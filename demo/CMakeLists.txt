@@ -1,0 +1,5 @@
+set(BINARY ${CMAKE_PROJECT_NAME}_demo)
+file(GLOB_RECURSE SOURCES LIST_DIRECTORIES false *.h *.cpp *.c)
+add_executable(${BINARY} ${SOURCES})
+
+target_link_libraries(${BINARY} PUBLIC -Wl,--whole-archive  ${CMAKE_PROJECT_NAME}_core -Wl,--no-whole-archive gtest)
