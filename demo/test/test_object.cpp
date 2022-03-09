@@ -13,16 +13,21 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_OBJECTS_STANDARD_H
-#define CANDY_SRC_OBJECTS_STANDARD_H
-#ifdef __cplusplus
-extern "C"{
-#endif /* __cplusplus */
-
-#include "src/common/candy_types.h"
+#include "gtest/gtest.h"
 #include "src/struct/candy_object.h"
+#include "src/method/candy_standard.h"
 
-#ifdef __cplusplus
+TEST(object, lifecycle){
+  candy_object_t obj = candy_object_create();
+  obj = candy_object_delete(obj);
+  EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
 }
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_OBJECTS_STANDARD_H */
+
+TEST(object, method){
+  candy_object_t obj = candy_object_create();
+  candy_object_push_method(obj, (char *)"print", candy_method_print);
+  candy_object_get_method(obj, (char *)"print")(obj);
+  obj = candy_object_delete(obj);
+  EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
+}
+

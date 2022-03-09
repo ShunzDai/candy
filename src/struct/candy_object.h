@@ -20,12 +20,20 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/common/candy_types.h"
+#include "src/struct/candy_queue.h"
 
-struct candy_object;
+candy_object_t candy_object_create(void);
+candy_object_t candy_object_delete(candy_object_t obj);
 
-typedef struct candy_object * candy_object_t;
+int candy_object_push(candy_object_t obj, candy_node_t node);
+#define candy_object_push_none(obj, name) candy_object_push(obj, candy_create_none(name))
+#define candy_object_push_string(obj, name, str) candy_object_push(obj, candy_create_string(name, str))
+#define candy_object_push_integer(obj, name, value) candy_object_push(obj, candy_create_integer(name, value))
+#define candy_object_push_float(obj, name, value) candy_object_push(obj, candy_create_float(name, value))
+#define candy_object_push_method(obj, name, method) candy_object_push(obj, candy_create_method(name, method))
+int candy_object_pop(candy_object_t obj, char *name);
 
-char *candy_get_string(candy_object_t obj);
+candy_method_t candy_object_get_method(candy_object_t obj, char *name);
 
 #ifdef __cplusplus
 }

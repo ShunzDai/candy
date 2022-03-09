@@ -13,7 +13,17 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_builtin.h"
+#ifndef CANDY_SRC_METHOD_STANDARD_H
+#define CANDY_SRC_METHOD_STANDARD_H
+#ifdef __cplusplus
+extern "C"{
+#endif /* __cplusplus */
 
+#include "src/common/candy_types.h"
 
+int candy_method_print(candy_object_t obj);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* CANDY_SRC_METHOD_STANDARD_H */

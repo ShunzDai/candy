@@ -33,14 +33,19 @@ extern "C"{
 #define CANDY_WEAK
 #endif
 
-#define candy_assert(condition) ((condition) ? ((void *)0U) : printf("assert %s line: %d", __FUNCTION__, __LINE__))
+#define candy_assert(condition) ((condition) ? ((void)0U) : printf("Assertion failed: func %s, line %d\n", __FUNCTION__, __LINE__))
 
-typedef enum candy_status{
-  CANDY_OK                                  = 0x00U,
-  CANDY_ERROR                               = 0x01U,
-  CANDY_BUSY                                = 0x02U,
-  CANDY_TIMEOUT                             = 0x03U,
-}candy_status_t;
+struct candy_node;
+typedef struct candy_node * candy_node_t;
+
+struct candy_object;
+typedef struct candy_object * candy_object_t;
+
+typedef uint32_t        candy_hash_t;
+typedef char            candy_string_t;
+typedef int64_t         candy_integer_t;
+typedef float           candy_float_t;
+typedef int (*candy_method_t)(candy_object_t obj);
 
 #ifdef __cplusplus
 }

@@ -13,9 +13,4 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "src/struct/candy_builtindef.h"
-
-CANDY_BUILTIN(NONE)
-CANDY_BUILTIN(STRING)
-CANDY_BUILTIN(INTEGER)
-CANDY_BUILTIN(FLOAT)
+#include "candy.h"

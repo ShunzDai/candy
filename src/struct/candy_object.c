@@ -14,13 +14,40 @@
   * limitations under the License.
   */
 #include "candy_object.h"
+#include "src/platform/candy_memory.h"
+#include "src/platform/candy_lib.h"
 
 struct candy_object{
-  struct candy_node *next;
+  candy_queue_t member;
 };
 
+candy_object_t candy_object_create(void){
+  candy_object_t obj = (candy_object_t)candy_malloc(sizeof(struct candy_object));
+  obj->member = candy_queue_create();
+  return obj;
+}
 
-char *candy_get_string(candy_object_t obj){
-  candy_assert(obj != NULL);
+candy_object_t candy_object_delete(candy_object_t obj){
+  if (obj != NULL){
+    candy_queue_delete(obj->member);
+    candy_free(obj);
+  }
   return NULL;
+}
+
+int candy_object_push(candy_object_t obj, candy_node_t node){
+  candy_assert(obj != NULL);
+  candy_enqueue(obj->member, node);
+  return 1;
+}
+
+int candy_object_pop(candy_object_t obj, char *name){
+  candy_assert(obj != NULL);
+  candy_dequeue_byname(obj->member, name);
+  return 1;
+}
+
+candy_method_t candy_object_get_method(candy_object_t obj, char *name){
+  candy_assert(obj != NULL);
+  return candy_node_get_method(*candy_queue_search(obj->member, name));
 }

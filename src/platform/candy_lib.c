@@ -1,5 +1,12 @@
 #include "candy_memory.h"
 
+candy_hash_t candy_time33(char *name){
+  candy_hash_t hash = 5381;
+  while (*name)
+    hash += (hash << 5) + (*name++);
+  return (hash & 0x7FFFFFFF);
+}
+
 void *candy_memset(void *dst, uint8_t val, size_t size){
 #define LBLOCKSIZE      (sizeof(long))
 #define UNALIGNED(X)    ((long)X & (LBLOCKSIZE - 1))
