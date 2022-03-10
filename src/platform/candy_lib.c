@@ -50,9 +50,8 @@ void *candy_memset(void *dst, uint8_t val, size_t size){
     m = (char *)aligned_addr;
   }
 
-  while (size--){
+  while (size--)
     *m++ = (char)d;
-  }
 
   return dst;
 
@@ -123,4 +122,3 @@ int candy_strcmp( const char *string1, const char *string2){
   }
   return *string1 - *string2;
 }
-

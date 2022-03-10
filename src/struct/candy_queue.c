@@ -17,7 +17,7 @@
 #include "src/platform/candy_memory.h"
 
 struct candy_queue{
-  candy_node_t next;
+  candy_pack_t next;
 };
 
 candy_queue_t candy_queue_create(void){
@@ -36,19 +36,42 @@ candy_queue_t candy_queue_delete(candy_queue_t queue){
 
 void candy_queue_print(candy_queue_t queue){
   candy_assert(queue != NULL);
-  candy_node_t *temp = &queue->next;
+  candy_pack_t *temp = &queue->next;
   uint32_t count = 0;
-  printf("\033[1;35m>>>\tqueue head\033[0m\n");
-  while (1){
-    if (temp == NULL)
+  uint16_t size = 0;
+  printf("\033[1;35m==================== queue head ====================\033[0m\n");
+  while (temp != NULL){
+    if (*temp == NULL)
       break;
-    else if (*temp == NULL)
-      break;
-    printf("%d\t%p\n", count, temp);
+    printf("[%d]\t%p\t", count, *temp);
+    switch (candy_pack_get_type(*temp)){
+      case CANDY_BUILTIN_NONE:
+        printf("none\n");
+        break;
+      case CANDY_BUILTIN_STRING:
+        printf("string\t%s\n", candy_pack_get_string(*temp, &size));
+        break;
+      case CANDY_BUILTIN_INTEGER:
+        printf("integer\t%ld\n", candy_pack_get_integer(*temp));
+        break;
+      case CANDY_BUILTIN_FLOAT:
+        printf("float\t%.5f\n", candy_pack_get_float(*temp));
+        break;
+      case CANDY_BUILTIN_METHOD:
+        printf("method\t%p\n", candy_pack_get_method(*temp));
+        break;
+      case CANDY_BUILTIN_OBJECT:
+        printf("object\t%p\n", candy_pack_get_object(*temp));
+        break;
+      default:
+        printf("exception types\n");
+        break;
+    }
     count++;
-    temp = candy_node_get_next(*temp);
+    temp = candy_pack_get_next(*temp);
   }
-  printf("\033[1;35m>>>\tqueue tail\033[0m\n");
+  printf("pack count(s): %d\n", count);
+  printf("\033[1;35m==================== queue tail ====================\033[0m\n");
 }
 
 int candy_queue_empty(candy_queue_t queue){
@@ -65,64 +88,66 @@ int candy_queue_clear(candy_queue_t queue){
 
 uint32_t candy_queue_count(candy_queue_t queue){
   candy_assert(queue != NULL);
-  candy_node_t *temp = &queue->next;
+  candy_pack_t *temp = &queue->next;
   uint32_t count = 0;
-  while (1){
-    if (temp == NULL)
+  while (temp != NULL){
+    if (*temp == NULL)
       break;
-    else if (*temp == NULL)
-      break;
+    temp = candy_pack_get_next(*temp);
     count++;
-    temp = candy_node_get_next(*temp);
   }
   return count;
 }
 
-candy_node_t *candy_queue_pointer(candy_queue_t queue, uint32_t pos){
+candy_pack_t *candy_queue_pointer(candy_queue_t queue, int32_t pos){
   candy_assert(queue != NULL);
-  candy_node_t *temp = &queue->next;
-  while (pos--){
-    if (temp == NULL)
-      return 0;
-    else if (*temp == NULL)
-      return 0;
-    temp = candy_node_get_next(*temp);
+  candy_pack_t *temp = &queue->next;
+  while (temp != NULL && pos--){
+    candy_pack_t *next = candy_pack_get_next(*temp);
+    if (*temp == NULL)
+      return temp;
+    else if (*next == NULL)
+      return next;
+    temp = next;
   }
   return temp;
 }
 
-candy_node_t *candy_queue_search(candy_queue_t queue, char *name){
+candy_pack_t *candy_queue_search(candy_queue_t queue, char *name){
   candy_assert(queue != NULL);
-  candy_node_t *temp = &queue->next;
+  candy_pack_t *temp = &queue->next;
   while (temp != NULL){
-    if (candy_node_checkout(*temp, name))
+    if (*temp == NULL)
+      return NULL;
+    else if (candy_pack_checkout(*temp, name))
       break;
-    temp = candy_node_get_next(*temp);
+    temp = candy_pack_get_next(*temp);
   }
   return temp;
 }
 
-int candy_enqueue(candy_queue_t queue, candy_node_t node){
+int candy_enqueue(candy_queue_t queue, candy_pack_t pack, int32_t pos){
   candy_assert(queue != NULL);
-  candy_assert(node != NULL);
-  uint32_t count = candy_queue_count(queue);
-  count = count ? count - 1 : count;
-  candy_node_t *temp = candy_queue_pointer(queue, count);
-  *candy_node_get_next(node) = *temp;
-  *temp = node;
+  candy_assert(pack != NULL);
+  candy_pack_t *temp = candy_queue_pointer(queue, pos);
+  candy_assert(temp != NULL);
+  *candy_pack_get_next(pack) = *temp;
+  *temp = pack;
   return 1;
 }
 
-int candy_dequeue_bypos(candy_queue_t queue, uint32_t pos){
+int candy_dequeue_bypos(candy_queue_t queue, int32_t pos){
   candy_assert(queue != NULL);
-  candy_node_t *temp = candy_queue_pointer(queue, pos);
-  *temp = candy_node_delete(*temp);
+  candy_pack_t *temp = candy_queue_pointer(queue, pos);
+  *temp = candy_pack_delete(*temp);
   return 1;
 }
 
 int candy_dequeue_byname(candy_queue_t queue, char *name){
   candy_assert(queue != NULL);
-  candy_node_t *temp = candy_queue_search(queue, name);
-  *temp = candy_node_delete(*temp);
+  candy_pack_t *temp = candy_queue_search(queue, name);
+  if (temp == NULL)
+    return 0;
+  *temp = candy_pack_delete(*temp);
   return 1;
 }

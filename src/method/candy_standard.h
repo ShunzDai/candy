@@ -21,7 +21,10 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
+extern candy_register_t candy_stdlib[];
+
 int candy_method_print(candy_object_t obj);
+int candy_method_type(candy_object_t obj);
 
 #ifdef __cplusplus
 }
