@@ -26,9 +26,6 @@ candy_hash_t candy_time33(char *name);
 void *candy_memset(void *dst, uint8_t val, size_t size);
 void *candy_memcpy(void *dst, const void *src, size_t size);
 
-size_t candy_strlen(const char *string);
-int candy_strcmp(const char *string1, const char *string2);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

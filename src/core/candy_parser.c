@@ -13,20 +13,12 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_METHOD_STANDARD_H
-#define CANDY_SRC_METHOD_STANDARD_H
-#ifdef __cplusplus
-extern "C"{
-#endif /* __cplusplus */
+#include "candy_parser.h"
 
-#include "src/common/candy_types.h"
-
-extern candy_register_t candy_stdlib[];
-
-int candy_method_print(candy_object_t param);
-int candy_method_type(candy_object_t param);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_METHOD_STANDARD_H */
+typedef enum candy_token{
+  CANDY_TOKEN_KEYWORD,
+  CANDY_TOKEN_TAG,
+  CANDY_TOKEN_CONST,
+  CANDY_TOKEN_OPERATOR,
+  CANDY_TOKEN_DELIMITER,
+} candy_token_t;

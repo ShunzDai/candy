@@ -20,7 +20,10 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/common/candy_types.h"
-#include "src/struct/candy_object.h"
+
+struct candy_state;
+
+typedef struct candy_state * candy_state_t;
 
 #ifdef __cplusplus
 }

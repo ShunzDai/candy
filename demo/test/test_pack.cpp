@@ -21,7 +21,6 @@
 TEST(pack, string){
   uint16_t size = 0;
   candy_pack_t pack = candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world"));
-  ASSERT_EQ(candy_pack_checkout(pack, (char *)"string"), !0);
   EXPECT_STREQ(candy_pack_get_string(pack, &size), (char *)"hello world");
   EXPECT_EQ(candy_pack_get_size(pack), sizeof("hello world"));
   pack = candy_pack_set_string(pack, (char *)"bye world", sizeof("bye world"));
@@ -66,9 +65,11 @@ TEST(pack, float){
 
 TEST(pack, method){
   candy_pack_t pack = candy_pack_method((char *)"method", candy_method_print);
+  candy_object_t obj = candy_object_create();
   EXPECT_EQ((uint64_t)candy_pack_get_method(pack), (uint64_t)candy_method_print);
-  candy_pack_get_method(pack)(NULL);
+  candy_pack_get_method(pack)(obj);
   pack = candy_pack_delete(pack);
+  obj = candy_object_delete(obj);
   EXPECT_EQ((uint64_t)pack, (uint64_t)NULL);
 }
 

@@ -13,20 +13,9 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_METHOD_STANDARD_H
-#define CANDY_SRC_METHOD_STANDARD_H
-#ifdef __cplusplus
-extern "C"{
-#endif /* __cplusplus */
+#include "gtest/gtest.h"
+#include "src/platform/candy_memory.h"
+/*
+TEST(memory, malloc){
 
-#include "src/common/candy_types.h"
-
-extern candy_register_t candy_stdlib[];
-
-int candy_method_print(candy_object_t param);
-int candy_method_type(candy_object_t param);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_METHOD_STANDARD_H */
+}*/

@@ -1,5 +1,16 @@
 # Change log
 
+## 2022-03-10 build1000.3
+
+- 新增`candy_node_t`类型作为所有线性数据结构的链表指针成员. 设计思路是不创建任何此类型的实例，仅将其作为强制类型转换的辅助结构. 此次增加的`candy_node_t`类型与build1000.2之前的`candy_node_t`类型无关
+- 重构`candy_pack_t` `candy_queue_t`及它们的系列方法，现在它们都继承`candy_node_t`类型，所有继承`candy_node_t`的数据结构复用`candy_queue_t`的系列方法，通过自身的析构函数实现内存释放
+- 重构`candy_queue_t`的测试用例
+- 优化`candy_queue_pointer`方法
+- 修复修改链表中的泛型容器类型会导致链表断裂的问题
+- 新增`src/struct`的[readme](src/struct/readme.md)
+- 新增一些空文件，尚未构造代码
+- 其他微小的工作
+
 ## 2022-03-10 build1000.2
 
 - 重构`candy_node_t`的部分方法，现在`candy_string_t`支持无符号字符串的增删改

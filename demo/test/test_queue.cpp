@@ -14,77 +14,70 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
+#include "src/struct/candy_pack.h"
 #include "src/struct/candy_queue.h"
 #include "src/method/candy_standard.h"
 
-TEST(queue, fifo){
+TEST(queue, clear){
   candy_queue_t queue = candy_queue_create();
-  candy_enqueue(queue, candy_pack_none((char *)"none"), -1);
-  candy_queue_print(queue);
-  candy_enqueue(queue, candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world")), -1);
-  candy_queue_print(queue);
-  candy_enqueue(queue, candy_pack_integer((char *)"integer", 114514), -1);
-  candy_queue_print(queue);
-  candy_dequeue_bypos(queue, 0);
-  candy_queue_print(queue);
-  candy_dequeue_bypos(queue, 0);
-  candy_queue_print(queue);
-  candy_dequeue_bypos(queue, 0);
-  candy_queue_print(queue);
-  queue = candy_queue_delete(queue);
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world")));
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_integer((char *)"integer", 114514));
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_float((char *)"float", 3.1415926f));
+  EXPECT_EQ(candy_queue_count(queue), 3);
+  candy_queue_clear(queue, (candy_destruct_t)candy_pack_delete);
+  EXPECT_EQ(candy_queue_count(queue), 0);
+  queue = candy_queue_delete(queue, (candy_destruct_t)candy_pack_delete);
+  EXPECT_EQ((uint64_t)queue, (uint64_t)NULL);
+}
+
+TEST(queue, fifo){
+  uint16_t size = 0;
+  candy_queue_t queue = candy_queue_create();
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world")));
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_integer((char *)"integer", 114514));
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_float((char *)"float", 3.1415926f));
+  EXPECT_STREQ(candy_pack_get_string((candy_pack_t)*candy_queue_pointer(queue, 0), &size), (char *)"hello world");
+  EXPECT_EQ(candy_pack_get_integer((candy_pack_t)*candy_queue_pointer(queue, 1)), 114514);
+  EXPECT_FLOAT_EQ(candy_pack_get_float((candy_pack_t)*candy_queue_pointer(queue, 2)), 3.1415926f);
+  candy_dequeue(queue, 0, (candy_destruct_t)candy_pack_delete);
+  EXPECT_EQ(candy_pack_get_integer((candy_pack_t)*candy_queue_pointer(queue, 0)), 114514);
+  EXPECT_FLOAT_EQ(candy_pack_get_float((candy_pack_t)*candy_queue_pointer(queue, 1)), 3.1415926f);
+  candy_dequeue(queue, 0, (candy_destruct_t)candy_pack_delete);
+  EXPECT_FLOAT_EQ(candy_pack_get_float((candy_pack_t)*candy_queue_pointer(queue, 0)), 3.1415926f);
+  candy_dequeue(queue, 0, (candy_destruct_t)candy_pack_delete);
+  EXPECT_EQ(candy_queue_empty(queue), !0);
+  queue = candy_queue_delete(queue, (candy_destruct_t)candy_pack_delete);
   EXPECT_EQ((uint64_t)queue, (uint64_t)NULL);
 }
 
 TEST(queue, lifo){
+  uint16_t size = 0;
   candy_queue_t queue = candy_queue_create();
-  candy_queue_print(queue);
-  candy_enqueue(queue, candy_pack_none((char *)"none"), 0);
-  candy_queue_print(queue);
-  candy_enqueue(queue, candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world")), 0);
-  candy_queue_print(queue);
-  candy_enqueue(queue, candy_pack_integer((char *)"integer", 114514), 0);
-  candy_queue_print(queue);
-  candy_dequeue_bypos(queue, 0);
-  candy_queue_print(queue);
-  candy_dequeue_bypos(queue, 0);
-  candy_queue_print(queue);
-  candy_dequeue_bypos(queue, 0);
-  candy_queue_print(queue);
-  queue = candy_queue_delete(queue);
+  candy_enqueue(queue, 0, (candy_node_t)candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world")));
+  candy_enqueue(queue, 0, (candy_node_t)candy_pack_integer((char *)"integer", 114514));
+  candy_enqueue(queue, 0, (candy_node_t)candy_pack_float((char *)"float", 3.1415926f));
+  EXPECT_STREQ(candy_pack_get_string((candy_pack_t)*candy_queue_pointer(queue, 2), &size), (char *)"hello world");
+  EXPECT_EQ(candy_pack_get_integer((candy_pack_t)*candy_queue_pointer(queue, 1)), 114514);
+  EXPECT_FLOAT_EQ(candy_pack_get_float((candy_pack_t)*candy_queue_pointer(queue, 0)), 3.1415926f);
+  candy_dequeue(queue, 0, (candy_destruct_t)candy_pack_delete);
+  EXPECT_STREQ(candy_pack_get_string((candy_pack_t)*candy_queue_pointer(queue, 1), &size), (char *)"hello world");
+  EXPECT_EQ(candy_pack_get_integer((candy_pack_t)*candy_queue_pointer(queue, 0)), 114514);
+  candy_dequeue(queue, 0, (candy_destruct_t)candy_pack_delete);
+  EXPECT_STREQ(candy_pack_get_string((candy_pack_t)*candy_queue_pointer(queue, 0), &size), (char *)"hello world");
+  candy_dequeue(queue, 0, (candy_destruct_t)candy_pack_delete);
+  EXPECT_EQ(candy_queue_empty(queue), !0);
+  queue = candy_queue_delete(queue, (candy_destruct_t)candy_pack_delete);
   EXPECT_EQ((uint64_t)queue, (uint64_t)NULL);
 }
 
-TEST(queue, clear){
+TEST(queue, cast){
   candy_queue_t queue = candy_queue_create();
-  candy_enqueue(queue, candy_pack_none((char *)"none"), -1);
-  candy_enqueue(queue, candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world")), -1);
-  candy_enqueue(queue, candy_pack_integer((char *)"integer", 114514), -1);
-  candy_enqueue(queue, candy_pack_float((char *)"float", 3.1415926f), -1);
-  candy_enqueue(queue, candy_pack_method((char *)"mathod", candy_method_print), -1);
-  queue = candy_queue_delete(queue);
-  EXPECT_EQ((uint64_t)queue, (uint64_t)NULL);
-}
-
-TEST(queue, search){
-  candy_queue_t queue = candy_queue_create();
-  candy_enqueue(queue, candy_pack_none((char *)"none"), -1);
-  candy_enqueue(queue, candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world")), -1);
-  candy_enqueue(queue, candy_pack_integer((char *)"integer", 114514), -1);
-  candy_enqueue(queue, candy_pack_float((char *)"float", 3.1415926f), -1);
-  candy_enqueue(queue, candy_pack_method((char *)"method", candy_method_print), -1);
-  candy_queue_print(queue);
-  candy_dequeue_byname(queue, (char *)"integer");
-  candy_queue_print(queue);
-  candy_dequeue_byname(queue, (char *)"none");
-  candy_queue_print(queue);
-  queue = candy_queue_delete(queue);
-  EXPECT_EQ((uint64_t)queue, (uint64_t)NULL);
-}
-
-TEST(queue, searchnull){
-  candy_queue_t queue = candy_queue_create();
-  candy_pack_t *pack = candy_queue_search(queue, (char *)"pack");
-  EXPECT_EQ((uint64_t)pack, (uint64_t)NULL);
-  queue = candy_queue_delete(queue);
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_string((char *)"string", (char *)"hello world", sizeof("hello world")));
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_integer((char *)"integer", 114514));
+  candy_enqueue(queue, -1, (candy_node_t)candy_pack_float((char *)"float", 3.1415926f));
+  candy_pack_set_float((candy_pack_t)*candy_queue_pointer(queue, 1), 6.28f);
+  EXPECT_EQ(candy_queue_count(queue), 3);
+  EXPECT_FLOAT_EQ(candy_pack_get_float((candy_pack_t)*candy_queue_pointer(queue, 1)), 6.28f);
+  queue = candy_queue_delete(queue, (candy_destruct_t)candy_pack_delete);
   EXPECT_EQ((uint64_t)queue, (uint64_t)NULL);
 }

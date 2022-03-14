@@ -13,20 +13,14 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_METHOD_STANDARD_H
-#define CANDY_SRC_METHOD_STANDARD_H
-#ifdef __cplusplus
-extern "C"{
-#endif /* __cplusplus */
+#include "candy_bytecode.h"
+#include "src/platform/candy_memory.h"
 
-#include "src/common/candy_types.h"
-
-extern candy_register_t candy_stdlib[];
-
-int candy_method_print(candy_object_t param);
-int candy_method_type(candy_object_t param);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_METHOD_STANDARD_H */
+struct candy_bytecode{
+  candy_node_t next;
+  uint8_t block;
+  uint8_t depth;
+  uint8_t code;
+  uint8_t size;
+  uint8_t data[];
+};

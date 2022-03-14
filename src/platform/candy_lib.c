@@ -106,19 +106,3 @@ void *candy_memcpy(void *dst, const void *src, size_t size){
 #undef LITTLEBLOCKSIZE
 #undef TOO_SMALL
 }
-
-size_t candy_strlen(const char *string){
-  const char *s;
-  s = string;
-  while (*s)
-    s++;
-  return s - string;
-}
-
-int candy_strcmp( const char *string1, const char *string2){
-  while ( *string1 == *string2 && *string1 && *string2 ){
-    string1++;
-    string2++;
-  }
-  return *string1 - *string2;
-}

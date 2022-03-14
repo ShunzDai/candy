@@ -17,7 +17,6 @@
 #include "src/struct/candy_object.h"
 #include "src/method/candy_standard.h"
 
-
 TEST(object, lifecycle){
   candy_object_t obj = candy_object_create();
   obj = candy_object_delete(obj);
@@ -26,10 +25,14 @@ TEST(object, lifecycle){
 
 TEST(object, method){
   candy_object_t obj = candy_object_create();
-  candy_object_register(obj, candy_stdlib);
+  candy_object_t param = candy_object_create();
+  candy_object_push_method(obj, (char *)"print", candy_method_print);
+  candy_object_push_string(param, (char *)"", (char *)"hello world", strlen("hello world") + 1);
+  candy_object_push_integer(param, (char *)"", 114514);
   candy_object_print(obj);
-  candy_object_get_method(obj, (char *)"print")(obj);
+  candy_object_print(param);
+  candy_object_get_method(obj, (char *)"print")(param);
   obj = candy_object_delete(obj);
+  param = candy_object_delete(param);
   EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
 }
-

@@ -33,24 +33,61 @@ extern "C"{
 #define CANDY_WEAK
 #endif
 
-#define candy_assert(condition) ((condition) ? ((void)0U) : printf("Assertion failed: func %s, line %d\n", __FUNCTION__, __LINE__))
+#define candy_get_next(key) (&((candy_node_t)(key))->next)
+
+#define candy_probe() printf(">>> probe: func %s, line %d\n", __FUNCTION__, __LINE__);
+
+int candy_platform_assert_error(const char *file, const char *func, int line, char *reason);
+#define candy_assert(condition, reason, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __FUNCTION__, __LINE__, reason))
+
+typedef enum candy_types{
+  CANDY_TYPES_NONE,
+  CANDY_TYPES_STRING,
+  CANDY_TYPES_INTEGER,
+  CANDY_TYPES_FLOAT,
+  CANDY_TYPES_BOOLEAN,
+  CANDY_TYPES_METHOD,
+  CANDY_TYPES_OBJECT,
+  CANDY_TYPES_FLOOR,
+} candy_types_t;
+
+struct candy_node;
+
+typedef struct candy_node * candy_node_t;
+
+struct candy_queue;
+
+typedef struct candy_queue * candy_queue_t;
 
 struct candy_pack;
+
 typedef struct candy_pack * candy_pack_t;
 
-struct candy_object;
-typedef struct candy_object * candy_object_t;
+struct candy_bytecode;
+
+typedef struct candy_bytecode * candy_bytecode_t;
+
+typedef candy_queue_t candy_object_t;
+
+typedef candy_node_t (*candy_destruct_t)(candy_node_t);
 
 typedef uint32_t        candy_hash_t;
 typedef char *          candy_string_t;
 typedef int64_t         candy_integer_t;
 typedef float           candy_float_t;
-typedef int (*candy_method_t)(candy_object_t obj);
+typedef uint8_t         candy_boolean_t;
+typedef int (*candy_method_t)(candy_object_t);
+
+struct candy_node{
+  candy_node_t next;
+};
 
 typedef struct candy_register{
   char *name;
   candy_method_t method;
 } candy_register_t;
+
+static const char candy_types[][8] = {"none", "str", "int", "float", "bool", "method", "obj", "unknown"};
 
 #ifdef __cplusplus
 }

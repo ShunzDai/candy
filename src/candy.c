@@ -14,3 +14,7 @@
   * limitations under the License.
   */
 #include "candy.h"
+#include "src/platform/candy_memory.h"
+#include "src/struct/candy_object.h"
+#include "src/method/candy_standard.h"
+

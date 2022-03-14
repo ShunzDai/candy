@@ -1,2 +1,2 @@
-a = 2.1
-print(a, int(a))
+a=""
+print(type(bool(a)), bool(a))
