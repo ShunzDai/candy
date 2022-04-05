@@ -1,4 +1,4 @@
-#include "candy_memory.h"
+#include "candy_lib.h"
 
 candy_hash_t candy_time33(char *name){
   candy_hash_t hash = 5381;

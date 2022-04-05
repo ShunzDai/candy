@@ -21,9 +21,7 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-struct candy_state;
 
-typedef struct candy_state * candy_state_t;
 
 #ifdef __cplusplus
 }

@@ -2,15 +2,15 @@
 #include "src/struct/candy_object.h"
 
 int candy_method_print(candy_object_t param){
-  candy_assert(param != NULL, "");
-  candy_pack_t *temp = (candy_pack_t *)candy_get_next(param);
+  candy_assert(param != NULL);
+  candy_pack_t *temp = (candy_pack_t *)candy_node_get_next(param);
   uint16_t size;
   if (*temp == NULL)
       return 0;
   while (temp != NULL){
-    switch (candy_pack_get_type(*temp)){
+    switch (candy_node_get_type(*temp)){
       case CANDY_TYPES_NONE:
-        printf("nil");
+        printf("None");
         break;
       case CANDY_TYPES_STRING:
         printf("%s", candy_pack_get_string(*temp, &size));
@@ -27,7 +27,7 @@ int candy_method_print(candy_object_t param){
       default:
         return 0;
     }
-    temp = (candy_pack_t *)candy_get_next(*temp);
+    temp = (candy_pack_t *)candy_node_get_next(*temp);
     if (*temp == NULL){
       printf("\n");
       return 0;

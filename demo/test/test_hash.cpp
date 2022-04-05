@@ -13,13 +13,11 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_vm.h"
-#include "src/struct/candy_object.h"
-#include "src/core/candy_parser.h"
-
-int candy_vm_runcode(candy_object_t root, char *code){
-  candy_assert(root != NULL);
-  candy_assert(code != NULL);
-  candy_parser_gen_ast(root, code);
-  return 1;
-}
+#include "gtest/gtest.h"
+#include "src/common/candy_lib.h"
+/*
+TEST(hash, value){
+  printf("%s 0x%08X\n", (char *)"print", candy_time33((char *)"print"));
+  printf("%s 0x%08X\n", CANDY_OBJECT_PARAM, candy_time33(CANDY_OBJECT_PARAM));
+  printf("%s 0x%08X\n", CANDY_OBJECT_AST, candy_time33(CANDY_OBJECT_AST));
+}*/

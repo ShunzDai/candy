@@ -13,14 +13,9 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_bytecode.h"
-#include "src/platform/candy_memory.h"
+#undef CANDY_OPCODE_DEF
 
-struct candy_bytecode{
-  candy_node_t next;
-  uint8_t block;
-  uint8_t depth;
-  uint8_t code;
-  uint8_t size;
-  uint8_t data[];
-};
+#if defined(CANDY_OPCODE_DEF_ENUM)
+#undef CANDY_OPCODE_DEF_ENUM
+#define CANDY_OPCODE_DEF(key) CANDY_OPCODE_##key,
+#endif /* CANDY_OPCODE_DEF_ENUM */

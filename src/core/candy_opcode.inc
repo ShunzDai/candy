@@ -13,13 +13,12 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_vm.h"
-#include "src/struct/candy_object.h"
-#include "src/core/candy_parser.h"
+#include "candy_opcodedef.h"
 
-int candy_vm_runcode(candy_object_t root, char *code){
-  candy_assert(root != NULL);
-  candy_assert(code != NULL);
-  candy_parser_gen_ast(root, code);
-  return 1;
-}
+CANDY_OPCODE_DEF(NIL)
+CANDY_OPCODE_DEF(REF)
+CANDY_OPCODE_DEF(JEZ)
+CANDY_OPCODE_DEF(JMP)
+CANDY_OPCODE_DEF(STR)
+CANDY_OPCODE_DEF(RUN)
+CANDY_OPCODE_DEF(EXT)

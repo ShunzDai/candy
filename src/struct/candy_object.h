@@ -20,33 +20,30 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/common/candy_types.h"
-#include "src/struct/candy_pack.h"
 #include "src/struct/candy_queue.h"
+#include "src/struct/candy_pack.h"
 
 #define candy_object_create() candy_queue_create()
-#define candy_object_delete(obj) candy_queue_delete(obj, (candy_destruct_t)candy_pack_delete)
+#define candy_object_delete(obj) candy_queue_delete((candy_queue_t)(obj))
 
 void candy_object_print(candy_object_t obj);
+candy_pack_t *candy_object_search(candy_object_t obj, candy_hash_t hash);
+int candy_object_register(candy_object_t obj, candy_register_t table[]);
 
-int candy_object_register(candy_object_t obj, candy_register_t reg[]);
+#define candy_object_push(obj, node)                        candy_enqueue((obj), -1, (candy_node_t)(node))
+#define candy_object_push_none(obj, name)                   candy_object_push(obj, candy_pack_none(name))
+#define candy_object_push_string(obj, name, string, size)   candy_object_push(obj, candy_pack_string(name, string, size))
+#define candy_object_push_integer(obj, name, value)         candy_object_push(obj, candy_pack_integer(name, value))
+#define candy_object_push_float(obj, name, value)           candy_object_push(obj, candy_pack_float(name, value))
+#define candy_object_push_method(obj, name, method)         candy_object_push(obj, candy_pack_method(name, method))
+#define candy_object_push_object(obj, name, object)         candy_object_push(obj, candy_pack_object(name, object))
 
-candy_pack_t *candy_object_search(candy_object_t obj, char *name);
-
-int candy_object_push(candy_object_t obj, candy_pack_t pack);
-#define candy_object_push_none(obj, name) candy_object_push(obj, candy_pack_none(name))
-#define candy_object_push_string(obj, name, string, size) candy_object_push(obj, candy_pack_string(name, string, size))
-#define candy_object_push_integer(obj, name, value) candy_object_push(obj, candy_pack_integer(name, value))
-#define candy_object_push_float(obj, name, value) candy_object_push(obj, candy_pack_float(name, value))
-#define candy_object_push_method(obj, name, method) candy_object_push(obj, candy_pack_method(name, method))
-#define candy_object_push_object(obj, name, object) candy_object_push(obj, candy_pack_object(name, object))
-
-candy_string_t candy_object_get_string(candy_object_t obj, char *name, uint16_t *size);
-candy_integer_t candy_object_get_integer(candy_object_t obj, char *name);
-candy_float_t candy_object_get_float(candy_object_t obj, char *name);
-candy_method_t candy_object_get_method(candy_object_t obj, char *name);
-candy_object_t candy_object_get_object(candy_object_t obj, char *name);
-
-
+uint8_t *candy_object_get_buffer(candy_object_t obj, int32_t pos);
+candy_string_t candy_object_get_string(candy_object_t obj, candy_hash_t hash, uint16_t *size);
+candy_integer_t candy_object_get_integer(candy_object_t obj, candy_hash_t hash);
+candy_float_t candy_object_get_float(candy_object_t obj, candy_hash_t hash);
+candy_method_t candy_object_get_method(candy_object_t obj, candy_hash_t hash);
+candy_object_t candy_object_get_object(candy_object_t obj, candy_hash_t hash);
 
 #ifdef __cplusplus
 }

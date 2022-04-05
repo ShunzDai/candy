@@ -20,7 +20,8 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/common/candy_types.h"
-#include "src/struct/candy_object.h"
+
+int candy_vm_runcode(candy_object_t root, char *code);
 
 #ifdef __cplusplus
 }

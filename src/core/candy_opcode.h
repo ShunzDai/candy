@@ -13,13 +13,22 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_vm.h"
-#include "src/struct/candy_object.h"
-#include "src/core/candy_parser.h"
+#ifndef CANDY_SRC_STRUCT_OPCODE_H
+#define CANDY_SRC_STRUCT_OPCODE_H
+#ifdef __cplusplus
+extern "C"{
+#endif /* __cplusplus */
 
-int candy_vm_runcode(candy_object_t root, char *code){
-  candy_assert(root != NULL);
-  candy_assert(code != NULL);
-  candy_parser_gen_ast(root, code);
-  return 1;
+#include "src/common/candy_types.h"
+
+typedef enum candy_opcode{
+#define CANDY_OPCODE_DEF_ENUM
+#include "src/core/candy_opcode.inc"
+} candy_opcode_t;
+
+
+
+#ifdef __cplusplus
 }
+#endif /* __cplusplus */
+#endif /* CANDY_SRC_STRUCT_OPCODE_H */

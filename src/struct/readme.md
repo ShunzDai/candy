@@ -104,34 +104,36 @@ candy_queue_t candy_queue_delete(candy_queue_t queue)
 - 输入: `queue` 将要释放的队列容器
 - 输出: `candy_queue_t` 空指针，用于清空已释放的队列容器句柄
 
+### API `candy_queue_pointer`
+
+```c
+candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t pos)
+```
+
+- 描述: 指向队列中的指定节点
+- 输入: `queue` 目标队列
+- 输入: `pos` 析构函数
+- 输出: `candy_node_t *` 指向目标节点的指针. 其行为请参考测试用例[queue.pointer](demo\test\test_queue.cpp)
+
 ### API `candy_enqueue`
 
 ```c
-int candy_enqueue(candy_queue_t queue, candy_pack_t pack, int32_t pos)
+int candy_enqueue(candy_queue_t queue, int32_t pos, candy_node_t node)
 ```
+
 - 描述: 将一个泛型容器挂载到队列的指定位置
 - 输入: `queue` 目标队列容器
-- 输入: `pack` 目标泛型容器
-- 输入: `pos` 节点序号，从0开始计数. 当pos超过当前最大节点序号时，断言失败；当pos为负时，泛型容器将挂载到队列尾(如果当前队列为空，那么被挂载的泛型容器将成为第0个节点)；否则泛型容器将挂载到原队列第pos个节点前，成为新的第pos个节点，原第pos个节点将成为插入后的第pos+1个节点(如果原第pos个节点为`NULL`，那么被挂载的泛型容器的下一节点为`NULL`).
+- 输入: `pos` 目标位置. 当pos超过当前最大节点序号时，返回0；当pos为负时，节点容器将挂载到队列尾(如果当前队列为空，那么被挂载的节点容器将成为第0个节点)；否则节点容器将挂载到原队列第pos个节点前，成为新的第pos个节点，原第pos个节点将成为插入后的第pos+1个节点(如果原第pos个节点为`NULL`，那么被挂载的节点容器的下一节点为`NULL`).
+- 输入: `node` 目标节点容器
 - 输出: `int` 0为失败，1为成功
 
-### API `candy_dequeue_bypos`
+### API `candy_dequeue`
 
 ```c
-int candy_dequeue_bypos(candy_queue_t queue, int32_t pos)
+int candy_dequeue(candy_queue_t queue, int32_t pos)
 ```
+
 - 描述: 释放队列指定位置的泛型容器
 - 输入: `queue` 目标队列容器
-- 输入: `pos` 节点序号，从0开始计数. 当pos超过当前最大节点序号时，断言失败；当pos为负时，将释放队列尾的泛型容器；否则释放第pos个泛型容器
+- 输入: `pos` 节点序号，从0开始计数. 当pos超过当前最大节点序号时，返回0；当pos为负时，将释放队列尾的泛型容器；否则释放第pos个泛型容器
 - 输出: `int` 0为失败，1为成功
-
-### API `candy_dequeue_byname`
-
-```c
-int candy_dequeue_byname(candy_queue_t queue, char *name)
-```
-- 描述: 释放队列指定名称的泛型容器
-- 输入: `queue` 目标队列容器
-- 输入: `pos` 节点名称. 如果队列中没有指定名称的节点则返回0
-- 输出: `int` 0为失败，1为成功
-

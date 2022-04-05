@@ -28,13 +28,10 @@ candy_pack_t candy_pack_float(char *name, candy_float_t value);
 candy_pack_t candy_pack_boolean(char *name, candy_boolean_t value);
 candy_pack_t candy_pack_method(char *name, candy_method_t method);
 candy_pack_t candy_pack_object(char *name, candy_object_t object);
-candy_pack_t candy_pack_delete(candy_pack_t pack);
 
-int candy_pack_checkout(candy_pack_t pack, char *name);
+int candy_pack_checkout(candy_pack_t pack, candy_hash_t hash);
 candy_pack_t candy_pack_copy(candy_pack_t pack);
-candy_types_t candy_pack_get_type(candy_pack_t pack);
-const char *candy_pack_get_typestr(candy_pack_t pack);
-uint16_t candy_pack_get_size(candy_pack_t pack);
+uint8_t *candy_pack_get_buffer(candy_pack_t pack);
 
 candy_pack_t candy_pack_set_none(candy_pack_t pack);
 candy_pack_t candy_pack_set_string(candy_pack_t pack, candy_string_t string, uint16_t size);

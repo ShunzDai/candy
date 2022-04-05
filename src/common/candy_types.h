@@ -33,12 +33,14 @@ extern "C"{
 #define CANDY_WEAK
 #endif
 
-#define candy_get_next(key) (&((candy_node_t)(key))->next)
+#define CANDY_OBJECT_PARAM                  ((char *)"__param__")
+#define CANDY_OBJECT_METHOD                 ((char *)"__method__")
+#define CANDY_OBJECT_BLOCK                  ((char *)"__block__")
+#define CANDY_OBJECT_AST                    ((char *)"__ast__")
 
-#define candy_probe() printf(">>> probe: func %s, line %d\n", __FUNCTION__, __LINE__);
+#define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
-int candy_platform_assert_error(const char *file, const char *func, int line, char *reason);
-#define candy_assert(condition, reason, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __FUNCTION__, __LINE__, reason))
+#define candy_assert(condition) ((condition) ? ((void)0U) : (void)candy_platform_assert_error(__FILE__, __FUNCTION__, __LINE__, #condition))
 
 typedef enum candy_types{
   CANDY_TYPES_NONE,
@@ -47,9 +49,13 @@ typedef enum candy_types{
   CANDY_TYPES_FLOAT,
   CANDY_TYPES_BOOLEAN,
   CANDY_TYPES_METHOD,
-  CANDY_TYPES_OBJECT,
+  CANDY_TYPES_QUEUE,
   CANDY_TYPES_FLOOR,
 } candy_types_t;
+
+struct candy_state;
+
+typedef struct candy_state * candy_state_t;
 
 struct candy_node;
 
@@ -67,9 +73,11 @@ struct candy_bytecode;
 
 typedef struct candy_bytecode * candy_bytecode_t;
 
-typedef candy_queue_t candy_object_t;
+struct candy_block;
 
-typedef candy_node_t (*candy_destruct_t)(candy_node_t);
+typedef struct candy_block * candy_block_t;
+
+typedef candy_queue_t candy_object_t;
 
 typedef uint32_t        candy_hash_t;
 typedef char *          candy_string_t;
@@ -78,16 +86,23 @@ typedef float           candy_float_t;
 typedef uint8_t         candy_boolean_t;
 typedef int (*candy_method_t)(candy_object_t);
 
-struct candy_node{
-  candy_node_t next;
-};
-
 typedef struct candy_register{
   char *name;
   candy_method_t method;
 } candy_register_t;
 
-static const char candy_types[][8] = {"none", "str", "int", "float", "bool", "method", "obj", "unknown"};
+static const char *const candy_types[] = {
+  "none",
+  "string",
+  "integer",
+  "float",
+  "bool",
+  "method",
+  "object",
+  "unknown"
+};
+
+int candy_platform_assert_error(const char *file, const char *func, int line, char *condition);
 
 #ifdef __cplusplus
 }

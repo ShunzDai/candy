@@ -1,2 +1,1 @@
-a=""
-print(type(bool(a)), bool(a))
+print("\060\061\062\063")

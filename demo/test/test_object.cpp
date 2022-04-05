@@ -14,6 +14,7 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
+#include "src/common/candy_lib.h"
 #include "src/struct/candy_object.h"
 #include "src/method/candy_standard.h"
 
@@ -26,13 +27,15 @@ TEST(object, lifecycle){
 TEST(object, method){
   candy_object_t obj = candy_object_create();
   candy_object_t param = candy_object_create();
+  candy_object_push_object(obj, CANDY_OBJECT_PARAM, param);
   candy_object_push_method(obj, (char *)"print", candy_method_print);
   candy_object_push_string(param, (char *)"", (char *)"hello world", strlen("hello world") + 1);
   candy_object_push_integer(param, (char *)"", 114514);
   candy_object_print(obj);
-  candy_object_print(param);
-  candy_object_get_method(obj, (char *)"print")(param);
+  param = candy_object_get_object(obj, candy_time33(CANDY_OBJECT_PARAM));
+  candy_method_t method = candy_object_get_method(obj, candy_time33((char *)"print"));
+  EXPECT_EQ(!(uint64_t)method, (uint64_t)NULL);
+  method(param);
   obj = candy_object_delete(obj);
-  param = candy_object_delete(param);
   EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
 }

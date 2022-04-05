@@ -6,6 +6,7 @@ project(candy)
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/config
 )
 
 add_subdirectory(src)

@@ -13,16 +13,15 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_CORE_BYTECODE_H
-#define CANDY_SRC_CORE_BYTECODE_H
+#ifndef CANDY_CONFIG_H
+#define CANDY_CONFIG_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/common/candy_types.h"
-#include "src/struct/candy_object.h"
+#define CANDY_PARSER_BUFFER_SIZE 128
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_CORE_BYTECODE_H */
+#endif /* CANDY_CONFIG_H */
