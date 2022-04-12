@@ -20,8 +20,10 @@
 
 #define is_capital(ch)            ((ch) >= 'A' && (ch) <= 'Z')
 #define is_lower(ch)              ((ch) >= 'a' && (ch) <= 'z')
-#define is_number(ch)             ((ch) >= '0' && (ch) <= '9')
+#define is_alpha(ch)              (is_capital(ch) || is_lower(ch))
 #define is_hex(ch)                (((ch) >= '0' && (ch) <= '9') || ((ch) >= 'a' && (ch) <= 'f') || ((ch) >= 'A' && (ch) <= 'F'))
+#define is_dec(ch)                ((ch) >= '0' && (ch) <= '9')
+#define is_oct(ch)                ((ch) >= '0' && (ch) <= '7')
 
 typedef enum candy_token_type{
   CANDY_TOKEN_KEYWORD_FALSE,
@@ -71,12 +73,12 @@ int candy_parser_gen_ast(candy_object_t root, char *code){
   /* while until *ch == '\0' */
   while (*ch){
     /* ident or keyword */
-    if (is_capital(*ch) || is_lower(*ch) || *ch == '_'){
+    if (is_alpha(*ch) || *ch == '_'){
       candy_token_type_t type = CANDY_TOKEN_IDENT;
-      /* save confirmed char */
+      /* save alpha, or '_' */
       *b++ = *ch++;
-      /* save capital, lower, number, or '_' */
-      while (is_capital(*ch) || is_lower(*ch) || is_number(*ch) || *ch == '_')
+      /* save alpha, number, or '_' */
+      while (is_dec(*ch) || is_alpha(*ch) || *ch == '_')
         *b++ = *ch++;
       /* last char padding '\0' */
       *b = '\0';
@@ -91,9 +93,9 @@ int candy_parser_gen_ast(candy_object_t root, char *code){
       /* reset */
       b = buffer;
     }
-    else if (is_number(*ch)){
+    else if (is_dec(*ch)){
       uint8_t dot = 0;
-      while (is_number(*ch)){
+      while (is_dec(*ch)){
         *b++ = *ch++;
         if (*ch == '.'){
           dot++;
@@ -105,8 +107,10 @@ int candy_parser_gen_ast(candy_object_t root, char *code){
       printf("[number]%s, line %d\n", buffer, line);
       b = buffer;
     }
+    /* if char start with ' or " */
     else if (*ch == '\'' || *ch == '\"'){
       const char * const comment = (*ch == '\'') ? "\'\'\'" : "\"\"\"";
+      /* if is comment */
       if (strncmp(ch + 1, comment, 2) == 0){
         ch += 3;
         char *temp = strstr(ch, comment);
@@ -119,56 +123,103 @@ int candy_parser_gen_ast(candy_object_t root, char *code){
         }
         ch += 3;
       }
+      /* else is const string */
       else{
+        /* find next ' or " */
         char *temp = strchr(ch + 1, *ch);
+        /* if not found */
         candy_assert(temp != NULL);
+        /* char check */
+        while (*(temp - 1) == '\\'){
+          /* find next ' or " */
+          temp = strchr(temp + 1, *ch);
+          /* if not found */
+          candy_assert(temp != NULL);
+        }
         /* skip ' or " */
         ch++;
         while (ch < temp){
+          /* is escape */
           if (*ch == '\\'){
-            if (*(ch + 1) == 'n'){
-              *b++ = '\n';
-              ch += 2;
+            ch++;
+            /* is '\a' */
+            if (*ch == 'a'){
+              *b++ = '\a';
+              ch++;
             }
-            else if (*(ch + 1) == 'r'){
-              *b++ = '\r';
-              ch += 2;
+            /* is '\b' */
+            else if (*ch == 'b'){
+              *b++ = '\b';
+              ch++;
             }
-            else if (*(ch + 1) == 't'){
+            /* is '\t' */
+            else if (*ch == 't'){
               *b++ = '\t';
-              ch += 2;
+              ch++;
             }
-            else if (*(ch + 1) == '\\'){
-              *b++ = '\\';
-              ch += 2;
+            /* is '\n' */
+            else if (*ch == 'n'){
+              *b++ = '\n';
+              ch++;
             }
-            else if (*(ch + 1) == '\''){
-              *b++ = '\'';
-              ch += 2;
+            /* is '\v' */
+            else if (*ch == 'v'){
+              *b++ = '\v';
+              ch++;
             }
-            else if (*(ch + 1) == '\"'){
+            /* is '\f' */
+            else if (*ch == 'f'){
+              *b++ = '\f';
+              ch++;
+            }
+            /* is '\r' */
+            else if (*ch == 'r'){
+              *b++ = '\r';
+              ch++;
+            }
+            /* is '\"' */
+            else if (*ch == '\"'){
               *b++ = '\"';
+              ch++;
+            }
+            /* is '\'' */
+            else if (*ch == '\''){
+              *b++ = '\'';
+              ch++;
+            }
+            /* is '\\' */
+            else if (*ch == '\\'){
+              *b++ = '\\';
+              ch++;
+            }
+            /* is hex */
+            else if (*ch == 'x'){
+              ch++;
+              /* check hex char */
+              candy_assert(is_hex(*ch) && is_hex(*(ch + 1)));
+              /* save hex */
+              char temp[3] = {*ch, *(ch + 1), '\0'};
               ch += 2;
-            }
-            else if (*(ch + 1) == '0'){
-              if (is_number(*(ch + 2)) && is_number(*(ch + 3))){
-                char temp[3] = {*(ch + 2), *(ch + 3), '\0'};
-                *b++ = strtol(temp, NULL, 8);
-                ch += 4;
-              }
-              else{
-                *b++ = '\0';
-                ch += 2;
-              }
-            }
-            else if (*(ch + 1) == 'x'){
-              candy_assert(is_hex(*(ch + 2)) && is_hex(*(ch + 3)));
-              char temp[3] = {*(ch + 2), *(ch + 3), '\0'};
+              /* string to hex */
               *b++ = strtol(temp, NULL, 16);
-              ch += 4;
             }
-            else
+            /* is oct */
+            else if (is_oct(*ch)){
+              /* save oct */
+              char temp[4] = {*ch};
+              ch++;
+              for (unsigned i = 1; i < 3; i++){
+                if (is_oct(*ch))
+                  temp[i] = *ch++;
+                else
+                  break;
+              }
+              /* string to oct */
+              *b++ = strtol(temp, NULL, 8);
+            }
+            else{
               candy_assert(0);
+            }
           }
           else{
             *b++ = *ch++;

@@ -46,7 +46,7 @@ TEST(vm, annotate){
   candy_object_delete(root);
 }
 
-TEST(vm, print){
+TEST(vm, string){
   candy_object_t root = candy_object_create();
   candy_vm_runcode(root, (char *)
     "print(\"hello world\\n\")\r\n"
@@ -54,16 +54,11 @@ TEST(vm, print){
   candy_vm_runcode(root, (char *)
     "print(\'hello world\\n\')\r\n"
   );
-  candy_object_delete(root);
-}
-
-TEST(vm, oct){
-  candy_object_t root = candy_object_create();
   candy_vm_runcode(root, (char *)
-    "print(\"\\060\\061\\062\\063\")\r\n"
-  );
-  candy_vm_runcode(root, (char *)
-    "print(\"0\\06123\")\r\n"
+    "print(\'\\\"ABCD\')\r\n"/* print('\"') */
+    "print(\'\\\'ABCD\')\r\n"/* print('\'') */
+    "print(\"\\\"ABCD\")\r\n"/* print("\"") */
+    "print(\"\\\'ABCD\")\r\n"/* print("\'") */
   );
   candy_object_delete(root);
 }
@@ -75,6 +70,28 @@ TEST(vm, hex){
   );
   candy_vm_runcode(root, (char *)
     "print(\"0\\x3123\")\r\n"
+  );
+  candy_object_delete(root);
+}
+
+TEST(vm, dec){
+  candy_object_t root = candy_object_create();
+  candy_vm_runcode(root, (char *)
+    "print(\"123\")\r\n"
+  );
+  candy_vm_runcode(root, (char *)
+    "print(\"123.456\")\r\n"
+  );
+  candy_object_delete(root);
+}
+
+TEST(vm, oct){
+  candy_object_t root = candy_object_create();
+  candy_vm_runcode(root, (char *)
+    "print(\"\\061\\062\\063\\141\\142\\143\")\r\n"
+  );
+  candy_vm_runcode(root, (char *)
+    "print(\"01\\0623\")\r\n"
   );
   candy_object_delete(root);
 }
