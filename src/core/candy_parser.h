@@ -21,7 +21,7 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-int candy_parser_gen_ast(candy_object_t root, char *code);
+int candy_parser_gen_ast(candy_object_t root, char * const code);
 
 #ifdef __cplusplus
 }

@@ -42,9 +42,3 @@ int candy_method_type(candy_object_t param){
 
   return 1;
 }
-
-candy_register_t candy_stdlib[] = {
-  {"print", candy_method_print},
-  {"type", candy_method_type},
-  {NULL, NULL},
-};

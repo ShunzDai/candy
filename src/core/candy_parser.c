@@ -63,25 +63,122 @@ static const char *const candy_keyword[] = {
   "continue",
 };
 
-int candy_parser_gen_ast(candy_object_t root, char *code){
+static char *_get_oct(char *dst, char *code){
+  /* save oct */
+  char temp[] = {*code, '\0', '\0', '\0'};
+  /* skip *code */
+  code++;
+  for (unsigned i = 1; i < 3; i++){
+    if (is_oct(*code))
+      temp[i] = *code++;
+    else
+      break;
+  }
+  /* string to oct */
+  *dst = strtol(temp, NULL, 8);
+  return code;
+}
+
+static char *_get_hex(char *dst, char *code){
+  /* check hex char */
+  candy_assert(is_hex(*code) && is_hex(*(code + 1)));
+  /* save hex */
+  char temp[] = {*code, *(code + 1), '\0'};
+  code += 2;
+  /* string to hex */
+  *dst = strtol(temp, NULL, 16);
+  return code;
+}
+
+static char *_get_escape(char *dst, char *code){
+  /* is octal */
+  if (is_oct(*code)){
+    /* string to octal */
+    code = _get_oct(dst, code);
+  }
+  /* is hexadecimal */
+  else if (*code == 'x'){
+    /* skip x */
+    code++;
+    /* string to hexadecimal */
+    code = _get_hex(dst, code);
+  }
+  else{
+    switch (*code){
+      case 'a':   *dst = '\a';   break;
+      case 'b':   *dst = '\b';   break;
+      case 't':   *dst = '\t';   break;
+      case 'n':   *dst = '\n';   break;
+      case 'v':   *dst = '\v';   break;
+      case 'f':   *dst = '\f';   break;
+      case 'r':   *dst = '\r';   break;
+      case '\"':  *dst = '\"';   break;
+      case '\'':  *dst = '\'';   break;
+      case '\\':  *dst = '\\';   break;
+      default:    candy_assert(0);    break;
+    }
+    code++;
+  }
+  return code;
+}
+
+/**
+  * @brief  gets token of type string, like "hello world\n" 'A\tB\tC' "\x41\x42\x43" '\041\042\043'
+  * @param  dst token buffer
+  * @param  code source code, header contains quotes ' or "
+  * @param  size size of string
+  * @retval code's offset after token
+  */
+static char *_get_string(char *dst, char *code, uint32_t *size){
+  char *temp = code;
+  /* check escape */
+  while (*(temp - 1) == '\\' || temp == code){
+    /* find next ' or " */
+    temp = strchr(temp + 1, *code);
+    /* if not found */
+    candy_assert(temp != NULL, string not closed);
+  }
+  /* skip first ' or " */
+  code++;
+  /* store characters up to the last ' or " */
+  while (code < temp){
+    /* is escape */
+    if (*code == '\\'){
+      /* skip \ */
+      code++;
+      code = _get_escape(dst++, code);
+      *size += 1;
+    }
+    else{
+      *dst++ = *code++;
+      *size += 1;
+    }
+  }
+  *dst = '\0';
+  /* skip last ' or " */
+  code++;
+  return code;
+}
+
+int candy_parser_gen_ast(candy_object_t root, char * const code){
   candy_assert(root != NULL);
   candy_assert(code != NULL);
   uint32_t line = 1;
   char buffer[CANDY_PARSER_BUFFER_SIZE] = {0};
-  char *ch = code;
-  char *b = buffer;
-  /* while until *ch == '\0' */
-  while (*ch){
+  char *src = code;
+  char *dst = buffer;
+  /* while until *src == '\0' */
+  while (*src){
     /* ident or keyword */
-    if (is_alpha(*ch) || *ch == '_'){
+    if (is_alpha(*src) || *src == '_'){
       candy_token_type_t type = CANDY_TOKEN_IDENT;
       /* save alpha, or '_' */
-      *b++ = *ch++;
+      *dst++ = *src++;
       /* save alpha, number, or '_' */
-      while (is_dec(*ch) || is_alpha(*ch) || *ch == '_')
-        *b++ = *ch++;
+      while (is_dec(*src) || is_alpha(*src) || *src == '_')
+        *dst++ = *src++;
       /* last char padding '\0' */
-      *b = '\0';
+      *dst = '\0';
       /* check keyword */
       for (unsigned i = 0; i < candy_lengthof(candy_keyword); i++){
         if (strcmp(buffer, candy_keyword[i]) == 0){
@@ -89,178 +186,77 @@ int candy_parser_gen_ast(candy_object_t root, char *code){
           break;
         }
       }
-      printf("[%s]%s, line %d\n", (type == CANDY_TOKEN_IDENT) ? "ident" : "keyword", buffer, line);
+      printf("%s\t\t%s\tline %d\n", (type == CANDY_TOKEN_IDENT) ? "ident" : "keyword", buffer, line);
       /* reset */
-      b = buffer;
+      dst = buffer;
     }
-    else if (is_dec(*ch)){
+    else if (is_dec(*src)){
       uint8_t dot = 0;
-      while (is_dec(*ch)){
-        *b++ = *ch++;
-        if (*ch == '.'){
+      while (is_dec(*src)){
+        *dst++ = *src++;
+        if (*src == '.'){
           dot++;
-          *b++ = *ch++;
+          *dst++ = *src++;
         }
       }
       candy_assert(dot == 1);
-      *b = '\0';
+      *dst = '\0';
       printf("[number]%s, line %d\n", buffer, line);
-      b = buffer;
+      dst = buffer;
     }
     /* if char start with ' or " */
-    else if (*ch == '\'' || *ch == '\"'){
-      const char * const comment = (*ch == '\'') ? "\'\'\'" : "\"\"\"";
+    else if (*src == '\'' || *src == '\"'){
+      const char comment[] = {*src, *src, '\0'};
       /* if is comment */
-      if (strncmp(ch + 1, comment, 2) == 0){
-        ch += 3;
-        char *temp = strstr(ch, comment);
+      if (strncmp(src, comment, 2) == 0){
+        src += 3;
+        char *temp = strstr(src, comment);
         candy_assert(temp != NULL);
-        printf("[comment]%s, line %d\n", comment, line);
-        while (ch < temp){
-          if (*ch == '\n')
+        printf("comment\t%s\tline %d\n", comment, line);
+        while (src < temp){
+          if (*src == '\n')
             line++;
-          ch++;
+          src++;
         }
-        ch += 3;
+        src += 3;
       }
       /* else is const string */
       else{
-        /* find next ' or " */
-        char *temp = strchr(ch + 1, *ch);
-        /* if not found */
-        candy_assert(temp != NULL);
-        /* char check */
-        while (*(temp - 1) == '\\'){
-          /* find next ' or " */
-          temp = strchr(temp + 1, *ch);
-          /* if not found */
-          candy_assert(temp != NULL);
-        }
-        /* skip ' or " */
-        ch++;
-        while (ch < temp){
-          /* is escape */
-          if (*ch == '\\'){
-            ch++;
-            /* is '\a' */
-            if (*ch == 'a'){
-              *b++ = '\a';
-              ch++;
-            }
-            /* is '\b' */
-            else if (*ch == 'b'){
-              *b++ = '\b';
-              ch++;
-            }
-            /* is '\t' */
-            else if (*ch == 't'){
-              *b++ = '\t';
-              ch++;
-            }
-            /* is '\n' */
-            else if (*ch == 'n'){
-              *b++ = '\n';
-              ch++;
-            }
-            /* is '\v' */
-            else if (*ch == 'v'){
-              *b++ = '\v';
-              ch++;
-            }
-            /* is '\f' */
-            else if (*ch == 'f'){
-              *b++ = '\f';
-              ch++;
-            }
-            /* is '\r' */
-            else if (*ch == 'r'){
-              *b++ = '\r';
-              ch++;
-            }
-            /* is '\"' */
-            else if (*ch == '\"'){
-              *b++ = '\"';
-              ch++;
-            }
-            /* is '\'' */
-            else if (*ch == '\''){
-              *b++ = '\'';
-              ch++;
-            }
-            /* is '\\' */
-            else if (*ch == '\\'){
-              *b++ = '\\';
-              ch++;
-            }
-            /* is hex */
-            else if (*ch == 'x'){
-              ch++;
-              /* check hex char */
-              candy_assert(is_hex(*ch) && is_hex(*(ch + 1)));
-              /* save hex */
-              char temp[3] = {*ch, *(ch + 1), '\0'};
-              ch += 2;
-              /* string to hex */
-              *b++ = strtol(temp, NULL, 16);
-            }
-            /* is oct */
-            else if (is_oct(*ch)){
-              /* save oct */
-              char temp[4] = {*ch};
-              ch++;
-              for (unsigned i = 1; i < 3; i++){
-                if (is_oct(*ch))
-                  temp[i] = *ch++;
-                else
-                  break;
-              }
-              /* string to oct */
-              *b++ = strtol(temp, NULL, 8);
-            }
-            else{
-              candy_assert(0);
-            }
-          }
-          else{
-            *b++ = *ch++;
-          }
-        }
-        *b = '\0';
-        ch++;
-        printf("[const]%s, line %d\n", buffer, line);
-        b = buffer;
+        uint32_t size = 0;
+        src = _get_string(buffer, src, &size);
+        printf("const\t\t%s\tline %d\tsize %d\n", buffer, line, size);
       }
     }
     /* line count */
-    else if (*ch == '\n'){
+    else if (*src == '\n'){
       line++;
-      ch++;
+      src++;
     }
-    else if (*ch == '('){
-      printf("[delimiter]'(', line %d\n", line);
-      ch++;
+    else if (*src == '('){
+      printf("delimiter\t%c\tline %d\n", *src, line);
+      src++;
     }
-    else if (*ch == ')'){
-      printf("[delimiter]')', line %d\n", line);
-      ch++;
+    else if (*src == ')'){
+      printf("delimiter\t%c\tline %d\n", *src, line);
+      src++;
     }
-    else if (*ch == '='){
-      printf("[delimiter]'=', line %d\n", line);
-      ch++;
+    else if (*src == '='){
+      printf("delimiter\t%c\tline %d\n", *src, line);
+      src++;
     }
-    else if (*ch == ','){
-      printf("[delimiter]',', line %d\n", line);
-      ch++;
+    else if (*src == ','){
+      printf("delimiter\t%c\tline %d\n", *src, line);
+      src++;
     }
-    else if (*ch == '#'){
-      char *temp = strchr(ch + 1, '\n');
+    else if (*src == '#'){
+      char *temp = strchr(src + 1, '\n');
       candy_assert(temp != NULL);
-      printf("[comment]#, line %d\n", line);
-      ch = temp;
+      printf("comment\t#\tline %d\n", line);
+      src = temp;
     }
     /* skip else, such as '\r', '\t', ' ', et.al. */
     else{
-      ch++;
+      src++;
     }
   }
   return 1;

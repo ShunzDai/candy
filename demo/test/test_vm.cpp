@@ -55,10 +55,10 @@ TEST(vm, string){
     "print(\'hello world\\n\')\r\n"
   );
   candy_vm_runcode(root, (char *)
-    "print(\'\\\"ABCD\')\r\n"/* print('\"') */
-    "print(\'\\\'ABCD\')\r\n"/* print('\'') */
-    "print(\"\\\"ABCD\")\r\n"/* print("\"") */
-    "print(\"\\\'ABCD\")\r\n"/* print("\'") */
+    "print(\'AB\\\"CD\')\r\n"/* print('\"') */
+    "print(\'AB\\\'CD\')\r\n"/* print('\'') */
+    "print(\"AB\\\"CD\")\r\n"/* print("\"") */
+    "print(\"AB\\\'CD\")\r\n"/* print("\'") */
   );
   candy_object_delete(root);
 }
