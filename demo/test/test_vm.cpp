@@ -46,13 +46,30 @@ TEST(vm, annotate){
   candy_object_delete(root);
 }
 
+TEST(vm, number){
+  candy_object_t root = candy_object_create();
+  candy_vm_runcode(root, (char *)
+    "a = True\r\n"
+  );
+  candy_vm_runcode(root, (char *)
+    "a = 114\r\n"
+  );
+  candy_vm_runcode(root, (char *)
+    "a = 3.14\r\n"
+  );
+  candy_vm_runcode(root, (char *)
+    "a = 'ABCD'\r\n"
+  );
+  candy_object_delete(root);
+}
+
 TEST(vm, string){
   candy_object_t root = candy_object_create();
   candy_vm_runcode(root, (char *)
-    "print(\"hello world\\n\")\r\n"
+    "print(\"AB\\nCD\")\r\n"
   );
   candy_vm_runcode(root, (char *)
-    "print(\'hello world\\n\')\r\n"
+    "print(\'AB\\nCD\')\r\n"
   );
   candy_vm_runcode(root, (char *)
     "print(\'AB\\\"CD\')\r\n"/* print('\"') */
@@ -60,10 +77,14 @@ TEST(vm, string){
     "print(\"AB\\\"CD\")\r\n"/* print("\"") */
     "print(\"AB\\\'CD\")\r\n"/* print("\'") */
   );
+  candy_vm_runcode(root, (char *)
+    "a = \"ABCD\"\r\n"
+    "print(a)\r\n"
+  );
   candy_object_delete(root);
 }
 
-TEST(vm, hex){
+TEST(vm, hexstring){
   candy_object_t root = candy_object_create();
   candy_vm_runcode(root, (char *)
     "print(\"\\x30\\x31\\x32\\x33\")\r\n"
@@ -74,7 +95,7 @@ TEST(vm, hex){
   candy_object_delete(root);
 }
 
-TEST(vm, dec){
+TEST(vm, decstring){
   candy_object_t root = candy_object_create();
   candy_vm_runcode(root, (char *)
     "print(\"123\")\r\n"
@@ -85,7 +106,7 @@ TEST(vm, dec){
   candy_object_delete(root);
 }
 
-TEST(vm, oct){
+TEST(vm, octstring){
   candy_object_t root = candy_object_create();
   candy_vm_runcode(root, (char *)
     "print(\"\\061\\062\\063\\141\\142\\143\")\r\n"

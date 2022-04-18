@@ -40,7 +40,7 @@ extern "C"{
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
-#define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __FUNCTION__, __LINE__, #condition " " #__VA_ARGS__))
+#define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __FUNCTION__, __LINE__, #condition ", " #__VA_ARGS__))
 
 typedef enum candy_types{
   CANDY_TYPES_NONE,

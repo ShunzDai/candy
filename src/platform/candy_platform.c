@@ -4,6 +4,6 @@
 #include <stdarg.h>                        //va_start /vsnprintf /va_end function
 
 void candy_platform_assert_error(const char *file, const char *func, int line, char *condition){
-  printf("Assertion failed: %s file %s, func %s, line %d\n", condition, file, func, line);
+  printf("Assertion failed: %s\nfile %s, func %s, line %d\n", condition, file, func, line);
   while (1);
 }
