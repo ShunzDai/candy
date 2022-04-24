@@ -60,6 +60,9 @@ TEST(vm, number){
   candy_vm_runcode(root, (char *)
     "a = 'ABCD'\r\n"
   );
+  candy_vm_runcode(root, (char *)
+    "0123ABCD = 1\r\n"
+  );
   candy_object_delete(root);
 }
 

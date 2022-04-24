@@ -42,7 +42,7 @@ static void candy_object_print_depth(candy_object_t obj, uint32_t depth){
       case CANDY_TYPES_METHOD:
         printf("%p\n", candy_pack_get_method(*temp));
         break;
-      case CANDY_TYPES_QUEUE:
+      case CANDY_TYPES_OBJECT:
         printf("%p\n", candy_pack_get_object(*temp));
         printf("\033[1;35m>>> sub object head\033[0m\n");
         candy_object_print_depth(candy_pack_get_object(*temp), depth + 1);

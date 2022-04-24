@@ -49,7 +49,7 @@ typedef enum candy_types{
   CANDY_TYPES_FLOAT,
   CANDY_TYPES_BOOLEAN,
   CANDY_TYPES_METHOD,
-  CANDY_TYPES_QUEUE,
+  CANDY_TYPES_OBJECT,
   CANDY_TYPES_FLOOR,
 } candy_types_t;
 

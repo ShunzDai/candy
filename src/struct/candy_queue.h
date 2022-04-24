@@ -21,17 +21,21 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-#define CANDY_NODE_BITS_SIZE 12
-#define CANDY_NODE_BITS_TYPE 4
+#define candy_node_common_bits(t) \
+  uint##t##_t type :  4;\
+  uint##t##_t size : 12;
 
-#define candy_node_get_next(key) (&((candy_node_t)(key))->next)
-#define candy_node_get_size(key) (((candy_node_t)(key))->size)
-#define candy_node_get_type(key) ((candy_types_t)((candy_node_t)(key))->type)
+#define candy_node_get_next(node) (&((candy_node_t)(node))->next)
+#define candy_node_get_type(node) (((struct node_public *)((candy_node_t)(node))->pub)->type)
+#define candy_node_get_size(node) (((struct node_public *)((candy_node_t)(node))->pub)->size)
 
 struct candy_node{
   candy_node_t next;
-  uint32_t size : CANDY_NODE_BITS_SIZE;
-  uint32_t type : CANDY_NODE_BITS_TYPE;
+  uint8_t pub[];
+};
+
+struct node_public{
+  candy_node_common_bits(16);
 };
 
 candy_queue_t candy_queue_create(void);
