@@ -17,9 +17,13 @@
 #include "src/struct/candy_object.h"
 #include "src/core/candy_parser.h"
 
-int candy_vm_runcode(candy_object_t root, char *code){
+int candy_vm_runcode(candy_object_t root, char * const code){
   candy_assert(root != NULL);
   candy_assert(code != NULL);
-  candy_parser_gen_ast(root, code);
-  return 1;
+  candy_lexer_t lex = candy_lexer_create(code);
+  candy_pack_t pack = NULL;
+  candy_lexer_get_token(lex, &pack);
+  pack ? candy_pack_delete(pack) : NULL;
+  lex = candy_lexer_delete(lex);
+  return 0;
 }

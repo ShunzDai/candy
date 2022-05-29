@@ -21,27 +21,40 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-candy_pack_t candy_pack_none(char *name);
-candy_pack_t candy_pack_string(char *name, candy_string_t string, uint16_t size);
-candy_pack_t candy_pack_integer(char *name, candy_integer_t value);
-candy_pack_t candy_pack_float(char *name, candy_float_t value);
-candy_pack_t candy_pack_boolean(char *name, candy_boolean_t value);
-candy_pack_t candy_pack_method(char *name, candy_method_t method);
-candy_pack_t candy_pack_object(char *name, candy_object_t object);
+/* pack general methods */
 
-int candy_pack_checkout(candy_pack_t pack, candy_hash_t hash);
+candy_span_t candy_pack_observe(candy_pack_t pack);
+candy_types_t candy_pack_type(candy_pack_t pack);
+bool candy_pack_match(candy_pack_t pack, candy_hash_t hash);
+
+/* pack delete method */
+
+candy_pack_t candy_pack_delete(candy_pack_t pack);
+
+/* pack create methods */
+
 candy_pack_t candy_pack_copy(candy_pack_t pack);
-uint8_t *candy_pack_get_buffer(candy_pack_t pack);
+candy_pack_t candy_pack_none(candy_hash_t hash);
+candy_pack_t candy_pack_string(candy_hash_t hash, candy_string_t string);
+candy_pack_t candy_pack_integer(candy_hash_t hash, candy_integer_t value);
+candy_pack_t candy_pack_float(candy_hash_t hash, candy_float_t value);
+candy_pack_t candy_pack_boolean(candy_hash_t hash, candy_boolean_t value);
+candy_pack_t candy_pack_method(candy_hash_t hash, candy_method_t method);
+candy_pack_t candy_pack_object(candy_hash_t hash, candy_object_t object);
+
+/* pack set methods */
 
 candy_pack_t candy_pack_set_none(candy_pack_t pack);
-candy_pack_t candy_pack_set_string(candy_pack_t pack, candy_string_t string, uint16_t size);
+candy_pack_t candy_pack_set_string(candy_pack_t pack, candy_string_t string);
 candy_pack_t candy_pack_set_integer(candy_pack_t pack, candy_integer_t value);
 candy_pack_t candy_pack_set_float(candy_pack_t pack, candy_float_t value);
 candy_pack_t candy_pack_set_boolean(candy_pack_t pack, candy_boolean_t value);
 candy_pack_t candy_pack_set_method(candy_pack_t pack, candy_method_t method);
 candy_pack_t candy_pack_set_object(candy_pack_t pack, candy_object_t object);
 
-candy_string_t candy_pack_get_string(candy_pack_t pack, uint16_t *size);
+/* pack get methods */
+
+candy_string_t candy_pack_get_string(candy_pack_t pack);
 candy_integer_t candy_pack_get_integer(candy_pack_t pack);
 candy_float_t candy_pack_get_float(candy_pack_t pack);
 candy_boolean_t candy_pack_get_boolean(candy_pack_t pack);

@@ -27,13 +27,13 @@ TEST(object, lifecycle){
 TEST(object, method){
   candy_object_t obj = candy_object_create();
   candy_object_t param = candy_object_create();
-  candy_object_push_object(obj, CANDY_OBJECT_PARAM, param);
-  candy_object_push_method(obj, (char *)"print", candy_method_print);
-  candy_object_push_string(param, (char *)"", (char *)"hello world", strlen("hello world") + 1);
-  candy_object_push_integer(param, (char *)"", 114514);
+  candy_object_push_object(obj, 1, param);
+  candy_object_push_method(obj, 2, candy_method_print);
+  candy_object_push_string(param, 0, (char *)"hello world", strlen("hello world") + 1);
+  candy_object_push_integer(param, 0, 114514);
   candy_object_print(obj);
-  param = candy_object_get_object(obj, candy_time33(CANDY_OBJECT_PARAM));
-  candy_method_t method = candy_object_get_method(obj, candy_time33((char *)"print"));
+  param = candy_object_get_object(obj, 1);
+  candy_method_t method = candy_object_get_method(obj, 2);
   EXPECT_EQ(!(uint64_t)method, (uint64_t)NULL);
   method(param);
   obj = candy_object_delete(obj);

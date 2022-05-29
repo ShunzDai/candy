@@ -3,34 +3,33 @@
 
 int candy_method_print(candy_object_t param){
   candy_assert(param != NULL);
-  candy_pack_t *temp = (candy_pack_t *)candy_node_get_next(param);
-  uint16_t size;
+  candy_pack_t *temp = (candy_pack_t *)candy_get_next(param);
   if (*temp == NULL)
-      return 0;
+      return -1;
   while (temp != NULL){
-    switch (candy_node_get_type(*temp)){
-      case CANDY_TYPES_NONE:
+    switch (candy_pack_type(*temp)){
+      case CANDY_TYPE_NONE:
         printf("None");
         break;
-      case CANDY_TYPES_STRING:
-        printf("%s", candy_pack_get_string(*temp, &size));
+      case CANDY_TYPE_STRING:
+        printf("%s", (char *)candy_pack_get_string(*temp).data);
         break;
-      case CANDY_TYPES_INTEGER:
+      case CANDY_TYPE_INTEGER:
         printf("%ld", candy_pack_get_integer(*temp));
         break;
-      case CANDY_TYPES_FLOAT:
+      case CANDY_TYPE_FLOAT:
         printf("%.5f", candy_pack_get_float(*temp));
         break;
-      case CANDY_TYPES_BOOLEAN:
+      case CANDY_TYPE_BOOLEAN:
         printf("%s", candy_pack_get_boolean(*temp) ? "True" : "False");
         break;
       default:
-        return 0;
+        return -1;
     }
-    temp = (candy_pack_t *)candy_node_get_next(*temp);
+    temp = (candy_pack_t *)candy_get_next(*temp);
     if (*temp == NULL){
       printf("\n");
-      return 0;
+      break;
     }
     printf(" ");
   }
@@ -40,5 +39,5 @@ int candy_method_print(candy_object_t param){
 int candy_method_type(candy_object_t param){
 
 
-  return 1;
+  return 0;
 }

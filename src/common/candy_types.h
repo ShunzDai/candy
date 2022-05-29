@@ -20,6 +20,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -40,22 +41,23 @@ extern "C"{
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
-#define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __FUNCTION__, __LINE__, #condition ", " #__VA_ARGS__))
+#define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __LINE__, __FUNCTION__, #condition " " __VA_ARGS__))
 
 typedef enum candy_types{
-  CANDY_TYPES_NONE,
-  CANDY_TYPES_STRING,
-  CANDY_TYPES_INTEGER,
-  CANDY_TYPES_FLOAT,
-  CANDY_TYPES_BOOLEAN,
-  CANDY_TYPES_METHOD,
-  CANDY_TYPES_OBJECT,
-  CANDY_TYPES_FLOOR,
+  CANDY_TYPE_NONE,
+  CANDY_TYPE_STRING,
+  CANDY_TYPE_INTEGER,
+  CANDY_TYPE_FLOAT,
+  CANDY_TYPE_BOOLEAN,
+  CANDY_TYPE_METHOD,
+  CANDY_TYPE_OBJECT,
+  CANDY_TYPE_FLOOR,
 } candy_types_t;
 
-struct candy_state;
-
-typedef struct candy_state * candy_state_t;
+typedef struct candy_span{
+  const void * const data;
+  const uint32_t size;
+} candy_span_t;
 
 struct candy_node;
 
@@ -69,22 +71,16 @@ struct candy_pack;
 
 typedef struct candy_pack * candy_pack_t;
 
-struct candy_bytecode;
-
-typedef struct candy_bytecode * candy_bytecode_t;
-
-struct candy_block;
-
-typedef struct candy_block * candy_block_t;
-
 typedef candy_queue_t candy_object_t;
 
 typedef uint32_t        candy_hash_t;
-typedef char *          candy_string_t;
+typedef candy_span_t    candy_string_t;
 typedef int64_t         candy_integer_t;
 typedef float           candy_float_t;
 typedef uint8_t         candy_boolean_t;
 typedef int (*candy_method_t)(candy_object_t);
+
+
 
 typedef struct candy_register{
   char *name;
@@ -102,7 +98,7 @@ static const char *const candy_types[] = {
   "unknown"
 };
 
-void candy_platform_assert_error(const char *file, const char *func, int line, char *condition);
+void candy_platform_assert_error(const char *file, int line, const char *func, char *format, ...);
 
 #ifdef __cplusplus
 }

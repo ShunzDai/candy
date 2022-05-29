@@ -38,8 +38,7 @@ int candy_object_register(candy_object_t obj, candy_register_t table[]);
 #define candy_object_push_method(obj, name, method)         candy_object_push(obj, candy_pack_method(name, method))
 #define candy_object_push_object(obj, name, object)         candy_object_push(obj, candy_pack_object(name, object))
 
-uint8_t *candy_object_get_buffer(candy_object_t obj, int32_t pos);
-candy_string_t candy_object_get_string(candy_object_t obj, candy_hash_t hash, uint16_t *size);
+candy_string_t candy_object_get_string(candy_object_t obj, candy_hash_t hash);
 candy_integer_t candy_object_get_integer(candy_object_t obj, candy_hash_t hash);
 candy_float_t candy_object_get_float(candy_object_t obj, candy_hash_t hash);
 candy_method_t candy_object_get_method(candy_object_t obj, candy_hash_t hash);

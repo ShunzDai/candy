@@ -75,7 +75,7 @@ TEST(vm, string){
     "print(\'AB\\nCD\')\r\n"
   );
   candy_vm_runcode(root, (char *)
-    "print(\'AB\\\"CD\')\r\n"/* print('\"') */
+    "print(\'AB\\\"CD\')\r\n"/* print('"') */
     "print(\'AB\\\'CD\')\r\n"/* print('\'') */
     "print(\"AB\\\"CD\")\r\n"/* print("\"") */
     "print(\"AB\\\'CD\")\r\n"/* print("\'") */

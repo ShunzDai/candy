@@ -1,5 +1,9 @@
-set(BINARY ${CMAKE_PROJECT_NAME}_demo)
-file(GLOB_RECURSE SOURCES LIST_DIRECTORIES false *.h *.cpp *.c)
-add_executable(${BINARY} ${SOURCES})
+file(GLOB_RECURSE SOURCES_TEST LIST_DIRECTORIES false
+  test_main.cpp
+  #test_queue.cpp
+  test_parser.cpp
+)
 
-target_link_libraries(${BINARY} PUBLIC -Wl,--whole-archive  ${CMAKE_PROJECT_NAME}_core -Wl,--no-whole-archive gtest)
+add_executable(${CMAKE_PROJECT_NAME}_test ${SOURCES_TEST})
+
+target_link_libraries(${CMAKE_PROJECT_NAME}_test PUBLIC ${CMAKE_PROJECT_NAME}_core gtest)
