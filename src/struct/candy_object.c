@@ -15,104 +15,173 @@
   */
 #include "candy_object.h"
 #include "src/common/candy_lib.h"
+#include "src/struct/candy_wrap.h"
+#include "src/struct/candy_queue.h"
 
-static void candy_object_print_depth(candy_object_t obj, uint32_t depth){
-  candy_pack_t *temp = (candy_pack_t *)candy_get_next(obj);
+static const char * const _wraps_string[] = {
+  "none",
+  "integer",
+  "float",
+  "boolean",
+  "string",
+  "method",
+  "object",
+  "unknown"
+};
+
+static inline candy_queue_t _object_queue(candy_object_t obj){
+  return (candy_queue_t)candy_wrap_expand(obj).data;
+}
+
+static void _print_depth(candy_queue_t queue, uint32_t depth){
+  candy_wrap_t temp = (candy_wrap_t)queue->next;
   uint32_t count = 0;
+  char offset[depth + 1];
+  memset(offset, '\t', depth);
+  offset[depth] = '\0';
+  printf("%s\033[1;35m>>> %sobject head\033[0m\n", offset, depth ? "sub " : "");
+  printf("%sdepth-pos\taddress\t\ttype\tvalue\n", offset);
   while (temp != NULL){
-    if (*temp == NULL)
-      break;
-    printf("[%d-%d]\t\t%p\t%s\t", depth, count, *temp, candy_types[candy_pack_type(*temp) < CANDY_TYPE_FLOOR ? candy_pack_type(*temp) : CANDY_TYPE_FLOOR]);
-    switch (candy_pack_type(*temp)){
-      case CANDY_TYPE_NONE:
+    printf("%s[%d-%d]\t\t%p\t%s\t", offset, depth, count, temp, _wraps_string[candy_wrap_type(temp) < CANDY_WRAP_MAX ? candy_wrap_type(temp) : CANDY_WRAP_MAX]);
+    switch (candy_wrap_type(temp)){
+      case CANDY_WRAP_NONE:
         printf("\n");
         break;
-      case CANDY_TYPE_STRING:
-        printf("%s\n", (char *)candy_pack_get_string(*temp).data);
+      case CANDY_WRAP_STRING:
+        printf("%s\n", (char *)candy_wrap_get_string(temp).data);
         break;
-      case CANDY_TYPE_INTEGER:
-        printf("%ld\n", candy_pack_get_integer(*temp));
+      case CANDY_WRAP_INTEGER:
+        printf("%ld\n", candy_wrap_get_integer(temp));
         break;
-      case CANDY_TYPE_FLOAT:
-        printf("%.5f\n", candy_pack_get_float(*temp));
+      case CANDY_WRAP_FLOAT:
+        printf("%.5f\n", candy_wrap_get_float(temp));
         break;
-      case CANDY_TYPE_BOOLEAN:
-        printf("%s\n", candy_pack_get_boolean(*temp) ? "True" : "False");
+      case CANDY_WRAP_BOOLEAN:
+        printf("%s\n", candy_wrap_get_boolean(temp) ? "True" : "False");
         break;
-      case CANDY_TYPE_METHOD:
-        printf("%p\n", candy_pack_get_method(*temp));
+      case CANDY_WRAP_METHOD:
+        printf("%p\n", candy_wrap_get_method(temp));
         break;
-      case CANDY_TYPE_OBJECT:
-        printf("%p\n", candy_pack_get_object(*temp));
-        printf("\033[1;35m>>> sub object head\033[0m\n");
-        candy_object_print_depth(candy_pack_get_object(*temp), depth + 1);
-        printf("\033[1;35m<<< sub object tail\033[0m\n");
+      case CANDY_WRAP_OBJECT:
+        printf("%p\n", temp);
+        _print_depth(_object_queue(temp), depth + 1);
         break;
       default:
         printf("exception types\n");
         break;
     }
     count++;
-    temp = (candy_pack_t *)candy_get_next(*temp);
+    temp = temp->next;
   }
-  printf("depth: %d, count(s): %d\n", depth, count);
+  printf("%sdepth: %d, count(s): %d\n",offset, depth, count);
+  printf("%s\033[1;35m<<< %sobject tail\033[0m\n", offset, depth ? "sub " : "");
 }
 
 void candy_object_print(candy_object_t obj){
   candy_assert(obj != NULL);
-  printf("depth-pos\taddress\t\ttype\tvalue\n");
-  printf("\033[1;35m>>> object head\033[0m\n");
-  candy_object_print_depth(obj, 0);
-  printf("\033[1;35m<<< object tail\033[0m\n");
+  _print_depth(_object_queue(obj), 0);
 }
 
-candy_pack_t *candy_object_search(candy_object_t obj, candy_hash_t hash){
+candy_wrap_t *candy_object_search(candy_object_t obj, candy_hash_t hash){
   candy_assert(obj != NULL);
-  candy_pack_t *temp = (candy_pack_t *)candy_get_next(obj);
+  candy_wrap_t *temp = (candy_wrap_t *)&_object_queue(obj)->next;
   while (temp != NULL){
     if (*temp == NULL)
-      return NULL;
-    else if (candy_pack_match(*temp, hash))
+      return temp;
+    else if (candy_wrap_match(*temp, hash))
       break;
-    temp = (candy_pack_t *)candy_get_next(*temp);
+    temp = &(*temp)->next;
   }
   return temp;
 }
 
-int candy_object_register(candy_object_t obj, candy_register_t table[]){
+// int candy_object_register(candy_object_t obj, candy_register_t table[]){
+//   candy_assert(obj != NULL);
+//   candy_assert(table != NULL);
+//   for (; table->name != NULL && table->method != NULL; table++)
+//     candy_object_push_method(obj, candy_time33(table->name), table->method);
+//   return 0;
+// }
+
+candy_object_t candy_object_create(candy_hash_t hash){
+  return candy_wrap_meta(hash, (candy_span_t){NULL, candy_queue_size()}, CANDY_WRAP_OBJECT);
+}
+
+candy_object_t candy_object_delete(candy_object_t obj){
+  if (candy_wrap_type(obj) == CANDY_WRAP_OBJECT){
+    candy_queue_clear(_object_queue(obj), (candy_destroy_t)candy_object_delete);
+    candy_assert(*(candy_queue_t *)candy_wrap_expand(obj).data == NULL);
+  }
+  return (candy_object_t)candy_wrap_delete((candy_wrap_t)obj);
+}
+
+int candy_object_push(candy_object_t obj, candy_wrap_t wrap){
   candy_assert(obj != NULL);
-  candy_assert(table != NULL);
-  for (; table->name != NULL && table->method != NULL; table++)
-    candy_object_push_method(obj, candy_time33(table->name), table->method);
+  candy_assert(candy_wrap_type(obj) == CANDY_WRAP_OBJECT);
+  return candy_enqueue(_object_queue(obj), 0, (candy_node_t)wrap);
+}
+
+int candy_object_push_none(candy_object_t obj, candy_hash_t hash){
+  return candy_object_push(obj, candy_wrap_none(hash));
+}
+
+int candy_object_push_integer(candy_object_t obj, candy_hash_t hash, candy_integer_t value){
+  return candy_object_push(obj, candy_wrap_integer(hash, value));
+}
+
+int candy_object_push_float(candy_object_t obj, candy_hash_t hash, candy_float_t value){
+  return candy_object_push(obj, candy_wrap_float(hash, value));
+}
+
+int candy_object_push_method(candy_object_t obj, candy_hash_t hash, candy_method_t value){
+  return candy_object_push(obj, candy_wrap_method(hash, value));
+}
+
+int candy_object_push_string(candy_object_t obj, candy_hash_t hash, candy_string_t value){
+  return candy_object_push(obj, candy_wrap_string(hash, value));
+}
+
+int candy_object_push_object(candy_object_t obj, candy_hash_t hash){
+  return candy_object_push(obj, candy_object_create(hash));
+}
+
+int candy_object_pop(candy_object_t obj, candy_hash_t hash){
+  candy_assert(obj != NULL);
+  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  if (wrap == NULL)
+    return -1;
+  candy_wrap_t del = *wrap;
+  *wrap = (*wrap)->next;
+  candy_object_delete(del);
   return 0;
 }
 
 candy_string_t candy_object_get_string(candy_object_t obj, candy_hash_t hash){
   candy_assert(obj != NULL);
-  candy_pack_t *pack = candy_object_search(obj, hash);
-  return (pack == NULL) ? (candy_string_t){NULL, 0} : candy_pack_get_string(*pack);
+  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  return (wrap == NULL) ? (candy_string_t){NULL, 0} : candy_wrap_get_string(*wrap);
 }
 
 candy_integer_t candy_object_get_integer(candy_object_t obj, candy_hash_t hash){
   candy_assert(obj != NULL);
-  candy_pack_t *pack = candy_object_search(obj, hash);
-  return (pack == NULL) ? 0 : candy_pack_get_integer(*pack);
+  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  return (wrap == NULL) ? 0 : candy_wrap_get_integer(*wrap);
 }
 
 candy_float_t candy_object_get_float(candy_object_t obj, candy_hash_t hash){
   candy_assert(obj != NULL);
-  candy_pack_t *pack = candy_object_search(obj, hash);
-  return (pack == NULL) ? 0.0f : candy_pack_get_float(*pack);
+  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  return (wrap == NULL) ? 0.0f : candy_wrap_get_float(*wrap);
 }
 
 candy_method_t candy_object_get_method(candy_object_t obj, candy_hash_t hash){
   candy_assert(obj != NULL);
-  candy_pack_t *pack = candy_object_search(obj, hash);
-  return (pack == NULL) ? NULL : candy_pack_get_method(*pack);
+  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  return (wrap == NULL) ? NULL : candy_wrap_get_method(*wrap);
 }
 
 candy_object_t candy_object_get_object(candy_object_t obj, candy_hash_t hash){
   candy_assert(obj != NULL);
-  candy_pack_t *pack = candy_object_search(obj, hash);
-  return (pack == NULL) ? NULL : candy_pack_get_object(*pack);
+  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  return (wrap == NULL) ? NULL : *wrap;
 }

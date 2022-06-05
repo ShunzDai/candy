@@ -15,7 +15,7 @@
   */
 #include "candy_parser.h"
 #include "src/platform/candy_memory.h"
-#include "src/struct/candy_pack.h"
+#include "src/struct/candy_wrap.h"
 #include "candy_config.h"
 #include <stdlib.h>
 
@@ -49,27 +49,6 @@ static const char *const _candy_keyword[] = {
   "break",
   "continue",
 };
-
-static char *_get_ident_or_keyword(char *code, char *buff, candy_token_type_t *type){
-  char *src = code;
-  char *dst = buff;
-  /* save alpha, or '_' */
-  *dst++ = *src++;
-  /* save number， alpha, or '_' */
-  while (_is_dec(*src) || _is_alpha(*src) || *src == '_')
-    *dst++ = *src++;
-  /* last char padding '\0' */
-  *dst = '\0';
-  /* check keyword */
-  *type = CANDY_TOKEN_IDENT;
-  for (unsigned i = 0; i < candy_lengthof(_candy_keyword); i++){
-    if (strcmp(buff, _candy_keyword[i]) == 0){
-      *type = (candy_token_type_t)i;
-      break;
-    }
-  }
-  return src;
-}
 
 /**
   * @brief  gets hexadecimal escape character, like
@@ -126,7 +105,7 @@ static char _read_oct(candy_lexer_t lex){
 static int _read_string(candy_lexer_t lex, char * buff, bool multiline){
   candy_assert(buff != NULL, "buffer is null");
   const char del = *lex->curr;
-  char *tail = buff;
+  char *dst = buff;
   /* skip first " or ' */
   lex->curr++;
   while (*lex->curr != del){
@@ -139,43 +118,43 @@ static int _read_string(candy_lexer_t lex, char * buff, bool multiline){
           candy_assert(0, "while scanning string literal");
           return -1;
         }
-        *tail++ = *lex->curr++;
+        *dst++ = *lex->curr++;
         lex->line++;
         break;
       case '\\':
         lex->curr++;
         switch (*lex->curr){
-          case         'a': lex->curr++; *tail++ =           '\a'; break;
-          case         'b': lex->curr++; *tail++ =           '\b'; break;
-          case         't': lex->curr++; *tail++ =           '\t'; break;
-          case         'n': lex->curr++; *tail++ =           '\n'; break;
-          case         'v': lex->curr++; *tail++ =           '\v'; break;
-          case         'f': lex->curr++; *tail++ =           '\f'; break;
-          case         'r': lex->curr++; *tail++ =           '\r'; break;
-          case        '\\': lex->curr++; *tail++ =           '\\'; break;
-          case        '\'': lex->curr++; *tail++ =           '\''; break;
-          case         '"': lex->curr++; *tail++ =            '"'; break;
-          case         'x': lex->curr++; *tail++ = _read_hex(lex); break;
-          case '0' ... '7':              *tail++ = _read_oct(lex); break;
+          case         'a': lex->curr++; *dst++ =           '\a'; break;
+          case         'b': lex->curr++; *dst++ =           '\b'; break;
+          case         't': lex->curr++; *dst++ =           '\t'; break;
+          case         'n': lex->curr++; *dst++ =           '\n'; break;
+          case         'v': lex->curr++; *dst++ =           '\v'; break;
+          case         'f': lex->curr++; *dst++ =           '\f'; break;
+          case         'r': lex->curr++; *dst++ =           '\r'; break;
+          case        '\\': lex->curr++; *dst++ =           '\\'; break;
+          case        '\'': lex->curr++; *dst++ =           '\''; break;
+          case         '"': lex->curr++; *dst++ =            '"'; break;
+          case         'x': lex->curr++; *dst++ = _read_hex(lex); break;
+          case '0' ... '7':              *dst++ = _read_oct(lex); break;
           /* TODO: support unicode */
           default:
             /* is not escape */
             //printf("unknown escape sequence: '\\%c'\n", *lex->curr);
-            *tail++ = '\\';
-            *tail++ = *lex->curr++;
+            *dst++ = '\\';
+            *dst++ = *lex->curr++;
             break;
         }
         break;
       /* normal character */
       default:
-        *tail++ = *lex->curr++;
+        *dst++ = *lex->curr++;
         break;
     }
   }
-  *tail = '\0';
+  *dst = '\0';
   /* skip last " or ' */
   lex->curr++;
-  return tail - buff;
+  return dst - buff;
 }
 
 /**
@@ -186,13 +165,12 @@ static int _read_string(candy_lexer_t lex, char * buff, bool multiline){
   * @retval comment string length, not include '\0'
   */
 static int _read_singleline_comment(candy_lexer_t lex, char *buff){
-  char *head = lex->curr;
-  char *tail = strchr(head, '\n');
+  char *tail = strchr(lex->curr, '\n');
   candy_assert(tail != NULL, "comment not closed");
   /* store */
-  int len = tail - head - 1;
+  int len = tail - lex->curr - 1;
   if(buff != NULL){
-    strncpy(buff, head + 1, len);
+    strncpy(buff, lex->curr + 1, len);
     buff[len] = '\0';
   }
   /* skip '\n' */
@@ -212,8 +190,7 @@ static int _read_singleline_comment(candy_lexer_t lex, char *buff){
   * @param  buff store buffer, can be NULL(will not store string to the buffer)
   * @retval comment string length
   */
-static int _read_multiline_comment(candy_lexer_t lex, char * buff){
-  const char del[] = {lex->curr[0], lex->curr[1], lex->curr[2], '\0'};
+static int _read_multiline_comment(candy_lexer_t lex, char *buff){
   int len = 0;
   if (buff){
     lex->curr += 2;
@@ -221,6 +198,7 @@ static int _read_multiline_comment(candy_lexer_t lex, char * buff){
     lex->curr += 2;
   }
   else{
+    const char del[] = {lex->curr[0], lex->curr[1], lex->curr[2], '\0'};
     lex->curr += 3;
     char *tail = strstr(lex->curr, del);
     candy_assert(tail != NULL, "comment not closed");
@@ -232,6 +210,23 @@ static int _read_multiline_comment(candy_lexer_t lex, char * buff){
     lex->curr += 3;
   }
   return len;
+}
+
+static candy_token_type_t _get_ident_or_keyword(candy_lexer_t lex, char *buff){
+  char *dst = buff;
+  /* save alpha, or '_' */
+  *dst++ = *lex->curr++;
+  /* save number,  alpha, or '_' */
+  while (_is_dec(*lex->curr) || _is_alpha(*lex->curr) || *lex->curr == '_')
+    *dst++ = *lex->curr++;
+  /* last char padding '\0' */
+  *dst = '\0';
+  /* check keyword */
+  for (unsigned i = 0; i < candy_lengthof(_candy_keyword); i++){
+    if (strcmp(buff, _candy_keyword[i]) == 0)
+      return (candy_token_type_t)i;
+  }
+  return CANDY_TOKEN_IDENT;
 }
 
 candy_lexer_t candy_lexer_create(char *code){
@@ -247,7 +242,7 @@ candy_lexer_t candy_lexer_delete(candy_lexer_t lex){
   return NULL;
 }
 
-candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_pack_t *pack){
+candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_wrap_t *wrap){
   candy_assert(lex != NULL);
   char buffer[CANDY_PARSER_BUFFER_SIZE] = {0};
   int len = 0;
@@ -300,7 +295,7 @@ candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_pack_t *pack){
           printf("multiline comment\tline %d\n", lex->line);
           len = _read_multiline_comment(lex, buffer);
           printf("buff = '%s', len = %d\n", buffer, len);
-          *pack = candy_pack_string(0, (candy_string_t){buffer, len});
+          *wrap = candy_wrap_string(0, (candy_string_t){buffer, len});
           return CANDY_TOKEN_NULL;
         }
         /* is const string */
@@ -308,15 +303,16 @@ candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_pack_t *pack){
           printf("string\tline %d\n", lex->line);
           len = _read_string(lex, buffer, false);
           printf("buff = '%s', len = %d\n", buffer, len);
-          *pack = candy_pack_string(0, (candy_string_t){buffer, len});
+          *wrap = candy_wrap_string(0, (candy_string_t){buffer, len});
           return CANDY_TOKEN_CONST_STRING;
         }
         break;
       default:
+        if (_is_alpha(*lex->curr) || *lex->curr == '_')
+          return _get_ident_or_keyword(lex, buffer);
         candy_assert(0, "unexpected char");
         break;
     }
-
   }
   return CANDY_TOKEN_NULL;
 }

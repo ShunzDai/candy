@@ -21,12 +21,12 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-int candy_method_print(candy_object_t param);
-int candy_method_type(candy_object_t param);
+int candy_std_print(candy_object_t param);
+int candy_std_type(candy_object_t param);
 
 static const candy_register_t candy_stdlib[] = {
-  {(char *)"print", candy_method_print},
-  {(char *)"type", candy_method_type},
+  {(char *)"print", candy_std_print},
+  {(char *)"type", candy_std_type},
   {NULL, NULL},
 };
 

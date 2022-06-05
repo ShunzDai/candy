@@ -15,18 +15,17 @@
   */
 #include "gtest/gtest.h"
 #include "src/common/candy_lib.h"
-#include "src/struct/candy_object.h"
-#include "src/method/candy_standard.h"
+#include "src/struct/candy_wrap.h"
 #include "src/core/candy_parser.h"
 
 #define TEST_LEXER(name, type, in, out)\
 TEST(lexer, name){\
   candy_lexer_t lex = candy_lexer_create((char *)in);\
-  candy_pack_t pack = NULL;\
+  candy_wrap_t pack = NULL;\
   EXPECT_EQ(candy_lexer_get_token(lex, &pack), type);\
   if (pack != NULL){\
-    EXPECT_EQ(strncmp((char *)candy_pack_get_string(pack).data, out, candy_pack_get_string(pack).size), 0);\
-    pack = candy_pack_delete(pack);\
+    EXPECT_EQ(strncmp((char *)candy_wrap_get_string(pack).data, out, candy_wrap_get_string(pack).size), 0);\
+    pack = candy_wrap_delete(pack);\
   }\
   lex = candy_lexer_delete(lex);\
 }
@@ -94,3 +93,18 @@ TEST_LEXER(string_oct, CANDY_TOKEN_CONST_STRING,
   "\"\\150\\145\\154\\154\\157\\40\\167\\157\\162\\154\\144\"",/* "\x68\x65\x6C\x6C\x6F\x20\x77\x6F\x72\x6C\x64" */
   "hello world"
 );
+
+TEST(lexer, name){
+  candy_lexer_t lex = candy_lexer_create((char *)
+    "str = \"hello world\""
+  );
+  candy_wrap_t pack = NULL;
+  EXPECT_EQ(candy_lexer_get_token(lex, &pack), CANDY_TOKEN_IDENT);
+  EXPECT_EQ(candy_lexer_get_token(lex, &pack), CANDY_TOKEN_OPERATOR_ASSIGN);
+  EXPECT_EQ(candy_lexer_get_token(lex, &pack), CANDY_TOKEN_CONST_STRING);
+  if (pack != NULL){
+    EXPECT_EQ(strncmp((char *)candy_wrap_get_string(pack).data, "hello world", candy_wrap_get_string(pack).size), 0);
+    pack = candy_wrap_delete(pack);
+  }
+  lex = candy_lexer_delete(lex);
+}

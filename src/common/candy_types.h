@@ -43,20 +43,9 @@ extern "C"{
 
 #define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __LINE__, __FUNCTION__, #condition " " __VA_ARGS__))
 
-typedef enum candy_types{
-  CANDY_TYPE_NONE,
-  CANDY_TYPE_STRING,
-  CANDY_TYPE_INTEGER,
-  CANDY_TYPE_FLOAT,
-  CANDY_TYPE_BOOLEAN,
-  CANDY_TYPE_METHOD,
-  CANDY_TYPE_OBJECT,
-  CANDY_TYPE_FLOOR,
-} candy_types_t;
-
 typedef struct candy_span{
-  const void * const data;
-  const uint32_t size;
+  void *data;
+  uint32_t size;
 } candy_span_t;
 
 struct candy_node;
@@ -67,11 +56,11 @@ struct candy_queue;
 
 typedef struct candy_queue * candy_queue_t;
 
-struct candy_pack;
+struct candy_wrap;
 
-typedef struct candy_pack * candy_pack_t;
+typedef struct candy_wrap * candy_wrap_t;
 
-typedef candy_queue_t candy_object_t;
+typedef candy_wrap_t candy_object_t;
 
 typedef uint32_t        candy_hash_t;
 typedef candy_span_t    candy_string_t;
@@ -80,23 +69,12 @@ typedef float           candy_float_t;
 typedef uint8_t         candy_boolean_t;
 typedef int (*candy_method_t)(candy_object_t);
 
-
+typedef candy_node_t (*candy_destroy_t)(candy_node_t node);
 
 typedef struct candy_register{
   char *name;
   candy_method_t method;
 } candy_register_t;
-
-static const char *const candy_types[] = {
-  "none",
-  "string",
-  "integer",
-  "float",
-  "bool",
-  "method",
-  "object",
-  "unknown"
-};
 
 void candy_platform_assert_error(const char *file, int line, const char *func, char *format, ...);
 

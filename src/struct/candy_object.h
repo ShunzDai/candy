@@ -20,23 +20,24 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/common/candy_types.h"
-#include "src/struct/candy_queue.h"
-#include "src/struct/candy_pack.h"
-
-#define candy_object_create() candy_queue_create()
-#define candy_object_delete(obj) candy_queue_delete((candy_queue_t)(obj))
 
 void candy_object_print(candy_object_t obj);
-candy_pack_t *candy_object_search(candy_object_t obj, candy_hash_t hash);
+candy_wrap_t *candy_object_search(candy_object_t obj, candy_hash_t hash);
 int candy_object_register(candy_object_t obj, candy_register_t table[]);
 
-#define candy_object_push(obj, node)                        candy_enqueue((obj), -1, (candy_node_t)(node))
-#define candy_object_push_none(obj, name)                   candy_object_push(obj, candy_pack_none(name))
-#define candy_object_push_string(obj, name, string, size)   candy_object_push(obj, candy_pack_string(name, string, size))
-#define candy_object_push_integer(obj, name, value)         candy_object_push(obj, candy_pack_integer(name, value))
-#define candy_object_push_float(obj, name, value)           candy_object_push(obj, candy_pack_float(name, value))
-#define candy_object_push_method(obj, name, method)         candy_object_push(obj, candy_pack_method(name, method))
-#define candy_object_push_object(obj, name, object)         candy_object_push(obj, candy_pack_object(name, object))
+candy_object_t candy_object_create(candy_hash_t hash);
+
+candy_object_t candy_object_delete(candy_object_t obj);
+
+int candy_object_push(candy_object_t obj, candy_wrap_t wrap);
+int candy_object_push_none(candy_object_t obj, candy_hash_t hash);
+int candy_object_push_integer(candy_object_t obj, candy_hash_t hash, candy_integer_t value);
+int candy_object_push_float(candy_object_t obj, candy_hash_t hash, candy_float_t value);
+int candy_object_push_method(candy_object_t obj, candy_hash_t hash, candy_method_t value);
+int candy_object_push_string(candy_object_t obj, candy_hash_t hash, candy_string_t value);
+int candy_object_push_object(candy_object_t obj, candy_hash_t hash);
+
+int candy_object_pop(candy_object_t obj, candy_hash_t hash);
 
 candy_string_t candy_object_get_string(candy_object_t obj, candy_hash_t hash);
 candy_integer_t candy_object_get_integer(candy_object_t obj, candy_hash_t hash);

@@ -22,9 +22,9 @@ extern "C"{
 #include "src/common/candy_types.h"
 
 typedef enum candy_token_type{
-  CANDY_TOKEN_NULL,
+  CANDY_TOKEN_NULL = -2,
   CANDY_TOKEN_ERROR,
-  CANDY_TOKEN_KEYWORD_FALSE,
+  CANDY_TOKEN_KEYWORD_FALSE = 0,
   CANDY_TOKEN_KEYWORD_TRUE,
   CANDY_TOKEN_KEYWORD_AND,
   CANDY_TOKEN_KEYWORD_OR,
@@ -65,7 +65,7 @@ typedef struct candy_lexer * candy_lexer_t;
 candy_lexer_t candy_lexer_create(char * code);
 candy_lexer_t candy_lexer_delete(candy_lexer_t lex);
 
-candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_pack_t *pack);
+candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_wrap_t *wrap);
 
 #ifdef __cplusplus
 }
