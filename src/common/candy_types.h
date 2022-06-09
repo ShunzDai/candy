@@ -44,8 +44,8 @@ extern "C"{
 #define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __LINE__, __FUNCTION__, #condition " " __VA_ARGS__))
 
 typedef struct candy_span{
-  void *data;
-  uint32_t size;
+  const void * const data;
+  const uint32_t size;
 } candy_span_t;
 
 struct candy_node;

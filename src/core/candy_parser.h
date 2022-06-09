@@ -62,7 +62,7 @@ struct candy_lexer;
 
 typedef struct candy_lexer * candy_lexer_t;
 
-candy_lexer_t candy_lexer_create(char * code);
+candy_lexer_t candy_lexer_create(char code[]);
 candy_lexer_t candy_lexer_delete(candy_lexer_t lex);
 
 candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_wrap_t *wrap);

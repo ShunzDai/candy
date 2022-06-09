@@ -29,47 +29,22 @@ static const char * const _wraps_string[] = {
   "unknown"
 };
 
-static inline candy_queue_t _object_queue(candy_object_t obj){
+static inline candy_queue_t _private(candy_object_t obj){
   return (candy_queue_t)candy_wrap_expand(obj).data;
 }
 
-static void _print_depth(candy_queue_t queue, uint32_t depth){
-  candy_wrap_t temp = (candy_wrap_t)queue->next;
+static void _print_with_depth(candy_object_t obj, uint32_t depth){
+  candy_wrap_t temp = (candy_wrap_t)_private(obj)->next;
   uint32_t count = 0;
   char offset[depth + 1];
   memset(offset, '\t', depth);
   offset[depth] = '\0';
   printf("%s\033[1;35m>>> %sobject head\033[0m\n", offset, depth ? "sub " : "");
-  printf("%sdepth-pos\taddress\t\ttype\tvalue\n", offset);
+  printf("%sdepth-pos\taddress\t\ttype\tsize\tvalue\n", offset);
   while (temp != NULL){
-    printf("%s[%d-%d]\t\t%p\t%s\t", offset, depth, count, temp, _wraps_string[candy_wrap_type(temp) < CANDY_WRAP_MAX ? candy_wrap_type(temp) : CANDY_WRAP_MAX]);
-    switch (candy_wrap_type(temp)){
-      case CANDY_WRAP_NONE:
-        printf("\n");
-        break;
-      case CANDY_WRAP_STRING:
-        printf("%s\n", (char *)candy_wrap_get_string(temp).data);
-        break;
-      case CANDY_WRAP_INTEGER:
-        printf("%ld\n", candy_wrap_get_integer(temp));
-        break;
-      case CANDY_WRAP_FLOAT:
-        printf("%.5f\n", candy_wrap_get_float(temp));
-        break;
-      case CANDY_WRAP_BOOLEAN:
-        printf("%s\n", candy_wrap_get_boolean(temp) ? "True" : "False");
-        break;
-      case CANDY_WRAP_METHOD:
-        printf("%p\n", candy_wrap_get_method(temp));
-        break;
-      case CANDY_WRAP_OBJECT:
-        printf("%p\n", temp);
-        _print_depth(_object_queue(temp), depth + 1);
-        break;
-      default:
-        printf("exception types\n");
-        break;
-    }
+    printf("%s[%d-%d]\t\t%p\t%s\t%d\t", offset, depth, count, temp, _wraps_string[candy_wrap_type(temp) < CANDY_WRAP_MAX ? candy_wrap_type(temp) : CANDY_WRAP_MAX], candy_wrap_expand(temp).size);
+    if (candy_wrap_print(temp) == CANDY_WRAP_OBJECT)
+      _print_with_depth(temp, depth + 1);
     count++;
     temp = temp->next;
   }
@@ -77,14 +52,15 @@ static void _print_depth(candy_queue_t queue, uint32_t depth){
   printf("%s\033[1;35m<<< %sobject tail\033[0m\n", offset, depth ? "sub " : "");
 }
 
-void candy_object_print(candy_object_t obj){
+int candy_object_print(candy_object_t obj){
   candy_assert(obj != NULL);
-  _print_depth(_object_queue(obj), 0);
+  _print_with_depth(obj, 0);
+  return 0;
 }
 
 candy_wrap_t *candy_object_search(candy_object_t obj, candy_hash_t hash){
   candy_assert(obj != NULL);
-  candy_wrap_t *temp = (candy_wrap_t *)&_object_queue(obj)->next;
+  candy_wrap_t *temp = (candy_wrap_t *)&_private(obj)->next;
   while (temp != NULL){
     if (*temp == NULL)
       return temp;
@@ -109,7 +85,7 @@ candy_object_t candy_object_create(candy_hash_t hash){
 
 candy_object_t candy_object_delete(candy_object_t obj){
   if (candy_wrap_type(obj) == CANDY_WRAP_OBJECT){
-    candy_queue_clear(_object_queue(obj), (candy_destroy_t)candy_object_delete);
+    candy_queue_clear(_private(obj), (candy_destroy_t)candy_object_delete);
     candy_assert(*(candy_queue_t *)candy_wrap_expand(obj).data == NULL);
   }
   return (candy_object_t)candy_wrap_delete((candy_wrap_t)obj);
@@ -118,7 +94,7 @@ candy_object_t candy_object_delete(candy_object_t obj){
 int candy_object_push(candy_object_t obj, candy_wrap_t wrap){
   candy_assert(obj != NULL);
   candy_assert(candy_wrap_type(obj) == CANDY_WRAP_OBJECT);
-  return candy_enqueue(_object_queue(obj), 0, (candy_node_t)wrap);
+  return candy_enqueue(_private(obj), 0, (candy_node_t)wrap);
 }
 
 int candy_object_push_none(candy_object_t obj, candy_hash_t hash){

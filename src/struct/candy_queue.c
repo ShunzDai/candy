@@ -24,19 +24,18 @@ static inline priv_t _private(candy_queue_t queue){
   return (priv_t)(((struct {candy_node_t next; uint8_t args[];} *)queue)->args);
 }
 
-candy_queue_t candy_queue_create(void){
-  candy_queue_t queue = (candy_queue_t)candy_malloc(sizeof(struct candy_queue) + sizeof(struct priv));
-  queue->next = NULL;
-  _private(queue)->count = 0;
-  return queue;
+inline uint16_t candy_queue_size(void){
+  return sizeof(struct candy_queue) + sizeof(struct priv);
 }
 
-candy_queue_t candy_queue_delete(candy_queue_t queue, candy_destroy_t func){
-  if (queue != NULL){
-    candy_queue_clear(queue, func);
-    candy_free(queue);
-  }
-  return NULL;
+inline bool candy_queue_empty(candy_queue_t queue){
+  candy_assert(queue != NULL);
+  return (queue->next == NULL);
+}
+
+inline uint32_t candy_queue_count(candy_queue_t queue){
+  candy_assert(queue != NULL);
+  return _private(queue)->count;
 }
 
 candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t pos){
@@ -53,25 +52,26 @@ candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t pos){
   return temp;
 }
 
-uint32_t candy_queue_count(candy_queue_t queue){
-  candy_assert(queue != NULL);
-  return _private(queue)->count;
-}
-
-uint16_t candy_queue_size(void){
-  return sizeof(struct candy_queue) + sizeof(struct priv);
-}
-
-bool candy_queue_empty(candy_queue_t queue){
-  candy_assert(queue != NULL);
-  return (queue->next == NULL);
-}
-
 int candy_queue_clear(candy_queue_t queue, candy_destroy_t func){
   candy_assert(queue != NULL);
   while (!candy_queue_empty(queue))
     candy_dequeue(queue, 0, func);
   return 0;
+}
+
+candy_queue_t candy_queue_create(void){
+  candy_queue_t queue = (candy_queue_t)candy_malloc(candy_queue_size());
+  queue->next = NULL;
+  _private(queue)->count = 0;
+  return queue;
+}
+
+candy_queue_t candy_queue_delete(candy_queue_t queue, candy_destroy_t func){
+  if (queue != NULL){
+    candy_queue_clear(queue, func);
+    candy_free(queue);
+  }
+  return NULL;
 }
 
 int candy_enqueue(candy_queue_t queue, int32_t pos, candy_node_t node){

@@ -1,8 +1,16 @@
 # Change log
 
-## 2022-06-05 buile1000.10
+## 2022-06-09 build1000.11
 
-- 将`candy_pack_t`更名为`candy_wrap_t`, `candy_types_t`更名为`candy_wrapa_t`, 系列方法也随之更名
+- 优化`parser`，现在不再有多行注释，因为python仅有单行注释，多行注释应当理解为不赋给任何变量的字符串
+- 优化`object`
+- 修复changelog-build1000.10的两处字符错误
+- 整理`queue`代码
+- 其他微小的工作
+
+## 2022-06-05 build1000.10
+
+- 将`candy_pack_t`更名为`candy_wrap_t`, `candy_types_t`更名为`candy_wraps_t`, 系列方法也随之更名
 - 移除`candy_wrap_t`的`object`方法, 现在`wrap`与`object`无关. 新增`wrap`的`meta`方法.
 - 优化私有变量的获取方法
 - 用`wrap`的`meta`方法重构了`object`，解决了`wrap`与`object`相互引用的问题

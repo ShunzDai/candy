@@ -33,11 +33,12 @@ typedef enum candy_wraps{
   CANDY_WRAP_STRING,
   CANDY_WRAP_METHOD,
   CANDY_WRAP_OBJECT,
-  CANDY_WRAP_MAX,
+  CANDY_WRAP_MAX = -1,
 } candy_wraps_t;
 
 /* wrap general methods */
 
+candy_wraps_t candy_wrap_print(candy_wrap_t wrap);
 candy_span_t candy_wrap_expand(candy_wrap_t wrap);
 candy_wraps_t candy_wrap_type(candy_wrap_t wrap);
 bool candy_wrap_match(candy_wrap_t wrap, candy_hash_t hash);

@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "candy_vm.h"
-#include "src/struct/candy_object.h"
+#include "src/struct/candy_wrap.h"
 #include "src/core/candy_parser.h"
 
 int candy_vm_runcode(candy_object_t root, char * const code){

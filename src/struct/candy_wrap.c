@@ -37,6 +37,35 @@ static inline priv_t _private(candy_wrap_t wrap){
   return (priv_t)(((struct {candy_wrap_t next; uint8_t args[];} *)wrap)->args);
 }
 
+candy_wraps_t candy_wrap_print(candy_wrap_t wrap){
+  switch (_private(wrap)->type){
+    case CANDY_WRAP_NONE:
+      printf("\n");
+      return CANDY_WRAP_NONE;
+    case CANDY_WRAP_STRING:
+      printf("%s\n", (char *)candy_wrap_get_string(wrap).data);
+      return CANDY_WRAP_STRING;
+    case CANDY_WRAP_INTEGER:
+      printf("%ld\n", candy_wrap_get_integer(wrap));
+      return CANDY_WRAP_INTEGER;
+    case CANDY_WRAP_FLOAT:
+      printf("%.5f\n", candy_wrap_get_float(wrap));
+      return CANDY_WRAP_FLOAT;
+    case CANDY_WRAP_BOOLEAN:
+      printf("%s\n", candy_wrap_get_boolean(wrap) ? "True" : "False");
+      return CANDY_WRAP_BOOLEAN;
+    case CANDY_WRAP_METHOD:
+      printf("%p\n", candy_wrap_get_method(wrap));
+      return CANDY_WRAP_METHOD;
+    case CANDY_WRAP_OBJECT:
+      printf("%p\n", wrap);
+      return CANDY_WRAP_OBJECT;
+    default:
+      printf("exception types");
+      return CANDY_WRAP_MAX;
+  }
+}
+
 inline candy_span_t candy_wrap_expand(candy_wrap_t wrap){
   candy_assert(wrap != NULL);
   return (candy_span_t){_private(wrap)->data, _private(wrap)->size};

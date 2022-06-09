@@ -30,33 +30,20 @@ TEST(lexer, name){\
   lex = candy_lexer_delete(lex);\
 }
 
-TEST_LEXER(singleline_comment_0, CANDY_TOKEN_NULL,
+TEST_LEXER(comment_0, CANDY_TOKEN_NULL,
   "#\n",
   ""
 );
 
-TEST_LEXER(singleline_comment_1, CANDY_TOKEN_NULL,
+TEST_LEXER(comment_1, CANDY_TOKEN_NULL,
   "# hello world\r\n",
   ""
 );
 
-TEST_LEXER(singleline_comment_2, CANDY_TOKEN_NULL,
+TEST_LEXER(comment_2, CANDY_TOKEN_NULL,
   "# hello world\n"
   "# hi\n",
   ""
-);
-
-TEST_LEXER(multiline_comment_0, CANDY_TOKEN_NULL,
-  "''''''\n",
-  ""
-);
-
-TEST_LEXER(multiline_comment_1, CANDY_TOKEN_NULL,
-  "'''\n"
-  "hello\n"
-  "world\n"
-  "'''\n",
-  "\nhello\nworld\n"
 );
 
 TEST_LEXER(string_0, CANDY_TOKEN_CONST_STRING,
@@ -92,6 +79,19 @@ TEST_LEXER(string_hex, CANDY_TOKEN_CONST_STRING,
 TEST_LEXER(string_oct, CANDY_TOKEN_CONST_STRING,
   "\"\\150\\145\\154\\154\\157\\40\\167\\157\\162\\154\\144\"",/* "\x68\x65\x6C\x6C\x6F\x20\x77\x6F\x72\x6C\x64" */
   "hello world"
+);
+
+TEST_LEXER(string_multiline_0, CANDY_TOKEN_CONST_STRING,
+  "''''''\n",
+  ""
+);
+
+TEST_LEXER(string_multiline_1, CANDY_TOKEN_CONST_STRING,
+  "'''\n"
+  "hello\n"
+  "world\n"
+  "'''\n",
+  "\nhello\nworld\n"
 );
 
 TEST(lexer, name){
