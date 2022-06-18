@@ -17,7 +17,7 @@
 #include "src/platform/candy_memory.h"
 
 typedef struct priv{
-  uint8_t count;
+  uint16_t count;
 } * priv_t;
 
 static inline priv_t _private(candy_queue_t queue){
@@ -38,18 +38,30 @@ inline uint32_t candy_queue_count(candy_queue_t queue){
   return _private(queue)->count;
 }
 
+int candy_queue_iterator(candy_queue_t queue, candy_iterator_t func, void *args){
+  candy_assert(queue != NULL);
+  for (candy_node_t *node = &queue->next; ;){
+    if (*node == NULL)
+      break;
+    if (func != NULL)
+      func(node, args);
+    node = &(*node)->next;
+  }
+  return 0;
+}
+
 candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t pos){
   candy_assert(queue != NULL);
-  candy_node_t *temp = &queue->next;
   if (_private(queue)->count == 0)
-    return temp;
+    return &queue->next;
   else if (pos < 0)
     pos = _private(queue)->count + pos;
-  while (temp != NULL && pos--){
-    candy_assert(*temp != NULL);
-    temp = &(*temp)->next;
+  for (candy_node_t *node = &queue->next; ; pos--){
+    if (pos == 0)
+      return node;
+    node = &(*node)->next;
   }
-  return temp;
+  return &queue->next;
 }
 
 int candy_queue_clear(candy_queue_t queue, candy_destroy_t func){
@@ -66,12 +78,11 @@ candy_queue_t candy_queue_create(void){
   return queue;
 }
 
-candy_queue_t candy_queue_delete(candy_queue_t queue, candy_destroy_t func){
-  if (queue != NULL){
-    candy_queue_clear(queue, func);
-    candy_free(queue);
-  }
-  return NULL;
+int candy_queue_delete(candy_queue_t *queue, candy_destroy_t func){
+  candy_queue_clear(*queue, func);
+  candy_free(*queue);
+  *queue = NULL;
+  return 0;
 }
 
 int candy_enqueue(candy_queue_t queue, int32_t pos, candy_node_t node){
@@ -92,7 +103,7 @@ int candy_dequeue(candy_queue_t queue, int32_t pos, candy_destroy_t func){
   candy_node_t del = *temp;
   *temp = (*temp)->next;
   if (func)
-    func(del);
+    func(&del);
   _private(queue)->count--;
   return 0;
 }

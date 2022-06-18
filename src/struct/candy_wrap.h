@@ -33,17 +33,19 @@ typedef enum candy_wraps{
   CANDY_WRAP_STRING,
   CANDY_WRAP_METHOD,
   CANDY_WRAP_OBJECT,
-  CANDY_WRAP_MAX = -1,
+  CANDY_WRAP_MAX,
 } candy_wraps_t;
 
 /* wrap general methods */
 
 candy_wraps_t candy_wrap_print(candy_wrap_t wrap);
-candy_span_t candy_wrap_expand(candy_wrap_t wrap);
+candy_view_t candy_wrap_expand(candy_wrap_t wrap);
 candy_wraps_t candy_wrap_type(candy_wrap_t wrap);
 bool candy_wrap_match(candy_wrap_t wrap, candy_hash_t hash);
 
 /* wrap create methods */
+
+candy_wrap_t candy_wrap_create(candy_hash_t hash, const void *data, uint16_t size, candy_wraps_t type, candy_wrap_t next);
 
 candy_wrap_t candy_wrap_copy(candy_wrap_t wrap);
 candy_wrap_t candy_wrap_none(candy_hash_t hash);
@@ -51,21 +53,20 @@ candy_wrap_t candy_wrap_integer(candy_hash_t hash, candy_integer_t value);
 candy_wrap_t candy_wrap_float(candy_hash_t hash, candy_float_t value);
 candy_wrap_t candy_wrap_boolean(candy_hash_t hash, candy_boolean_t value);
 candy_wrap_t candy_wrap_method(candy_hash_t hash, candy_method_t value);
-candy_wrap_t candy_wrap_string(candy_hash_t hash, candy_string_t value);
-candy_wrap_t candy_wrap_meta(candy_hash_t hash, candy_span_t span, candy_wraps_t type);
+candy_wrap_t candy_wrap_string(candy_hash_t hash, const char *value, uint16_t size);
 
 /* wrap delete method */
 
-candy_wrap_t candy_wrap_delete(candy_wrap_t wrap);
+int candy_wrap_delete(candy_wrap_t *wrap);
 
 /* wrap set methods */
 
-candy_wrap_t candy_wrap_set_none(candy_wrap_t wrap);
-candy_wrap_t candy_wrap_set_integer(candy_wrap_t wrap, candy_integer_t value);
-candy_wrap_t candy_wrap_set_float(candy_wrap_t wrap, candy_float_t value);
-candy_wrap_t candy_wrap_set_boolean(candy_wrap_t wrap, candy_boolean_t value);
-candy_wrap_t candy_wrap_set_method(candy_wrap_t wrap, candy_method_t method);
-candy_wrap_t candy_wrap_set_string(candy_wrap_t wrap, candy_string_t string);
+int candy_wrap_set_none(candy_wrap_t *wrap);
+int candy_wrap_set_integer(candy_wrap_t *wrap, candy_integer_t value);
+int candy_wrap_set_float(candy_wrap_t *wrap, candy_float_t value);
+int candy_wrap_set_boolean(candy_wrap_t *wrap, candy_boolean_t value);
+int candy_wrap_set_method(candy_wrap_t *wrap, candy_method_t value);
+int candy_wrap_set_string(candy_wrap_t *wrap, const char *value, uint16_t size);
 
 /* wrap get methods */
 

@@ -21,20 +21,24 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
+struct candy_object{
+  candy_object_t next;
+};
+
 int candy_object_print(candy_object_t obj);
 candy_wrap_t *candy_object_search(candy_object_t obj, candy_hash_t hash);
 int candy_object_register(candy_object_t obj, candy_register_t table[]);
 
 candy_object_t candy_object_create(candy_hash_t hash);
 
-candy_object_t candy_object_delete(candy_object_t obj);
+int candy_object_delete(candy_object_t *obj);
 
 int candy_object_push(candy_object_t obj, candy_wrap_t wrap);
 int candy_object_push_none(candy_object_t obj, candy_hash_t hash);
 int candy_object_push_integer(candy_object_t obj, candy_hash_t hash, candy_integer_t value);
 int candy_object_push_float(candy_object_t obj, candy_hash_t hash, candy_float_t value);
 int candy_object_push_method(candy_object_t obj, candy_hash_t hash, candy_method_t value);
-int candy_object_push_string(candy_object_t obj, candy_hash_t hash, candy_string_t value);
+int candy_object_push_string(candy_object_t obj, candy_hash_t hash, const char *value, uint16_t size);
 int candy_object_push_object(candy_object_t obj, candy_hash_t hash);
 
 int candy_object_pop(candy_object_t obj, candy_hash_t hash);

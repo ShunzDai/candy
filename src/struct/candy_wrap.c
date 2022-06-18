@@ -17,19 +17,11 @@
 #include "src/common/candy_lib.h"
 #include "src/platform/candy_memory.h"
 
-#define CANDY_WRAP_TYPE  4
-#define CANDY_WRAP_SZIE 16
-#define CANDY_WRAP_RSVD 12
-
-#if (CANDY_WRAP_TYPE + CANDY_WRAP_SZIE + CANDY_WRAP_RSVD) != 32
-#error "private common struct size error"
-#endif
-
 typedef struct priv{
-  uint32_t type : CANDY_WRAP_TYPE;
-  uint32_t size : CANDY_WRAP_SZIE;
-  uint32_t      : CANDY_WRAP_RSVD;
   candy_hash_t hash;
+  uint16_t type : 4;
+  uint16_t      : 12;
+  uint16_t size;
   uint8_t data[];
 } * priv_t;
 
@@ -43,7 +35,7 @@ candy_wraps_t candy_wrap_print(candy_wrap_t wrap){
       printf("\n");
       return CANDY_WRAP_NONE;
     case CANDY_WRAP_STRING:
-      printf("%s\n", (char *)candy_wrap_get_string(wrap).data);
+      printf("%s\n", (char *)candy_wrap_get_string(wrap)->data);
       return CANDY_WRAP_STRING;
     case CANDY_WRAP_INTEGER:
       printf("%ld\n", candy_wrap_get_integer(wrap));
@@ -66,9 +58,9 @@ candy_wraps_t candy_wrap_print(candy_wrap_t wrap){
   }
 }
 
-inline candy_span_t candy_wrap_expand(candy_wrap_t wrap){
+inline candy_view_t candy_wrap_expand(candy_wrap_t wrap){
   candy_assert(wrap != NULL);
-  return (candy_span_t){_private(wrap)->data, _private(wrap)->size};
+  return (candy_view_t)&_private(wrap)->size;
 }
 
 inline candy_wraps_t candy_wrap_type(candy_wrap_t wrap){
@@ -81,136 +73,138 @@ inline bool candy_wrap_match(candy_wrap_t wrap, candy_hash_t hash){
   return (_private(wrap)->hash == hash);
 }
 
-static candy_wrap_t _candy_wrap_create(candy_hash_t hash, candy_span_t span, candy_wraps_t type, candy_wrap_t next){
-  candy_wrap_t wrap = (candy_wrap_t)candy_malloc(sizeof(struct candy_wrap) + sizeof(struct priv) + span.size);
+candy_wrap_t candy_wrap_create(candy_hash_t hash, const void *data, uint16_t size, candy_wraps_t type, candy_wrap_t next){
+  candy_wrap_t wrap = (candy_wrap_t)candy_malloc(sizeof(struct candy_wrap) + sizeof(struct priv) + size);
   wrap->next = next;
-  _private(wrap)->size = span.size;
+  _private(wrap)->size = size;
   _private(wrap)->type = type;
   _private(wrap)->hash = hash;
-  (span.data == NULL) ? candy_memset(_private(wrap)->data, 0, span.size) : candy_memcpy(_private(wrap)->data, span.data, span.size);
+  (data == NULL) ? candy_memset(_private(wrap)->data, 0, size) : candy_memcpy(_private(wrap)->data, data, size);
   return wrap;
 }
 
-candy_wrap_t candy_wrap_delete(candy_wrap_t wrap){
-  candy_wrap_t temp = wrap->next;
-  candy_free(wrap);
-  wrap = NULL;
-  return temp;
+int candy_wrap_delete(candy_wrap_t *wrap){
+  candy_wrap_t temp = (*wrap)->next;
+  candy_free(*wrap);
+  *wrap = temp;
+  return 0;
 }
 
 inline candy_wrap_t candy_wrap_copy(candy_wrap_t wrap){
   candy_assert(wrap != NULL);
-  return _candy_wrap_create(_private(wrap)->hash, (candy_span_t){_private(wrap)->data, _private(wrap)->size}, _private(wrap)->type, NULL);
+  return candy_wrap_create(_private(wrap)->hash, _private(wrap)->data, _private(wrap)->size, _private(wrap)->type, NULL);
 }
 
 inline candy_wrap_t candy_wrap_none(candy_hash_t hash){
-  return _candy_wrap_create(hash, (candy_span_t){NULL, 0}, CANDY_WRAP_NONE, NULL);
+  return candy_wrap_create(hash, NULL, 0, CANDY_WRAP_NONE, NULL);
 }
 
 inline candy_wrap_t candy_wrap_integer(candy_hash_t hash, candy_integer_t value){
-  return _candy_wrap_create(hash, (candy_span_t){&value, sizeof(candy_integer_t)}, CANDY_WRAP_INTEGER, NULL);
+  return candy_wrap_create(hash, &value, sizeof(candy_integer_t), CANDY_WRAP_INTEGER, NULL);
 }
 
 inline candy_wrap_t candy_wrap_float(candy_hash_t hash, candy_float_t value){
-  return _candy_wrap_create(hash, (candy_span_t){&value, sizeof(candy_float_t)}, CANDY_WRAP_FLOAT, NULL);
+  return candy_wrap_create(hash, &value, sizeof(candy_float_t), CANDY_WRAP_FLOAT, NULL);
 }
 
 inline candy_wrap_t candy_wrap_boolean(candy_hash_t hash, candy_boolean_t value){
-  return _candy_wrap_create(hash, (candy_span_t){&value, sizeof(candy_boolean_t)}, CANDY_WRAP_BOOLEAN, NULL);
+  return candy_wrap_create(hash, &value, sizeof(candy_boolean_t), CANDY_WRAP_BOOLEAN, NULL);
 }
 
 inline candy_wrap_t candy_wrap_method(candy_hash_t hash, candy_method_t value){
-  return _candy_wrap_create(hash, (candy_span_t){&value, sizeof(candy_method_t)}, CANDY_WRAP_METHOD, NULL);
+  return candy_wrap_create(hash, &value, sizeof(candy_method_t), CANDY_WRAP_METHOD, NULL);
 }
 
-inline candy_wrap_t candy_wrap_string(candy_hash_t hash, candy_string_t value){
-  return _candy_wrap_create(hash, (candy_span_t){value.data, value.size}, CANDY_WRAP_STRING, NULL);
+inline candy_wrap_t candy_wrap_string(candy_hash_t hash, const char *value, uint16_t size){
+  return candy_wrap_create(hash, value, size, CANDY_WRAP_STRING, NULL);
 }
 
-inline candy_wrap_t candy_wrap_meta(candy_hash_t hash, candy_span_t span, candy_wraps_t type){
-  return _candy_wrap_create(hash, span, type, NULL);
-}
-
-candy_wrap_t candy_wrap_set_none(candy_wrap_t wrap){
+int candy_wrap_set_none(candy_wrap_t *wrap){
   candy_assert(wrap != NULL);
-  switch (_private(wrap)->type){
+  switch (_private(*wrap)->type){
     case CANDY_WRAP_NONE:
-      return wrap;
+      return 0;
     default: {
-      candy_wrap_t next = wrap->next;
-      candy_hash_t hash = _private(wrap)->hash;
-      candy_free(wrap);
-      return _candy_wrap_create(hash, (candy_span_t){NULL, 0}, CANDY_WRAP_NONE, next);
+      candy_wrap_t next = (*wrap)->next;
+      candy_hash_t hash = _private(*wrap)->hash;
+      candy_free(*wrap);
+      *wrap = candy_wrap_create(hash, NULL, 0, CANDY_WRAP_NONE, next);
+      return 0;
     }
   }
 }
 
-candy_wrap_t candy_wrap_set_integer(candy_wrap_t wrap, candy_integer_t value){
+int candy_wrap_set_integer(candy_wrap_t *wrap, candy_integer_t value){
   candy_assert(wrap != NULL);
-  switch (_private(wrap)->type){
+  switch (_private(*wrap)->type){
     case CANDY_WRAP_INTEGER:
-      *((candy_integer_t *)_private(wrap)->data) = value;
-      return wrap;
+      *((candy_integer_t *)_private(*wrap)->data) = value;
+      return 0;
     default: {
-      candy_wrap_t next = wrap->next;
-      candy_hash_t hash = _private(wrap)->hash;
-      candy_free(wrap);
-      return _candy_wrap_create(hash, (candy_span_t){&value, sizeof(candy_integer_t)}, CANDY_WRAP_INTEGER, next);
+      candy_wrap_t next = (*wrap)->next;
+      candy_hash_t hash = _private(*wrap)->hash;
+      candy_free(*wrap);
+      *wrap = candy_wrap_create(hash, &value, sizeof(candy_integer_t), CANDY_WRAP_INTEGER, next);
+      return 0;
     }
   }
 }
 
-candy_wrap_t candy_wrap_set_float(candy_wrap_t wrap, candy_float_t value){
+int candy_wrap_set_float(candy_wrap_t *wrap, candy_float_t value){
   candy_assert(wrap != NULL);
-  switch (_private(wrap)->type){
+  switch (_private(*wrap)->type){
     case CANDY_WRAP_FLOAT:
-      *((candy_float_t *)_private(wrap)->data) = value;
-      return wrap;
+      *((candy_float_t *)_private(*wrap)->data) = value;
+      return 0;
     default:{
-      candy_wrap_t next = wrap->next;
-      candy_hash_t hash = _private(wrap)->hash;
-      candy_free(wrap);
-      return _candy_wrap_create(hash, (candy_span_t){&value, sizeof(candy_float_t)}, CANDY_WRAP_FLOAT, next);
+      candy_wrap_t next = (*wrap)->next;
+      candy_hash_t hash = _private(*wrap)->hash;
+      candy_free(*wrap);
+      *wrap = candy_wrap_create(hash, &value, sizeof(candy_float_t), CANDY_WRAP_FLOAT, next);
+      return 0;
     }
   }
 }
 
-candy_wrap_t candy_wrap_set_boolean(candy_wrap_t wrap, candy_boolean_t value){/* if value % 256 == 0 ? */
+int candy_wrap_set_boolean(candy_wrap_t *wrap, candy_boolean_t value){/* if value % 256 == 0 ? */
   candy_assert(wrap != NULL);
-  switch (_private(wrap)->type){
+  switch (_private(*wrap)->type){
     case CANDY_WRAP_BOOLEAN:
-      *((candy_boolean_t *)_private(wrap)->data) = value;
-      return wrap;
+      *((candy_boolean_t *)_private(*wrap)->data) = value;
+      return 0;
     default: {
-      candy_wrap_t next = wrap->next;
-      candy_hash_t hash = _private(wrap)->hash;
-      candy_free(wrap);
-      return _candy_wrap_create(hash, (candy_span_t){&value, sizeof(candy_boolean_t)}, CANDY_WRAP_BOOLEAN, next);
+      candy_wrap_t next = (*wrap)->next;
+      candy_hash_t hash = _private(*wrap)->hash;
+      candy_free(*wrap);
+      *wrap = candy_wrap_create(hash, &value, sizeof(candy_boolean_t), CANDY_WRAP_BOOLEAN, next);
+      return 0;
     }
   }
 }
 
-candy_wrap_t candy_wrap_set_method(candy_wrap_t wrap, candy_method_t method){
+int candy_wrap_set_method(candy_wrap_t *wrap, candy_method_t value){
   candy_assert(wrap != NULL);
-  switch (_private(wrap)->type){
+  switch (_private(*wrap)->type){
     case CANDY_WRAP_METHOD:
-      *((candy_method_t *)_private(wrap)->data) = method;
-      return wrap;
+      *((candy_method_t *)_private(*wrap)->data) = value;
+      return 0;
     default: {
-      candy_wrap_t next = wrap->next;
-      candy_hash_t hash = _private(wrap)->hash;
-      candy_free(wrap);
-      return _candy_wrap_create(hash, (candy_span_t){&method, sizeof(candy_method_t)}, CANDY_WRAP_METHOD, next);
+      candy_wrap_t next = (*wrap)->next;
+      candy_hash_t hash = _private(*wrap)->hash;
+      candy_free(*wrap);
+      *wrap = candy_wrap_create(hash, &value, sizeof(candy_method_t), CANDY_WRAP_METHOD, next);
+      return 0;
     }
   }
 }
 
-candy_wrap_t candy_wrap_set_string(candy_wrap_t wrap, candy_string_t string){
+int candy_wrap_set_string(candy_wrap_t *wrap, const char *value, uint16_t size){
   candy_assert(wrap != NULL);
-  candy_wrap_t next = wrap->next;
-  candy_hash_t hash = _private(wrap)->hash;
-  candy_free(wrap);
-  return _candy_wrap_create(hash, (candy_span_t){string.data, string.size}, CANDY_WRAP_STRING, next);
+  candy_wrap_t next = (*wrap)->next;
+  candy_hash_t hash = _private(*wrap)->hash;
+  candy_free(*wrap);
+  *wrap = candy_wrap_create(hash, value, size, CANDY_WRAP_STRING, next);
+  return 0;
 }
 
 candy_integer_t candy_wrap_get_integer(candy_wrap_t wrap){
@@ -273,9 +267,9 @@ candy_string_t candy_wrap_get_string(candy_wrap_t wrap){
   candy_assert(wrap != NULL);
   switch (_private(wrap)->type){
     case CANDY_WRAP_STRING:
-      return (candy_string_t){_private(wrap)->data, _private(wrap)->size};
+      return (candy_view_t)(&_private(wrap)->size);
     default:
       candy_assert(false);
-      return (candy_string_t){NULL, 0};
+      return (candy_view_t){0};
   }
 }

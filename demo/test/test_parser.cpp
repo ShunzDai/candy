@@ -24,8 +24,9 @@ TEST(lexer, name){\
   candy_wrap_t pack = NULL;\
   EXPECT_EQ(candy_lexer_get_token(lex, &pack), type);\
   if (pack != NULL){\
-    EXPECT_EQ(strncmp((char *)candy_wrap_get_string(pack).data, out, candy_wrap_get_string(pack).size), 0);\
-    pack = candy_wrap_delete(pack);\
+    EXPECT_EQ(candy_wrap_get_string(pack)->size, sizeof(out) - 1);\
+    EXPECT_EQ(memcmp((char *)candy_wrap_get_string(pack)->data, out, candy_wrap_get_string(pack)->size), 0);\
+    candy_wrap_delete(&pack);\
   }\
   lex = candy_lexer_delete(lex);\
 }
@@ -103,8 +104,8 @@ TEST(lexer, name){
   EXPECT_EQ(candy_lexer_get_token(lex, &pack), CANDY_TOKEN_OPERATOR_ASSIGN);
   EXPECT_EQ(candy_lexer_get_token(lex, &pack), CANDY_TOKEN_CONST_STRING);
   if (pack != NULL){
-    EXPECT_EQ(strncmp((char *)candy_wrap_get_string(pack).data, "hello world", candy_wrap_get_string(pack).size), 0);
-    pack = candy_wrap_delete(pack);
+    EXPECT_EQ(strncmp((char *)candy_wrap_get_string(pack)->data, "hello world", candy_wrap_get_string(pack)->size), 0);
+    candy_wrap_delete(&pack);
   }
   lex = candy_lexer_delete(lex);
 }

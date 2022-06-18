@@ -107,7 +107,7 @@ static int _read_string(candy_lexer_t lex, char buff[], bool multiline){
   const char del = *lex->curr;
   char *dst = buff;
   /* skip first " or ' */
-  lex->curr += multiline ? 2 : 1;
+  lex->curr += multiline ? 3 : 1;
   while (*lex->curr != del){
     switch (*lex->curr){
       case '\0':
@@ -153,7 +153,8 @@ static int _read_string(candy_lexer_t lex, char buff[], bool multiline){
   }
   *dst = '\0';
   /* skip last " or ' */
-  lex->curr += multiline ? 2 : 1;
+  candy_assert(*lex->curr == del && multiline ? (*(lex->curr + 1) == *lex->curr && *(lex->curr + 2) == *lex->curr) : (true), "unexpected end of string");
+  lex->curr += multiline ? 3 : 1;
   return dst - buff;
 }
 
@@ -253,7 +254,7 @@ candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_wrap_t *wrap){
         printf("string\tline %d\n", lex->line);
         len = _read_string(lex, buffer, *(lex->curr + 1) == *lex->curr && *(lex->curr + 2) == *lex->curr);
         printf("buff = '%s', len = %d\n", buffer, len);
-        *wrap = candy_wrap_string(0, (candy_string_t){buffer, len});
+        *wrap = candy_wrap_string(0, buffer, len);
         return CANDY_TOKEN_CONST_STRING;
       default:
         if (_is_alpha(*lex->curr) || *lex->curr == '_')

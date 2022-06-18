@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-add_compile_options(-Wall -Wextra -Wno-unused-parameter)
+add_compile_options(-Wall -Wextra -Wno-unused-parameter -Wfatal-errors -Werror)
 
 project(candy)
 

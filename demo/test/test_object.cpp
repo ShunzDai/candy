@@ -20,7 +20,7 @@
 
 TEST(object, lifecycle){
   candy_object_t obj = candy_object_create(0);
-  obj = candy_object_delete(obj);
+  candy_object_delete(&obj);
   EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
 }
 
@@ -31,10 +31,10 @@ TEST(object, recursive){
     obj[i] = candy_object_create(0);
     candy_object_push_none(obj[i], 0);
     if (i != 0)
-      candy_object_push(obj[i - 1], obj[i]);
+      candy_object_push(obj[i - 1], (candy_wrap_t)obj[i]);
   }
   candy_object_print(obj[0]);
-  obj[0] = candy_object_delete(obj[0]);
+  candy_object_delete(&obj[0]);
   EXPECT_EQ((uint64_t)obj[0], (uint64_t)NULL);
 #undef depth
 }
@@ -47,22 +47,22 @@ TEST(object, pop){
   candy_object_print(obj);
   candy_object_pop(obj, 1);
   candy_object_print(obj);
-  obj = candy_object_delete(obj);
+  candy_object_delete(&obj);
   EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
 }
 
 TEST(obj, method){
   candy_object_t obj = candy_object_create(0);
   candy_object_t param = candy_object_create(1);
-  candy_object_push(obj, param);
+  candy_object_push(obj, (candy_wrap_t)param);
   candy_object_push_method(obj, 2, candy_std_print);
-  candy_object_push_string(param, 0, (candy_span_t){(void *)"hello world", strlen("hello world")});
+  candy_object_push_string(param, 0, "hello world", strlen("hello world"));
   candy_object_push_integer(param, 0, 114514);
   candy_object_print(obj);
   param = candy_object_get_object(obj, 1);
   candy_method_t method = candy_object_get_method(obj, 2);
   EXPECT_EQ(!(uint64_t)method, (uint64_t)NULL);
   method(param);
-  obj = candy_object_delete(obj);
+  candy_object_delete(&obj);
   EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
 }

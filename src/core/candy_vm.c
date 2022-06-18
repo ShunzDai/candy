@@ -24,7 +24,7 @@ int candy_vm_runcode(candy_object_t root, char * const code){
   candy_wrap_t wrap = NULL;
   candy_lexer_get_token(lex, &wrap);
   if (wrap)
-    candy_wrap_delete(wrap);
+    candy_wrap_delete(&wrap);
   lex = candy_lexer_delete(lex);
   return 0;
 }

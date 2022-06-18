@@ -1,5 +1,15 @@
 # Change log
 
+## 2022-06-18 build1000.12
+
+- 移除`candy_span_t`，现在带有`candy_span_t`入参的函数恢复到build1000.8. 理由是传结构体本身给函数的行为涉及到平台、编译器实现等特性，降低了代码鲁棒性.
+- 新增`candy_view_t`作为`candy_span_t`的替代，设计理念是仅将其作为观察者，不能通过其修改数据. 原本返回`candy_span_t`的函数现在返回`candy_view_t`.
+- 增强`parser`单元测试的鲁棒性
+- 修复`lex`解析多行字符串时引号偏移值错误的问题
+- 重构所有析构函数，现在析构函数传入二重指针，在函数内部处理野指针
+- 优化build1000.9 change log的表述
+- 其他微小的工作
+
 ## 2022-06-09 build1000.11
 
 - 优化`parser`，现在不再有多行注释，因为python仅有单行注释，多行注释应当理解为不赋给任何变量的字符串
@@ -18,7 +28,7 @@
 ## 2022-05-23 build1000.9
 
 - 新增candy_span_t类型, 现在candy_string_t由candy_span_t实现
-- 修改int类型状态量的含义, 引入bool类型
+- 修改c int类型状态量的含义, 引入c bool类型
 - 重构lexer
 - 重构assert函数的实现
 - 重构queue::pointer方法
