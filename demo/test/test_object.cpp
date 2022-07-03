@@ -18,16 +18,16 @@
 #include "src/struct/candy_object.h"
 #include "src/method/candy_standard.h"
 
-TEST(object, lifecycle){
+TEST(object, lifecycle) {
   candy_object_t obj = candy_object_create(0);
   candy_object_delete(&obj);
   EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
 }
 
-TEST(object, recursive){
+TEST(object, recursive) {
 #define depth 4
   candy_object_t obj[depth] = {0};
-  for (int i = 0; i < depth; i++){
+  for (int i = 0; i < depth; i++) {
     obj[i] = candy_object_create(0);
     candy_object_push_none(obj[i], 0);
     if (i != 0)
@@ -39,7 +39,7 @@ TEST(object, recursive){
 #undef depth
 }
 
-TEST(object, pop){
+TEST(object, pop) {
   candy_object_t obj = candy_object_create(0);
   candy_object_push_integer(obj, 0, 114514);
   candy_object_push_float(obj, 1, 3.1415926f);
@@ -51,7 +51,7 @@ TEST(object, pop){
   EXPECT_EQ((uint64_t)obj, (uint64_t)NULL);
 }
 
-TEST(obj, method){
+TEST(obj, method) {
   candy_object_t obj = candy_object_create(0);
   candy_object_t param = candy_object_create(1);
   candy_object_push(obj, (candy_wrap_t)param);

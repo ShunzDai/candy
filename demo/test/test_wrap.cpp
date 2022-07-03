@@ -18,45 +18,45 @@
 #include "src/struct/candy_wrap.h"
 #include "src/method/candy_standard.h"
 
-TEST(wrap, lifecycle){
+TEST(wrap, lifecycle) {
   candy_wrap_t wrap = candy_wrap_none(0);
-  candy_wrap_delete(&wrap);
+  candy_wrap_delete(&wrap, NULL);
   EXPECT_EQ((uint64_t)wrap, (uint64_t)NULL);
 }
 
-TEST(wrap, string){
+TEST(wrap, string) {
   candy_wrap_t wrap = candy_wrap_string(0, "hello world", sizeof("hello world"));
   EXPECT_STREQ((char *)candy_wrap_get_string(wrap)->data, (char *)"hello world");
-  EXPECT_EQ(candy_wrap_expand(wrap)->size, sizeof("hello world"));
+  EXPECT_EQ(candy_wrap_view(wrap)->size, sizeof("hello world"));
   candy_wrap_set_string(&wrap, "bye world", sizeof("bye world"));
   EXPECT_STREQ((char *)candy_wrap_get_string(wrap)->data, (char *)"bye world");
-  EXPECT_EQ(candy_wrap_expand(wrap)->size, sizeof("bye world"));
-  candy_wrap_delete(&wrap);
+  EXPECT_EQ(candy_wrap_view(wrap)->size, sizeof("bye world"));
+  candy_wrap_delete(&wrap, NULL);
   EXPECT_EQ((uint64_t)wrap, (uint64_t)NULL);
 }
 
-TEST(wrap, integer){
+TEST(wrap, integer) {
   candy_wrap_t wrap = candy_wrap_integer(0, 114514);
   EXPECT_EQ(candy_wrap_get_integer(wrap), 114514);
   candy_wrap_set_integer(&wrap, 1919810);
   EXPECT_EQ(candy_wrap_get_integer(wrap), 1919810);
   EXPECT_FLOAT_EQ(candy_wrap_get_float(wrap), 1919810.0f);
-  candy_wrap_delete(&wrap);
+  candy_wrap_delete(&wrap, NULL);
   EXPECT_EQ((uint64_t)wrap, (uint64_t)NULL);
 }
 
-TEST(wrap, float){
+TEST(wrap, float) {
   candy_wrap_t wrap = candy_wrap_float(0, 6.626f);
   EXPECT_FLOAT_EQ(candy_wrap_get_float(wrap), 6.626f);
   EXPECT_EQ(candy_wrap_get_integer(wrap), 7);
   candy_wrap_set_float(&wrap, 3.1415926f);
   EXPECT_FLOAT_EQ(candy_wrap_get_float(wrap), 3.1415926f);
   EXPECT_EQ(candy_wrap_get_integer(wrap), 3);
-  candy_wrap_delete(&wrap);
+  candy_wrap_delete(&wrap, NULL);
   EXPECT_EQ((uint64_t)wrap, (uint64_t)NULL);
 }
 
-TEST(wrap, cast){
+TEST(wrap, cast) {
   candy_wrap_t wrap = candy_wrap_none(0);
   candy_wrap_set_string(&wrap, "hello world", sizeof("hello world"));
   EXPECT_STREQ((char *)candy_wrap_get_string(wrap)->data, (char *)"hello world");
@@ -66,6 +66,6 @@ TEST(wrap, cast){
   EXPECT_FLOAT_EQ(candy_wrap_get_float(wrap), 3.1415926f);
   candy_wrap_set_method(&wrap, candy_std_print);
   EXPECT_EQ((uint64_t)candy_wrap_get_method(wrap), (uint64_t)candy_std_print);
-  candy_wrap_delete(&wrap);
+  candy_wrap_delete(&wrap, NULL);
   EXPECT_EQ((uint64_t)wrap, (uint64_t)NULL);
 }

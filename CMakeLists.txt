@@ -10,5 +10,5 @@ include_directories(
 )
 
 add_subdirectory(src)
-add_subdirectory(module/googletest)
+add_subdirectory(components/googletest)
 add_subdirectory(demo)

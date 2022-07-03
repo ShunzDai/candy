@@ -25,7 +25,7 @@ struct candy_object{
   candy_object_t next;
 };
 
-int candy_object_print(candy_object_t obj);
+void candy_object_print(candy_object_t obj);
 candy_wrap_t *candy_object_search(candy_object_t obj, candy_hash_t hash);
 int candy_object_register(candy_object_t obj, candy_register_t table[]);
 
