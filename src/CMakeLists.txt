@@ -1,4 +1,9 @@
-file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true
+file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES true
   *.c
 )
-add_library(${CMAKE_PROJECT_NAME}_core STATIC ${SOURCES})
+
+add_library(candy_core STATIC ${SOURCES_CANDY})
+
+target_include_directories(candy_core PUBLIC
+  ..
+)

@@ -15,7 +15,7 @@
   */
 #include "gtest/gtest.h"
 #include "src/platform/candy_memory.h"
-/*
-TEST(memory, malloc){
 
-}*/
+TEST(memory, malloc) {
+
+}

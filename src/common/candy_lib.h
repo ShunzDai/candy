@@ -21,7 +21,7 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-candy_hash_t candy_time33(char *name);
+candy_hash_t candy_hash(char *name);
 
 void *candy_memset(void *dst, uint8_t val, size_t size);
 void *candy_memcpy(void *dst, const void *src, size_t size);
