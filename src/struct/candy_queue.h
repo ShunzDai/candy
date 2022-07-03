@@ -26,7 +26,7 @@ struct candy_node{
 };
 
 struct candy_queue{
-  candy_node_t next;
+  candy_node_t head;
 };
 
 typedef void (*candy_iterator_t)(candy_node_t *node, void *args);

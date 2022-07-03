@@ -1,13 +1,13 @@
 #include "candy_standard.h"
 #include "src/struct/candy_object.h"
 
-int candy_std_print(candy_object_t param){
+int candy_std_print(candy_object_t param) {
   // candy_assert(param != NULL);
   // candy_wrap_t *temp = &param->next;
   // if (*temp == NULL)
   //     return -1;
-  // while (temp != NULL){
-  //   switch (candy_wrap_type(*temp)){
+  // while (temp != NULL) {
+  //   switch (candy_wrap_type(*temp)) {
   //     case CANDY_WRAP_NONE:
   //       printf("None");
   //       break;
@@ -27,7 +27,7 @@ int candy_std_print(candy_object_t param){
   //       return -1;
   //   }
   //   temp = &param->next;
-  //   if (*temp == NULL){
+  //   if (*temp == NULL) {
   //     printf("\n");
   //     break;
   //   }
@@ -36,7 +36,7 @@ int candy_std_print(candy_object_t param){
   return 0;
 }
 
-int candy_std_type(candy_object_t param){
+int candy_std_type(candy_object_t param) {
 
 
   return 0;

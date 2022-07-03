@@ -14,254 +14,121 @@
   * limitations under the License.
   */
 #include "candy_parser.h"
+#include "src/core/candy_lexer.h"
 #include "src/platform/candy_memory.h"
 #include "src/struct/candy_wrap.h"
-#include "candy_config.h"
-#include <stdlib.h>
+#include "src/struct/candy_queue.h"
 
-#define _is_capital(ch)           ((ch) >= 'A' && (ch) <= 'Z')
-#define _is_lower(ch)             ((ch) >= 'a' && (ch) <= 'z')
-#define _is_alpha(ch)             (_is_capital(ch) || _is_lower(ch))
-#define _is_hex(ch)               (((ch) >= '0' && (ch) <= '9') || ((ch) >= 'a' && (ch) <= 'f') || ((ch) >= 'A' && (ch) <= 'F'))
-#define _is_dec(ch)               ((ch) >= '0' && (ch) <= '9')
-#define _is_oct(ch)               ((ch) >= '0' && (ch) <= '7')
-
-
-
-struct candy_lexer {
-  char *code;
-  char *curr;
-  char *error;
-  uint32_t line;
+struct ast_node {
+  ast_node_t l;
+  ast_node_t r;
+  int8_t token;
+  int8_t meta[sizeof(candy_meta_t)];
 };
 
-static const char *const _candy_keyword[] = {
-  "False",
-  "True",
-  "and",
-  "or",
-  "not",
-  "if",
-  "else",
-  "elif",
-  "while",
-  "for",
-  "break",
-  "continue",
+typedef struct priv {
+  int8_t token;
+  int8_t meta[sizeof(candy_meta_t)];
+} * priv_t;
+
+struct candy_parser {
+  candy_lexer_t lex;
+  ast_node_t root;
 };
 
-/**
-  * @brief  gets hexadecimal escape character, like
-  *         "30"
-  * @param  lex lexer
-  * @retval hexadecimal character
-  */
-static char _read_hex(candy_lexer_t lex){
-  /* save hex */
-  char hex[] = {lex->curr[0], lex->curr[1], '\0'};
-  lex->curr += 2;
-  /* string to hex */
-  char *end = NULL;
-  char res = strtol(hex, &end, 16);
-  candy_assert(end == hex + 2, "hex not valid");
-  return res;
+static inline priv_t _private(ast_node_t node) {
+  return (priv_t)((struct {ast_node_t l; ast_node_t r; uint8_t args[];} *)node)->args;
 }
 
-/**
-  * @brief  gets octal escape character, like
-  *         "0"
-  *         "01"
-  *         "012"
-  * @param  lex lexer
-  * @retval octal character
-  */
-static char _read_oct(candy_lexer_t lex){
-  /* save oct */
-  char oct[] = {lex->curr[0], lex->curr[1], lex->curr[2], '\0'};
-  lex->curr += 3;
-  if (_is_oct(oct[1]) == false){
-    oct[1] = '\0';
-    lex->curr -= 2;
-  }
-  else if (_is_oct(oct[2]) == false){
-    oct[2] = '\0';
-    lex->curr -= 1;
-  }
-  /* string to oct */
-  return strtol(oct, NULL, 8);
+static ast_node_t _ast_node_create(int8_t token, candy_meta_t *meta, ast_node_t l, ast_node_t r) {
+  ast_node_t ast = candy_malloc(sizeof(struct ast_node) + sizeof(int8_t) + sizeof(candy_meta_t));
+  ast->l = l;
+  ast->r = r;
+  _private(ast)->token = token;
+  if (meta != NULL)
+    (*(candy_meta_t *)_private(ast)->meta) = *meta;
+  return ast;
 }
 
-/**
-  * @brief  gets token of type string, like
-  *         "hello world\n"
-  *         'A\tB\tC'
-  *         "\x41\x42\x43"
-  *         '\041\042\043'
-  * @param  lex lexer
-  * @param  buff store buffer, can not be NULL
-  * @param  multiline is multiline string or not
-  * @retval comment string length, not include '\0'
-  */
-static int _read_string(candy_lexer_t lex, char buff[], bool multiline){
-  candy_assert(buff != NULL, "buffer is null");
-  const char del = *lex->curr;
-  char *dst = buff;
-  /* skip first " or ' */
-  lex->curr += multiline ? 3 : 1;
-  while (*lex->curr != del){
-    switch (*lex->curr){
-      case '\0':
-        candy_assert(0, "unexpected end of string");
-        return -1;
-      case '\n':
-        if (multiline == false){
-          candy_assert(0, "while scanning string literal");
-          return -1;
-        }
-        *dst++ = *lex->curr++;
-        lex->line++;
-        break;
-      case '\\':
-        lex->curr++;
-        switch (*lex->curr){
-          case         'a': lex->curr++; *dst++ =           '\a'; break;
-          case         'b': lex->curr++; *dst++ =           '\b'; break;
-          case         't': lex->curr++; *dst++ =           '\t'; break;
-          case         'n': lex->curr++; *dst++ =           '\n'; break;
-          case         'v': lex->curr++; *dst++ =           '\v'; break;
-          case         'f': lex->curr++; *dst++ =           '\f'; break;
-          case         'r': lex->curr++; *dst++ =           '\r'; break;
-          case        '\\': lex->curr++; *dst++ =           '\\'; break;
-          case        '\'': lex->curr++; *dst++ =           '\''; break;
-          case         '"': lex->curr++; *dst++ =            '"'; break;
-          case         'x': lex->curr++; *dst++ = _read_hex(lex); break;
-          case '0' ... '7':              *dst++ = _read_oct(lex); break;
-          /* TODO: support unicode */
-          default:
-            /* is not escape */
-            // printf("unknown escape sequence: '\\%c'\n", *lex->curr);
-            *dst++ = '\\';
-            *dst++ = *lex->curr++;
-            break;
-        }
-        break;
-      /* normal character */
-      default:
-        *dst++ = *lex->curr++;
-        break;
-    }
-  }
-  *dst = '\0';
-  /* skip last " or ' */
-  candy_assert(*lex->curr == del && multiline ? (*(lex->curr + 1) == *lex->curr && *(lex->curr + 2) == *lex->curr) : (true), "unexpected end of string");
-  lex->curr += multiline ? 3 : 1;
-  return dst - buff;
-}
-
-/**
-  * @brief  skip comment, like
-  *         # hello world
-  * @param  lex lexer
-  * @param  buff store buffer
-  * @retval comment string length, not include '\0'
-  */
-static int _skip_comment(candy_lexer_t lex){
-  char *tail = strchr(lex->curr, '\n');
-  candy_assert(tail != NULL, "comment not closed");
-  /* skip '\n' */
-  lex->curr = tail + 1;
-  lex->line++;
+static int _ast_node_delete(ast_node_t *ast) {
+  candy_assert(ast != NULL);
+  if ((*ast)->l != NULL)
+    _ast_node_delete(&(*ast)->l);
+  if ((*ast)->r != NULL)
+    _ast_node_delete(&(*ast)->r);
+  candy_free(*ast);
+  *ast = NULL;
   return 0;
 }
 
-static candy_token_type_t _get_ident_or_keyword(candy_lexer_t lex, char buff[]){
-  char *dst = buff;
-  /* save alpha, or '_' */
-  *dst++ = *lex->curr++;
-  /* save number,  alpha, or '_' */
-  while (_is_dec(*lex->curr) || _is_alpha(*lex->curr) || *lex->curr == '_')
-    *dst++ = *lex->curr++;
-  /* last char padding '\0' */
-  *dst = '\0';
-  /* check keyword */
-  for (unsigned i = 0; i < candy_lengthof(_candy_keyword); i++){
-    if (strcmp(buff, _candy_keyword[i]) == 0)
-      return (candy_token_type_t)i;
+static ast_node_t _term(candy_parser_t parser);
+static ast_node_t _factor(candy_parser_t parser);
+static ast_node_t _expression(candy_parser_t parser);
+
+static ast_node_t _term(candy_parser_t parser) {
+  ast_node_t l = _factor(parser);
+  struct priv t = {0};
+  t.token = candy_lexer_lookahead(parser->lex);
+  while (t.token == '*' || t.token == '/') {
+    t.token = candy_lexer_curr(parser->lex, (candy_meta_t *)t.meta);
+    l = _ast_node_create(t.token, NULL, l, _factor(parser));
+    t.token = candy_lexer_lookahead(parser->lex);
   }
-  return CANDY_TOKEN_IDENT;
+  return l;
 }
 
-candy_lexer_t candy_lexer_create(char code[]){
-  candy_lexer_t lex = (candy_lexer_t)candy_malloc(sizeof(struct candy_lexer));
-  lex->code = code;
-  lex->curr = code;
-  lex->line = 1;
-  return lex;
-}
-
-candy_lexer_t candy_lexer_delete(candy_lexer_t lex){
-  candy_free(lex);
-  return NULL;
-}
-
-candy_token_type_t candy_lexer_get_token(candy_lexer_t lex, candy_wrap_t *wrap){
-  candy_assert(lex != NULL);
-  char buffer[CANDY_PARSER_BUFFER_SIZE] = {0};
-  int len = 0;
-  /* while until *src == '\0' */
-  while (*lex->curr){
-    switch (*lex->curr){
-      case '\n': case '\r':
-        lex->line++;
-        lex->curr++;
-        break;
-      case ' ': case '\f': case '\t': case '\v':
-        lex->curr++;
-        break;
-      case '=':
-        if (*(lex->curr + 1) == '='){
-          lex->curr += 2;
-          return CANDY_TOKEN_OPERATOR_EQUAL;
-        }
-        lex->curr++;
-        return CANDY_TOKEN_OPERATOR_ASSIGN;
-      case '<':
-        if (*(lex->curr + 1) == '='){
-          lex->curr += 2;
-          return CANDY_TOKEN_OPERATOR_LESS_EQUAL;
-        }
-        lex->curr++;
-        return CANDY_TOKEN_OPERATOR_LESS;
-      case '>':
-        if (*(lex->curr + 1) == '='){
-          lex->curr += 2;
-          return CANDY_TOKEN_OPERATOR_GREATER_EQUAL;
-        }
-        lex->curr++;
-        return CANDY_TOKEN_OPERATOR_GREATER;
-      case '/':
-        lex->curr++;
-        return CANDY_TOKEN_OPERATOR_DIV;
-      case '~':
-        return -1;
-      /* is singleline comment */
-      case '#':
-        printf("singleline comment\tline %d\n", lex->line);
-        _skip_comment(lex);
-        break;
-      /* if char start with \' or \" */
-      case '"': case '\'':
-        printf("string\tline %d\n", lex->line);
-        len = _read_string(lex, buffer, *(lex->curr + 1) == *lex->curr && *(lex->curr + 2) == *lex->curr);
-        printf("buff = '%s', len = %d\n", buffer, len);
-        *wrap = candy_wrap_string(0, buffer, len);
-        return CANDY_TOKEN_CONST_STRING;
-      default:
-        if (_is_alpha(*lex->curr) || *lex->curr == '_')
-          return _get_ident_or_keyword(lex, buffer);
-        candy_assert(0, "unexpected char");
-        break;
-    }
+static ast_node_t _factor(candy_parser_t parser) {
+  ast_node_t l = NULL;
+  struct priv t = {0};
+  t.token = candy_lexer_curr(parser->lex, (candy_meta_t *)t.meta);
+  // if (t.token == CANDY_TK_NONE)
+  //   return l;
+  switch (t.token) {
+    case CANDY_TK_CST_INTEGER:
+    case CANDY_TK_CST_FLOAT:
+      l = _ast_node_create(t.token, (candy_meta_t *)t.meta, NULL, NULL);
+      break;
+    case '(':
+      l = _expression(parser);
+      t.token = candy_lexer_curr(parser->lex, (candy_meta_t *)t.meta);
+      candy_assert(t.token == ')', "unexpected token: %d", t.token);
+      break;
+    default:
+      candy_assert(0, "unexpected token: %d", t.token);
   }
-  return CANDY_TOKEN_NULL;
+  return l;
+}
+
+static ast_node_t _expression(candy_parser_t parser) {
+  ast_node_t l = _term(parser);
+  struct priv t = {0};
+  t.token = candy_lexer_lookahead(parser->lex);
+  while (t.token == '+' || t.token == '-') {
+    t.token = candy_lexer_curr(parser->lex, (candy_meta_t *)t.meta);
+    l = _ast_node_create(t.token, NULL, l, _term(parser));
+    t.token = candy_lexer_lookahead(parser->lex);
+  }
+  return l;
+}
+
+void candy_parser_print(candy_parser_t parser) {
+  candy_assert(parser != NULL);
+
+}
+
+candy_parser_t candy_parser_create(const char code[]) {
+  candy_parser_t parser = (candy_parser_t)candy_malloc(sizeof(struct candy_parser));
+  parser->lex = candy_lexer_create(code);
+  parser->root = _expression(parser);
+  return parser;
+}
+
+int candy_parser_delete(candy_parser_t *parser) {
+  candy_assert(parser != NULL);
+  candy_assert(*parser != NULL);
+  candy_lexer_delete(&(*parser)->lex);
+  _ast_node_delete(&(*parser)->root);
+  candy_free(*parser);
+  *parser = NULL;
+  return 0;
 }

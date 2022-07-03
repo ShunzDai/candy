@@ -67,7 +67,7 @@ typedef struct candy_object * candy_object_t;
 typedef uint32_t        candy_hash_t;
 typedef candy_view_t    candy_string_t;
 typedef int64_t         candy_integer_t;
-typedef float           candy_float_t;
+typedef double          candy_float_t;
 typedef uint8_t         candy_boolean_t;
 typedef int (*candy_method_t)(candy_object_t);
 

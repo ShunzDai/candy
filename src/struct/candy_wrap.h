@@ -39,7 +39,7 @@ typedef enum candy_wraps{
 /* wrap general methods */
 
 candy_wraps_t candy_wrap_print(candy_wrap_t wrap);
-candy_view_t candy_wrap_expand(candy_wrap_t wrap);
+candy_view_t candy_wrap_view(candy_wrap_t wrap);
 candy_wraps_t candy_wrap_type(candy_wrap_t wrap);
 bool candy_wrap_match(candy_wrap_t wrap, candy_hash_t hash);
 
@@ -57,7 +57,7 @@ candy_wrap_t candy_wrap_string(candy_hash_t hash, const char *value, uint16_t si
 
 /* wrap delete method */
 
-int candy_wrap_delete(candy_wrap_t *wrap);
+int candy_wrap_delete(candy_wrap_t *wrap, candy_destroy_t func);
 
 /* wrap set methods */
 

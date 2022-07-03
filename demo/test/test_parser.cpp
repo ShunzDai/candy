@@ -14,98 +14,65 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "src/common/candy_lib.h"
-#include "src/struct/candy_wrap.h"
 #include "src/core/candy_parser.h"
 
-#define TEST_LEXER(name, type, in, out)\
-TEST(lexer, name){\
-  candy_lexer_t lex = candy_lexer_create((char *)in);\
-  candy_wrap_t pack = NULL;\
-  EXPECT_EQ(candy_lexer_get_token(lex, &pack), type);\
-  if (pack != NULL){\
-    EXPECT_EQ(candy_wrap_get_string(pack)->size, sizeof(out) - 1);\
-    EXPECT_EQ(memcmp((char *)candy_wrap_get_string(pack)->data, out, candy_wrap_get_string(pack)->size), 0);\
-    candy_wrap_delete(&pack);\
-  }\
-  lex = candy_lexer_delete(lex);\
+// extern "C" {
+
+// ast_node_t _ast_node_create(int8_t token, uint8_t meta[], ast_node_t l, ast_node_t r);
+// int _ast_node_delete(ast_node_t *node);
+
+// }
+
+// TEST(parser, tree_1) {
+//   auto root = _ast_node_create(0, NULL, NULL, NULL);
+//   _ast_node_delete(&root);
+// }
+
+// TEST(parser, tree_2) {
+//   auto l = _ast_node_create(0, NULL, NULL, NULL);
+//   auto r = _ast_node_create(0, NULL, NULL, NULL);
+//   auto root = _ast_node_create(0, NULL, l, r);
+//   _ast_node_delete(&root);
+// }
+
+// TEST(parser, tree_3) {
+//   auto l = _ast_node_create(0, NULL, NULL, NULL);
+//   auto root = _ast_node_create(0, NULL, l, NULL);
+//   _ast_node_delete(&root);
+// }
+
+// TEST(parser, tree_4) {
+//   auto ll = _ast_node_create(0, NULL, NULL, NULL);
+//   auto lr = _ast_node_create(0, NULL, NULL, NULL);
+//   auto rl = _ast_node_create(0, NULL, NULL, NULL);
+//   auto rr = _ast_node_create(0, NULL, NULL, NULL);
+//   auto l = _ast_node_create(0, NULL, ll, lr);
+//   auto r = _ast_node_create(0, NULL, rl, rr);
+//   auto root = _ast_node_create(0, NULL, l, r);
+//   _ast_node_delete(&root);
+// }
+
+TEST(parser, exp_0) {
+  auto parser = candy_parser_create("1 + 2");
+  candy_parser_delete(&parser);
 }
 
-TEST_LEXER(comment_0, CANDY_TOKEN_NULL,
-  "#\n",
-  ""
-);
+TEST(parser, exp_1) {
+  auto parser = candy_parser_create("(1 + 2)");
+  candy_parser_delete(&parser);
+}
 
-TEST_LEXER(comment_1, CANDY_TOKEN_NULL,
-  "# hello world\r\n",
-  ""
-);
+TEST(parser, exp_2) {
+  auto parser = candy_parser_create("1 * 2");
+  candy_parser_delete(&parser);
+}
 
-TEST_LEXER(comment_2, CANDY_TOKEN_NULL,
-  "# hello world\n"
-  "# hi\n",
-  ""
-);
+TEST(parser, exp_3) {
+  auto parser = candy_parser_create("(1 * 2)");
+  candy_parser_delete(&parser);
+}
 
-TEST_LEXER(string_0, CANDY_TOKEN_CONST_STRING,
-  "\"\"",
-  ""
-);
-
-TEST_LEXER(string_1, CANDY_TOKEN_CONST_STRING,
-  "\"hello world\"",
-  "hello world"
-);
-
-TEST_LEXER(string_2, CANDY_TOKEN_CONST_STRING,
-  "\"\\\\\"",/* "\\" */
-  "\\"
-);
-
-TEST_LEXER(string_3, CANDY_TOKEN_CONST_STRING,
-  "\"\\\"\"",/* "\"" */
-  "\""
-);
-
-TEST_LEXER(string_4, CANDY_TOKEN_CONST_STRING,
-  "\"\\hello world\"",/* "\hello world" */
-  "\\hello world"
-);
-
-TEST_LEXER(string_hex, CANDY_TOKEN_CONST_STRING,
-  "\"\\x68\\x65\\x6C\\x6C\\x6F\\x20\\x77\\x6F\\x72\\x6C\\x64\"",/* "\x68\x65\x6C\x6C\x6F\x20\x77\x6F\x72\x6C\x64" */
-  "hello world"
-);
-
-TEST_LEXER(string_oct, CANDY_TOKEN_CONST_STRING,
-  "\"\\150\\145\\154\\154\\157\\40\\167\\157\\162\\154\\144\"",/* "\x68\x65\x6C\x6C\x6F\x20\x77\x6F\x72\x6C\x64" */
-  "hello world"
-);
-
-TEST_LEXER(string_multiline_0, CANDY_TOKEN_CONST_STRING,
-  "''''''\n",
-  ""
-);
-
-TEST_LEXER(string_multiline_1, CANDY_TOKEN_CONST_STRING,
-  "'''\n"
-  "hello\n"
-  "world\n"
-  "'''\n",
-  "\nhello\nworld\n"
-);
-
-TEST(lexer, name){
-  candy_lexer_t lex = candy_lexer_create((char *)
-    "str = \"hello world\""
-  );
-  candy_wrap_t pack = NULL;
-  EXPECT_EQ(candy_lexer_get_token(lex, &pack), CANDY_TOKEN_IDENT);
-  EXPECT_EQ(candy_lexer_get_token(lex, &pack), CANDY_TOKEN_OPERATOR_ASSIGN);
-  EXPECT_EQ(candy_lexer_get_token(lex, &pack), CANDY_TOKEN_CONST_STRING);
-  if (pack != NULL){
-    EXPECT_EQ(strncmp((char *)candy_wrap_get_string(pack)->data, "hello world", candy_wrap_get_string(pack)->size), 0);
-    candy_wrap_delete(&pack);
-  }
-  lex = candy_lexer_delete(lex);
+TEST(parser, exp_4) {
+  auto parser = candy_parser_create("1 + (2 * 3)/(4 + 5)");
+  candy_parser_delete(&parser);
 }
