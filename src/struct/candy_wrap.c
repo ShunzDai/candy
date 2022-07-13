@@ -69,7 +69,7 @@ inline candy_view_t candy_wrap_view(candy_wrap_t wrap) {
 
 inline candy_wraps_t candy_wrap_type(candy_wrap_t wrap) {
   candy_assert(wrap != NULL);
-  return _private(wrap)->type;
+  return (candy_wraps_t)_private(wrap)->type;
 }
 
 inline bool candy_wrap_match(candy_wrap_t wrap, candy_hash_t hash) {
@@ -98,31 +98,7 @@ int candy_wrap_delete(candy_wrap_t *wrap, candy_destroy_t func) {
 
 inline candy_wrap_t candy_wrap_copy(candy_wrap_t wrap) {
   candy_assert(wrap != NULL);
-  return candy_wrap_create(_private(wrap)->hash, _private(wrap)->data, _private(wrap)->size, _private(wrap)->type, NULL);
-}
-
-inline candy_wrap_t candy_wrap_none(candy_hash_t hash) {
-  return candy_wrap_create(hash, NULL, 0, CANDY_WRAP_NONE, NULL);
-}
-
-inline candy_wrap_t candy_wrap_integer(candy_hash_t hash, candy_integer_t value) {
-  return candy_wrap_create(hash, &value, sizeof(candy_integer_t), CANDY_WRAP_INTEGER, NULL);
-}
-
-inline candy_wrap_t candy_wrap_float(candy_hash_t hash, candy_float_t value) {
-  return candy_wrap_create(hash, &value, sizeof(candy_float_t), CANDY_WRAP_FLOAT, NULL);
-}
-
-inline candy_wrap_t candy_wrap_boolean(candy_hash_t hash, candy_boolean_t value) {
-  return candy_wrap_create(hash, &value, sizeof(candy_boolean_t), CANDY_WRAP_BOOLEAN, NULL);
-}
-
-inline candy_wrap_t candy_wrap_method(candy_hash_t hash, candy_method_t value) {
-  return candy_wrap_create(hash, &value, sizeof(candy_method_t), CANDY_WRAP_METHOD, NULL);
-}
-
-inline candy_wrap_t candy_wrap_string(candy_hash_t hash, const char *value, uint16_t size) {
-  return candy_wrap_create(hash, value, size, CANDY_WRAP_STRING, NULL);
+  return candy_wrap_create(_private(wrap)->hash, _private(wrap)->data, _private(wrap)->size, (candy_wraps_t)_private(wrap)->type, NULL);
 }
 
 int candy_wrap_set_none(candy_wrap_t *wrap) {
@@ -254,7 +230,7 @@ candy_boolean_t candy_wrap_get_boolean(candy_wrap_t wrap) {
       return (candy_boolean_t)(*(candy_integer_t *)_private(wrap)->data);
     default:
       candy_assert(false);
-      return -1;
+      return false;
   }
 }
 
@@ -276,6 +252,6 @@ candy_string_t candy_wrap_get_string(candy_wrap_t wrap) {
       return (candy_view_t)(&_private(wrap)->size);
     default:
       candy_assert(false);
-      return (candy_view_t){0};
+      return (candy_view_t)NULL;
   }
 }

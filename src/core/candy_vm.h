@@ -21,7 +21,9 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-int candy_vm_runcode(candy_object_t root, char *const code);
+typedef struct candy_state * candy_state_t;
+
+int candy_vm_runcode(candy_state_t state, char *const code);
 
 #ifdef __cplusplus
 }

@@ -48,19 +48,11 @@ typedef struct candy_view{
   const uint8_t data[];
 } * candy_view_t;
 
-struct candy_node;
-
 typedef struct candy_node * candy_node_t;
-
-struct candy_queue;
 
 typedef struct candy_queue * candy_queue_t;
 
-struct candy_wrap;
-
 typedef struct candy_wrap * candy_wrap_t;
-
-struct candy_object;
 
 typedef struct candy_object * candy_object_t;
 
@@ -74,7 +66,7 @@ typedef int (*candy_method_t)(candy_object_t);
 typedef int (*candy_destroy_t)(candy_node_t *node);
 
 typedef struct candy_register{
-  char *name;
+  const char *name;
   candy_method_t method;
 } candy_register_t;
 

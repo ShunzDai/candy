@@ -24,6 +24,8 @@ extern "C"{
 typedef struct ast_node * ast_node_t;
 typedef struct candy_parser * candy_parser_t;
 
+void candy_parser_print(candy_parser_t parser);
+
 candy_parser_t candy_parser_create(const char code[]);
 int candy_parser_delete(candy_parser_t *parser);
 
