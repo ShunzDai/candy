@@ -22,7 +22,7 @@ extern "C"{
 #include "src/common/candy_types.h"
 
 enum {
-  CANDY_TK_EDGE = '\x80',
+  CANDY_TK_MIN = '\x80',
   CANDY_TK_ERROR = '\xFF',
   CANDY_TK_NONE = '\x00',
   CANDY_TK_EOF,
@@ -44,27 +44,30 @@ enum {
   CANDY_TK_CST_INTEGER,
   CANDY_TK_CST_FLOAT,
   CANDY_TK_CST_BOOLEAN,
-  CANDY_TK_OPE_ASSIGN   = '=',
-  CANDY_TK_OPE_ADDASS   = '+' + CANDY_TK_EDGE,
-  CANDY_TK_OPE_SUBASS   = '-' + CANDY_TK_EDGE,
-  CANDY_TK_OPE_MULASS   = '*' + CANDY_TK_EDGE,
-  CANDY_TK_OPE_DIVASS   = '/' + CANDY_TK_EDGE,
-  CANDY_TK_OPE_MODASS   = '%' + CANDY_TK_EDGE,
-  CANDY_TK_OPE_ADD      = '+',
-  CANDY_TK_OPE_SUB      = '-',
-  CANDY_TK_OPE_MUL      = '*',
-  CANDY_TK_OPE_DIV      = '/',
-  CANDY_TK_OPE_MOD      = '%',
+  CANDY_TK_OPE_ASSIGN   = '=',                /* 0x3D =  */
+  CANDY_TK_OPE_ADD      = '+',                /* 0x2B +  */
+  CANDY_TK_OPE_SUB      = '-',                /* 0x2D -  */
+  CANDY_TK_OPE_MUL      = '*',                /* 0x2A *  */
+  CANDY_TK_OPE_DIV      = '/',                /* 0x2F /  */
+  CANDY_TK_OPE_MOD      = '%',                /* 0x25 %  */
+  CANDY_TK_OPE_GREATER  = '>',                /* 0x3E >  */
+  CANDY_TK_OPE_LESS     = '<',                /* 0x3C <  */
+  CANDY_TK_OPE_EQUAL    = '=' + CANDY_TK_MIN, /* 0xBD == */
+  CANDY_TK_OPE_ADDASS   = '+' + CANDY_TK_MIN, /* 0xAB += */
+  CANDY_TK_OPE_SUBASS   = '-' + CANDY_TK_MIN, /* 0xAD -= */
+  CANDY_TK_OPE_MULASS   = '*' + CANDY_TK_MIN, /* 0xAA *= */
+  CANDY_TK_OPE_DIVASS   = '/' + CANDY_TK_MIN, /* 0xAF /= */
+  CANDY_TK_OPE_MODASS   = '%' + CANDY_TK_MIN, /* 0xB5 %= */
+  CANDY_TK_OPE_GEQUAL   = '>' + CANDY_TK_MIN, /* 0xBE >= */
+  CANDY_TK_OPE_LEQUAL   = '<' + CANDY_TK_MIN, /* 0xBC <= */
+  CANDY_TK_OPE_NEQUAL   = '!' + CANDY_TK_MIN, /* 0xA1 != */
   /* todo: ** // */
-  CANDY_TK_OPE_GREATER  = '>',
-  CANDY_TK_OPE_LESS     = '<',
-  CANDY_TK_OPE_EQUAL    = '=' + CANDY_TK_EDGE,
-  CANDY_TK_OPE_NEQUAL   = '!' + CANDY_TK_EDGE,
-  CANDY_TK_OPE_GEQUAL   = '>' + CANDY_TK_EDGE,
-  CANDY_TK_OPE_LEQUAL   = '<' + CANDY_TK_EDGE,
   CANDY_TK_DEL_LPAREN  = '(',
   CANDY_TK_DEL_RPAREN  = ')',
-  CANDY_TK_MAX = 127,
+  CANDY_TK_MAX,
+#if CANDY_TK_MAX > '\x7F'
+#error "too many tokens"
+#endif /* CANDY_TK_MAX */
 };
 
 typedef union candy_meta{

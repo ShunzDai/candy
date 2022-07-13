@@ -24,9 +24,10 @@ struct candy_lexer {
   const char *code;
   const char *curr;
   const char *error;
+  int8_t indent;
   uint32_t line;
 
-  struct {
+  struct lookahead{
     int8_t token;
     candy_meta_t meta;
   } lookahead;
@@ -98,7 +99,7 @@ static int _skip_newline(candy_lexer_t lex, char buff[]) {
   *         # hello world
   * @param  lex lexer
   * @param  buff store buffer
-  * @retval comment string length, not include '\0'
+  * @retval reserved
   */
 static int _skip_comment(candy_lexer_t lex) {
   char *tail = strchr(lex->curr, '\n');
@@ -210,7 +211,7 @@ static int _get_string(candy_lexer_t lex, char buff[], bool multiline) {
   }
   *dst = '\0';
   /* skip last " or ' */
-  candy_assert(*lex->curr == del && multiline ? (lex->curr[1] == del && lex->curr[2] == del) : (true), "unexpected end of string");
+  candy_assert(*lex->curr == del && (multiline ? (lex->curr[1] == del && lex->curr[2] == del) : (true)), "unexpected end of string");
   lex->curr += multiline ? 3 : 1;
   return dst - buff;
 }
@@ -293,7 +294,7 @@ static int8_t _next(candy_lexer_t lex, candy_meta_t *meta) {
         if (lex->curr[1] == '=') {
           char ch = *lex->curr;
           lex->curr += 2;
-          return ch + CANDY_TK_EDGE;
+          return ch + CANDY_TK_MIN;
         }
         return *lex->curr++;
       case '(': case ')':
@@ -318,6 +319,14 @@ static int8_t _next(candy_lexer_t lex, candy_meta_t *meta) {
   }
 }
 
+const char *candy_lexer_get_tokenstr(int8_t token) {
+  for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
+    if (_keywords[i].token == token)
+      return _keywords[i].keyword;
+  }
+  return NULL;
+}
+
 candy_lexer_t candy_lexer_create(const char code[]) {
   candy_lexer_t lex = (candy_lexer_t)candy_malloc(sizeof(struct candy_lexer));
   lex->code = code;
@@ -337,8 +346,9 @@ int8_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta) {
   /* is there a look-ahead token? */
   if (lex->lookahead.token != CANDY_TK_EOS) {
     /* use this one */
-    *meta = lex->lookahead.meta;
     int8_t token = lex->lookahead.token;
+    if (meta != NULL)
+      *meta = lex->lookahead.meta;
     /* and discharge it */
     lex->lookahead.token = CANDY_TK_EOS;
     return token;

@@ -52,27 +52,48 @@
 //   _ast_node_delete(&root);
 // }
 
-TEST(parser, exp_0) {
+TEST(parser, exp_add_0) {
   auto parser = candy_parser_create("1 + 2");
   candy_parser_delete(&parser);
 }
 
-TEST(parser, exp_1) {
+TEST(parser, exp_add_1) {
   auto parser = candy_parser_create("(1 + 2)");
   candy_parser_delete(&parser);
 }
 
-TEST(parser, exp_2) {
+TEST(parser, exp_sub_0) {
+  auto parser = candy_parser_create("1 - 2");
+  candy_parser_delete(&parser);
+}
+
+TEST(parser, exp_sub_1) {
+  auto parser = candy_parser_create("(1 - 2)");
+  candy_parser_delete(&parser);
+}
+
+TEST(parser, exp_mul_0) {
   auto parser = candy_parser_create("1 * 2");
   candy_parser_delete(&parser);
 }
 
-TEST(parser, exp_3) {
+TEST(parser, exp_mul_1) {
   auto parser = candy_parser_create("(1 * 2)");
   candy_parser_delete(&parser);
 }
 
+TEST(parser, exp_div_0) {
+  auto parser = candy_parser_create("1 / 2");
+  candy_parser_delete(&parser);
+}
+
+TEST(parser, exp_div_1) {
+  auto parser = candy_parser_create("(1 / 2)");
+  candy_parser_delete(&parser);
+}
+
 TEST(parser, exp_4) {
-  auto parser = candy_parser_create("1 + (2 * 3)/(4 + 5)");
+  const char exp[] = "(((1 + (2 * 3)/(4.5 + 5))*(6 - 7) + (8 + 9) * 10)/11) - 12";
+  candy_parser_t parser = candy_parser_create(exp);
   candy_parser_delete(&parser);
 }
