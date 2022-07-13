@@ -17,7 +17,15 @@
 #include "src/struct/candy_wrap.h"
 #include "src/core/candy_parser.h"
 
-int candy_vm_runcode(candy_object_t root, char * const code) {
+struct candy_state {
+  candy_parser_t parser;
+  candy_queue_t stack;
+  candy_object_t root;
+};
+
+
+
+int candy_vm_runcode(candy_state_t state, char * const code) {
 
   return 0;
 }

@@ -13,5 +13,5 @@ include_directories(
   ../../config
 )
 
-add_subdirectory(../middleware ${CMAKE_SOURCE_DIR}/build/middleware)
+add_subdirectory(../../components/middleware ${CMAKE_SOURCE_DIR}/build/middleware)
 add_subdirectory(../../src ${CMAKE_SOURCE_DIR}/build/candy_core)

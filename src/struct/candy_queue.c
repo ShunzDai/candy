@@ -61,7 +61,6 @@ candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t pos) {
       return node;
     node = &(*node)->next;
   }
-  return &queue->head;
 }
 
 int candy_queue_clear(candy_queue_t queue, candy_destroy_t func) {

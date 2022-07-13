@@ -48,12 +48,30 @@ bool candy_wrap_match(candy_wrap_t wrap, candy_hash_t hash);
 candy_wrap_t candy_wrap_create(candy_hash_t hash, const void *data, uint16_t size, candy_wraps_t type, candy_wrap_t next);
 
 candy_wrap_t candy_wrap_copy(candy_wrap_t wrap);
-candy_wrap_t candy_wrap_none(candy_hash_t hash);
-candy_wrap_t candy_wrap_integer(candy_hash_t hash, candy_integer_t value);
-candy_wrap_t candy_wrap_float(candy_hash_t hash, candy_float_t value);
-candy_wrap_t candy_wrap_boolean(candy_hash_t hash, candy_boolean_t value);
-candy_wrap_t candy_wrap_method(candy_hash_t hash, candy_method_t value);
-candy_wrap_t candy_wrap_string(candy_hash_t hash, const char *value, uint16_t size);
+
+static inline candy_wrap_t candy_wrap_none(candy_hash_t hash) {
+  return candy_wrap_create(hash, NULL, 0, CANDY_WRAP_NONE, NULL);
+}
+
+static inline candy_wrap_t candy_wrap_integer(candy_hash_t hash, candy_integer_t value) {
+  return candy_wrap_create(hash, &value, sizeof(candy_integer_t), CANDY_WRAP_INTEGER, NULL);
+}
+
+static inline candy_wrap_t candy_wrap_float(candy_hash_t hash, candy_float_t value) {
+  return candy_wrap_create(hash, &value, sizeof(candy_float_t), CANDY_WRAP_FLOAT, NULL);
+}
+
+static inline candy_wrap_t candy_wrap_boolean(candy_hash_t hash, candy_boolean_t value) {
+  return candy_wrap_create(hash, &value, sizeof(candy_boolean_t), CANDY_WRAP_BOOLEAN, NULL);
+}
+
+static inline candy_wrap_t candy_wrap_method(candy_hash_t hash, candy_method_t value) {
+  return candy_wrap_create(hash, &value, sizeof(candy_method_t), CANDY_WRAP_METHOD, NULL);
+}
+
+static inline candy_wrap_t candy_wrap_string(candy_hash_t hash, const char *value, uint16_t size) {
+  return candy_wrap_create(hash, value, size, CANDY_WRAP_STRING, NULL);
+}
 
 /* wrap delete method */
 
