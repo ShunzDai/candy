@@ -21,7 +21,7 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-enum {
+typedef enum candy_tokens{
   CANDY_TK_MIN = '\x80',
   CANDY_TK_ERROR = '\xFF',
   CANDY_TK_NONE = '\x00',
@@ -68,7 +68,7 @@ enum {
 #if CANDY_TK_MAX > '\x7F'
 #error "too many tokens"
 #endif /* CANDY_TK_MAX */
-};
+} candy_tokens_t;
 
 typedef union candy_meta{
   size_t value;
@@ -85,8 +85,8 @@ typedef struct candy_lexer * candy_lexer_t;
 candy_lexer_t candy_lexer_create(const char code[]);
 int candy_lexer_delete(candy_lexer_t *lex);
 
-int8_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta);
-int8_t candy_lexer_lookahead(candy_lexer_t lex);
+candy_tokens_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta);
+candy_tokens_t candy_lexer_lookahead(candy_lexer_t lex);
 
 #ifdef __cplusplus
 }

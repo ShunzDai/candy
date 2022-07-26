@@ -38,11 +38,7 @@ candy_wraps_t candy_wrap_print(candy_wrap_t wrap) {
       printf("%s\n", (char *)candy_wrap_get_string(wrap)->data);
       return CANDY_WRAP_STRING;
     case CANDY_WRAP_INTEGER:
-      #if defined __linux__
       printf("%ld\n", candy_wrap_get_integer(wrap));
-      #else
-      printf("%lld\n", candy_wrap_get_integer(wrap));
-      #endif /* __linux__ */
       return CANDY_WRAP_INTEGER;
     case CANDY_WRAP_FLOAT:
       printf("%.5f\n", candy_wrap_get_float(wrap));

@@ -43,7 +43,7 @@ extern "C"{
 
 #define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert_error(__FILE__, __LINE__, __FUNCTION__, #condition " " __VA_ARGS__))
 
-typedef struct candy_view{
+typedef struct candy_view {
   const uint16_t size;
   const uint8_t data[];
 } * candy_view_t;
@@ -65,7 +65,7 @@ typedef int (*candy_method_t)(candy_object_t);
 
 typedef int (*candy_destroy_t)(candy_node_t *node);
 
-typedef struct candy_register{
+typedef struct candy_register {
   const char *name;
   candy_method_t method;
 } candy_register_t;
