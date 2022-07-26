@@ -1,3 +1,4 @@
+#include "mid_os.h"
 #include <stdint.h>
 #include <stdio.h>
 

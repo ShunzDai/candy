@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_PLATFORM_LIB_H
-#define CANDY_SRC_PLATFORM_LIB_H
+#ifndef CANDY_SRC_COMMON_LIB_H
+#define CANDY_SRC_COMMON_LIB_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -26,7 +26,31 @@ candy_hash_t candy_hash(char *name);
 void *candy_memset(void *dst, uint8_t val, size_t size);
 void *candy_memcpy(void *dst, const void *src, size_t size);
 
+static inline bool is_capital(char ch) {
+  return (ch >= 'A') && (ch <= 'Z');
+}
+
+static inline bool is_lower(char ch) {
+  return (ch >= 'a') && (ch <= 'z');
+}
+
+static inline bool is_alpha(char ch) {
+  return is_capital(ch) || is_lower(ch);
+}
+
+static inline bool is_oct(char ch) {
+  return (ch >= '0') && (ch <= '7');
+}
+
+static inline bool is_dec(char ch) {
+  return (ch >= '0') && (ch <= '9');
+}
+
+static inline bool is_hex(char ch) {
+  return is_dec(ch) || ((ch >= 'a') && (ch <= 'f')) || ((ch >= 'A') && (ch <= 'F'));
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_PLATFORM_LIB_H */
+#endif /* CANDY_SRC_COMMON_LIB_H */

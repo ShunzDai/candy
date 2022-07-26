@@ -94,11 +94,9 @@ TEST(parser, exp_div_1) {
 }
 
 TEST(parser, exp_4) {
-  const char exp[] = "(((1 + (2 * 3)/(4.5 + 5))*(6 - 7) + (8 + 9) * 10)/11) - 12";
+  const char exp[] = "(((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12";
   auto tick = os::tick_us();
   candy_parser_t parser = candy_parser_create(exp);
   candy_parser_delete(&parser);
-  printf("%ld\n", os::tick_us() - tick);
-  tick = os::tick_us();
-  printf("%ld\n", os::tick_us() - tick);
+  printf("delta time = %lld us\n", os::tick_us() - tick);
 }

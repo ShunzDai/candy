@@ -4,4 +4,4 @@ dummy.cpp
 
 add_executable(dummy ${SOURCES_DUMMY})
 
-target_link_libraries(dummy PUBLIC -Wl,--whole-archive candy_core -Wl,-no-whole-archive)
+target_link_libraries(dummy PUBLIC -Wl,--whole-archive candy_core -Wl,-no-whole-archive mid_os)

@@ -79,8 +79,8 @@ TEST_LEXER(string_hex, CANDY_TK_CST_STRING,
 );
 
 TEST_LEXER(string_oct, CANDY_TK_CST_STRING,
-  "\"\\150\\145\\154\\154\\157\\40\\167\\157\\162\\154\\144\"",/* "\x68\x65\x6C\x6C\x6F\x20\x77\x6F\x72\x6C\x64" */
-  "hello world"
+  "\"\\150\\145\\154\\154\\157\\40\\167\\157\\162\\154\\144\\0\"",/* "\150\145\154\154\157\40\167\157\162\154\144\0" */
+  "hello world\0"
 );
 
 TEST_LEXER(string_multiline_0, CANDY_TK_CST_STRING,
