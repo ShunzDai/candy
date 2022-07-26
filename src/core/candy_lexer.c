@@ -35,7 +35,7 @@ struct candy_lexer {
 
 static const struct {
   const char * const keyword;
-  int8_t token;
+  candy_tokens_t token;
 } _keywords[] = {
   {"False",     CANDY_TK_KW_FALSE},
   {"True",      CANDY_TK_KW_TRUE},
@@ -51,54 +51,10 @@ static const struct {
   {"continue",  CANDY_TK_KW_CONTINUE},
 };
 
-static inline bool _is_capital(char ch) {
-  return ch >= 'A' && ch <= 'Z';
-}
-
-static inline bool _is_lower(char ch) {
-  return ch >= 'a' && ch <= 'z';
-}
-
-static inline bool _is_alpha(char ch) {
-  return _is_capital(ch) || _is_lower(ch);
-}
-
-static inline bool _is_oct(char ch) {
-  return ch >= '0' && ch <= '7';
-}
-
-static inline bool _is_dec(char ch) {
-  return ch >= '0' && ch <= '9';
-}
-
-static inline bool _is_hex(char ch) {
-  return (_is_dec(ch) || (ch >= 'a' && ch <= 'f')) || (ch >= 'A' && ch <= 'F');
-}
-
-/**
-  * @brief  skip newline, like
-  *         \r
-  *         \n
-  *         \r\n
-  *         \n\r
-  * @param  lex lexer
-  * @return skip bytes
-  */
-static int _skip_newline(candy_lexer_t lex, char buff[]) {
-  char *dst = buff;
-  *dst++ = *lex->curr++;
-  if (*lex->curr == '\n' || *lex->curr == '\r') {
-    *buff++ = *lex->curr++;
-  }
-  lex->line++;
-  return dst - buff;
-}
-
 /**
   * @brief  skip comment, like
   *         # hello world
   * @param  lex lexer
-  * @param  buff store buffer
   * @retval reserved
   */
 static int _skip_comment(candy_lexer_t lex) {
@@ -109,20 +65,33 @@ static int _skip_comment(candy_lexer_t lex) {
 }
 
 /**
-  * @brief  gets hexadecimal escape character, like
-  *         "30"
+  * @brief  get newline, like
+  *         \r
+  *         \n
+  *         \r\n
+  *         \n\r
   * @param  lex lexer
-  * @retval hexadecimal character
+  * @param  buff store buffer
+  * @return newline bytes
   */
-static char _get_hexchar(candy_lexer_t lex) {
-  /* save hex */
-  char hex[] = {*lex->curr, lex->curr[1], '\0'};
-  lex->curr += 2;
-  /* string to hex */
+static int _get_newline(candy_lexer_t lex, char buff[]) {
+  char *dst = buff;
+  *dst++ = *lex->curr++;
+  if (*lex->curr == '\n' || *lex->curr == '\r') {
+    *buff++ = *lex->curr++;
+  }
+  lex->line++;
+  return dst - buff;
+}
+
+static char _get_intchar(candy_lexer_t lex, uint8_t max_len, uint8_t base) {
+  char value = 0;
+  char buff[] = {lex->curr[0], lex->curr[1], lex->curr[2], '\0'};
+  buff[max_len] = '\0';
   char *end = NULL;
-  char res = strtol(hex, &end, 16);
-  candy_assert(end == hex + 2, "hex not valid");
-  return res;
+  value = strtoul(buff, &end, base);
+  lex->curr += (end - buff);
+  return value;
 }
 
 /**
@@ -134,20 +103,61 @@ static char _get_hexchar(candy_lexer_t lex) {
   * @param  lex lexer
   * @retval octal character
   */
-static char _get_octchar(candy_lexer_t lex) {
-  /* save oct */
-  char oct[] = {*lex->curr, lex->curr[1], lex->curr[2], '\0'};
-  lex->curr += 3;
-  if (_is_oct(oct[1]) == false) {
-    oct[1] = '\0';
-    lex->curr -= 2;
+static inline char _get_octchar(candy_lexer_t lex) {
+  return _get_intchar(lex, 3, 8);
+}
+
+/**
+  * @brief  gets hexadecimal escape character, like
+  *         "30"
+  * @param  lex lexer
+  * @retval hexadecimal character
+  */
+static inline char _get_hexchar(candy_lexer_t lex) {
+  return _get_intchar(lex, 2, 16);
+}
+
+static candy_tokens_t _get_number(candy_lexer_t lex, char buff[], const int sign, candy_meta_t *meta) {
+  char *dst = buff;
+  bool is_float = false;
+  *dst++ = *lex->curr++;
+  if ((*lex->curr == 'x' || *lex->curr == 'X')) {
+    lex->curr++;
+    char *end = NULL;
+    meta->i = (candy_integer_t)strtol(lex->curr, &end, 16) * sign;
+    candy_assert(end != NULL, "invalid hexadecimal number");
+    lex->curr = end;
+    return CANDY_TK_CST_INTEGER;
   }
-  else if (_is_oct(oct[2]) == false) {
-    oct[2] = '\0';
-    lex->curr -= 1;
+  while (1) {
+    switch (*lex->curr) {
+      case '0' ... '9':
+        *dst++ = *lex->curr++;
+        break;
+      case '.':
+        candy_assert(!is_float, "invalid float");
+        is_float = true;
+        *dst++ = *lex->curr++;
+        break;
+      case 'e': case 'E':
+        is_float = true;
+        *dst++ = *lex->curr++;
+        if (*lex->curr == '+' || *lex->curr == '-') {
+          *dst++ = *lex->curr++;
+        }
+        break;
+      default:
+        *dst = '\0';
+        if (is_float) {
+          meta->f = (candy_float_t)strtod(buff, NULL) * sign;
+          return CANDY_TK_CST_FLOAT;
+        }
+        else {
+          meta->i = (candy_integer_t)strtol(buff, NULL, 10) * sign;
+          return CANDY_TK_CST_INTEGER;
+        }
+    }
   }
-  /* string to oct */
-  return strtol(oct, NULL, 8);
 }
 
 /**
@@ -177,7 +187,7 @@ static int _get_string(candy_lexer_t lex, char buff[], bool multiline) {
           candy_assert(false, "single line string can not contain newline");
           return -1;
         }
-        dst += _skip_newline(lex, dst);
+        dst += _get_newline(lex, dst);
         break;
       case '\\':
         lex->curr++;
@@ -192,8 +202,8 @@ static int _get_string(candy_lexer_t lex, char buff[], bool multiline) {
           case        '\\': lex->curr++; *dst++ =               '\\'; break;
           case        '\'': lex->curr++; *dst++ =               '\''; break;
           case         '"': lex->curr++; *dst++ =                '"'; break;
-          case         'x': lex->curr++; *dst++ = _get_hexchar(lex); break;
-          case '0' ... '7':              *dst++ = _get_octchar(lex); break;
+          case         'x': lex->curr++; *dst++ =  _get_hexchar(lex); break;
+          case '0' ... '7':              *dst++ =  _get_octchar(lex); break;
           /* todo: support unicode */
           default:
             /* is not escape */
@@ -216,50 +226,12 @@ static int _get_string(candy_lexer_t lex, char buff[], bool multiline) {
   return dst - buff;
 }
 
-static int8_t _get_number(candy_lexer_t lex, char buff[], candy_meta_t *meta) {
-  bool f = false;
-  /* save integer part */
-  char *dst = buff;
-  while (_is_dec(*lex->curr)) {
-    *dst++ = *lex->curr++;
-  }
-  /* save fraction part */
-  if (*lex->curr == '.') {
-    f = true;
-    *dst++ = *lex->curr++;
-    while (_is_dec(*lex->curr)) {
-      *dst++ = *lex->curr++;
-    }
-  }
-  /* save exponent part */
-  if (*lex->curr == 'e' || *lex->curr == 'E') {
-    *dst++ = *lex->curr++;
-    if (*lex->curr == '+' || *lex->curr == '-') {
-      *dst++ = *lex->curr++;
-    }
-    while (_is_dec(*lex->curr)) {
-      *dst++ = *lex->curr++;
-    }
-  }
-  *dst = '\0';
-  /* convert to float or int */
-  if (f) {
-    /* is float */
-    meta->f = strtof(buff, NULL);
-    return CANDY_TK_CST_FLOAT;
-
-  }
-  /* is integer */
-  meta->i = strtol(buff, NULL, 10);
-  return CANDY_TK_CST_INTEGER;
-}
-
-static int8_t _get_ident_or_keyword(candy_lexer_t lex, char buff[], candy_meta_t *meta) {
+static candy_tokens_t _get_ident_or_keyword(candy_lexer_t lex, char buff[], const char curr, candy_meta_t *meta) {
   char *dst = buff;
   /* save alpha, or '_' */
-  *dst++ = *lex->curr++;
+  *dst++ = curr;
   /* save number, alpha, or '_' */
-  while (_is_dec(*lex->curr) || _is_alpha(*lex->curr) || *lex->curr == '_')
+  while (is_dec(*lex->curr) || is_alpha(*lex->curr) || *lex->curr == '_')
     *dst++ = *lex->curr++;
   /* last char padding '\0' */
   *dst = '\0';
@@ -272,7 +244,7 @@ static int8_t _get_ident_or_keyword(candy_lexer_t lex, char buff[], candy_meta_t
   return CANDY_TK_IDENT;
 }
 
-static int8_t _next(candy_lexer_t lex, candy_meta_t *meta) {
+static candy_tokens_t _next(candy_lexer_t lex, candy_meta_t *meta) {
   candy_assert(lex != NULL);
   char buffer[CANDY_PARSER_BUFFER_SIZE] = {0};
   int len = 0;
@@ -282,21 +254,40 @@ static int8_t _next(candy_lexer_t lex, candy_meta_t *meta) {
       case '\0':
         return CANDY_TK_NONE;
       case '\r': case '\n':
-        _skip_newline(lex, buffer);
+        _get_newline(lex, buffer);
         break;
       case ' ': case '\f': case '\t': case '\v':
         lex->curr++;
         break;
-      case '+': case '-': case '*': case '/': case '%':
-      case '=': case '!': case '>': case '<':
-        if (*lex->curr == '!')
-          candy_assert(lex->curr[1] == '=', "unexpected token");
-        if (lex->curr[1] == '=') {
-          char ch = *lex->curr;
-          lex->curr += 2;
-          return ch + CANDY_TK_MIN;
+      case '+': case '-':
+        switch (lex->curr[1]) {
+          case '=':
+            *buffer = *lex->curr;
+            lex->curr += 2;
+            /* CANDY_TK_OPE_ADDASS or CANDY_TK_OPE_SUBASS */
+            return *buffer + CANDY_TK_MIN;
+          case '0' ... '9':
+            return _get_number(lex, buffer, ('+' == *lex->curr++) ? (1) : (-1), meta);
+          default:
+            /* CANDY_TK_OPE_ADD or CANDY_TK_OPE_SUB */
+            return *lex->curr++;
         }
-        return *lex->curr++;
+      case '*': case '/': case '%':
+      case '=': case '>': case '<':
+        switch (lex->curr[1]) {
+          case '=':
+            *buffer = *lex->curr;
+            lex->curr += 2;
+            return *buffer + CANDY_TK_MIN;
+          default:
+            return *lex->curr++;
+        }
+      case '!':
+        candy_assert(lex->curr[1] == '=', "unexpected token");
+        *buffer = *lex->curr;
+        lex->curr += 2;
+        /* CANDY_TK_OPE_NEQUAL */
+        return *buffer + CANDY_TK_MIN;
       case '(': case ')':
         return *lex->curr++;
       /* is singleline comment */
@@ -309,17 +300,17 @@ static int8_t _next(candy_lexer_t lex, candy_meta_t *meta) {
         meta->wrap = candy_wrap_string(0, buffer, len);
         return CANDY_TK_CST_STRING;
       case '0' ... '9':
-        return _get_number(lex, buffer, meta);
+        return _get_number(lex, buffer, 1, meta);
       default:
-        if (_is_alpha(*lex->curr) || *lex->curr == '_')
-          return _get_ident_or_keyword(lex, buffer, meta);
+        if (is_alpha(*lex->curr) || *lex->curr == '_')
+          return _get_ident_or_keyword(lex, buffer, *lex->curr++, meta);
         candy_assert(false, "unexpected char '%c'", *lex->curr);
         break;
     }
   }
 }
 
-const char *candy_lexer_get_tokenstr(int8_t token) {
+const char *candy_lexer_get_tokenstr(candy_tokens_t token) {
   for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
     if (_keywords[i].token == token)
       return _keywords[i].keyword;
@@ -342,11 +333,11 @@ int candy_lexer_delete(candy_lexer_t *lex) {
   return 0;
 }
 
-int8_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta) {
+candy_tokens_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta) {
   /* is there a look-ahead token? */
   if (lex->lookahead.token != CANDY_TK_EOS) {
     /* use this one */
-    int8_t token = lex->lookahead.token;
+    candy_tokens_t token = lex->lookahead.token;
     if (meta != NULL)
       *meta = lex->lookahead.meta;
     /* and discharge it */
@@ -357,7 +348,7 @@ int8_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta) {
   return _next(lex, meta);
 }
 
-int8_t candy_lexer_lookahead(candy_lexer_t lex) {
+candy_tokens_t candy_lexer_lookahead(candy_lexer_t lex) {
   if (lex->lookahead.token == CANDY_TK_EOS)
     lex->lookahead.token = _next(lex, &lex->lookahead.meta);
   return lex->lookahead.token;
