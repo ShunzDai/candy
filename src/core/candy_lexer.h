@@ -21,12 +21,16 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-typedef enum candy_tokens{
-  CANDY_TK_MIN = '\x80',
-  CANDY_TK_ERROR = '\xFF',
+#define tk_dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
+
+typedef enum candy_tokens {
   CANDY_TK_NONE = '\x00',
   CANDY_TK_EOF,
   CANDY_TK_EOS,
+  CANDY_TK_CST_STRING,
+  CANDY_TK_CST_INTEGER,
+  CANDY_TK_CST_FLOAT,
+  CANDY_TK_IDENT,
   CANDY_TK_KW_FALSE,
   CANDY_TK_KW_TRUE,
   CANDY_TK_KW_AND,
@@ -39,39 +43,39 @@ typedef enum candy_tokens{
   CANDY_TK_KW_FOR,
   CANDY_TK_KW_BREAK,
   CANDY_TK_KW_CONTINUE,
-  CANDY_TK_IDENT,
-  CANDY_TK_CST_STRING,
-  CANDY_TK_CST_INTEGER,
-  CANDY_TK_CST_FLOAT,
-  CANDY_TK_CST_BOOLEAN,
-  CANDY_TK_OPE_ASSIGN   = '=',                /* 0x3D =  */
-  CANDY_TK_OPE_ADD      = '+',                /* 0x2B +  */
-  CANDY_TK_OPE_SUB      = '-',                /* 0x2D -  */
-  CANDY_TK_OPE_MUL      = '*',                /* 0x2A *  */
-  CANDY_TK_OPE_DIV      = '/',                /* 0x2F /  */
-  CANDY_TK_OPE_MOD      = '%',                /* 0x25 %  */
-  CANDY_TK_OPE_GREATER  = '>',                /* 0x3E >  */
-  CANDY_TK_OPE_LESS     = '<',                /* 0x3C <  */
-  CANDY_TK_OPE_EQUAL    = '=' + CANDY_TK_MIN, /* 0xBD == */
-  CANDY_TK_OPE_ADDASS   = '+' + CANDY_TK_MIN, /* 0xAB += */
-  CANDY_TK_OPE_SUBASS   = '-' + CANDY_TK_MIN, /* 0xAD -= */
-  CANDY_TK_OPE_MULASS   = '*' + CANDY_TK_MIN, /* 0xAA *= */
-  CANDY_TK_OPE_DIVASS   = '/' + CANDY_TK_MIN, /* 0xAF /= */
-  CANDY_TK_OPE_MODASS   = '%' + CANDY_TK_MIN, /* 0xB5 %= */
-  CANDY_TK_OPE_GEQUAL   = '>' + CANDY_TK_MIN, /* 0xBE >= */
-  CANDY_TK_OPE_LEQUAL   = '<' + CANDY_TK_MIN, /* 0xBC <= */
-  CANDY_TK_OPE_NEQUAL   = '!' + CANDY_TK_MIN, /* 0xA1 != */
-  /* todo: ** // */
-  CANDY_TK_DEL_LPAREN  = '(',
-  CANDY_TK_DEL_RPAREN  = ')',
-  CANDY_TK_MAX,
-#if CANDY_TK_MAX > '\x7F'
-#error "too many tokens"
-#endif /* CANDY_TK_MAX */
+  CANDY_TK_DEL_LPAREN   =                   '(', /* 0x28 (  */
+  CANDY_TK_DEL_RPAREN   =                   ')', /* 0x29 )  */
+  CANDY_TK_DEL_LBRACE   =                   '[', /* 0x5B [  */
+  CANDY_TK_DEL_RBRACE   =                   ']', /* 0x5D ]  */
+  CANDY_TK_OPE_BITAND   =                   '&', /* 0x26 &  */
+  CANDY_TK_OPE_BITOR    =                   '|', /* 0x7C |  */
+  CANDY_TK_OPE_BITNOT   =                   '~', /* 0x7E ~  */
+  CANDY_TK_OPE_BITXOR   =                   '^', /* 0x5E ^  */
+  CANDY_TK_OPE_MOD      =                   '%', /* 0x25 %  */
+  CANDY_TK_OPE_ADD      =                   '+', /* 0x2B +  */
+  CANDY_TK_OPE_SUB      =                   '-', /* 0x2D -  */
+  CANDY_TK_OPE_MUL      =                   '*', /* 0x2A *  */
+  CANDY_TK_OPE_DIV      =                   '/', /* 0x2F /  */
+  CANDY_TK_OPE_ASSIGN   =                   '=', /* 0x3D =  */
+  CANDY_TK_OPE_GREATER  =                   '>', /* 0x3E >  */
+  CANDY_TK_OPE_LESS     =                   '<', /* 0x3C <  */
+  CANDY_TK_OPE_EXP      = tk_dual_ope('*', '*'), /* 0xEA ** */
+  CANDY_TK_OPE_FLRDIV   = tk_dual_ope('/', '/'), /* 0xA9 // */
+  CANDY_TK_OPE_MODASS   = tk_dual_ope('%', '='), /* 0xD9 %= */
+  CANDY_TK_OPE_NEQUAL   = tk_dual_ope('!', '='), /* 0xE4 != */
+  CANDY_TK_OPE_ADDASS   = tk_dual_ope('+', '='), /* 0xC9 += */
+  CANDY_TK_OPE_SUBASS   = tk_dual_ope('-', '='), /* 0xC3 -= */
+  CANDY_TK_OPE_MULASS   = tk_dual_ope('*', '='), /* 0x8C *= */
+  CANDY_TK_OPE_DIVASS   = tk_dual_ope('/', '='), /* 0xBE /= */
+  CANDY_TK_OPE_EQUAL    = tk_dual_ope('=', '='), /* 0x97 == */
+  CANDY_TK_OPE_GEQUAL   = tk_dual_ope('>', '='), /* 0xD4 >= */
+  CANDY_TK_OPE_LEQUAL   = tk_dual_ope('<', '='), /* 0xDA <= */
+  CANDY_TK_OPE_RSHIFT   = tk_dual_ope('>', '>'), /* 0x93 >> */
+  CANDY_TK_OPE_LSHIFT   = tk_dual_ope('<', '<'), /* 0x9E << */
 } candy_tokens_t;
 
-typedef union candy_meta{
-  size_t value;
+typedef union candy_meta {
+  size_t data;
   candy_integer_t i;
   candy_float_t f;
   candy_hash_t hash;
@@ -82,7 +86,7 @@ struct candy_lexer;
 
 typedef struct candy_lexer * candy_lexer_t;
 
-candy_lexer_t candy_lexer_create(const char code[]);
+candy_lexer_t candy_lexer_create(const char code[], const candy_view_t buffer);
 int candy_lexer_delete(candy_lexer_t *lex);
 
 candy_tokens_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta);

@@ -1,17 +1,20 @@
 #include <stdint.h>
 #include <stdio.h>
 
-int add(int *a) {
-  (*a)++;
-  return *a;
+int a() {
+  printf("into %s\n", __FUNCTION__);
+  return 0;
 }
 
-int get(int *a) {
-  return *a;
+int b() {
+  printf("into %s\n", __FUNCTION__);
+  return 1;
 }
 
 int main(int argc, char *argv[]) {
-  int a = 0;
-    printf("%d %d\n", get(&a), add(&a));
-    return 0;
+  if (a() || b())
+    printf("into if\n");
+  else
+    printf("into else\n");
+  return 0;
 }

@@ -25,8 +25,8 @@ struct ast_node {
 };
 
 typedef struct priv {
-  int8_t token;
-  int8_t meta[sizeof(candy_meta_t)];
+  uint8_t token;
+  uint8_t meta[sizeof(candy_meta_t)];
 } * priv_t;
 
 struct candy_parser {
@@ -77,7 +77,7 @@ static int _ast_node_delete(ast_node_t *node) {
 static ast_node_t _factor(candy_parser_t parser) {
   ast_node_t l = NULL;
   candy_meta_t meta;
-  int8_t token = candy_lexer_curr(parser->lex, &meta);
+  uint8_t token = candy_lexer_curr(parser->lex, &meta);
   switch (token) {
     case CANDY_TK_CST_INTEGER:
     case CANDY_TK_CST_FLOAT:
@@ -96,7 +96,7 @@ static ast_node_t _factor(candy_parser_t parser) {
 
 static ast_node_t _term(candy_parser_t parser) {
   ast_node_t l = _factor(parser);
-  for (int8_t token = candy_lexer_lookahead(parser->lex); token == '*' || token == '/'; token = candy_lexer_lookahead(parser->lex)) {
+  for (uint8_t token = candy_lexer_lookahead(parser->lex); token == '*' || token == '/'; token = candy_lexer_lookahead(parser->lex)) {
     token = candy_lexer_curr(parser->lex, NULL);
     l = _ast_node_create(token, NULL, l, _factor(parser));
   }
@@ -105,7 +105,7 @@ static ast_node_t _term(candy_parser_t parser) {
 
 static ast_node_t _expression(candy_parser_t parser) {
   ast_node_t l = _term(parser);
-  for (int8_t token = candy_lexer_lookahead(parser->lex); token == '+' || token == '-'; token = candy_lexer_lookahead(parser->lex)) {
+  for (uint8_t token = candy_lexer_lookahead(parser->lex); token == '+' || token == '-'; token = candy_lexer_lookahead(parser->lex)) {
     token = candy_lexer_curr(parser->lex, NULL);
     l = _ast_node_create(token, NULL, l, _term(parser));
   }
@@ -119,7 +119,8 @@ void candy_parser_print(candy_parser_t parser) {
 
 candy_parser_t candy_parser_create(const char code[]) {
   candy_parser_t parser = (candy_parser_t)candy_malloc(sizeof(struct candy_parser));
-  parser->lex = candy_lexer_create(code);
+  uint8_t buffer[1026] = {0x00, 0x04};
+  parser->lex = candy_lexer_create(code, (candy_view_t)buffer);
   parser->root = _expression(parser);
   return parser;
 }

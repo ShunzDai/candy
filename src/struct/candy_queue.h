@@ -35,14 +35,14 @@ uint16_t candy_queue_size(void);
 bool candy_queue_empty(candy_queue_t queue);
 uint32_t candy_queue_count(candy_queue_t queue);
 int candy_queue_iterator(candy_queue_t queue, candy_iterator_t func, void *args);
-candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t pos);
+candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t idx);
 int candy_queue_clear(candy_queue_t queue, candy_destroy_t func);
 
 candy_queue_t candy_queue_create(void);
 int candy_queue_delete(candy_queue_t *queue, candy_destroy_t func);
 
-int candy_enqueue(candy_queue_t queue, int32_t pos, candy_node_t node);
-int candy_dequeue(candy_queue_t queue, int32_t pos, candy_destroy_t func);
+int candy_enqueue(candy_queue_t queue, int32_t idx, candy_node_t node);
+int candy_dequeue(candy_queue_t queue, int32_t idx, candy_destroy_t func);
 
 #ifdef __cplusplus
 }

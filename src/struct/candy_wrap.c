@@ -33,29 +33,30 @@ candy_wraps_t candy_wrap_print(candy_wrap_t wrap) {
   switch (_private(wrap)->type) {
     case CANDY_WRAP_NONE:
       printf("\n");
-      return CANDY_WRAP_NONE;
+      break;
     case CANDY_WRAP_STRING:
       printf("%s\n", (char *)candy_wrap_get_string(wrap)->data);
-      return CANDY_WRAP_STRING;
+      break;
     case CANDY_WRAP_INTEGER:
-      printf("%ld\n", candy_wrap_get_integer(wrap));
+      printf("%d\n", candy_wrap_get_integer(wrap));
       return CANDY_WRAP_INTEGER;
     case CANDY_WRAP_FLOAT:
       printf("%.5f\n", candy_wrap_get_float(wrap));
-      return CANDY_WRAP_FLOAT;
+      break;
     case CANDY_WRAP_BOOLEAN:
       printf("%s\n", candy_wrap_get_boolean(wrap) ? "True" : "False");
-      return CANDY_WRAP_BOOLEAN;
+      break;
     case CANDY_WRAP_METHOD:
       printf("%p\n", candy_wrap_get_method(wrap));
-      return CANDY_WRAP_METHOD;
+      break;
     case CANDY_WRAP_OBJECT:
       printf("%p\n", wrap);
-      return CANDY_WRAP_OBJECT;
+      break;
     default:
       printf("exception types");
-      return CANDY_WRAP_MAX;
+      break;
   }
+  return (candy_wraps_t)_private(wrap)->type;
 }
 
 inline candy_view_t candy_wrap_view(candy_wrap_t wrap) {
@@ -83,10 +84,8 @@ candy_wrap_t candy_wrap_create(candy_hash_t hash, const void *data, uint16_t siz
   return wrap;
 }
 
-int candy_wrap_delete(candy_wrap_t *wrap, candy_destroy_t func) {
+int candy_wrap_delete(candy_wrap_t *wrap) {
   candy_wrap_t temp = (*wrap)->next;
-  if (func != NULL)
-    func((candy_node_t *)&temp);
   candy_free(*wrap);
   *wrap = temp;
   return 0;
@@ -176,7 +175,7 @@ int candy_wrap_set_method(candy_wrap_t *wrap, candy_method_t value) {
   }
 }
 
-int candy_wrap_set_string(candy_wrap_t *wrap, const char *value, uint16_t size) {
+int candy_wrap_set_string(candy_wrap_t *wrap, const char value[], uint16_t size) {
   candy_assert(wrap != NULL);
   candy_wrap_t next = (*wrap)->next;
   candy_hash_t hash = _private(*wrap)->hash;

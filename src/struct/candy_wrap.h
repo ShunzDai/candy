@@ -69,13 +69,13 @@ static inline candy_wrap_t candy_wrap_method(candy_hash_t hash, candy_method_t v
   return candy_wrap_create(hash, &value, sizeof(candy_method_t), CANDY_WRAP_METHOD, NULL);
 }
 
-static inline candy_wrap_t candy_wrap_string(candy_hash_t hash, const char *value, uint16_t size) {
+static inline candy_wrap_t candy_wrap_string(candy_hash_t hash, const char value[], uint16_t size) {
   return candy_wrap_create(hash, value, size, CANDY_WRAP_STRING, NULL);
 }
 
 /* wrap delete method */
 
-int candy_wrap_delete(candy_wrap_t *wrap, candy_destroy_t func);
+int candy_wrap_delete(candy_wrap_t *wrap);
 
 /* wrap set methods */
 
