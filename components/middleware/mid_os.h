@@ -6,7 +6,7 @@
 
 namespace os {
 
-using tick_t = uint64_t;
+using tick_t = uint32_t;
 
 tick_t tick_us();
 static inline tick_t tick_ms() {return tick_us() / 1E+3;}

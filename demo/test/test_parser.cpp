@@ -98,5 +98,5 @@ TEST(parser, exp_4) {
   auto tick = os::tick_us();
   candy_parser_t parser = candy_parser_create(exp);
   candy_parser_delete(&parser);
-  printf("delta time = %lld us\n", os::tick_us() - tick);
+  printf("delta time = %d us\n", os::tick_us() - tick);
 }

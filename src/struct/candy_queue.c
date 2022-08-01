@@ -50,14 +50,14 @@ int candy_queue_iterator(candy_queue_t queue, candy_iterator_t func, void *args)
   return 0;
 }
 
-candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t pos) {
+candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t idx) {
   candy_assert(queue != NULL);
   if (_private(queue)->count == 0)
     return &queue->head;
-  else if (pos < 0)
-    pos = _private(queue)->count + pos;
-  for (candy_node_t *node = &queue->head; ; pos--) {
-    if (pos == 0)
+  else if (idx < 0)
+    idx = _private(queue)->count + idx;
+  for (candy_node_t *node = &queue->head; ; idx--) {
+    if (idx == 0)
       return node;
     node = &(*node)->next;
   }
@@ -84,11 +84,11 @@ int candy_queue_delete(candy_queue_t *queue, candy_destroy_t func) {
   return 0;
 }
 
-int candy_enqueue(candy_queue_t queue, int32_t pos, candy_node_t node) {
+int candy_enqueue(candy_queue_t queue, int32_t idx, candy_node_t node) {
   candy_assert(queue != NULL);
   candy_assert(node != NULL);
-  candy_node_t *temp = candy_queue_pointer(queue, pos);
-  if (_private(queue)->count && pos != 0)
+  candy_node_t *temp = candy_queue_pointer(queue, idx);
+  if (_private(queue)->count && idx != 0)
     temp = &(*temp)->next;
   node->next = *temp;
   *temp = node;
@@ -96,9 +96,9 @@ int candy_enqueue(candy_queue_t queue, int32_t pos, candy_node_t node) {
   return 0;
 }
 
-int candy_dequeue(candy_queue_t queue, int32_t pos, candy_destroy_t func) {
+int candy_dequeue(candy_queue_t queue, int32_t idx, candy_destroy_t func) {
   candy_assert(queue != NULL);
-  candy_node_t *temp = candy_queue_pointer(queue, pos);
+  candy_node_t *temp = candy_queue_pointer(queue, idx);
   candy_node_t del = *temp;
   *temp = (*temp)->next;
   if (func)

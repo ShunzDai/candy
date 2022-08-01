@@ -32,10 +32,10 @@ tick_t tick_us() {
   gettimeofday(&tv, nullptr);
   return (tick_t)(tv.tv_sec * 1000000 + tv.tv_usec);
 #elif defined __arm__
-	Tick_t m = uwTick;
-	const Tick_t tms = SysTick->LOAD + 1;
-	__IO Tick_t u = tms - SysTick->VAL;
-	return (m * 1000 + (u * 1000) / tms);
+  Tick_t m = uwTick;
+  const Tick_t tms = SysTick->LOAD + 1;
+  __IO Tick_t u = tms - SysTick->VAL;
+  return (m * 1000 + (u * 1000) / tms);
 #endif /* platform */
 }
 
@@ -54,7 +54,7 @@ void delay_ms(uint32_t ms) {
 #elif defined ESP_PLATFORM
   vTaskDelay(ms / portTICK_PERIOD_MS);
 #elif defined __arm__
-	vTaskDelay(ms / portTICK_PERIOD_MS);
+  vTaskDelay(ms / portTICK_PERIOD_MS);
 #else /* platform */
 #error "unsupported platform"
 #endif /* platform */
@@ -149,8 +149,8 @@ task_t::task_t(callback_t callback, void* arg, uint32_t stack_size, uint32_t pri
 #if defined __linux__
  : arg(arg), _callback(callback) {
   pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   pthread_create((pthread_t *)&_handle, &attr, (void *(*)(void *))(void *)_callback_wrapper, this);
 }
 #elif defined ESP_PLATFORM
