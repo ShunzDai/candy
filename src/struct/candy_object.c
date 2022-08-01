@@ -87,7 +87,7 @@ int candy_object_delete(candy_object_t *obj) {
     candy_queue_clear(_private(*obj), (candy_destroy_t)candy_object_delete);
     candy_assert(*(candy_queue_t *)candy_wrap_view((candy_wrap_t)*obj)->data == NULL);
   }
-  return candy_wrap_delete((candy_wrap_t *)obj, NULL);
+  return candy_wrap_delete((candy_wrap_t *)obj);
 }
 
 int candy_object_push(candy_object_t obj, candy_wrap_t wrap) {
