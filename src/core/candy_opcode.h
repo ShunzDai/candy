@@ -13,22 +13,22 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_STRUCT_OPCODE_H
-#define CANDY_SRC_STRUCT_OPCODE_H
-#ifdef __cplusplus
-extern "C"{
-#endif /* __cplusplus */
+#ifndef CANDY_OPCODE_LIST
+#error "can only be include by candy_opcode.list"
+#endif /* CANDY_OPCODE_LIST */
 
-#include "src/common/candy_types.h"
+#ifdef CANDY_OP
+#undef CANDY_OP
+#endif /* CANDY_OP */
 
-typedef enum candy_opcode{
-#define CANDY_OPCODE_DEF_ENUM
-#include "src/core/candy_opcode.inc"
-} candy_opcode_t;
+#if defined(CANDY_OP_ENUM)
+#undef CANDY_OP_ENUM
+#define CANDY_OP(_opcode, ...) CANDY_OP_##_opcode,
+#endif /* CANDY_OP_ENUM */
 
-
-
-#ifdef __cplusplus
+#if defined(CANDY_OP_CASE)
+#undef CANDY_OP_CASE
+#define CANDY_OP(_opcode, ...) case CANDY_OP_##_opcode: { \
+  __VA_ARGS__ \
 }
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_STRUCT_OPCODE_H */
+#endif /* CANDY_OP_CASE */

@@ -21,15 +21,14 @@
 #include <stdlib.h>
 
 struct candy_lexer {
+#ifdef CANDY_DEBUG_MODE
+  struct candy_dbginfo dbginfo;
+#endif /* CANDY_DEBUG_MODE */
   const char *curr;
   const char *error;
   struct {
     uint8_t type;
   } indent;
-#ifdef CANDY_DEBUG_MODE
-  uint16_t line;
-  uint16_t column;
-#endif /* CANDY_DEBUG_MODE */
   struct {
     uint8_t token;
     candy_meta_t meta;
@@ -39,28 +38,23 @@ struct candy_lexer {
 };
 
 static const struct {
-  const char * const keyword;
   candy_tokens_t token;
+  const char * const keyword;
 } _keywords[] = {
-  {"False",     CANDY_TK_KW_FALSE},
-  {"True",      CANDY_TK_KW_TRUE},
-  {"and",       CANDY_TK_KW_AND},
-  {"or",        CANDY_TK_KW_OR},
-  {"not",       CANDY_TK_KW_NOT},
-  {"if",        CANDY_TK_KW_IF},
-  {"elif",      CANDY_TK_KW_ELIF},
-  {"else",      CANDY_TK_KW_ELSE},
-  {"while",     CANDY_TK_KW_WHILE},
-  {"for",       CANDY_TK_KW_FOR},
-  {"break",     CANDY_TK_KW_BREAK},
-  {"continue",  CANDY_TK_KW_CONTINUE},
+  #define CANDY_KW_MATCH
+  #include "src/core/candy_keyword.list"
 };
 
-static inline char _skip_curr(candy_lexer_t lex) {
+static inline char _skip_idx(candy_lexer_t lex, int idx) {
 #ifdef CANDY_DEBUG_MODE
-  lex->column++;
+  lex->dbginfo.column += idx;
 #endif /* CANDY_DEBUG_MODE */
-  return *lex->curr++;
+  char ch = *lex->curr;
+  return lex->curr += idx, ch;
+}
+
+static inline char _skip_curr(candy_lexer_t lex) {
+  return _skip_idx(lex, 1);
 }
 
 static inline void _save_char(candy_lexer_t lex, char ch) {
@@ -87,7 +81,6 @@ static inline bool _check_dual(candy_lexer_t lex, const char str[]) {
   *         \n\r
   *         first byte of curr pointer has been checked by up layer function
   * @param  lex lexer
-  * @param  buff store buffer
   * @return newline bytes
   */
 static int _get_newline(candy_lexer_t lex) {
@@ -95,8 +88,8 @@ static int _get_newline(candy_lexer_t lex) {
   _save_curr(lex);
   _check_dual(lex, "\r\n");
 #ifdef CANDY_DEBUG_MODE
-  lex->line++;
-  lex->column = 0;
+  lex->dbginfo.line++;
+  lex->dbginfo.column = 0;
 #endif /* CANDY_DEBUG_MODE */
   return lex->cursor - head;
 }
@@ -111,7 +104,9 @@ static int _skip_comment(candy_lexer_t lex) {
   _skip_curr(lex);
   while (1) {
     switch (*lex->curr) {
-      case '\0': case '\r': case '\n':
+      case '\r': case '\n':
+        _get_newline(lex);
+      case '\0':
         return 0;
       default:
         _skip_curr(lex);
@@ -121,12 +116,11 @@ static int _skip_comment(candy_lexer_t lex) {
 }
 
 static char _get_intchar(candy_lexer_t lex, uint8_t max_len, uint8_t base) {
-  char value = 0;
-  char buff[] = {lex->curr[0], lex->curr[1], lex->curr[2]};
+  char buff[] = {lex->curr[0], lex->curr[1], lex->curr[2], '\0'};
   buff[max_len] = '\0';
   char *end = NULL;
-  value = strtoul(buff, &end, base);
-  lex->curr += (end - buff);
+  char value = strtoul(buff, &end, base);
+  _skip_idx(lex, end - buff);
   return value;
 }
 
@@ -159,7 +153,7 @@ static candy_tokens_t _get_number(candy_lexer_t lex, const int sign, candy_meta_
     char *end = NULL;
     meta->i = (candy_integer_t)strtol(lex->curr, &end, 16) * sign;
     candy_assert(end != NULL, "invalid hexadecimal number");
-    lex->curr = end;
+    _skip_idx(lex, end - lex->curr);
     return CANDY_TK_CST_INTEGER;
   }
   while (1) {
@@ -205,7 +199,7 @@ static int _get_string(candy_lexer_t lex, bool multiline) {
   const char *head = lex->cursor;
   const char del = *lex->curr;
   /* skip first " or ' */
-  lex->curr += multiline ? 3 : 1;
+  _skip_idx(lex, multiline ? 3 : 1);
   while (*lex->curr != del) {
     switch (*lex->curr) {
       case '\0':
@@ -251,7 +245,7 @@ static int _get_string(candy_lexer_t lex, bool multiline) {
   _save_char(lex, '\0');
   /* skip last " or ' */
   candy_assert(*lex->curr == del && (multiline ? (lex->curr[1] == del && lex->curr[2] == del) : (true)), "unexpected end of string");
-  lex->curr += multiline ? 3 : 1;
+  _skip_idx(lex, multiline ? 3 : 1);
   return lex->cursor - head - 1;
 }
 
@@ -265,7 +259,6 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t lex, candy_meta_t *met
   _save_char(lex, '\0');
   /* check keyword */
   for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
-    printf("data '%s' keyword '%s'\n", lex->buffer->data, _keywords[i].keyword);
     if (strcmp(lex->buffer->data, _keywords[i].keyword) == 0)
       return _keywords[i].token;
   }
@@ -328,15 +321,14 @@ static candy_tokens_t _get_next_token(candy_lexer_t lex, candy_meta_t *meta) {
 
 candy_lexer_t candy_lexer_create(const char code[], const candy_view_t buffer) {
   candy_lexer_t lex = (candy_lexer_t)candy_malloc(sizeof(struct candy_lexer));
-  lex->curr = code;
 #ifdef CANDY_DEBUG_MODE
-  lex->line = 1;
-  lex->column = 0;
+  lex->dbginfo.line = 1;
+  lex->dbginfo.column = 0;
 #endif /* CANDY_DEBUG_MODE */
+  lex->curr = code;
   lex->lookahead.token = CANDY_TK_EOS;
   lex->lookahead.meta.data = 0;
   lex->buffer = buffer;
-  lex->cursor = buffer->data;
   return lex;
 }
 
@@ -366,3 +358,5 @@ candy_tokens_t candy_lexer_lookahead(candy_lexer_t lex) {
     lex->lookahead.token = _get_next_token(lex, &lex->lookahead.meta);
   return lex->lookahead.token;
 }
+
+

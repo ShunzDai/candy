@@ -21,9 +21,10 @@ extern "C"{
 
 #include "src/common/candy_types.h"
 
-typedef struct candy_state * candy_state_t;
+typedef struct candy_vm * candy_vm_t;
 
-int candy_vm_runcode(candy_state_t state, char *const code);
+int candy_vm_load(candy_vm_t vm, const uint8_t binary[]);
+int candy_vm_execute(candy_vm_t vm);
 
 #ifdef __cplusplus
 }

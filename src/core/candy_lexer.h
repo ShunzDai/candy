@@ -23,6 +23,8 @@ extern "C"{
 
 #define tk_dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
+typedef struct candy_lexer * candy_lexer_t;
+
 typedef enum candy_tokens {
   CANDY_TK_NONE = '\x00',
   CANDY_TK_EOF,
@@ -31,18 +33,8 @@ typedef enum candy_tokens {
   CANDY_TK_CST_INTEGER,
   CANDY_TK_CST_FLOAT,
   CANDY_TK_IDENT,
-  CANDY_TK_KW_FALSE,
-  CANDY_TK_KW_TRUE,
-  CANDY_TK_KW_AND,
-  CANDY_TK_KW_OR,
-  CANDY_TK_KW_NOT,
-  CANDY_TK_KW_IF,
-  CANDY_TK_KW_ELIF,
-  CANDY_TK_KW_ELSE,
-  CANDY_TK_KW_WHILE,
-  CANDY_TK_KW_FOR,
-  CANDY_TK_KW_BREAK,
-  CANDY_TK_KW_CONTINUE,
+  #define CANDY_KW_ENUM
+  #include "src/core/candy_keyword.list"
   CANDY_TK_DEL_LPAREN   =                   '(', /* 0x28 (  */
   CANDY_TK_DEL_RPAREN   =                   ')', /* 0x29 )  */
   CANDY_TK_DEL_LBRACE   =                   '[', /* 0x5B [  */
@@ -72,6 +64,7 @@ typedef enum candy_tokens {
   CANDY_TK_OPE_LEQUAL   = tk_dual_ope('<', '='), /* 0xDA <= */
   CANDY_TK_OPE_RSHIFT   = tk_dual_ope('>', '>'), /* 0x93 >> */
   CANDY_TK_OPE_LSHIFT   = tk_dual_ope('<', '<'), /* 0x9E << */
+  CANDY_TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
 typedef union candy_meta {
@@ -82,9 +75,16 @@ typedef union candy_meta {
   candy_wrap_t wrap;
 } candy_meta_t;
 
-struct candy_lexer;
+#ifdef CANDY_DEBUG_MODE
+typedef struct candy_dbginfo {
+  uint16_t line;
+  uint16_t column;
+} * candy_dbginfo_t;
 
-typedef struct candy_lexer * candy_lexer_t;
+static inline candy_dbginfo_t candy_lexer_dbginfo(candy_lexer_t lexer) {
+  return (candy_dbginfo_t)lexer;
+}
+#endif /* CANDY_DEBUG_MODE */
 
 candy_lexer_t candy_lexer_create(const char code[], const candy_view_t buffer);
 int candy_lexer_delete(candy_lexer_t *lex);
