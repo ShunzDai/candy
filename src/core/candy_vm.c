@@ -17,15 +17,47 @@
 #include "src/struct/candy_wrap.h"
 #include "src/core/candy_parser.h"
 
-struct candy_state {
-  candy_parser_t parser;
+#define CANDY_OP_SIZE 6
+
+typedef enum candy_opcode {
+  #define CANDY_OP_ENUM
+  #include "src/core/candy_opcode.list"
+} candy_opcode_t;
+
+typedef union candy_opmode {
+  struct {
+    uint32_t op : CANDY_OP_SIZE;
+    uint32_t    :            24;
+  };
+  struct {
+    uint32_t    : CANDY_OP_SIZE;
+    uint32_t  a :             8;
+    uint32_t  b :             9;
+    uint32_t  c :             9;
+  } iABC;
+  struct {
+    uint32_t    : CANDY_OP_SIZE;
+    uint32_t  a :             8;
+    uint32_t  b :            18;
+  } iABx;
+} candy_opmode_t;
+
+struct candy_vm {
   candy_queue_t stack;
-  candy_object_t root;
 };
 
+int candy_vm_load(candy_vm_t vm, const uint8_t binary[]) {
+  return 0;
+}
 
+int candy_vm_execute(candy_vm_t vm) {
+  const uint32_t *cursor = (uint32_t *)0;
+  for (uint32_t size = *cursor++; size; size--) {
 
-int candy_vm_runcode(candy_state_t state, char * const code) {
-
+    switch (((candy_opmode_t *)cursor++)->op) {
+      #define CANDY_OP_CASE
+      #include "src/core/candy_opcode.list"
+    }
+  }
   return 0;
 }

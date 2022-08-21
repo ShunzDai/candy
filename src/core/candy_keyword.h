@@ -13,9 +13,25 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#undef CANDY_OPCODE_DEF
+#ifndef CANDY_KEYWORD_LIST
+#error "can only be include by candy_keyword.list"
+#endif /* CANDY_KEYWORD_LIST */
 
-#if defined(CANDY_OPCODE_DEF_ENUM)
-#undef CANDY_OPCODE_DEF_ENUM
-#define CANDY_OPCODE_DEF(key) CANDY_OPCODE_##key,
-#endif /* CANDY_OPCODE_DEF_ENUM */
+#ifdef CANDY_KW
+#undef CANDY_KW
+#endif /* CANDY_KW */
+
+#ifdef CANDY_KW_ENUM
+#undef CANDY_KW_ENUM
+#define CANDY_KW(_keyword) CANDY_TK_KW_##_keyword,
+#endif /* CANDY_KW_ENUM */
+
+#ifdef CANDY_KW_MATCH
+#undef CANDY_KW_MATCH
+#define CANDY_KW(_keyword) {CANDY_TK_KW_##_keyword, #_keyword},
+#endif /* CANDY_KW_MATCH */
+
+#ifdef CANDY_KW_TEST
+#undef CANDY_KW_TEST
+#define CANDY_KW(_keyword) TEST_LEXER(_keyword, CANDY_TK_KW_##_keyword, #_keyword, 1, strlen(#_keyword));
+#endif /* CANDY_KW_TEST */
