@@ -24,7 +24,7 @@
 template <typename ... supposed>
 void tast_body(candy_tokens_t token, const char code[], size_t line, size_t column, supposed ... value) {
   uint8_t buffer[1026] = {0x00, 0x04};
-  candy_lexer_t lex = candy_lexer_create(code, (candy_view_t)buffer);
+  struct candy_lexer *lex = candy_lexer_create(code, (struct candy_view *)buffer);
   candy_meta_t meta;
   candy_tokens_t type = candy_lexer_curr(lex, &meta);
   EXPECT_EQ(type, token);

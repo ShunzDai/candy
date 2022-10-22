@@ -32,7 +32,7 @@ struct candy_lexer {
     uint8_t token;
     candy_meta_t meta;
   } lookahead;
-  candy_view_t buffer;
+  struct candy_view *buffer;
   char *cursor;
 };
 
@@ -44,7 +44,7 @@ static const struct {
   #include "src/core/candy_keyword.list"
 };
 
-static inline char _skip_idx(candy_lexer_t lex, int idx) {
+static inline char _skip_idx(struct candy_lexer *lex, int idx) {
 #ifdef CANDY_DEBUG_MODE
   lex->dbginfo.column += idx;
 #endif /* CANDY_DEBUG_MODE */
@@ -52,19 +52,19 @@ static inline char _skip_idx(candy_lexer_t lex, int idx) {
   return lex->curr += idx, ch;
 }
 
-static inline char _skip_curr(candy_lexer_t lex) {
+static inline char _skip_curr(struct candy_lexer *lex) {
   return _skip_idx(lex, 1);
 }
 
-static inline void _save_char(candy_lexer_t lex, char ch) {
+static inline void _save_char(struct candy_lexer *lex, char ch) {
   *lex->cursor++ = ch;
 }
 
-static inline void _save_curr(candy_lexer_t lex) {
+static inline void _save_curr(struct candy_lexer *lex) {
   _save_char(lex, _skip_curr(lex));
 }
 
-static inline bool _check_dual(candy_lexer_t lex, const char str[]) {
+static inline bool _check_dual(struct candy_lexer *lex, const char str[]) {
   if (*lex->curr == str[0] || *lex->curr == str[1]) {
     _save_curr(lex);
     return true;
@@ -82,7 +82,7 @@ static inline bool _check_dual(candy_lexer_t lex, const char str[]) {
   * @param  lex lexer
   * @return newline bytes
   */
-static int _get_newline(candy_lexer_t lex) {
+static int _get_newline(struct candy_lexer *lex) {
   const char *head = lex->cursor;
   _save_curr(lex);
   _check_dual(lex, "\r\n");
@@ -99,7 +99,7 @@ static int _get_newline(candy_lexer_t lex) {
   * @param  lex lexer
   * @retval reserved
   */
-static int _skip_comment(candy_lexer_t lex) {
+static int _skip_comment(struct candy_lexer *lex) {
   _skip_curr(lex);
   while (1) {
     switch (*lex->curr) {
@@ -114,7 +114,7 @@ static int _skip_comment(candy_lexer_t lex) {
   }
 }
 
-static char _get_intchar(candy_lexer_t lex, uint8_t max_len, uint8_t base) {
+static char _get_intchar(struct candy_lexer *lex, uint8_t max_len, uint8_t base) {
   char buff[] = {lex->curr[0], lex->curr[1], lex->curr[2], '\0'};
   buff[max_len] = '\0';
   char *end = NULL;
@@ -131,7 +131,7 @@ static char _get_intchar(candy_lexer_t lex, uint8_t max_len, uint8_t base) {
   * @param  lex lexer
   * @retval octal character
   */
-static inline char _get_octchar(candy_lexer_t lex) {
+static inline char _get_octchar(struct candy_lexer *lex) {
   return _get_intchar(lex, 3, 8);
 }
 
@@ -141,11 +141,11 @@ static inline char _get_octchar(candy_lexer_t lex) {
   * @param  lex lexer
   * @retval hexadecimal character
   */
-static inline char _get_hexchar(candy_lexer_t lex) {
+static inline char _get_hexchar(struct candy_lexer *lex) {
   return _get_intchar(lex, 2, 16);
 }
 
-static candy_tokens_t _get_number(candy_lexer_t lex, const int sign, candy_meta_t *meta) {
+static candy_tokens_t _get_number(struct candy_lexer *lex, const int sign, candy_meta_t *meta) {
   bool is_float = false;
   _save_curr(lex);
   if (*lex->buffer->data == '0' && _check_dual(lex, "xX")) {
@@ -194,7 +194,7 @@ static candy_tokens_t _get_number(candy_lexer_t lex, const int sign, candy_meta_
   * @param  multiline is multiline string or not
   * @retval string length, not include '\0'
   */
-static int _get_string(candy_lexer_t lex, bool multiline) {
+static int _get_string(struct candy_lexer *lex, bool multiline) {
   const char *head = lex->cursor;
   const char del = *lex->curr;
   /* skip first " or ' */
@@ -248,7 +248,7 @@ static int _get_string(candy_lexer_t lex, bool multiline) {
   return lex->cursor - head - 1;
 }
 
-static candy_tokens_t _get_ident_or_keyword(candy_lexer_t lex, candy_meta_t *meta) {
+static candy_tokens_t _get_ident_or_keyword(struct candy_lexer *lex, candy_meta_t *meta) {
   /* save alpha, or '_' */
   _save_curr(lex);
   /* save number, alpha, or '_' */
@@ -265,7 +265,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t lex, candy_meta_t *met
   return CANDY_TK_IDENT;
 }
 
-static candy_tokens_t _get_next_token(candy_lexer_t lex, candy_meta_t *meta) {
+static candy_tokens_t _get_next_token(struct candy_lexer *lex, candy_meta_t *meta) {
   lex->cursor = lex->buffer->data;
   int len = 0;
   while (1) {
@@ -318,8 +318,8 @@ static candy_tokens_t _get_next_token(candy_lexer_t lex, candy_meta_t *meta) {
   return tk_dual_ope(_skip_curr(lex), _skip_curr(lex));
 }
 
-candy_lexer_t candy_lexer_create(const char code[], const candy_view_t buffer) {
-  candy_lexer_t lex = (candy_lexer_t)malloc(sizeof(struct candy_lexer));
+struct candy_lexer *candy_lexer_create(const char code[], struct candy_view *buffer) {
+  struct candy_lexer *lex = (candy_lexer_t)malloc(sizeof(struct candy_lexer));
 #ifdef CANDY_DEBUG_MODE
   lex->dbginfo.line = 1;
   lex->dbginfo.column = 0;
@@ -331,13 +331,13 @@ candy_lexer_t candy_lexer_create(const char code[], const candy_view_t buffer) {
   return lex;
 }
 
-int candy_lexer_delete(candy_lexer_t *lex) {
+int candy_lexer_delete(struct candy_lexer **lex) {
   free(*lex);
   *lex = NULL;
   return 0;
 }
 
-candy_tokens_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta) {
+candy_tokens_t candy_lexer_curr(struct candy_lexer *lex, candy_meta_t *meta) {
   /* is there a look-ahead token? */
   if (lex->lookahead.token != CANDY_TK_EOS) {
     /* use this one */
@@ -352,7 +352,7 @@ candy_tokens_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta) {
   return _get_next_token(lex, meta);
 }
 
-candy_tokens_t candy_lexer_lookahead(candy_lexer_t lex) {
+candy_tokens_t candy_lexer_lookahead(struct candy_lexer *lex) {
   if (lex->lookahead.token == CANDY_TK_EOS)
     lex->lookahead.token = _get_next_token(lex, &lex->lookahead.meta);
   return lex->lookahead.token;

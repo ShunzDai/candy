@@ -30,7 +30,7 @@ typedef struct priv {
 } * priv_t;
 
 struct candy_parser {
-  candy_lexer_t lex;
+  struct candy_lexer *lex;
   ast_node_t root;
 };
 
@@ -120,7 +120,7 @@ void candy_parser_print(candy_parser_t parser) {
 candy_parser_t candy_parser_create(const char code[]) {
   candy_parser_t parser = (candy_parser_t)malloc(sizeof(struct candy_parser));
   uint8_t buffer[1026] = {0x00, 0x04};
-  parser->lex = candy_lexer_create(code, (candy_view_t)buffer);
+  parser->lex = candy_lexer_create(code, (struct candy_view *)buffer);
   parser->root = _expression(parser);
   return parser;
 }
