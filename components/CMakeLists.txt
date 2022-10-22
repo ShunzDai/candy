@@ -1,2 +1,2 @@
-add_subdirectory(middleware)
+add_subdirectory(middleware/mid_os)
 add_subdirectory(googletest)
