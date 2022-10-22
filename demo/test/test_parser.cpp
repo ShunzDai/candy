@@ -19,8 +19,8 @@
 
 // extern "C" {
 
-// ast_node_t _ast_node_create(int8_t token, uint8_t meta[], ast_node_t l, ast_node_t r);
-// int _ast_node_delete(ast_node_t *node);
+// struct ast_node *_ast_node_create(int8_t token, uint8_t meta[], struct ast_node *l, struct ast_node *r);
+// int _ast_node_delete(struct ast_node **node);
 
 // }
 
@@ -93,10 +93,10 @@ TEST(parser, exp_div_1) {
   candy_parser_delete(&parser);
 }
 
-TEST(parser, exp_4) {
+TEST(parser, exp) {
   const char exp[] = "(((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12";
   auto tick = os::tick_us();
-  candy_parser_t parser = candy_parser_create(exp);
+  struct candy_parser *parser = candy_parser_create(exp);
   candy_parser_delete(&parser);
   printf("delta time = %d us\n", os::tick_us() - tick);
 }
