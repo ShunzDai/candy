@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "candy_queue.h"
-#include "src/platform/candy_memory.h"
+#include <stdlib.h>
 
 typedef struct priv {
   uint16_t count;
@@ -71,7 +71,7 @@ int candy_queue_clear(candy_queue_t queue, candy_destroy_t func) {
 }
 
 candy_queue_t candy_queue_create(void) {
-  candy_queue_t queue = (candy_queue_t)candy_malloc(candy_queue_size());
+  candy_queue_t queue = (candy_queue_t)malloc(candy_queue_size());
   queue->head = NULL;
   _private(queue)->count = 0;
   return queue;
@@ -79,7 +79,7 @@ candy_queue_t candy_queue_create(void) {
 
 int candy_queue_delete(candy_queue_t *queue, candy_destroy_t func) {
   candy_queue_clear(*queue, func);
-  candy_free(*queue);
+  free(*queue);
   *queue = NULL;
   return 0;
 }

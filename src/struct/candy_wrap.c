@@ -15,7 +15,7 @@
   */
 #include "candy_wrap.h"
 #include "src/common/candy_lib.h"
-#include "src/platform/candy_memory.h"
+#include <stdlib.h>
 
 typedef struct priv {
   candy_hash_t hash;
@@ -75,7 +75,7 @@ inline bool candy_wrap_match(candy_wrap_t wrap, candy_hash_t hash) {
 }
 
 candy_wrap_t candy_wrap_create(candy_hash_t hash, const void *data, uint16_t size, candy_wraps_t type, candy_wrap_t next) {
-  candy_wrap_t wrap = (candy_wrap_t)candy_malloc(sizeof(struct candy_wrap) + sizeof(struct priv) + size);
+  candy_wrap_t wrap = (candy_wrap_t)malloc(sizeof(struct candy_wrap) + sizeof(struct priv) + size);
   wrap->next = next;
   _private(wrap)->size = size;
   _private(wrap)->type = type;
@@ -86,7 +86,7 @@ candy_wrap_t candy_wrap_create(candy_hash_t hash, const void *data, uint16_t siz
 
 int candy_wrap_delete(candy_wrap_t *wrap) {
   candy_wrap_t temp = (*wrap)->next;
-  candy_free(*wrap);
+  free(*wrap);
   *wrap = temp;
   return 0;
 }
@@ -104,7 +104,7 @@ int candy_wrap_set_none(candy_wrap_t *wrap) {
     default: {
       candy_wrap_t next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
-      candy_free(*wrap);
+      free(*wrap);
       *wrap = candy_wrap_create(hash, NULL, 0, CANDY_WRAP_NONE, next);
       return 0;
     }
@@ -120,7 +120,7 @@ int candy_wrap_set_integer(candy_wrap_t *wrap, candy_integer_t value) {
     default: {
       candy_wrap_t next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
-      candy_free(*wrap);
+      free(*wrap);
       *wrap = candy_wrap_create(hash, &value, sizeof(candy_integer_t), CANDY_WRAP_INTEGER, next);
       return 0;
     }
@@ -136,7 +136,7 @@ int candy_wrap_set_float(candy_wrap_t *wrap, candy_float_t value) {
     default:{
       candy_wrap_t next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
-      candy_free(*wrap);
+      free(*wrap);
       *wrap = candy_wrap_create(hash, &value, sizeof(candy_float_t), CANDY_WRAP_FLOAT, next);
       return 0;
     }
@@ -152,7 +152,7 @@ int candy_wrap_set_boolean(candy_wrap_t *wrap, candy_boolean_t value){/* if valu
     default: {
       candy_wrap_t next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
-      candy_free(*wrap);
+      free(*wrap);
       *wrap = candy_wrap_create(hash, &value, sizeof(candy_boolean_t), CANDY_WRAP_BOOLEAN, next);
       return 0;
     }
@@ -168,7 +168,7 @@ int candy_wrap_set_method(candy_wrap_t *wrap, candy_method_t value) {
     default: {
       candy_wrap_t next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
-      candy_free(*wrap);
+      free(*wrap);
       *wrap = candy_wrap_create(hash, &value, sizeof(candy_method_t), CANDY_WRAP_METHOD, next);
       return 0;
     }
@@ -179,7 +179,7 @@ int candy_wrap_set_string(candy_wrap_t *wrap, const char value[], uint16_t size)
   candy_assert(wrap != NULL);
   candy_wrap_t next = (*wrap)->next;
   candy_hash_t hash = _private(*wrap)->hash;
-  candy_free(*wrap);
+  free(*wrap);
   *wrap = candy_wrap_create(hash, value, size, CANDY_WRAP_STRING, next);
   return 0;
 }
