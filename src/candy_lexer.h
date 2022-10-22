@@ -19,7 +19,7 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/common/candy_types.h"
+#include "candy_types.h"
 
 #define tk_dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
@@ -34,7 +34,7 @@ typedef enum candy_tokens {
   CANDY_TK_CST_FLOAT,
   CANDY_TK_IDENT,
   #define CANDY_KW_ENUM
-  #include "src/core/candy_keyword.list"
+  #include "candy_keyword.list"
   CANDY_TK_DEL_LPAREN   =                   '(', /* 0x28 (  */
   CANDY_TK_DEL_RPAREN   =                   ')', /* 0x29 )  */
   CANDY_TK_DEL_LBRACE   =                   '[', /* 0x5B [  */

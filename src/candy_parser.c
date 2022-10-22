@@ -14,9 +14,10 @@
   * limitations under the License.
   */
 #include "candy_parser.h"
-#include "src/core/candy_lexer.h"
-#include "src/struct/candy_wrap.h"
-#include "src/struct/candy_queue.h"
+#include "candy_lexer.h"
+#include "candy_wrap.h"
+#include "candy_queue.h"
+#include "candy_platform.h"
 #include <stdlib.h>
 
 struct ast_node {

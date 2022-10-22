@@ -19,7 +19,7 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/common/candy_types.h"
+#include "candy_types.h"
 
 typedef struct ast_node * ast_node_t;
 typedef struct candy_parser * candy_parser_t;
