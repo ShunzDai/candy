@@ -15,7 +15,6 @@
   */
 #include "candy_lexer.h"
 #include "src/common/candy_lib.h"
-#include "src/platform/candy_memory.h"
 #include "src/struct/candy_wrap.h"
 #include "candy_config.h"
 #include <stdlib.h>
@@ -320,7 +319,7 @@ static candy_tokens_t _get_next_token(candy_lexer_t lex, candy_meta_t *meta) {
 }
 
 candy_lexer_t candy_lexer_create(const char code[], const candy_view_t buffer) {
-  candy_lexer_t lex = (candy_lexer_t)candy_malloc(sizeof(struct candy_lexer));
+  candy_lexer_t lex = (candy_lexer_t)malloc(sizeof(struct candy_lexer));
 #ifdef CANDY_DEBUG_MODE
   lex->dbginfo.line = 1;
   lex->dbginfo.column = 0;
@@ -333,7 +332,7 @@ candy_lexer_t candy_lexer_create(const char code[], const candy_view_t buffer) {
 }
 
 int candy_lexer_delete(candy_lexer_t *lex) {
-  candy_free(*lex);
+  free(*lex);
   *lex = NULL;
   return 0;
 }
