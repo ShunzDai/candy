@@ -19,7 +19,7 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/common/candy_types.h"
+#include "candy_types.h"
 
 struct candy_wrap {
   struct candy_wrap *next;

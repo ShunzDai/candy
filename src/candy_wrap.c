@@ -14,7 +14,8 @@
   * limitations under the License.
   */
 #include "candy_wrap.h"
-#include "src/common/candy_lib.h"
+#include "candy_lib.h"
+#include "candy_platform.h"
 #include <stdlib.h>
 
 struct priv {

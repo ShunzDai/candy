@@ -14,14 +14,14 @@
   * limitations under the License.
   */
 #include "candy_vm.h"
-#include "src/struct/candy_wrap.h"
-#include "src/core/candy_parser.h"
+#include "candy_wrap.h"
+#include "candy_parser.h"
 
 #define CANDY_OP_SIZE 6
 
 typedef enum candy_opcode {
   #define CANDY_OP_ENUM
-  #include "src/core/candy_opcode.list"
+  #include "candy_opcode.list"
 } candy_opcode_t;
 
 typedef union candy_opmode {
@@ -56,7 +56,7 @@ int candy_vm_execute(struct candy_vm *vm) {
 
     switch (((candy_opmode_t *)cursor++)->op) {
       #define CANDY_OP_CASE
-      #include "src/core/candy_opcode.list"
+      #include "candy_opcode.list"
     }
   }
   return 0;

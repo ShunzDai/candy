@@ -14,9 +14,9 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "src/common/candy_lib.h"
-#include "src/struct/candy_wrap.h"
-#include "src/core/candy_lexer.h"
+#include "candy_lib.h"
+#include "candy_wrap.h"
+#include "candy_lexer.h"
 #include <string>
 
 #define TEST_LEXER(_name, _token, _code, ...) TEST(lexer, _name) {tast_body(_token, _code __VA_OPT__(,) __VA_ARGS__);}
@@ -42,7 +42,7 @@ void tast_body(candy_tokens_t token, const char code[], supposed ... value) {
       EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, meta.f, val);
     }
     else {
-      candy_assert(0, "unknown type");
+      assert(0);
     }
   }
   candy_lexer_delete(&lex);
@@ -114,7 +114,7 @@ TEST_LEXER(sci_0,   CANDY_TK_CST_FLOAT  , "0.31415926e1", 0.31415926e1);
 TEST_LEXER(sci_1,   CANDY_TK_CST_FLOAT  , "314.15926e-2", 314.15926e-2);
 
 #define CANDY_KW_TEST
-#include "src/core/candy_keyword.list"
+#include "candy_keyword.list"
 
 TEST_LEXER(CANDY_TK_DEL_LPAREN , CANDY_TK_DEL_LPAREN ,  "(");
 TEST_LEXER(CANDY_TK_DEL_RPAREN , CANDY_TK_DEL_RPAREN ,  ")");
