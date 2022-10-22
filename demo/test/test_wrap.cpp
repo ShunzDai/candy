@@ -16,16 +16,15 @@
 #include "gtest/gtest.h"
 #include "src/common/candy_lib.h"
 #include "src/struct/candy_wrap.h"
-#include "src/method/candy_standard.h"
 
 TEST(wrap, lifecycle) {
-  candy_wrap_t wrap = candy_wrap_none(0);
+  struct candy_wrap *wrap = candy_wrap_none(0);
   candy_wrap_delete(&wrap);
   EXPECT_EQ((uint64_t)wrap, (uint64_t)NULL);
 }
 
 TEST(wrap, string) {
-  candy_wrap_t wrap = candy_wrap_string(0, "hello world", sizeof("hello world"));
+  struct candy_wrap *wrap = candy_wrap_string(0, "hello world", sizeof("hello world"));
   EXPECT_STREQ((char *)candy_wrap_get_string(wrap)->data, (char *)"hello world");
   EXPECT_EQ(candy_wrap_view(wrap)->size, sizeof("hello world"));
   candy_wrap_set_string(&wrap, "bye world", sizeof("bye world"));
@@ -36,7 +35,7 @@ TEST(wrap, string) {
 }
 
 TEST(wrap, integer) {
-  candy_wrap_t wrap = candy_wrap_integer(0, 114514);
+  struct candy_wrap *wrap = candy_wrap_integer(0, 114514);
   EXPECT_EQ(candy_wrap_get_integer(wrap), 114514);
   candy_wrap_set_integer(&wrap, 1919810);
   EXPECT_EQ(candy_wrap_get_integer(wrap), 1919810);
@@ -46,7 +45,7 @@ TEST(wrap, integer) {
 }
 
 TEST(wrap, float) {
-  candy_wrap_t wrap = candy_wrap_float(0, 6.626f);
+  struct candy_wrap *wrap = candy_wrap_float(0, 6.626f);
   EXPECT_FLOAT_EQ(candy_wrap_get_float(wrap), 6.626f);
   EXPECT_EQ(candy_wrap_get_integer(wrap), 7);
   candy_wrap_set_float(&wrap, 3.1415926f);
@@ -57,15 +56,13 @@ TEST(wrap, float) {
 }
 
 TEST(wrap, cast) {
-  candy_wrap_t wrap = candy_wrap_none(0);
+  struct candy_wrap *wrap = candy_wrap_none(0);
   candy_wrap_set_string(&wrap, "hello world", sizeof("hello world"));
   EXPECT_STREQ((char *)candy_wrap_get_string(wrap)->data, (char *)"hello world");
   candy_wrap_set_integer(&wrap, 114514);
   EXPECT_EQ(candy_wrap_get_integer(wrap), 114514);
   candy_wrap_set_float(&wrap, 3.1415926f);
   EXPECT_FLOAT_EQ(candy_wrap_get_float(wrap), 3.1415926f);
-  candy_wrap_set_method(&wrap, candy_std_print);
-  EXPECT_EQ((uint64_t)candy_wrap_get_method(wrap), (uint64_t)candy_std_print);
   candy_wrap_delete(&wrap);
   EXPECT_EQ((uint64_t)wrap, (uint64_t)NULL);
 }

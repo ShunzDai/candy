@@ -19,12 +19,12 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/common/candy_types.h"
+#include <stdint.h>
 
-typedef struct candy_vm * candy_vm_t;
+struct candy_vm;
 
-int candy_vm_load(candy_vm_t vm, const uint8_t binary[]);
-int candy_vm_execute(candy_vm_t vm);
+int candy_vm_load(struct candy_vm *vm, const uint8_t binary[]);
+int candy_vm_execute(struct candy_vm *vm);
 
 #ifdef __cplusplus
 }

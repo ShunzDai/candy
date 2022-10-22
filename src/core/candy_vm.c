@@ -43,14 +43,14 @@ typedef union candy_opmode {
 } candy_opmode_t;
 
 struct candy_vm {
-  candy_queue_t stack;
+  struct candy_queue *stack;
 };
 
-int candy_vm_load(candy_vm_t vm, const uint8_t binary[]) {
+int candy_vm_load(struct candy_vm *vm, const uint8_t binary[]) {
   return 0;
 }
 
-int candy_vm_execute(candy_vm_t vm) {
+int candy_vm_execute(struct candy_vm *vm) {
   const uint32_t *cursor = (uint32_t *)0;
   for (uint32_t size = *cursor++; size; size--) {
 

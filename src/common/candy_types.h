@@ -38,32 +38,16 @@ extern "C"{
 
 #define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert(__FILE__, __LINE__, __FUNCTION__, #condition " " __VA_ARGS__))
 
-typedef struct candy_view {
+struct candy_view {
   const uint16_t size;
   char data[];
-} * candy_view_t;
+};
 
-typedef struct candy_node * candy_node_t;
-
-typedef struct candy_queue * candy_queue_t;
-
-typedef struct candy_wrap * candy_wrap_t;
-
-typedef struct candy_object * candy_object_t;
-
-typedef uint32_t        candy_hash_t;
-typedef candy_view_t    candy_string_t;
-typedef int32_t         candy_integer_t;
-typedef double          candy_float_t;
-typedef uint8_t         candy_boolean_t;
-typedef int (*candy_method_t)(candy_object_t);
-
-typedef int (*candy_destroy_t)(candy_node_t *node);
-
-typedef struct candy_register {
-  const char *name;
-  candy_method_t method;
-} candy_register_t;
+typedef uint32_t candy_hash_t;
+typedef struct candy_view * candy_string_t;
+typedef int32_t candy_integer_t;
+typedef double candy_float_t;
+typedef uint8_t candy_boolean_t;
 
 void candy_platform_assert(const char *file, int line, const char *func, char *format, ...);
 

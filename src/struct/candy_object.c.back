@@ -34,7 +34,7 @@ static inline candy_queue_t _private(candy_object_t obj) {
 }
 
 static void _print_with_depth(candy_object_t obj, uint32_t depth) {
-  candy_wrap_t temp = (candy_wrap_t)_private(obj)->head;
+  struct candy_wrap *temp = (candy_wrap_t)_private(obj)->head;
   uint32_t count = 0;
   char offset[depth + 1];
   memset(offset, '\t', depth);
@@ -57,9 +57,9 @@ void candy_object_print(candy_object_t obj) {
   _print_with_depth(obj, 0);
 }
 
-candy_wrap_t *candy_object_search(candy_object_t obj, candy_hash_t hash) {
+struct candy_wrap **candy_object_search(candy_object_t obj, candy_hash_t hash) {
   candy_assert(obj != NULL);
-  candy_wrap_t *temp = (candy_wrap_t *)&_private(obj)->head;
+  struct candy_wrap **temp = (struct candy_wrap **)&_private(obj)->head;
   while (temp != NULL) {
     if (*temp == NULL)
       return temp;
@@ -87,10 +87,10 @@ int candy_object_delete(candy_object_t *obj) {
     candy_queue_clear(_private(*obj), (candy_destroy_t)candy_object_delete);
     candy_assert(*(candy_queue_t *)candy_wrap_view((candy_wrap_t)*obj)->data == NULL);
   }
-  return candy_wrap_delete((candy_wrap_t *)obj);
+  return candy_wrap_delete((struct candy_wrap **)obj);
 }
 
-int candy_object_push(candy_object_t obj, candy_wrap_t wrap) {
+int candy_object_push(candy_object_t obj, struct candy_wrap *wrap) {
   candy_assert(obj != NULL);
   candy_assert(candy_wrap_type((candy_wrap_t)obj) == CANDY_WRAP_OBJECT);
   return candy_enqueue(_private(obj), 0, (candy_node_t)wrap);
@@ -117,15 +117,15 @@ int candy_object_push_string(candy_object_t obj, candy_hash_t hash, const char *
 }
 
 int candy_object_push_object(candy_object_t obj, candy_hash_t hash) {
-  return candy_object_push(obj, (candy_wrap_t )candy_object_create(hash));
+  return candy_object_push(obj, (struct candy_wrap *)candy_object_create(hash));
 }
 
 int candy_object_pop(candy_object_t obj, candy_hash_t hash) {
   candy_assert(obj != NULL);
-  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  struct candy_wrap **wrap = candy_object_search(obj, hash);
   if (wrap == NULL)
     return -1;
-  candy_wrap_t del = *wrap;
+  struct candy_wrap *del = *wrap;
   *wrap = (*wrap)->next;
   candy_object_delete((candy_object_t *)&del);
   return 0;
@@ -133,30 +133,30 @@ int candy_object_pop(candy_object_t obj, candy_hash_t hash) {
 
 candy_string_t candy_object_get_string(candy_object_t obj, candy_hash_t hash) {
   candy_assert(obj != NULL);
-  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  struct candy_wrap **wrap = candy_object_search(obj, hash);
   return (wrap == NULL) ? (candy_string_t){0} : candy_wrap_get_string(*wrap);
 }
 
 candy_integer_t candy_object_get_integer(candy_object_t obj, candy_hash_t hash) {
   candy_assert(obj != NULL);
-  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  struct candy_wrap **wrap = candy_object_search(obj, hash);
   return (wrap == NULL) ? 0 : candy_wrap_get_integer(*wrap);
 }
 
 candy_float_t candy_object_get_float(candy_object_t obj, candy_hash_t hash) {
   candy_assert(obj != NULL);
-  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  struct candy_wrap **wrap = candy_object_search(obj, hash);
   return (wrap == NULL) ? 0.0f : candy_wrap_get_float(*wrap);
 }
 
 candy_method_t candy_object_get_method(candy_object_t obj, candy_hash_t hash) {
   candy_assert(obj != NULL);
-  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  struct candy_wrap **wrap = candy_object_search(obj, hash);
   return (wrap == NULL) ? NULL : candy_wrap_get_method(*wrap);
 }
 
 candy_object_t candy_object_get_object(candy_object_t obj, candy_hash_t hash) {
   candy_assert(obj != NULL);
-  candy_wrap_t *wrap = candy_object_search(obj, hash);
+  struct candy_wrap **wrap = candy_object_search(obj, hash);
   return (wrap == NULL) ? NULL : (candy_object_t)*wrap;
 }
