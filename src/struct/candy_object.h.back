@@ -26,14 +26,14 @@ struct candy_object{
 };
 
 void candy_object_print(candy_object_t obj);
-candy_wrap_t *candy_object_search(candy_object_t obj, candy_hash_t hash);
+struct candy_wrap **candy_object_search(candy_object_t obj, candy_hash_t hash);
 int candy_object_register(candy_object_t obj, candy_register_t table[]);
 
 candy_object_t candy_object_create(candy_hash_t hash);
 
 int candy_object_delete(candy_object_t *obj);
 
-int candy_object_push(candy_object_t obj, candy_wrap_t wrap);
+int candy_object_push(candy_object_t obj, struct candy_wrap *wrap);
 int candy_object_push_none(candy_object_t obj, candy_hash_t hash);
 int candy_object_push_integer(candy_object_t obj, candy_hash_t hash, candy_integer_t value);
 int candy_object_push_float(candy_object_t obj, candy_hash_t hash, candy_float_t value);

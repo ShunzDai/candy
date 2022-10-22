@@ -72,7 +72,7 @@ typedef union candy_meta {
   candy_integer_t i;
   candy_float_t f;
   candy_hash_t hash;
-  candy_wrap_t wrap;
+  struct candy_wrap *wrap;
 } candy_meta_t;
 
 #ifdef CANDY_DEBUG_MODE
@@ -81,16 +81,16 @@ typedef struct candy_dbginfo {
   uint16_t column;
 } * candy_dbginfo_t;
 
-static inline candy_dbginfo_t candy_lexer_dbginfo(candy_lexer_t lexer) {
+static inline candy_dbginfo_t candy_lexer_dbginfo(struct candy_lexer *lexer) {
   return (candy_dbginfo_t)lexer;
 }
 #endif /* CANDY_DEBUG_MODE */
 
-candy_lexer_t candy_lexer_create(const char code[], const candy_view_t buffer);
-int candy_lexer_delete(candy_lexer_t *lex);
+struct candy_lexer *candy_lexer_create(const char code[], struct candy_view *buffer);
+int candy_lexer_delete(struct candy_lexer **lex);
 
-candy_tokens_t candy_lexer_curr(candy_lexer_t lex, candy_meta_t *meta);
-candy_tokens_t candy_lexer_lookahead(candy_lexer_t lex);
+candy_tokens_t candy_lexer_curr(struct candy_lexer *lex, candy_meta_t *meta);
+candy_tokens_t candy_lexer_lookahead(struct candy_lexer *lex);
 
 #ifdef __cplusplus
 }

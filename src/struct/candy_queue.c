@@ -15,94 +15,83 @@
   */
 #include "candy_queue.h"
 #include <stdlib.h>
+#include <assert.h>
 
-typedef struct priv {
-  uint16_t count;
-} * priv_t;
+struct priv {
+  uint16_t size;
+};
 
-static inline priv_t _private(candy_queue_t queue) {
-  return (priv_t)(((struct {candy_node_t next; uint8_t args[];} *)queue)->args);
+static inline struct priv *_private(struct candy_queue *queue) {
+  return (struct priv *)((struct {struct candy_node *next; uint8_t args[];} *)queue)->args;
 }
 
-inline uint16_t candy_queue_size(void) {
-  return sizeof(struct candy_queue) + sizeof(struct priv);
-}
-
-inline bool candy_queue_empty(candy_queue_t queue) {
-  candy_assert(queue != NULL);
+bool candy_queue_empty(struct candy_queue *queue) {
+  assert(queue);
   return (queue->head == NULL);
 }
 
-inline uint32_t candy_queue_count(candy_queue_t queue) {
-  candy_assert(queue != NULL);
-  return _private(queue)->count;
+uint32_t candy_queue_size(struct candy_queue *queue) {
+  assert(queue);
+  return _private(queue)->size;
 }
 
-int candy_queue_iterator(candy_queue_t queue, candy_iterator_t func, void *args) {
-  candy_assert(queue != NULL);
-  for (candy_node_t *node = &queue->head; ;) {
-    if (*node == NULL)
-      break;
-    if (func != NULL)
-      func(node, args);
-    node = &(*node)->next;
+int candy_queue_iterator(struct candy_queue *queue, candy_iterator_t func, void *args) {
+  assert(queue);
+  assert(func);
+  for (struct candy_node **node = &queue->head; *node; node = &(*node)->next) {
+    func(node, args);
   }
   return 0;
 }
 
-candy_node_t *candy_queue_pointer(candy_queue_t queue, int32_t idx) {
-  candy_assert(queue != NULL);
-  if (_private(queue)->count == 0)
-    return &queue->head;
-  else if (idx < 0)
-    idx = _private(queue)->count + idx;
-  for (candy_node_t *node = &queue->head; ; idx--) {
-    if (idx == 0)
-      return node;
-    node = &(*node)->next;
-  }
+struct candy_node **candy_queue_pointer(struct candy_queue *queue, int32_t idx) {
+  assert(queue);
+  if (idx < 0)
+    idx = _private(queue)->size + idx + 1;
+  assert(idx >= 0 && idx <= _private(queue)->size);
+  struct candy_node **node = &queue->head;
+  for (; *node && idx; node = &(*node)->next, idx--);
+  return node;
 }
 
-int candy_queue_clear(candy_queue_t queue, candy_destroy_t func) {
-  candy_assert(queue != NULL);
+int candy_queue_clear(struct candy_queue *queue, candy_destroy_t func) {
+  assert(queue);
   while (!candy_queue_empty(queue))
     candy_dequeue(queue, 0, func);
   return 0;
 }
 
-candy_queue_t candy_queue_create(void) {
-  candy_queue_t queue = (candy_queue_t)malloc(candy_queue_size());
+struct candy_queue *candy_queue_create(void) {
+  struct candy_queue *queue = (struct candy_queue *)malloc(sizeof(struct candy_queue) + sizeof(struct priv));
   queue->head = NULL;
-  _private(queue)->count = 0;
+  _private(queue)->size = 0;
   return queue;
 }
 
-int candy_queue_delete(candy_queue_t *queue, candy_destroy_t func) {
+int candy_queue_delete(struct candy_queue **queue, candy_destroy_t func) {
   candy_queue_clear(*queue, func);
   free(*queue);
   *queue = NULL;
   return 0;
 }
 
-int candy_enqueue(candy_queue_t queue, int32_t idx, candy_node_t node) {
-  candy_assert(queue != NULL);
-  candy_assert(node != NULL);
-  candy_node_t *temp = candy_queue_pointer(queue, idx);
-  if (_private(queue)->count && idx != 0)
-    temp = &(*temp)->next;
+int candy_enqueue(struct candy_queue *queue, int32_t idx, struct candy_node *node) {
+  assert(queue);
+  assert(node);
+  struct candy_node **temp = candy_queue_pointer(queue, idx);
   node->next = *temp;
   *temp = node;
-  _private(queue)->count++;
+  _private(queue)->size++;
   return 0;
 }
 
-int candy_dequeue(candy_queue_t queue, int32_t idx, candy_destroy_t func) {
-  candy_assert(queue != NULL);
-  candy_node_t *temp = candy_queue_pointer(queue, idx);
-  candy_node_t del = *temp;
-  *temp = (*temp)->next;
+int candy_dequeue(struct candy_queue *queue, int32_t idx, candy_destroy_t func) {
+  assert(queue);
+  struct candy_node **del = candy_queue_pointer(queue, idx);
+  struct candy_node *next = (*del)->next;
   if (func)
-    func(&del);
-  _private(queue)->count--;
+    func(del);
+  *del = next;
+  _private(queue)->size--;
   return 0;
 }

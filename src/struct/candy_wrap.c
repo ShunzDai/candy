@@ -17,19 +17,19 @@
 #include "src/common/candy_lib.h"
 #include <stdlib.h>
 
-typedef struct priv {
+struct priv {
   candy_hash_t hash;
   uint16_t type : 4;
   uint16_t      : 12;
   uint16_t size;
   uint8_t data[];
-} * priv_t;
+};
 
-static inline priv_t _private(candy_wrap_t wrap) {
-  return (priv_t)(((struct {candy_wrap_t next; uint8_t args[];} *)wrap)->args);
+static inline struct priv *_private(struct candy_wrap *wrap) {
+  return (struct priv *)(((struct {struct candy_wrap *next; uint8_t args[];} *)wrap)->args);
 }
 
-candy_wraps_t candy_wrap_print(candy_wrap_t wrap) {
+candy_wraps_t candy_wrap_print(struct candy_wrap *wrap) {
   switch (_private(wrap)->type) {
     case CANDY_WRAP_NONE:
       printf("\n");
@@ -46,9 +46,6 @@ candy_wraps_t candy_wrap_print(candy_wrap_t wrap) {
     case CANDY_WRAP_BOOLEAN:
       printf("%s\n", candy_wrap_get_boolean(wrap) ? "True" : "False");
       break;
-    case CANDY_WRAP_METHOD:
-      printf("%p\n", candy_wrap_get_method(wrap));
-      break;
     case CANDY_WRAP_OBJECT:
       printf("%p\n", wrap);
       break;
@@ -59,23 +56,23 @@ candy_wraps_t candy_wrap_print(candy_wrap_t wrap) {
   return (candy_wraps_t)_private(wrap)->type;
 }
 
-inline candy_view_t candy_wrap_view(candy_wrap_t wrap) {
+inline struct candy_view *candy_wrap_view(struct candy_wrap *wrap) {
   candy_assert(wrap != NULL);
-  return (candy_view_t)&_private(wrap)->size;
+  return (struct candy_view *)&_private(wrap)->size;
 }
 
-inline candy_wraps_t candy_wrap_type(candy_wrap_t wrap) {
+inline candy_wraps_t candy_wrap_type(struct candy_wrap *wrap) {
   candy_assert(wrap != NULL);
   return (candy_wraps_t)_private(wrap)->type;
 }
 
-inline bool candy_wrap_match(candy_wrap_t wrap, candy_hash_t hash) {
+inline bool candy_wrap_match(struct candy_wrap *wrap, candy_hash_t hash) {
   candy_assert(wrap != NULL);
   return (_private(wrap)->hash == hash);
 }
 
-candy_wrap_t candy_wrap_create(candy_hash_t hash, const void *data, uint16_t size, candy_wraps_t type, candy_wrap_t next) {
-  candy_wrap_t wrap = (candy_wrap_t)malloc(sizeof(struct candy_wrap) + sizeof(struct priv) + size);
+struct candy_wrap *candy_wrap_create(candy_hash_t hash, const void *data, uint16_t size, candy_wraps_t type, struct candy_wrap *next) {
+  struct candy_wrap *wrap = (struct candy_wrap *)malloc(sizeof(struct candy_wrap) + sizeof(struct priv) + size);
   wrap->next = next;
   _private(wrap)->size = size;
   _private(wrap)->type = type;
@@ -84,25 +81,25 @@ candy_wrap_t candy_wrap_create(candy_hash_t hash, const void *data, uint16_t siz
   return wrap;
 }
 
-int candy_wrap_delete(candy_wrap_t *wrap) {
-  candy_wrap_t temp = (*wrap)->next;
+int candy_wrap_delete(struct candy_wrap **wrap) {
+  struct candy_wrap *temp = (*wrap)->next;
   free(*wrap);
   *wrap = temp;
   return 0;
 }
 
-inline candy_wrap_t candy_wrap_copy(candy_wrap_t wrap) {
+inline struct candy_wrap *candy_wrap_copy(struct candy_wrap *wrap) {
   candy_assert(wrap != NULL);
   return candy_wrap_create(_private(wrap)->hash, _private(wrap)->data, _private(wrap)->size, (candy_wraps_t)_private(wrap)->type, NULL);
 }
 
-int candy_wrap_set_none(candy_wrap_t *wrap) {
+int candy_wrap_set_none(struct candy_wrap **wrap) {
   candy_assert(wrap != NULL);
   switch (_private(*wrap)->type) {
     case CANDY_WRAP_NONE:
       return 0;
     default: {
-      candy_wrap_t next = (*wrap)->next;
+      struct candy_wrap *next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
       free(*wrap);
       *wrap = candy_wrap_create(hash, NULL, 0, CANDY_WRAP_NONE, next);
@@ -111,14 +108,14 @@ int candy_wrap_set_none(candy_wrap_t *wrap) {
   }
 }
 
-int candy_wrap_set_integer(candy_wrap_t *wrap, candy_integer_t value) {
+int candy_wrap_set_integer(struct candy_wrap **wrap, candy_integer_t value) {
   candy_assert(wrap != NULL);
   switch (_private(*wrap)->type) {
     case CANDY_WRAP_INTEGER:
       *((candy_integer_t *)_private(*wrap)->data) = value;
       return 0;
     default: {
-      candy_wrap_t next = (*wrap)->next;
+      struct candy_wrap *next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
       free(*wrap);
       *wrap = candy_wrap_create(hash, &value, sizeof(candy_integer_t), CANDY_WRAP_INTEGER, next);
@@ -127,14 +124,14 @@ int candy_wrap_set_integer(candy_wrap_t *wrap, candy_integer_t value) {
   }
 }
 
-int candy_wrap_set_float(candy_wrap_t *wrap, candy_float_t value) {
+int candy_wrap_set_float(struct candy_wrap **wrap, candy_float_t value) {
   candy_assert(wrap != NULL);
   switch (_private(*wrap)->type) {
     case CANDY_WRAP_FLOAT:
       *((candy_float_t *)_private(*wrap)->data) = value;
       return 0;
     default:{
-      candy_wrap_t next = (*wrap)->next;
+      struct candy_wrap *next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
       free(*wrap);
       *wrap = candy_wrap_create(hash, &value, sizeof(candy_float_t), CANDY_WRAP_FLOAT, next);
@@ -143,14 +140,14 @@ int candy_wrap_set_float(candy_wrap_t *wrap, candy_float_t value) {
   }
 }
 
-int candy_wrap_set_boolean(candy_wrap_t *wrap, candy_boolean_t value){/* if value % 256 == 0 ? */
+int candy_wrap_set_boolean(struct candy_wrap **wrap, candy_boolean_t value){/* if value % 256 == 0 ? */
   candy_assert(wrap != NULL);
   switch (_private(*wrap)->type) {
     case CANDY_WRAP_BOOLEAN:
       *((candy_boolean_t *)_private(*wrap)->data) = value;
       return 0;
     default: {
-      candy_wrap_t next = (*wrap)->next;
+      struct candy_wrap *next = (*wrap)->next;
       candy_hash_t hash = _private(*wrap)->hash;
       free(*wrap);
       *wrap = candy_wrap_create(hash, &value, sizeof(candy_boolean_t), CANDY_WRAP_BOOLEAN, next);
@@ -159,32 +156,16 @@ int candy_wrap_set_boolean(candy_wrap_t *wrap, candy_boolean_t value){/* if valu
   }
 }
 
-int candy_wrap_set_method(candy_wrap_t *wrap, candy_method_t value) {
+int candy_wrap_set_string(struct candy_wrap **wrap, const char value[], uint16_t size) {
   candy_assert(wrap != NULL);
-  switch (_private(*wrap)->type) {
-    case CANDY_WRAP_METHOD:
-      *((candy_method_t *)_private(*wrap)->data) = value;
-      return 0;
-    default: {
-      candy_wrap_t next = (*wrap)->next;
-      candy_hash_t hash = _private(*wrap)->hash;
-      free(*wrap);
-      *wrap = candy_wrap_create(hash, &value, sizeof(candy_method_t), CANDY_WRAP_METHOD, next);
-      return 0;
-    }
-  }
-}
-
-int candy_wrap_set_string(candy_wrap_t *wrap, const char value[], uint16_t size) {
-  candy_assert(wrap != NULL);
-  candy_wrap_t next = (*wrap)->next;
+  struct candy_wrap *next = (*wrap)->next;
   candy_hash_t hash = _private(*wrap)->hash;
   free(*wrap);
   *wrap = candy_wrap_create(hash, value, size, CANDY_WRAP_STRING, next);
   return 0;
 }
 
-candy_integer_t candy_wrap_get_integer(candy_wrap_t wrap) {
+candy_integer_t candy_wrap_get_integer(struct candy_wrap *wrap) {
 #define _round(x) ((x) >= 0 ? (candy_integer_t)((x) + 0.5) : (candy_integer_t)((x) - 0.5))
   candy_assert(wrap != NULL);
   switch (_private(wrap)->type) {
@@ -201,7 +182,7 @@ candy_integer_t candy_wrap_get_integer(candy_wrap_t wrap) {
 #undef _round
 }
 
-candy_float_t candy_wrap_get_float(candy_wrap_t wrap) {
+candy_float_t candy_wrap_get_float(struct candy_wrap *wrap) {
   candy_assert(wrap != NULL);
   switch (_private(wrap)->type) {
     case CANDY_WRAP_FLOAT:
@@ -216,7 +197,7 @@ candy_float_t candy_wrap_get_float(candy_wrap_t wrap) {
   }
 }
 
-candy_boolean_t candy_wrap_get_boolean(candy_wrap_t wrap) {
+candy_boolean_t candy_wrap_get_boolean(struct candy_wrap *wrap) {
   candy_assert(wrap != NULL);
   switch (_private(wrap)->type) {
     case CANDY_WRAP_BOOLEAN:
@@ -229,24 +210,13 @@ candy_boolean_t candy_wrap_get_boolean(candy_wrap_t wrap) {
   }
 }
 
-candy_method_t candy_wrap_get_method(candy_wrap_t wrap) {
-  candy_assert(wrap != NULL);
-  switch (_private(wrap)->type) {
-    case CANDY_WRAP_METHOD:
-      return *(candy_method_t *)_private(wrap)->data;
-    default:
-      candy_assert(false);
-      return NULL;
-  }
-}
-
-candy_string_t candy_wrap_get_string(candy_wrap_t wrap) {
+candy_string_t candy_wrap_get_string(struct candy_wrap *wrap) {
   candy_assert(wrap != NULL);
   switch (_private(wrap)->type) {
     case CANDY_WRAP_STRING:
-      return (candy_view_t)(&_private(wrap)->size);
+      return (candy_string_t)(&_private(wrap)->size);
     default:
       candy_assert(false);
-      return (candy_view_t)NULL;
+      return (candy_string_t)NULL;
   }
 }
