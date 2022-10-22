@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "src/core/candy_parser.h"
+#include "candy_parser.h"
 #include "mid_os.h"
 
 // extern "C" {

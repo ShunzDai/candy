@@ -13,18 +13,29 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#define CANDY_KEYWORD_LIST
-#include "src/core/candy_keyword.h"
+#ifndef CANDY_SRC_COMMON_TYPES_H
+#define CANDY_SRC_COMMON_TYPES_H
+#ifdef __cplusplus
+extern "C"{
+#endif /* __cplusplus */
 
-CANDY_KW(False)
-CANDY_KW(True)
-CANDY_KW(and)
-CANDY_KW(or)
-CANDY_KW(not)
-CANDY_KW(if)
-CANDY_KW(elif)
-CANDY_KW(else)
-CANDY_KW(while)
-CANDY_KW(for)
-CANDY_KW(break)
-CANDY_KW(continue)
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
+
+struct candy_view {
+  const uint16_t size;
+  char data[];
+};
+
+typedef uint32_t candy_hash_t;
+typedef struct candy_view * candy_string_t;
+typedef int32_t candy_integer_t;
+typedef double candy_float_t;
+typedef uint8_t candy_boolean_t;
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* CANDY_SRC_COMMON_TYPES_H */

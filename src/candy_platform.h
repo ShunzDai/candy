@@ -13,23 +13,21 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_CORE_LEXER_H
-#define CANDY_SRC_CORE_LEXER_H
+#ifndef CANDY_SRC_PLATFORM_PLATFORM_H
+#define CANDY_SRC_PLATFORM_PLATFORM_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/common/candy_types.h"
+#include <stdint.h>
 
-typedef struct ast_node * ast_node_t;
-typedef struct candy_parser * candy_parser_t;
+#ifndef candy_assert
+#define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert(__FILE__, __LINE__, __FUNCTION__, #condition " " __VA_ARGS__))
+#endif /* candy_assert */
 
-void candy_parser_print(struct candy_parser *parser);
-
-struct candy_parser *candy_parser_create(const char code[]);
-int candy_parser_delete(struct candy_parser **parser);
+void candy_platform_assert(const char *file, int line, const char *func, char *format, ...);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_CORE_LEXER_H */
+#endif /* CANDY_SRC_PLATFORM_PLATFORM_H */

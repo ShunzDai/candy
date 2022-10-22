@@ -19,7 +19,9 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/common/candy_types.h"
+#include "candy_types.h"
+
+#define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
 candy_hash_t candy_hash(char *name);
 

@@ -13,15 +13,23 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_CANDY_H
-#define CANDY_CANDY_H
+#ifndef CANDY_SRC_CORE_LEXER_H
+#define CANDY_SRC_CORE_LEXER_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy.h"
+#include "candy_types.h"
+
+typedef struct ast_node * ast_node_t;
+typedef struct candy_parser * candy_parser_t;
+
+void candy_parser_print(struct candy_parser *parser);
+
+struct candy_parser *candy_parser_create(const char code[]);
+int candy_parser_delete(struct candy_parser **parser);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_CANDY_H */
+#endif /* CANDY_SRC_CORE_LEXER_H */

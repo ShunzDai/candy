@@ -14,8 +14,8 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "src/common/candy_lib.h"
-#include "src/struct/candy_wrap.h"
+#include "candy_lib.h"
+#include "candy_wrap.h"
 
 TEST(wrap, lifecycle) {
   struct candy_wrap *wrap = candy_wrap_none(0);

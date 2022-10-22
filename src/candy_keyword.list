@@ -13,15 +13,18 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_PLATFORM_PLATFORM_H
-#define CANDY_SRC_PLATFORM_PLATFORM_H
-#ifdef __cplusplus
-extern "C"{
-#endif /* __cplusplus */
+#define CANDY_KEYWORD_LIST
+#include "candy_keyword.h"
 
-#include "src/common/candy_types.h"
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_PLATFORM_PLATFORM_H */
+CANDY_KW(False)
+CANDY_KW(True)
+CANDY_KW(and)
+CANDY_KW(or)
+CANDY_KW(not)
+CANDY_KW(if)
+CANDY_KW(elif)
+CANDY_KW(else)
+CANDY_KW(while)
+CANDY_KW(for)
+CANDY_KW(break)
+CANDY_KW(continue)
