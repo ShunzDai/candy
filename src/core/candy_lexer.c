@@ -145,12 +145,12 @@ static inline char _get_hexchar(struct candy_lexer *lex) {
   return _get_intchar(lex, 2, 16);
 }
 
-static candy_tokens_t _get_number(struct candy_lexer *lex, const int sign, candy_meta_t *meta) {
+static candy_tokens_t _get_number(struct candy_lexer *lex, candy_meta_t *meta) {
   bool is_float = false;
   _save_curr(lex);
   if (*lex->buffer->data == '0' && _check_dual(lex, "xX")) {
     char *end = NULL;
-    meta->i = (candy_integer_t)strtol(lex->curr, &end, 16) * sign;
+    meta->i = (candy_integer_t)strtol(lex->curr, &end, 16);
     candy_assert(end != NULL, "invalid hexadecimal number");
     _skip_idx(lex, end - lex->curr);
     return CANDY_TK_CST_INTEGER;
@@ -173,11 +173,11 @@ static candy_tokens_t _get_number(struct candy_lexer *lex, const int sign, candy
       default:
         _save_char(lex, '\0');
         if (is_float) {
-          meta->f = (candy_float_t)strtod(lex->buffer->data, NULL) * sign;
+          meta->f = (candy_float_t)strtod(lex->buffer->data, NULL);
           return CANDY_TK_CST_FLOAT;
         }
         else {
-          meta->i = (candy_integer_t)strtol(lex->buffer->data, NULL, 10) * sign;
+          meta->i = (candy_integer_t)strtol(lex->buffer->data, NULL, 10);
           return CANDY_TK_CST_INTEGER;
         }
     }
@@ -282,9 +282,7 @@ static candy_tokens_t _get_next_token(struct candy_lexer *lex, candy_meta_t *met
         candy_assert(lex->curr[1] == '=', "unexpected token '%5.5s'", *lex->curr);
         goto dual_ope;
       case '+': case '-':
-        if (is_dec(lex->curr[1]))
-          return _get_number(lex, (_skip_curr(lex) == '+') ? (1) : (-1), meta);
-        else if (lex->curr[1] == '=')
+        if (lex->curr[1] == '=')
           goto dual_ope;
         return _skip_curr(lex);
       case '>': case '<': case '*': case '/':
@@ -306,7 +304,7 @@ static candy_tokens_t _get_next_token(struct candy_lexer *lex, candy_meta_t *met
         meta->wrap = candy_wrap_string(0, lex->buffer->data, len);
         return CANDY_TK_CST_STRING;
       case '0' ... '9':
-        return _get_number(lex, 1, meta);
+        return _get_number(lex, meta);
       default:
         if (is_alpha(*lex->curr) || *lex->curr == '_')
           return _get_ident_or_keyword(lex, meta);
