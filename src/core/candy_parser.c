@@ -15,9 +15,9 @@
   */
 #include "candy_parser.h"
 #include "src/core/candy_lexer.h"
-#include "src/platform/candy_memory.h"
 #include "src/struct/candy_wrap.h"
 #include "src/struct/candy_queue.h"
+#include <stdlib.h>
 
 struct ast_node {
   ast_node_t l;
@@ -54,7 +54,7 @@ static void _ast_node_print(ast_node_t node) {
 }
 
 static ast_node_t _ast_node_create(int8_t token, candy_meta_t *meta, ast_node_t l, ast_node_t r) {
-  ast_node_t node = (ast_node_t)candy_malloc(sizeof(struct ast_node) + ((meta == NULL) ? sizeof(int8_t) : sizeof(struct priv)));
+  ast_node_t node = (ast_node_t)malloc(sizeof(struct ast_node) + ((meta == NULL) ? sizeof(int8_t) : sizeof(struct priv)));
   node->l = l;
   node->r = r;
   _private(node)->token = token;
@@ -69,7 +69,7 @@ static int _ast_node_delete(ast_node_t *node) {
     _ast_node_delete(&(*node)->l);
   if ((*node)->r != NULL)
     _ast_node_delete(&(*node)->r);
-  candy_free(*node);
+  free(*node);
   *node = NULL;
   return 0;
 }
@@ -118,7 +118,7 @@ void candy_parser_print(candy_parser_t parser) {
 }
 
 candy_parser_t candy_parser_create(const char code[]) {
-  candy_parser_t parser = (candy_parser_t)candy_malloc(sizeof(struct candy_parser));
+  candy_parser_t parser = (candy_parser_t)malloc(sizeof(struct candy_parser));
   uint8_t buffer[1026] = {0x00, 0x04};
   parser->lex = candy_lexer_create(code, (candy_view_t)buffer);
   parser->root = _expression(parser);
@@ -130,7 +130,7 @@ int candy_parser_delete(candy_parser_t *parser) {
   candy_assert(*parser != NULL);
   candy_lexer_delete(&(*parser)->lex);
   _ast_node_delete(&(*parser)->root);
-  candy_free(*parser);
+  free(*parser);
   *parser = NULL;
   return 0;
 }
