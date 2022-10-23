@@ -81,7 +81,7 @@ static struct ast_node *_factor(struct candy_parser *parser) {
   int sign = 1;
   uint8_t token = CANDY_TK_NONE;
   begin:
-  token = candy_lexer_curr(parser->lex, &meta);
+  token = candy_lexer_next(parser->lex, &meta);
   switch (token) {
     case '-':
       sign = -1;
@@ -97,7 +97,7 @@ static struct ast_node *_factor(struct candy_parser *parser) {
       break;
     case '(':
       l = _expression(parser);
-      token = candy_lexer_curr(parser->lex, &meta);
+      token = candy_lexer_next(parser->lex, &meta);
       candy_assert(token == ')', "unexpected token: %d", token);
       return l;
     default:
@@ -109,7 +109,7 @@ static struct ast_node *_factor(struct candy_parser *parser) {
 static struct ast_node *_term(struct candy_parser *parser) {
   struct ast_node *l = _factor(parser);
   for (uint8_t token = candy_lexer_lookahead(parser->lex); token == '*' || token == '/'; token = candy_lexer_lookahead(parser->lex)) {
-    token = candy_lexer_curr(parser->lex, NULL);
+    token = candy_lexer_next(parser->lex, NULL);
     l = _ast_node_create(token, NULL, l, _factor(parser));
   }
   return l;
@@ -118,7 +118,7 @@ static struct ast_node *_term(struct candy_parser *parser) {
 static struct ast_node *_expression(struct candy_parser *parser) {
   struct ast_node *l = _term(parser);
   for (uint8_t token = candy_lexer_lookahead(parser->lex); token == '+' || token == '-'; token = candy_lexer_lookahead(parser->lex)) {
-    token = candy_lexer_curr(parser->lex, NULL);
+    token = candy_lexer_next(parser->lex, NULL);
     l = _ast_node_create(token, NULL, l, _term(parser));
   }
   return l;

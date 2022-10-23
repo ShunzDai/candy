@@ -78,7 +78,7 @@ struct candy_lexer;
 struct candy_lexer *candy_lexer_create(const char code[], struct candy_view *buffer);
 int candy_lexer_delete(struct candy_lexer **lex);
 
-candy_tokens_t candy_lexer_curr(struct candy_lexer *lex, candy_meta_t *meta);
+candy_tokens_t candy_lexer_next(struct candy_lexer *lex, candy_meta_t *meta);
 candy_tokens_t candy_lexer_lookahead(struct candy_lexer *lex);
 
 #ifdef __cplusplus
