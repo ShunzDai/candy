@@ -78,7 +78,7 @@ struct candy_wrap *candy_wrap_create(candy_hash_t hash, const void *data, uint16
   _private(wrap)->size = size;
   _private(wrap)->type = type;
   _private(wrap)->hash = hash;
-  (data == NULL) ? candy_memset(_private(wrap)->data, 0, size) : candy_memcpy(_private(wrap)->data, data, size);
+  (data == NULL) ? memset(_private(wrap)->data, 0, size) : memcpy(_private(wrap)->data, data, size);
   return wrap;
 }
 

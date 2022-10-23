@@ -23,8 +23,6 @@ extern "C"{
 
 #define tk_dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
-typedef struct candy_lexer * candy_lexer_t;
-
 typedef enum candy_tokens {
   CANDY_TK_NONE = '\x00',
   CANDY_TK_EOF,
@@ -75,16 +73,7 @@ typedef union candy_meta {
   struct candy_wrap *wrap;
 } candy_meta_t;
 
-#ifdef CANDY_DEBUG_MODE
-typedef struct candy_dbginfo {
-  uint16_t line;
-  uint16_t column;
-} * candy_dbginfo_t;
-
-static inline candy_dbginfo_t candy_lexer_dbginfo(struct candy_lexer *lexer) {
-  return (candy_dbginfo_t)lexer;
-}
-#endif /* CANDY_DEBUG_MODE */
+struct candy_lexer;
 
 struct candy_lexer *candy_lexer_create(const char code[], struct candy_view *buffer);
 int candy_lexer_delete(struct candy_lexer **lex);

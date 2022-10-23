@@ -21,7 +21,10 @@
 
 struct candy_lexer {
 #ifdef CANDY_DEBUG_MODE
-  struct candy_dbginfo dbginfo;
+  struct {
+    uint16_t line;
+    uint16_t column;
+  } dbg;
 #endif /* CANDY_DEBUG_MODE */
   const char *curr;
   const char *error;
@@ -46,7 +49,7 @@ static const struct {
 
 static inline char _skip_idx(struct candy_lexer *lex, int idx) {
 #ifdef CANDY_DEBUG_MODE
-  lex->dbginfo.column += idx;
+  lex->dbg.column += idx;
 #endif /* CANDY_DEBUG_MODE */
   char ch = *lex->curr;
   return lex->curr += idx, ch;
@@ -87,8 +90,8 @@ static int _get_newline(struct candy_lexer *lex) {
   _save_curr(lex);
   _check_dual(lex, "\r\n");
 #ifdef CANDY_DEBUG_MODE
-  lex->dbginfo.line++;
-  lex->dbginfo.column = 0;
+  lex->dbg.line++;
+  lex->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
   return lex->cursor - head;
 }
@@ -317,10 +320,10 @@ static candy_tokens_t _get_next_token(struct candy_lexer *lex, candy_meta_t *met
 }
 
 struct candy_lexer *candy_lexer_create(const char code[], struct candy_view *buffer) {
-  struct candy_lexer *lex = (candy_lexer_t)malloc(sizeof(struct candy_lexer));
+  struct candy_lexer *lex = (struct candy_lexer *)malloc(sizeof(struct candy_lexer));
 #ifdef CANDY_DEBUG_MODE
-  lex->dbginfo.line = 1;
-  lex->dbginfo.column = 0;
+  lex->dbg.line = 1;
+  lex->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
   lex->curr = code;
   lex->lookahead.token = CANDY_TK_EOS;
