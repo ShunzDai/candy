@@ -26,7 +26,7 @@ void tast_body(candy_tokens_t token, const char code[], supposed ... value) {
   uint8_t buffer[1026] = {0x00, 0x04};
   struct candy_lexer *lex = candy_lexer_create(code, (struct candy_view *)buffer);
   candy_meta_t meta;
-  candy_tokens_t type = candy_lexer_curr(lex, &meta);
+  candy_tokens_t type = candy_lexer_next(lex, &meta);
   EXPECT_EQ(type, token);
   if constexpr(sizeof...(value)) {
     auto val = std::get<0>(std::make_tuple(value ...));
