@@ -23,10 +23,7 @@ extern "C"{
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
-candy_hash_t candy_hash(char *name);
-
-void *candy_memset(void *dst, uint8_t val, size_t size);
-void *candy_memcpy(void *dst, const void *src, size_t size);
+candy_hash_t candy_hash(char str[]);
 
 static inline bool is_capital(char ch) {
   return (ch >= 'A') && (ch <= 'Z');

@@ -55,7 +55,7 @@ static void _ast_node_print(struct ast_node *node) {
 }
 
 static struct ast_node *_ast_node_create(int8_t token, candy_meta_t *meta, struct ast_node *l, struct ast_node *r) {
-  struct ast_node *node = (ast_node_t)malloc(sizeof(struct ast_node) + ((meta == NULL) ? sizeof(int8_t) : sizeof(struct priv)));
+  struct ast_node *node = (struct ast_node *)malloc(sizeof(struct ast_node) + ((meta == NULL) ? sizeof(int8_t) : sizeof(struct priv)));
   node->l = l;
   node->r = r;
   _private(node)->token = token;
@@ -130,7 +130,7 @@ void candy_parser_print(struct candy_parser *parser) {
 }
 
 struct candy_parser *candy_parser_create(const char code[]) {
-  struct candy_parser *parser = (candy_parser_t)malloc(sizeof(struct candy_parser));
+  struct candy_parser *parser = (struct candy_parser *)malloc(sizeof(struct candy_parser));
   uint8_t buffer[1026] = {0x00, 0x04};
   parser->lex = candy_lexer_create(code, (struct candy_view *)buffer);
   parser->root = _expression(parser);

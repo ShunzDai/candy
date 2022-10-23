@@ -21,10 +21,6 @@ extern "C"{
 
 #include "candy_types.h"
 
-struct candy_wrap {
-  struct candy_wrap *next;
-};
-
 typedef enum candy_wraps {
   CANDY_WRAP_NONE,
   CANDY_WRAP_INTEGER,
@@ -35,6 +31,10 @@ typedef enum candy_wraps {
   CANDY_WRAP_OBJECT,
   CANDY_WRAP_MAX,
 } candy_wraps_t;
+
+struct candy_wrap {
+  struct candy_wrap *next;
+};
 
 /* wrap general methods */
 
