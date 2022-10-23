@@ -21,8 +21,7 @@ extern "C"{
 
 #include "candy_types.h"
 
-typedef struct ast_node * ast_node_t;
-typedef struct candy_parser * candy_parser_t;
+struct candy_parser;
 
 void candy_parser_print(struct candy_parser *parser);
 

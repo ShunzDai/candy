@@ -22,13 +22,9 @@ extern "C"{
 #include <stdint.h>
 #include <stdbool.h>
 
-struct candy_node;
-
 struct candy_node {
   struct candy_node *next;
 };
-
-struct candy_queue;
 
 struct candy_queue {
   struct candy_node *head;
