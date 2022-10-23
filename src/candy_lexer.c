@@ -268,7 +268,7 @@ static candy_tokens_t _get_ident_or_keyword(struct candy_lexer *lex, candy_meta_
   return CANDY_TK_IDENT;
 }
 
-static candy_tokens_t _get_next_token(struct candy_lexer *lex, candy_meta_t *meta) {
+static candy_tokens_t _lexer(struct candy_lexer *lex, candy_meta_t *meta) {
   lex->cursor = lex->buffer->data;
   int len = 0;
   while (1) {
@@ -338,7 +338,7 @@ int candy_lexer_delete(struct candy_lexer **lex) {
   return 0;
 }
 
-candy_tokens_t candy_lexer_curr(struct candy_lexer *lex, candy_meta_t *meta) {
+candy_tokens_t candy_lexer_next(struct candy_lexer *lex, candy_meta_t *meta) {
   /* is there a look-ahead token? */
   if (lex->lookahead.token != CANDY_TK_EOS) {
     /* use this one */
@@ -350,13 +350,11 @@ candy_tokens_t candy_lexer_curr(struct candy_lexer *lex, candy_meta_t *meta) {
     return token;
   }
   /* read next token */
-  return _get_next_token(lex, meta);
+  return _lexer(lex, meta);
 }
 
 candy_tokens_t candy_lexer_lookahead(struct candy_lexer *lex) {
   if (lex->lookahead.token == CANDY_TK_EOS)
-    lex->lookahead.token = _get_next_token(lex, &lex->lookahead.meta);
+    lex->lookahead.token = _lexer(lex, &lex->lookahead.meta);
   return lex->lookahead.token;
 }
-
-
