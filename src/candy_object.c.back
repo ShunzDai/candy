@@ -13,7 +13,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_object.h"
+#include "src/candy_object.h"
 #include "src/common/candy_lib.h"
 #include "src/struct/candy_wrap.h"
 #include "src/struct/candy_queue.h"

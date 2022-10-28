@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "candy_queue.h"
+#include "src/candy_queue.h"
 #include <stdlib.h>
 
 struct node {

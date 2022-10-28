@@ -13,17 +13,17 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_vm.h"
-#include "candy_wrap.h"
-#include "candy_queue.h"
-#include "candy_parser.h"
+#include "src/candy_vm.h"
+#include "src/candy_wrap.h"
+#include "src/candy_queue.h"
+#include "src/candy_parser.h"
 #include <stdlib.h>
 
 #define CANDY_OP_SIZE 6
 
 typedef enum candy_opcode {
   #define CANDY_OP_ENUM
-  #include "candy_opcode.list"
+  #include "src/candy_opcode.list"
 } candy_opcode_t;
 
 typedef union candy_opmode {
@@ -106,7 +106,7 @@ int candy_vm_execute(struct candy_vm *vm) {
   while (vm->opcurr < vm->opview->size) {
     switch (vm->opview->mode[vm->opcurr].op) {
       #define CANDY_OP_CASE
-      #include "candy_opcode.list"
+      #include "src/candy_opcode.list"
     }
   }
   return 0;
