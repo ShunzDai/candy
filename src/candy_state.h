@@ -13,18 +13,23 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#define CANDY_KEYWORD_LIST
-#include "src/candy_keyword.h"
+#ifndef CANDY_SRC_STATE_H
+#define CANDY_SRC_STATE_H
+#ifdef __cplusplus
+extern "C"{
+#endif /* __cplusplus */
 
-CANDY_KW(False)
-CANDY_KW(True)
-CANDY_KW(and)
-CANDY_KW(or)
-CANDY_KW(not)
-CANDY_KW(if)
-CANDY_KW(elif)
-CANDY_KW(else)
-CANDY_KW(while)
-CANDY_KW(for)
-CANDY_KW(break)
-CANDY_KW(continue)
+#include <stdint.h>
+
+struct candy_state {
+  void *ud;
+};
+
+struct candy_state *candy_state_create();
+int candy_state_delete(struct candy_state **s);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* CANDY_SRC_STATE_H */
+

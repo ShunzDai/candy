@@ -13,10 +13,10 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_lexer.h"
-#include "candy_wrap.h"
-#include "candy_lib.h"
-#include "candy_platform.h"
+#include "src/candy_lexer.h"
+#include "src/candy_wrap.h"
+#include "src/candy_lib.h"
+#include "src/candy_platform.h"
 #include <stdlib.h>
 
 struct candy_lexer {
@@ -44,7 +44,7 @@ static const struct {
   const char * const keyword;
 } _keywords[] = {
   #define CANDY_KW_MATCH
-  #include "candy_keyword.list"
+  #include "src/candy_keyword.list"
 };
 
 static inline char _skip_idx(struct candy_lexer *lex, int idx) {

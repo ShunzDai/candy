@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #define CANDY_OPCODE_LIST
-#include "candy_opcode.h"
+#include "src/candy_opcode.h"
 
 CANDY_OP(LOAD,
   break;

@@ -13,7 +13,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_queue.h"
+#include "src/candy_queue.h"
 #include <stdlib.h>
 #include <assert.h>
 
