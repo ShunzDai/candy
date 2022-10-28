@@ -1,4 +1,4 @@
-#include "candy_platform.h"
+#include "src/candy_platform.h"
 #include <stdio.h>                        //uart redirect fputc
 #include <string.h>                        //copy function
 #include <stdarg.h>                        //va_start /vsnprintf /va_end function

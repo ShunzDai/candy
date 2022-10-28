@@ -1,4 +1,4 @@
-#include "candy_lib.h"
+#include "src/candy_lib.h"
 
 /* time33 hash map */
 candy_hash_t candy_hash(char str[]) {
