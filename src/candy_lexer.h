@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_CORE_PARSER_H
-#define CANDY_SRC_CORE_PARSER_H
+#ifndef CANDY_SRC_PARSER_H
+#define CANDY_SRC_PARSER_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -84,4 +84,4 @@ candy_tokens_t candy_lexer_lookahead(struct candy_lexer *lex);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_CORE_PARSER_H */
+#endif /* CANDY_SRC_PARSER_H */

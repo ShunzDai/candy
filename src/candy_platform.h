@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_PLATFORM_PLATFORM_H
-#define CANDY_SRC_PLATFORM_PLATFORM_H
+#ifndef CANDY_SRC_PLATFORM_H
+#define CANDY_SRC_PLATFORM_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -30,4 +30,4 @@ void candy_platform_assert(const char *file, int line, const char *func, char *f
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_PLATFORM_PLATFORM_H */
+#endif /* CANDY_SRC_PLATFORM_H */
