@@ -213,7 +213,6 @@ arg_t candy::pull() {
 	  return (arg_t)pull_string();
   else
     static_assert(!std::is_same<arg_t, arg_t>::value, "unknown arg type");
-  return {};
 }
 
 template <typename ... arg_t>

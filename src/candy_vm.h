@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_CORE_VM_H
-#define CANDY_SRC_CORE_VM_H
+#ifndef CANDY_SRC_VM_H
+#define CANDY_SRC_VM_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -29,4 +29,4 @@ int candy_vm_execute(struct candy_vm *vm);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_CORE_VM_H */
+#endif /* CANDY_SRC_VM_H */

@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_STRUCT_WRAP_H
-#define CANDY_SRC_STRUCT_WRAP_H
+#ifndef CANDY_SRC_WRAP_H
+#define CANDY_SRC_WRAP_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -91,4 +91,4 @@ candy_string_t candy_wrap_get_string(struct candy_wrap *wrap);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_STRUCT_WRAP_H */
+#endif /* CANDY_SRC_WRAP_H */
