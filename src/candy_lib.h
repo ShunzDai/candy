@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_COMMON_LIB_H
-#define CANDY_SRC_COMMON_LIB_H
+#ifndef CANDY_SRC_LIB_H
+#define CANDY_SRC_LIB_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -52,4 +52,4 @@ static inline bool is_hex(char ch) {
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_COMMON_LIB_H */
+#endif /* CANDY_SRC_LIB_H */

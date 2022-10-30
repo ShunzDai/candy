@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_STRUCT_QUEUE_H
-#define CANDY_SRC_STRUCT_QUEUE_H
+#ifndef CANDY_SRC_QUEUE_H
+#define CANDY_SRC_QUEUE_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -52,4 +52,4 @@ int candy_dequeue(struct candy_queue *queue, int32_t idx, candy_destroy_t func);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_STRUCT_QUEUE_H */
+#endif /* CANDY_SRC_QUEUE_H */
