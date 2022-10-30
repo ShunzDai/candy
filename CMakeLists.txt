@@ -14,7 +14,10 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/config
 )
 
-add_subdirectory(src)
 add_subdirectory(components)
-add_subdirectory(demo)
+add_subdirectory(src)
 add_subdirectory(cpp)
+add_subdirectory(test)
+add_subdirectory(dummy)
+
+
