@@ -42,10 +42,10 @@ void candy_stack_push_float(candy_stack_t *self, candy_float_t *val, int size);
 void candy_stack_push_boolean(candy_stack_t *self, candy_boolean_t *val, int size);
 void candy_stack_push_string(candy_stack_t *self, char *val, int size);
 
-candy_integer_t *candy_stack_pull_integer(candy_stack_t *self, int *size, void *err);
-candy_float_t *candy_stack_pull_float(candy_stack_t *self, int *size, void *err);
-candy_boolean_t *candy_stack_pull_boolean(candy_stack_t *self, int *size, void *err);
-char *candy_stack_pull_string(candy_stack_t *self, int *size, void *err);
+candy_integer_t *candy_stack_pull_integer(candy_stack_t *self, int *size);
+candy_float_t *candy_stack_pull_float(candy_stack_t *self, int *size);
+candy_boolean_t *candy_stack_pull_boolean(candy_stack_t *self, int *size);
+char *candy_stack_pull_string(candy_stack_t *self, int *size);
 
 #ifdef __cplusplus
 }

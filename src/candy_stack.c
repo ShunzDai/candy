@@ -2,7 +2,6 @@
 #include "src/candy_wrap.h"
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 struct candy_stack {
   candy_wrap_t *base;
@@ -82,26 +81,18 @@ void candy_stack_push_string(candy_stack_t *self, char *val, int size) {
   candy_stack_push(self, &wrap);
 }
 
-candy_integer_t *candy_stack_pull_integer(candy_stack_t *self, int *size, void *err) {
-  /** @todo error handle */
-  assert(candy_wrap_check_integer(candy_stack_top(self)));
+candy_integer_t *candy_stack_pull_integer(candy_stack_t *self, int *size) {
   return candy_wrap_get_integer(candy_stack_pop(self), size);
 }
 
-candy_float_t *candy_stack_pull_float(candy_stack_t *self, int *size, void *err) {
-  /** @todo error handle */
- assert(candy_wrap_check_float(candy_stack_top(self)));
+candy_float_t *candy_stack_pull_float(candy_stack_t *self, int *size) {
   return candy_wrap_get_float(candy_stack_pop(self), size);
 }
 
-candy_boolean_t *candy_stack_pull_boolean(candy_stack_t *self, int *size, void *err) {
-  /** @todo error handle */
-  assert(candy_wrap_check_boolean(candy_stack_top(self)));
+candy_boolean_t *candy_stack_pull_boolean(candy_stack_t *self, int *size) {
   return candy_wrap_get_boolean(candy_stack_pop(self), size);
 }
 
-char *candy_stack_pull_string(candy_stack_t *self, int *size, void *err) {
-  /** @todo error handle */
-  assert(candy_wrap_check_string(candy_stack_top(self)));
+char *candy_stack_pull_string(candy_stack_t *self, int *size) {
   return candy_wrap_get_string(candy_stack_pop(self), size);
 }
