@@ -23,7 +23,12 @@ extern "C"{
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
-candy_hash_t candy_hash(char str[]);
+static inline candy_hash_t candy_hash(char str[]) {
+  candy_hash_t hash = 5381;
+  while (*str)
+    hash += (hash << 5) + (*str++);
+  return (hash & 0x7FFFFFFF);
+}
 
 static inline bool is_capital(char ch) {
   return (ch >= 'A') && (ch <= 'Z');

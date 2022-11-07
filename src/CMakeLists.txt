@@ -1,8 +1,10 @@
-file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES true
-  *.c
+file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
+  candy_stack.c
+  candy_vm.c
+  candy_state.c
 )
 
-add_compile_options(-Wno-implicit-fallthrough)
+add_compile_options(-Wno-implicit-fallthrough -Wno-sizeof-pointer-div)
 
 add_library(candy_core STATIC ${SOURCES_CANDY})
 

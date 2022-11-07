@@ -65,13 +65,7 @@ typedef enum candy_tokens {
   CANDY_TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
-typedef union candy_meta {
-  size_t data;
-  candy_integer_t i;
-  candy_float_t f;
-  candy_hash_t hash;
-  struct candy_wrap *wrap;
-} candy_meta_t;
+
 
 struct candy_lexer;
 

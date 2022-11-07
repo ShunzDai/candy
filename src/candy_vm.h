@@ -19,12 +19,25 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include <stdint.h>
+#include "src/candy_types.h"
 
-struct candy_vm;
+candy_vm_t *candy_vm_create(candy_state_t *sta);
+int candy_vm_delete(candy_vm_t **self);
 
-int candy_vm_load(struct candy_vm *vm, const uint8_t binary[]);
-int candy_vm_execute(struct candy_vm *vm);
+void candy_vm_regist_entry(candy_vm_t *self, candy_cfunc_t entry);
+
+void candy_vm_push_integer(candy_vm_t *self, candy_integer_t val);
+void candy_vm_push_float(candy_vm_t *self, candy_float_t val);
+void candy_vm_push_boolean(candy_vm_t *self, candy_boolean_t val);
+void candy_vm_push_string(candy_vm_t *self, char *val, int size);
+
+candy_integer_t candy_vm_pull_integer(candy_vm_t *self);
+candy_float_t candy_vm_pull_float(candy_vm_t *self);
+candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self);
+char *candy_vm_pull_string(candy_vm_t *self, int *size);
+
+int candy_vm_load(candy_vm_t *self, const uint8_t binary[]);
+int candy_vm_execute(candy_vm_t *self);
 
 #ifdef __cplusplus
 }
