@@ -23,22 +23,6 @@ extern "C"{
 #include <stdlib.h>
 #include <string.h>
 
-static inline bool candy_wrap_check_integer(candy_wrap_t *self) {
-  return self->type == CANDY_INTEGER;
-}
-
-static inline bool candy_wrap_check_float(candy_wrap_t *self) {
-  return self->type == CANDY_FLOAT;
-}
-
-static inline bool candy_wrap_check_boolean(candy_wrap_t *self) {
-  return self->type == CANDY_BOOLEAN;
-}
-
-static inline bool candy_wrap_check_string(candy_wrap_t *self) {
-  return self->type == CANDY_STRING;
-}
-
 static inline bool candy_wrap_check_linteger(candy_wrap_t *self) {
   return self->i.size > sizeof(self->i.sval);
 }

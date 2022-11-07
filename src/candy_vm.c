@@ -17,6 +17,7 @@
 #include "src/candy_stack.h"
 #include "src/candy_parser.h"
 #include <stdlib.h>
+#include <assert.h>
 
 #define CANDY_OP_SIZE 6
 
@@ -87,23 +88,35 @@ void candy_vm_push_string(candy_vm_t *self, char *val, int size) {
 }
 
 candy_integer_t candy_vm_pull_integer(candy_vm_t *self) {
+  candy_wrap_t *wrap = candy_stack_top(self->stack);
+  /** @todo error handle */
+  assert(wrap->type == CANDY_INTEGER);
   /** @todo if it is lval, push it into gc */
-  return *candy_stack_pull_integer(self->stack, NULL, self->err);
+  return *candy_stack_pull_integer(self->stack, NULL);
 }
 
 candy_float_t candy_vm_pull_float(candy_vm_t *self) {
+  candy_wrap_t *wrap = candy_stack_top(self->stack);
+  /** @todo error handle */
+  assert(wrap->type == CANDY_FLOAT);
   /** @todo if it is lval, push it into gc */
-  return *candy_stack_pull_float(self->stack, NULL, self->err);
+  return *candy_stack_pull_float(self->stack, NULL);
 }
 
 candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self) {
+  candy_wrap_t *wrap = candy_stack_top(self->stack);
+  /** @todo error handle */
+  assert(wrap->type == CANDY_BOOLEAN);
   /** @todo if it is lval, push it into gc */
-  return *candy_stack_pull_boolean(self->stack, NULL, self->err);
+  return *candy_stack_pull_boolean(self->stack, NULL);
 }
 
 char *candy_vm_pull_string(candy_vm_t *self, int *size) {
+  candy_wrap_t *wrap = candy_stack_top(self->stack);
+  /** @todo error handle */
+  assert(wrap->type == CANDY_STRING);
   /** @todo if it is lval, push it into gc */
-  return candy_stack_pull_string(self->stack, size, self->err);
+  return candy_stack_pull_string(self->stack, size);
 }
 
 int candy_vm_load(candy_vm_t *self, const uint8_t binary[]) {
