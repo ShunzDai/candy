@@ -5,4 +5,4 @@ idf_component_register(
   "."
 )
 
-target_link_libraries(${COMPONENT_LIB} PUBLIC -Wl,--whole-archive candy_core -Wl,-no-whole-archive mid_os)
+target_link_libraries(${COMPONENT_LIB} PUBLIC -Wl,--whole-archive candy_cpp -Wl,-no-whole-archive mid_os)

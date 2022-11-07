@@ -19,12 +19,12 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include <stdint.h>
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
-static inline candy_hash_t candy_hash(char str[]) {
-  candy_hash_t hash = 5381;
+static inline uint32_t djb_hash(char str[]) {
+  uint32_t hash = 5381;
   while (*str)
     hash += (hash << 5) + (*str++);
   return (hash & 0x7FFFFFFF);

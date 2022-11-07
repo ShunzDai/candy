@@ -27,7 +27,6 @@ typedef struct candy_view {
   char data[];
 } candy_view_t;
 
-typedef uint32_t candy_hash_t;
 typedef int64_t candy_integer_t;
 typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
@@ -42,13 +41,6 @@ typedef enum candy_wraps {
   CANDY_OBJECT,
   CANDY_MAX,
 } candy_wraps_t;
-
-typedef union candy_meta {
-  candy_integer_t i;
-  candy_float_t f;
-  char *s;
-  candy_hash_t hash;
-} candy_meta_t;
 
 typedef union candy_wrap {
   struct {
