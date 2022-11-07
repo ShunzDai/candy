@@ -20,73 +20,116 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/candy_types.h"
+#include <stdlib.h>
+#include <string.h>
 
-typedef enum candy_wraps {
-  CANDY_WRAP_NONE,
-  CANDY_WRAP_INTEGER,
-  CANDY_WRAP_FLOAT,
-  CANDY_WRAP_BOOLEAN,
-  CANDY_WRAP_STRING,
-  CANDY_WRAP_METHOD,
-  CANDY_WRAP_OBJECT,
-  CANDY_WRAP_MAX,
-} candy_wraps_t;
-
-struct candy_wrap {
-  struct candy_wrap *next;
-};
-
-/* wrap general methods */
-
-candy_wraps_t candy_wrap_print(struct candy_wrap *wrap);
-struct candy_view *candy_wrap_view(struct candy_wrap *wrap);
-candy_wraps_t candy_wrap_type(struct candy_wrap *wrap);
-bool candy_wrap_match(struct candy_wrap *wrap, candy_hash_t hash);
-
-/* wrap create methods */
-
-struct candy_wrap *candy_wrap_create(candy_hash_t hash, const void *data, uint16_t size, candy_wraps_t type, struct candy_wrap *next);
-
-struct candy_wrap *candy_wrap_copy(struct candy_wrap *wrap);
-
-static inline struct candy_wrap *candy_wrap_none(candy_hash_t hash) {
-  return candy_wrap_create(hash, NULL, 0, CANDY_WRAP_NONE, NULL);
+static inline bool candy_wrap_check_integer(candy_wrap_t *self) {
+  return self->type == CANDY_INTEGER;
 }
 
-static inline struct candy_wrap *candy_wrap_integer(candy_hash_t hash, candy_integer_t value) {
-  return candy_wrap_create(hash, &value, sizeof(candy_integer_t), CANDY_WRAP_INTEGER, NULL);
+static inline bool candy_wrap_check_float(candy_wrap_t *self) {
+  return self->type == CANDY_FLOAT;
 }
 
-static inline struct candy_wrap *candy_wrap_float(candy_hash_t hash, candy_float_t value) {
-  return candy_wrap_create(hash, &value, sizeof(candy_float_t), CANDY_WRAP_FLOAT, NULL);
+static inline bool candy_wrap_check_boolean(candy_wrap_t *self) {
+  return self->type == CANDY_BOOLEAN;
 }
 
-static inline struct candy_wrap *candy_wrap_boolean(candy_hash_t hash, candy_boolean_t value) {
-  return candy_wrap_create(hash, &value, sizeof(candy_boolean_t), CANDY_WRAP_BOOLEAN, NULL);
+static inline bool candy_wrap_check_string(candy_wrap_t *self) {
+  return self->type == CANDY_STRING;
 }
 
-static inline struct candy_wrap *candy_wrap_string(candy_hash_t hash, const char value[], uint16_t size) {
-  return candy_wrap_create(hash, value, size, CANDY_WRAP_STRING, NULL);
+static inline bool candy_wrap_check_linteger(candy_wrap_t *self) {
+  return self->i.size > sizeof(self->i.sval);
 }
 
-/* wrap delete method */
+static inline bool candy_wrap_check_lfloat(candy_wrap_t *self) {
+  return self->f.size > sizeof(self->f.sval);
+}
 
-int candy_wrap_delete(struct candy_wrap **wrap);
+static inline bool candy_wrap_check_lboolean(candy_wrap_t *self) {
+  return self->b.size > sizeof(self->b.sval);
+}
 
-/* wrap set methods */
+static inline bool candy_wrap_check_lstring(candy_wrap_t *self) {
+  return self->s.size > sizeof(self->s.sval);
+}
 
-int candy_wrap_set_none(struct candy_wrap **wrap);
-int candy_wrap_set_integer(struct candy_wrap **wrap, candy_integer_t value);
-int candy_wrap_set_float(struct candy_wrap **wrap, candy_float_t value);
-int candy_wrap_set_boolean(struct candy_wrap **wrap, candy_boolean_t value);
-int candy_wrap_set_string(struct candy_wrap **wrap, const char *value, uint16_t size);
+static inline candy_integer_t *candy_wrap_get_integer(candy_wrap_t *self, int *size) {
+  if (size)
+    *size = self->i.size;
+  return candy_wrap_check_linteger(self) ? self->i.lval : self->i.sval;
+}
 
-/* wrap get methods */
+static inline candy_float_t *candy_wrap_get_float(candy_wrap_t *self, int *size) {
+  if (size)
+    *size = self->f.size;
+  return candy_wrap_check_lfloat(self) ? self->f.lval : self->f.sval;
+}
 
-candy_integer_t candy_wrap_get_integer(struct candy_wrap *wrap);
-candy_float_t candy_wrap_get_float(struct candy_wrap *wrap);
-candy_boolean_t candy_wrap_get_boolean(struct candy_wrap *wrap);
-candy_string_t candy_wrap_get_string(struct candy_wrap *wrap);
+static inline candy_boolean_t *candy_wrap_get_boolean(candy_wrap_t *self, int *size) {
+  if (size)
+    *size = self->b.size;
+  return candy_wrap_check_lboolean(self) ? self->b.lval : self->b.sval;
+}
+
+static inline char *candy_wrap_get_string(candy_wrap_t *self, int *size) {
+  if (size)
+    *size = self->s.size;
+  return candy_wrap_check_lstring(self) ? self->s.lval : self->s.sval;
+}
+
+static inline void candy_wrap_integer_init(candy_wrap_t *self, candy_integer_t *val, int size) {
+  self->type = CANDY_INTEGER;
+  self->i.size = size;
+  if (candy_wrap_check_linteger(self)) {
+    self->i.lval = (candy_integer_t *)calloc(size, sizeof(candy_integer_t));
+    memcpy(self->i.lval, val, size * sizeof(candy_integer_t));
+  }
+  else {
+    memcpy(self->i.sval, val, size * sizeof(candy_integer_t));
+  }
+}
+
+static inline void candy_wrap_float_init(candy_wrap_t *self, candy_float_t *val, int size) {
+  self->type = CANDY_FLOAT;
+  self->f.size = size;
+  if (candy_wrap_check_lfloat(self)) {
+    self->f.lval = (candy_float_t *)calloc(size, sizeof(candy_float_t));
+    memcpy(self->f.lval, val, size * sizeof(candy_float_t));
+  }
+  else {
+    memcpy(self->f.sval, val, size * sizeof(candy_float_t));
+  }
+}
+
+static inline void candy_wrap_boolean_init(candy_wrap_t *self, candy_boolean_t *val, int size) {
+  self->type = CANDY_BOOLEAN;
+  self->b.size = size;
+  if (candy_wrap_check_lboolean(self)) {
+    self->b.lval = (candy_boolean_t *)calloc(size, sizeof(candy_boolean_t));
+    memcpy(self->b.lval, val, size * sizeof(candy_boolean_t));
+  }
+  else {
+    memcpy(self->b.sval, val, size * sizeof(candy_boolean_t));
+  }
+}
+
+static inline void candy_wrap_string_init(candy_wrap_t *self, char *val, int size) {
+  self->type = CANDY_STRING;
+  self->s.size = size;
+  if (candy_wrap_check_lstring(self)) {
+    self->s.lval = (char *)calloc(size, sizeof(char));
+    memcpy(self->s.lval, val, size * sizeof(char));
+  }
+  else {
+    memcpy(self->s.sval, val, size * sizeof(char));
+  }
+}
+
+static inline int candy_wrap_deinit(candy_wrap_t *self) {
+  return 0;
+}
 
 #ifdef __cplusplus
 }

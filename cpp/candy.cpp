@@ -17,22 +17,24 @@
 #include "src/candy_state.h"
 
 candy::candy() :
-_cdy((void *)candy_state_create()) {
-  static_cast<candy_state *>(_cdy)->ud = this;
+_cdy((void *)candy_state_create(this)) {
+  candy_regist_entry((candy_state *)_cdy, (candy_cfunc_t)cfunc_wrap);
 }
 
 candy::~candy() {
   candy_state_delete((candy_state **)&_cdy);
 }
 
-int candy::cfunc_wrap(void *cdy) {
-  // candy *c = (candy *)static_cast<candy_state *>(cdy)->ud;
-  return 0;
+int candy::cfunc_wrap(void *cdy, void *cfunc) {
+  candy *c = (candy *)candy_ud((candy_state *)cdy);
+  return c->_funcs[(size_t)cfunc](c);
 }
 
-int candy::regist(const char name[], std::function<void(candy *)> &func) {
-  printf("regist '%s'\n", name);
-  return 0;
+void candy::regist(const char obj[], reg_t list[], unsigned size) {
+  printf("regist obj '%s' in >>>\n", obj);
+  candy_regist_cfuncs((candy_state *)_cdy, obj, (candy_regist_t *)list, size);
+  printf("regist obj '%s' out <<<\n", obj);
+  return;
 }
 
 int candy::execute(const char func[], int nargs, int nresults) {
@@ -42,36 +44,41 @@ int candy::execute(const char func[], int nargs, int nresults) {
 
 void candy::push_integer(int val) {
   printf("into %s\n", __FUNCTION__);
+  candy_push_integer((candy_state *)_cdy, val);
 }
 
 void candy::push_float(double val) {
   printf("into %s\n", __FUNCTION__);
+  candy_push_float((candy_state *)_cdy, val);
 }
 
 void candy::push_boolean(bool val) {
   printf("into %s\n", __FUNCTION__);
+  candy_push_boolean((candy_state *)_cdy, val);
 }
 
 void candy::push_string(std::string val) {
   printf("into %s\n", __FUNCTION__);
+  candy_push_string((candy_state *)_cdy, val.data(), val.size());
 }
 
 int candy::pull_integer() {
   printf("into %s\n", __FUNCTION__);
-  return 0;
+  return candy_pull_integer((candy_state *)_cdy);
 }
 
 double candy::pull_float() {
   printf("into %s\n", __FUNCTION__);
-  return 0;
+  return candy_pull_float((candy_state *)_cdy);;
 }
 
 bool candy::pull_boolean() {
   printf("into %s\n", __FUNCTION__);
-  return 0;
+  return candy_pull_boolean((candy_state *)_cdy);;
 }
 
 std::string candy::pull_string() {
   printf("into %s\n", __FUNCTION__);
-  return "";
+  int size = -1;
+  return {candy_pull_string((candy_state *)_cdy, &size), (size_t)size};
 }

@@ -21,19 +21,87 @@ extern "C"{
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
-#include <stdio.h>
 
-struct candy_view {
+typedef struct candy_view {
   const uint16_t size;
   char data[];
-};
+} candy_view_t;
 
 typedef uint32_t candy_hash_t;
-typedef struct candy_view * candy_string_t;
-typedef int32_t candy_integer_t;
+typedef int64_t candy_integer_t;
 typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
+
+typedef enum candy_wraps {
+  CANDY_NONE,
+  CANDY_INTEGER,
+  CANDY_FLOAT,
+  CANDY_BOOLEAN,
+  CANDY_STRING,
+  CANDY_CFUNCTION,
+  CANDY_OBJECT,
+  CANDY_MAX,
+} candy_wraps_t;
+
+typedef union candy_meta {
+  candy_integer_t i;
+  candy_float_t f;
+  char *s;
+  candy_hash_t hash;
+} candy_meta_t;
+
+typedef union candy_wrap {
+  struct {
+    uint32_t type : 4;
+    uint32_t      : 28;
+  };
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
+    union {
+      candy_integer_t sval[sizeof(long) / sizeof(candy_integer_t)];
+      candy_integer_t *lval;
+    };
+  } i;
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
+    union {
+      candy_float_t sval[sizeof(long) / sizeof(candy_float_t)];
+      candy_float_t *lval;
+    };
+  } f;
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
+    union {
+      candy_boolean_t sval[sizeof(long) / sizeof(candy_boolean_t)];
+      candy_boolean_t *lval;
+    };
+  } b;
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
+    union {
+      char sval[sizeof(long) / sizeof(char)];
+      char *lval;
+    };
+  } s;
+} candy_wrap_t;
+
+typedef struct candy_vm candy_vm_t;
+
+typedef struct candy_state candy_state_t;
+
+/**
+  * @brief c-function
+  */
+typedef int (*candy_cfunc_t)(candy_state_t *, void *);
+
+typedef struct candy_regist {
+  const char *name;
+  candy_cfunc_t cfunc;
+} candy_regist_t;
 
 #ifdef __cplusplus
 }
