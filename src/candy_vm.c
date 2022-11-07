@@ -14,8 +14,7 @@
   * limitations under the License.
   */
 #include "src/candy_vm.h"
-#include "src/candy_wrap.h"
-#include "src/candy_queue.h"
+#include "src/candy_stack.h"
 #include "src/candy_parser.h"
 #include <stdlib.h>
 
@@ -44,67 +43,78 @@ typedef union candy_opmode {
   } iABx;
 } candy_opmode_t;
 
-struct candy_opview {
-  const uint32_t size;
-  const union candy_opmode mode[];
-};
-
-struct candy_stack {
-  struct candy_stack *next;
-  struct candy_queue *args;
-};
-
 struct candy_vm {
-  struct candy_queue *stack;
-  struct candy_opview *opview;
-  uint32_t opcurr;
+  candy_stack_t *stack;
+  candy_cfunc_t entry;
+  candy_state_t *sta;
+  void *gc;
+  void *err;
 };
 
-static struct candy_stack *_stack_create() {
-  struct candy_stack *stack = (struct candy_stack *)malloc(sizeof(struct candy_stack));
-  stack->next = NULL;
-  stack->args = candy_queue_create();
-  return stack;
+candy_vm_t *candy_vm_create(candy_state_t *sta) {
+  candy_vm_t *self = (candy_vm_t *)malloc(sizeof(candy_vm_t));
+  self->stack = candy_stack_create(4);
+  self->entry = NULL;
+  self->sta = sta;
+  return self;
 }
 
-int _stack_delete(struct candy_stack **stack) {
-  candy_queue_delete(&(*stack)->args, (candy_destroy_t)candy_wrap_delete);
-  free(*stack);
-  *stack = NULL;
+int candy_vm_delete(candy_vm_t **self) {
+  candy_stack_delete(&(*self)->stack);
+  free(*self);
+  *self = NULL;
   return 0;
 }
 
-static inline int _stack_push(struct candy_queue *stack) {
-  return candy_enqueue(stack, 0, (struct candy_node *)_stack_create());
+void candy_vm_regist_entry(candy_vm_t *self, candy_cfunc_t entry) {
+  self->entry = entry;
 }
 
-static inline int _stack_pop(struct candy_queue *stack) {
-  return candy_dequeue(stack, 0, (candy_destroy_t)_stack_delete);
+void candy_vm_push_integer(candy_vm_t *self, candy_integer_t val) {
+  candy_stack_push_integer(self->stack, &val, 1);
 }
 
-struct candy_vm *candy_vm_create() {
-  struct candy_vm *vm = (struct candy_vm *)malloc(sizeof(struct candy_vm));
-  vm->stack = candy_queue_create();
-  vm->opview = NULL;
-  vm->opcurr = 0;
-  return vm;
+void candy_vm_push_float(candy_vm_t *self, candy_float_t val) {
+  candy_stack_push_float(self->stack, &val, 1);
 }
 
-int candy_vm_delete(struct candy_vm **vm) {
-  free(*vm);
-  *vm = NULL;
+void candy_vm_push_boolean(candy_vm_t *self, candy_boolean_t val) {
+  candy_stack_push_boolean(self->stack, &val, 1);
+}
+
+void candy_vm_push_string(candy_vm_t *self, char *val, int size) {
+  candy_stack_push_string(self->stack, val, size);
+}
+
+candy_integer_t candy_vm_pull_integer(candy_vm_t *self) {
+  /** @todo if it is lval, push it into gc */
+  return *candy_stack_pull_integer(self->stack, NULL, self->err);
+}
+
+candy_float_t candy_vm_pull_float(candy_vm_t *self) {
+  /** @todo if it is lval, push it into gc */
+  return *candy_stack_pull_float(self->stack, NULL, self->err);
+}
+
+candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self) {
+  /** @todo if it is lval, push it into gc */
+  return *candy_stack_pull_boolean(self->stack, NULL, self->err);
+}
+
+char *candy_vm_pull_string(candy_vm_t *self, int *size) {
+  /** @todo if it is lval, push it into gc */
+  return candy_stack_pull_string(self->stack, size, self->err);
+}
+
+int candy_vm_load(candy_vm_t *self, const uint8_t binary[]) {
+
   return 0;
 }
 
-int candy_vm_load(struct candy_vm *vm, const uint8_t binary[]) {
-  vm->opview = (struct candy_opview *)binary;
-  return 0;
-}
+int candy_vm_execute(candy_vm_t *self) {
 
-int candy_vm_execute(struct candy_vm *vm) {
-  // const struct candy_stack *base = (struct candy_stack *)*candy_queue_pointer(vm->stack, 0);
-  while (vm->opcurr < vm->opview->size) {
-    switch (vm->opview->mode[vm->opcurr].op) {
+  while (1) {
+    switch (1) {
       #define CANDY_OP_CASE
       #include "src/candy_opcode.list"
     }
