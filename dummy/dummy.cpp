@@ -1,4 +1,5 @@
 #include "candy.h"
+#include "src/candy_lib.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,10 +39,16 @@ int main(int argc, char *argv[]) {
     std::pair{"cfunc4", cfunc4},
     std::pair{"cfunc5", cfunc5}
   );
-  /* auto res1 = */ cdy.call("cfunc1");
-  /* auto res2 = */ cdy.call("cfunc2", 314, 3.14f, "str from cpp");
-  /* auto res3 = */ cdy.call<int>("cfunc3");
-  /* auto res4 = */ cdy.call<int, float, std::string>("cfunc4");
-  /* auto res5 = */ cdy.call<int, float, std::string>("cfunc5", 314, 3.14f, "str from cpp");
+  // /* auto res1 = */ cdy.call("cfunc1");
+  // /* auto res2 = */ cdy.call("cfunc2", 314, 3.14f, "str from cpp");
+  // /* auto res3 = */ cdy.call<int>("cfunc3");
+  // /* auto res4 = */ cdy.call<int, float, std::string>("cfunc4");
+  // /* auto res5 = */ cdy.call<int, float, std::string>("cfunc5", 314, 3.14f, "str from cpp");
+  for (char ch = '0'; ch <= '9'; ch++)
+    printf("is_hex(%c) %d\n", ch, is_hex(ch));
+  for (char ch = 'a'; ch <= 'f'; ch++)
+    printf("is_hex(%c) %d\n", ch, is_hex(ch));
+  for (char ch = 'A'; ch <= 'F'; ch++)
+    printf("is_hex(%c) %d\n", ch, is_hex(ch));
   return 0;
 }

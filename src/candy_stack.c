@@ -59,25 +59,25 @@ candy_wrap_t *candy_stack_pop(candy_stack_t *self) {
 
 void candy_stack_push_integer(candy_stack_t *self, candy_integer_t *val, int size) {
   candy_wrap_t wrap;
-  candy_wrap_integer_init(&wrap, val, size);
+  candy_wrap_init_integer(&wrap, val, size);
   candy_stack_push(self, &wrap);
 }
 
 void candy_stack_push_float(candy_stack_t *self, candy_float_t *val, int size) {
   candy_wrap_t wrap;
-  candy_wrap_float_init(&wrap, val, size);
+  candy_wrap_init_float(&wrap, val, size);
   candy_stack_push(self, &wrap);
 }
 
 void candy_stack_push_boolean(candy_stack_t *self, candy_boolean_t *val, int size) {
   candy_wrap_t wrap;
-  candy_wrap_boolean_init(&wrap, val, size);
+  candy_wrap_init_boolean(&wrap, val, size);
   candy_stack_push(self, &wrap);
 }
 
 void candy_stack_push_string(candy_stack_t *self, char *val, int size) {
   candy_wrap_t wrap;
-  candy_wrap_string_init(&wrap, val, size);
+  candy_wrap_init_string(&wrap, val, size);
   candy_stack_push(self, &wrap);
 }
 
