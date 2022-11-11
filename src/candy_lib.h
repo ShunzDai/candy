@@ -31,11 +31,11 @@ static inline uint32_t djb_hash(char str[]) {
 }
 
 static inline bool is_capital(char ch) {
-  return (ch >= 'A') && (ch <= 'Z');
+  return (unsigned)(ch - 'A') <= (unsigned)('Z' - 'A');
 }
 
 static inline bool is_lower(char ch) {
-  return (ch >= 'a') && (ch <= 'z');
+  return (unsigned)(ch - 'a') <= (unsigned)('z' - 'a');
 }
 
 static inline bool is_alpha(char ch) {
@@ -43,15 +43,15 @@ static inline bool is_alpha(char ch) {
 }
 
 static inline bool is_oct(char ch) {
-  return (ch >= '0') && (ch <= '7');
+  return (unsigned)(ch - '0') <= (unsigned)('7' - '0');
 }
 
 static inline bool is_dec(char ch) {
-  return (ch >= '0') && (ch <= '9');
+  return (unsigned)(ch - '0') <= (unsigned)('9' - '0');
 }
 
 static inline bool is_hex(char ch) {
-  return is_dec(ch) || ((ch >= 'a') && (ch <= 'f')) || ((ch >= 'A') && (ch <= 'F'));
+  return is_dec(ch) || ((unsigned)(ch - 'a') <= (unsigned)('f' - 'a')) || ((unsigned)(ch - 'A') <= (unsigned)('F' - 'A'));
 }
 
 #ifdef __cplusplus

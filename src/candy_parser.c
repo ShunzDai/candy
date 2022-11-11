@@ -31,7 +31,7 @@ struct priv {
 };
 
 struct candy_parser {
-  struct candy_lexer *lex;
+  candy_lexer_t *self;
   struct ast_node *root;
 };
 

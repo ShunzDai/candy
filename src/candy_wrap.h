@@ -63,7 +63,7 @@ static inline char *candy_wrap_get_string(candy_wrap_t *self, int *size) {
   return candy_wrap_check_lstring(self) ? self->s.lval : self->s.sval;
 }
 
-static inline void candy_wrap_integer_init(candy_wrap_t *self, candy_integer_t *val, int size) {
+static inline void candy_wrap_init_integer(candy_wrap_t *self, candy_integer_t *val, int size) {
   self->type = CANDY_INTEGER;
   self->i.size = size;
   if (candy_wrap_check_linteger(self)) {
@@ -75,7 +75,7 @@ static inline void candy_wrap_integer_init(candy_wrap_t *self, candy_integer_t *
   }
 }
 
-static inline void candy_wrap_float_init(candy_wrap_t *self, candy_float_t *val, int size) {
+static inline void candy_wrap_init_float(candy_wrap_t *self, candy_float_t *val, int size) {
   self->type = CANDY_FLOAT;
   self->f.size = size;
   if (candy_wrap_check_lfloat(self)) {
@@ -87,7 +87,7 @@ static inline void candy_wrap_float_init(candy_wrap_t *self, candy_float_t *val,
   }
 }
 
-static inline void candy_wrap_boolean_init(candy_wrap_t *self, candy_boolean_t *val, int size) {
+static inline void candy_wrap_init_boolean(candy_wrap_t *self, candy_boolean_t *val, int size) {
   self->type = CANDY_BOOLEAN;
   self->b.size = size;
   if (candy_wrap_check_lboolean(self)) {
@@ -99,7 +99,7 @@ static inline void candy_wrap_boolean_init(candy_wrap_t *self, candy_boolean_t *
   }
 }
 
-static inline void candy_wrap_string_init(candy_wrap_t *self, char *val, int size) {
+static inline void candy_wrap_init_string(candy_wrap_t *self, char *val, int size) {
   self->type = CANDY_STRING;
   self->s.size = size;
   if (candy_wrap_check_lstring(self)) {

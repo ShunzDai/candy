@@ -14,7 +14,6 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "src/candy_lib.h"
 #include "src/candy_wrap.h"
 #include "src/candy_lexer.h"
 #include <string>
@@ -24,22 +23,37 @@
 template <typename ... supposed>
 void tast_body(candy_tokens_t token, const char code[], supposed ... value) {
   uint8_t buffer[1026] = {0x00, 0x04};
-  struct candy_lexer *lex = candy_lexer_create(code, (struct candy_view *)buffer);
-  candy_meta_t meta;
-  candy_tokens_t type = candy_lexer_next(lex, &meta);
+  candy_lexer_t *lex = candy_lexer_create(code, (struct candy_view *)buffer);
+  candy_wrap_t wrap;
+  candy_tokens_t type = candy_lexer_next(lex, &wrap);
   EXPECT_EQ(type, token);
   if constexpr(sizeof...(value)) {
     auto val = std::get<0>(std::make_tuple(value ...));
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
-      EXPECT_EQ(candy_wrap_get_string(meta.wrap)->size, val.size());
-      EXPECT_EQ(memcmp((char *)candy_wrap_get_string(meta.wrap)->data, val.data(), candy_wrap_get_string(meta.wrap)->size), 0);
-      candy_wrap_delete(&meta.wrap);
+      int size;
+    char *str = candy_wrap_get_string(&wrap, &size);
+      EXPECT_EQ(memcmp(str, val.data(), size), 0);
+      printf("size >>> %d\n", size);
+      EXPECT_EQ(size, val.size());
+      candy_wrap_deinit(&wrap);
     }
-    else if constexpr (std::is_same<decltype(val), candy_integer_t>::value) {
-      EXPECT_EQ(meta.i, val);
+    else if constexpr (
+      std::is_same<decltype(val),   int8_t>::value ||
+      std::is_same<decltype(val),  int16_t>::value ||
+      std::is_same<decltype(val),  int32_t>::value ||
+      std::is_same<decltype(val),  int64_t>::value ||
+      std::is_same<decltype(val),  uint8_t>::value ||
+      std::is_same<decltype(val), uint16_t>::value ||
+      std::is_same<decltype(val), uint32_t>::value ||
+      std::is_same<decltype(val), uint64_t>::value
+    ) {
+      EXPECT_EQ(*candy_wrap_get_integer(&wrap, NULL), val);
     }
-    else if constexpr (std::is_same<decltype(val), candy_float_t>::value) {
-      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, meta.f, val);
+    else if constexpr (
+      std::is_same<decltype(val),  float>::value ||
+      std::is_same<decltype(val), double>::value
+    ) {
+      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&wrap, NULL), val);
     }
     else {
       assert(0);
@@ -108,7 +122,7 @@ TEST_LEXER(string_multiline_1, CANDY_TK_CST_STRING,
 );
 
 TEST_LEXER(integer, CANDY_TK_CST_INTEGER,       "114514",       114514);
-TEST_LEXER(hex,     CANDY_TK_CST_INTEGER,     "0x114514",     0x114514);
+TEST_LEXER(hex,     CANDY_TK_CST_INTEGER,   "0xAbCd1234",   0xAbCd1234);
 TEST_LEXER(float,   CANDY_TK_CST_FLOAT  ,    "3.1415926",    3.1415926);
 TEST_LEXER(sci_0,   CANDY_TK_CST_FLOAT  , "0.31415926e1", 0.31415926e1);
 TEST_LEXER(sci_1,   CANDY_TK_CST_FLOAT  , "314.15926e-2", 314.15926e-2);
