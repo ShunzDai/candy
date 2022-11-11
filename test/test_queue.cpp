@@ -36,16 +36,17 @@ static int _node_delete(struct node **node) {
   return 0;
 }
 
-static void _node_iterator(struct node **node, void *args) {
+static int _node_iterator(struct node **node, void *args) {
   *(*node)->data = *(int *)args;
+  return 0;
 }
 
 TEST(queue, pointer) {
-  struct candy_queue *queue = candy_queue_create();
+  candy_queue_t *queue = candy_queue_create();
   EXPECT_EQ((uint64_t)candy_queue_pointer(queue, 0), (uint64_t)&queue->head);
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(0));
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(1));
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(2));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(0));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(1));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(2));
   EXPECT_EQ((uint64_t)candy_queue_pointer(queue, -3), (uint64_t)&queue->head->next);
   EXPECT_EQ((uint64_t)candy_queue_pointer(queue, -2), (uint64_t)&queue->head->next->next);
   EXPECT_EQ((uint64_t)candy_queue_pointer(queue, -1), (uint64_t)&queue->head->next->next->next);
@@ -59,10 +60,10 @@ TEST(queue, pointer) {
 }
 
 TEST(queue, clear) {
-  struct candy_queue *queue = candy_queue_create();
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(0));
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(1));
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(2));
+  candy_queue_t *queue = candy_queue_create();
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(0));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(1));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(2));
   EXPECT_EQ(candy_queue_size(queue), 3);
   candy_queue_clear(queue, (candy_destroy_t)_node_delete);
   EXPECT_EQ(candy_queue_size(queue), 0);
@@ -71,10 +72,10 @@ TEST(queue, clear) {
 }
 
 TEST(queue, fifo) {
-  struct candy_queue *queue = candy_queue_create();
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(0));
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(1));
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(2));
+  candy_queue_t *queue = candy_queue_create();
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(0));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(1));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(2));
   EXPECT_EQ(*((struct node *)*candy_queue_pointer(queue, 0))->data, 0);
   EXPECT_EQ(*((struct node *)*candy_queue_pointer(queue, 1))->data, 1);
   EXPECT_EQ(*((struct node *)*candy_queue_pointer(queue, 2))->data, 2);
@@ -90,10 +91,10 @@ TEST(queue, fifo) {
 }
 
 TEST(queue, lifo) {
-  struct candy_queue *queue = candy_queue_create();
-  candy_enqueue(queue, 0, (struct candy_node *)_node_create(0));
-  candy_enqueue(queue, 0, (struct candy_node *)_node_create(1));
-  candy_enqueue(queue, 0, (struct candy_node *)_node_create(2));
+  candy_queue_t *queue = candy_queue_create();
+  candy_enqueue(queue, 0, (candy_node_t *)_node_create(0));
+  candy_enqueue(queue, 0, (candy_node_t *)_node_create(1));
+  candy_enqueue(queue, 0, (candy_node_t *)_node_create(2));
   EXPECT_EQ(*((struct node *)*candy_queue_pointer(queue, 0))->data, 2);
   EXPECT_EQ(*((struct node *)*candy_queue_pointer(queue, 1))->data, 1);
   EXPECT_EQ(*((struct node *)*candy_queue_pointer(queue, 2))->data, 0);
@@ -109,10 +110,10 @@ TEST(queue, lifo) {
 }
 
 TEST(queue, iterator) {
-  struct candy_queue *queue = candy_queue_create();
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(0));
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(1));
-  candy_enqueue(queue, -1, (struct candy_node *)_node_create(2));
+  candy_queue_t *queue = candy_queue_create();
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(0));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(1));
+  candy_enqueue(queue, -1, (candy_node_t *)_node_create(2));
   int args = 114514;
   candy_queue_iterator(queue, (candy_iterator_t)_node_iterator, &args);
   EXPECT_EQ(*((struct node *)*candy_queue_pointer(queue, 0))->data, 114514);

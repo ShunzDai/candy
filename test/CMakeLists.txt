@@ -4,7 +4,7 @@ file(GLOB_RECURSE SOURCES_TEST LIST_DIRECTORIES false
   # test_wrap.cpp
   # test_object.cpp
   test_lexer.cpp
-  test_parser.cpp
+  # test_parser.cpp
 )
 
 add_compile_options(-std=gnu++17)

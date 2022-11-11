@@ -17,7 +17,7 @@ include_directories(
 add_subdirectory(components)
 add_subdirectory(src)
 add_subdirectory(cpp)
-# add_subdirectory(test)
+add_subdirectory(test)
 add_subdirectory(dummy)
 
 

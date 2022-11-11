@@ -65,15 +65,11 @@ typedef enum candy_tokens {
   CANDY_TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
+candy_lexer_t *candy_lexer_create(const char code[], struct candy_view *buffer);
+int candy_lexer_delete(candy_lexer_t **lex);
 
-
-struct candy_lexer;
-
-struct candy_lexer *candy_lexer_create(const char code[], struct candy_view *buffer);
-int candy_lexer_delete(struct candy_lexer **lex);
-
-candy_tokens_t candy_lexer_next(struct candy_lexer *lex, candy_meta_t *meta);
-candy_tokens_t candy_lexer_lookahead(struct candy_lexer *lex);
+candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap);
+candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);
 
 #ifdef __cplusplus
 }

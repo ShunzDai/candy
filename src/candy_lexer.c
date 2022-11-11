@@ -33,7 +33,7 @@ struct candy_lexer {
   } indent;
   struct {
     uint8_t token;
-    candy_meta_t meta;
+    candy_wrap_t wrap;
   } lookahead;
   struct candy_view *buffer;
   char *cursor;
@@ -47,29 +47,29 @@ static const struct {
   #include "src/candy_keyword.list"
 };
 
-static inline char _skip_idx(struct candy_lexer *lex, int idx) {
+static inline char _skip_idx(candy_lexer_t *self, int idx) {
 #ifdef CANDY_DEBUG_MODE
-  lex->dbg.column += idx;
+  self->dbg.column += idx;
 #endif /* CANDY_DEBUG_MODE */
-  char ch = *lex->curr;
-  return lex->curr += idx, ch;
+  char ch = *self->curr;
+  return self->curr += idx, ch;
 }
 
-static inline char _skip_curr(struct candy_lexer *lex) {
-  return _skip_idx(lex, 1);
+static inline char _skip_curr(candy_lexer_t *self) {
+  return _skip_idx(self, 1);
 }
 
-static inline void _save_char(struct candy_lexer *lex, char ch) {
-  *lex->cursor++ = ch;
+static inline void _save_char(candy_lexer_t *self, char ch) {
+  *self->cursor++ = ch;
 }
 
-static inline void _save_curr(struct candy_lexer *lex) {
-  _save_char(lex, _skip_curr(lex));
+static inline void _save_curr(candy_lexer_t *self) {
+  _save_char(self, _skip_curr(self));
 }
 
-static inline bool _check_dual(struct candy_lexer *lex, const char str[]) {
-  if (*lex->curr == str[0] || *lex->curr == str[1]) {
-    _save_curr(lex);
+static inline bool _check_dual(candy_lexer_t *self, const char str[]) {
+  if (*self->curr == str[0] || *self->curr == str[1]) {
+    _save_curr(self);
     return true;
   }
   return false;
@@ -85,15 +85,15 @@ static inline bool _check_dual(struct candy_lexer *lex, const char str[]) {
   * @param  lex lexer
   * @return newline bytes
   */
-static int _get_newline(struct candy_lexer *lex) {
-  const char *head = lex->cursor;
-  _save_curr(lex);
-  _check_dual(lex, "\r\n");
+static int _get_newline(candy_lexer_t *self) {
+  const char *head = self->cursor;
+  _save_curr(self);
+  _check_dual(self, "\r\n");
 #ifdef CANDY_DEBUG_MODE
-  lex->dbg.line++;
-  lex->dbg.column = 0;
+  self->dbg.line++;
+  self->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
-  return lex->cursor - head;
+  return self->cursor - head;
 }
 
 /**
@@ -102,27 +102,27 @@ static int _get_newline(struct candy_lexer *lex) {
   * @param  lex lexer
   * @retval reserved
   */
-static int _skip_comment(struct candy_lexer *lex) {
-  _skip_curr(lex);
+static int _skip_comment(candy_lexer_t *self) {
+  _skip_curr(self);
   while (1) {
-    switch (*lex->curr) {
+    switch (*self->curr) {
       case '\r': case '\n':
-        _get_newline(lex);
+        _get_newline(self);
       case '\0':
         return 0;
       default:
-        _skip_curr(lex);
+        _skip_curr(self);
         break;
     }
   }
 }
 
-static char _get_intchar(struct candy_lexer *lex, uint8_t max_len, uint8_t base) {
-  char buff[] = {lex->curr[0], lex->curr[1], lex->curr[2], '\0'};
+static char _get_intchar(candy_lexer_t *self, uint8_t max_len, uint8_t base) {
+  char buff[] = {self->curr[0], self->curr[1], self->curr[2], '\0'};
   buff[max_len] = '\0';
   char *end = NULL;
   char value = strtoul(buff, &end, base);
-  _skip_idx(lex, end - buff);
+  _skip_idx(self, end - buff);
   return value;
 }
 
@@ -134,8 +134,8 @@ static char _get_intchar(struct candy_lexer *lex, uint8_t max_len, uint8_t base)
   * @param  lex lexer
   * @retval octal character
   */
-static inline char _get_octchar(struct candy_lexer *lex) {
-  return _get_intchar(lex, 3, 8);
+static inline char _get_octchar(candy_lexer_t *self) {
+  return _get_intchar(self, 3, 8);
 }
 
 /**
@@ -144,43 +144,46 @@ static inline char _get_octchar(struct candy_lexer *lex) {
   * @param  lex lexer
   * @retval hexadecimal character
   */
-static inline char _get_hexchar(struct candy_lexer *lex) {
-  return _get_intchar(lex, 2, 16);
+static inline char _get_hexchar(candy_lexer_t *self) {
+  return _get_intchar(self, 2, 16);
 }
 
-static candy_tokens_t _get_number(struct candy_lexer *lex, candy_meta_t *meta) {
+static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   bool is_float = false;
-  _save_curr(lex);
-  if (*lex->buffer->data == '0' && _check_dual(lex, "xX")) {
+  _save_curr(self);
+  if (*self->buffer->data == '0' && _check_dual(self, "xX")) {
     char *end = NULL;
-    meta->i = (candy_integer_t)strtol(lex->curr, &end, 16);
+    candy_integer_t i = (candy_integer_t)strtol(self->curr, &end, 16);
+    candy_wrap_init_integer(wrap, &i, 1);
     candy_assert(end != NULL, "invalid hexadecimal number");
-    _skip_idx(lex, end - lex->curr);
+    _skip_idx(self, end - self->curr);
     return CANDY_TK_CST_INTEGER;
   }
   while (1) {
-    switch (*lex->curr) {
+    switch (*self->curr) {
       case '0' ... '9':
-        _save_curr(lex);
+        _save_curr(self);
         break;
       case '.':
         candy_assert(!is_float, "invalid float");
         is_float = true;
-        _save_curr(lex);
+        _save_curr(self);
         break;
       case 'e': case 'E':
         is_float = true;
-        _save_curr(lex);
-        _check_dual(lex, "+-");
+        _save_curr(self);
+        _check_dual(self, "+-");
         break;
       default:
-        _save_char(lex, '\0');
+        _save_char(self, '\0');
         if (is_float) {
-          meta->f = (candy_float_t)strtod(lex->buffer->data, NULL);
+          candy_float_t f = (candy_float_t)strtod(self->buffer->data, NULL);
+          candy_wrap_init_float(wrap, &f, 1);
           return CANDY_TK_CST_FLOAT;
         }
         else {
-          meta->i = (candy_integer_t)strtol(lex->buffer->data, NULL, 10);
+          candy_integer_t i = (candy_integer_t)strtol(self->buffer->data, NULL, 10);
+          candy_wrap_init_integer(wrap, &i, 1);
           return CANDY_TK_CST_INTEGER;
         }
     }
@@ -197,13 +200,13 @@ static candy_tokens_t _get_number(struct candy_lexer *lex, candy_meta_t *meta) {
   * @param  multiline is multiline string or not
   * @retval string length, not include '\0'
   */
-static int _get_string(struct candy_lexer *lex, bool multiline) {
-  const char *head = lex->cursor;
-  const char del = *lex->curr;
+static int _get_string(candy_lexer_t *self, bool multiline) {
+  const char *head = self->cursor;
+  const char del = *self->curr;
   /* skip first " or ' */
-  _skip_idx(lex, multiline ? 3 : 1);
-  while (*lex->curr != del) {
-    switch (*lex->curr) {
+  _skip_idx(self, multiline ? 3 : 1);
+  while (*self->curr != del) {
+    switch (*self->curr) {
       case '\0':
         candy_assert(false, "unexpected end of string");
         return -1;
@@ -212,149 +215,148 @@ static int _get_string(struct candy_lexer *lex, bool multiline) {
           candy_assert(false, "single line string can not contain newline");
           return -1;
         }
-        _get_newline(lex);
+        _get_newline(self);
         break;
       case '\\':
-        _skip_curr(lex);
-        switch (*lex->curr) {
-          case         'a': _skip_curr(lex); _save_char(lex,              '\a'); break;
-          case         'b': _skip_curr(lex); _save_char(lex,              '\b'); break;
-          case         't': _skip_curr(lex); _save_char(lex,              '\t'); break;
-          case         'n': _skip_curr(lex); _save_char(lex,              '\n'); break;
-          case         'v': _skip_curr(lex); _save_char(lex,              '\v'); break;
-          case         'f': _skip_curr(lex); _save_char(lex,              '\f'); break;
-          case         'r': _skip_curr(lex); _save_char(lex,              '\r'); break;
-          case        '\\': _skip_curr(lex); _save_char(lex,              '\\'); break;
-          case        '\'': _skip_curr(lex); _save_char(lex,              '\''); break;
-          case         '"': _skip_curr(lex); _save_char(lex,               '"'); break;
-          case         'x': _skip_curr(lex); _save_char(lex, _get_hexchar(lex)); break;
-          case '0' ... '7':                  _save_char(lex, _get_octchar(lex)); break;
+        _skip_curr(self);
+        switch (*self->curr) {
+          case         'a': _skip_curr(self); _save_char(self,               '\a'); break;
+          case         'b': _skip_curr(self); _save_char(self,               '\b'); break;
+          case         't': _skip_curr(self); _save_char(self,               '\t'); break;
+          case         'n': _skip_curr(self); _save_char(self,               '\n'); break;
+          case         'v': _skip_curr(self); _save_char(self,               '\v'); break;
+          case         'f': _skip_curr(self); _save_char(self,               '\f'); break;
+          case         'r': _skip_curr(self); _save_char(self,               '\r'); break;
+          case        '\\': _skip_curr(self); _save_char(self,               '\\'); break;
+          case        '\'': _skip_curr(self); _save_char(self,               '\''); break;
+          case         '"': _skip_curr(self); _save_char(self,                '"'); break;
+          case         'x': _skip_curr(self); _save_char(self, _get_hexchar(self)); break;
+          case '0' ... '7':                   _save_char(self, _get_octchar(self)); break;
           /* todo: support unicode */
           default:
             /* is not escape */
-            // printf("unknown escape sequence: '\\%c'\n", *lex->curr);
-            _save_char(lex, '\\');
-            _save_curr(lex);
+            // printf("unknown escape sequence: '\\%c'\n", *self->curr);
+            _save_char(self, '\\');
+            _save_curr(self);
             break;
         }
         break;
       /* normal character */
       default:
-        _save_curr(lex);
+        _save_curr(self);
         break;
     }
   }
-  _save_char(lex, '\0');
+  _save_char(self, '\0');
   /* skip last " or ' */
-  candy_assert(*lex->curr == del && (multiline ? (lex->curr[1] == del && lex->curr[2] == del) : (true)), "unexpected end of string");
-  _skip_idx(lex, multiline ? 3 : 1);
-  return lex->cursor - head - 1;
+  candy_assert(*self->curr == del && (multiline ? (self->curr[1] == del && self->curr[2] == del) : (true)), "unexpected end of string");
+  _skip_idx(self, multiline ? 3 : 1);
+  return self->cursor - head - 1;
 }
 
-static candy_tokens_t _get_ident_or_keyword(struct candy_lexer *lex, candy_meta_t *meta) {
+static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *wrap) {
   /* save alpha, or '_' */
-  _save_curr(lex);
+  _save_curr(self);
   /* save number, alpha, or '_' */
-  while (is_dec(*lex->curr) || is_alpha(*lex->curr) || *lex->curr == '_')
-    _save_curr(lex);
+  while (is_dec(*self->curr) || is_alpha(*self->curr) || *self->curr == '_')
+    _save_curr(self);
   /* last char padding '\0' */
-  _save_char(lex, '\0');
+  _save_char(self, '\0');
   /* check keyword */
   for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
-    if (strcmp(lex->buffer->data, _keywords[i].keyword) == 0)
+    if (strcmp(self->buffer->data, _keywords[i].keyword) == 0)
       return _keywords[i].token;
   }
-  meta->hash = candy_hash(lex->buffer->data);
+  // wrap->hash = candy_hash(self->buffer->data);
   return CANDY_TK_IDENT;
 }
 
-static candy_tokens_t _lexer(struct candy_lexer *lex, candy_meta_t *meta) {
-  lex->cursor = lex->buffer->data;
+static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
+  self->cursor = self->buffer->data;
   int len = 0;
   while (1) {
-    switch (*lex->curr) {
+    switch (*self->curr) {
       case '\0':
         return CANDY_TK_NONE;
       case '\r': case '\n':
-        _get_newline(lex);
+        _get_newline(self);
         break;
       case ' ': case '\f': case '\t': case '\v':
-        _skip_curr(lex);
+        _skip_curr(self);
         break;
       case '!':
-        candy_assert(lex->curr[1] == '=', "unexpected token '%5.5s'", *lex->curr);
+        candy_assert(self->curr[1] == '=', "unexpected token '%5.5s'", *self->curr);
         goto dual_ope;
       case '+': case '-':
-        if (lex->curr[1] == '=')
+        if (self->curr[1] == '=')
           goto dual_ope;
-        return _skip_curr(lex);
+        return _skip_curr(self);
       case '>': case '<': case '*': case '/':
-        if (lex->curr[1] == *lex->curr)
+        if (self->curr[1] == *self->curr)
           goto dual_ope;
       case '%': case '=':
-        if (lex->curr[1] == '=')
+        if (self->curr[1] == '=')
           goto dual_ope;
       case '&': case '|': case '~': case '^':
       case '(': case ')': case '[': case ']':
-        return _skip_curr(lex);
+        return _skip_curr(self);
       /* is singleline comment */
       case '#':
-        _skip_comment(lex);
+        _skip_comment(self);
         break;
       /* is string */
       case '"': case '\'':
-        len = _get_string(lex, lex->curr[1] == *lex->curr && lex->curr[2] == *lex->curr);
-        meta->wrap = candy_wrap_string(0, lex->buffer->data, len);
+        len = _get_string(self, self->curr[1] == *self->curr && self->curr[2] == *self->curr);
+        candy_wrap_init_string(wrap, self->buffer->data, len);
         return CANDY_TK_CST_STRING;
       case '0' ... '9':
-        return _get_number(lex, meta);
+        return _get_number(self, wrap);
       default:
-        if (is_alpha(*lex->curr) || *lex->curr == '_')
-          return _get_ident_or_keyword(lex, meta);
-        candy_assert(false, "unexpected token '%5.5s'", *lex->curr);
+        if (is_alpha(*self->curr) || *self->curr == '_')
+          return _get_ident_or_keyword(self, wrap);
+        candy_assert(false, "unexpected token '%5.5s'", *self->curr);
         break;
     }
   }
   dual_ope:
-  return tk_dual_ope(_skip_curr(lex), _skip_curr(lex));
+  return tk_dual_ope(_skip_curr(self), _skip_curr(self));
 }
 
-struct candy_lexer *candy_lexer_create(const char code[], struct candy_view *buffer) {
-  struct candy_lexer *lex = (struct candy_lexer *)malloc(sizeof(struct candy_lexer));
+candy_lexer_t *candy_lexer_create(const char code[], struct candy_view *buffer) {
+  candy_lexer_t *self = (candy_lexer_t *)malloc(sizeof(struct candy_lexer));
 #ifdef CANDY_DEBUG_MODE
-  lex->dbg.line = 1;
-  lex->dbg.column = 0;
+  self->dbg.line = 1;
+  self->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
-  lex->curr = code;
-  lex->lookahead.token = CANDY_TK_EOS;
-  lex->lookahead.meta.data = 0;
-  lex->buffer = buffer;
-  return lex;
+  self->curr = code;
+  self->lookahead.token = CANDY_TK_EOS;
+  self->buffer = buffer;
+  return self;
 }
 
-int candy_lexer_delete(struct candy_lexer **lex) {
+int candy_lexer_delete(candy_lexer_t **lex) {
   free(*lex);
   *lex = NULL;
   return 0;
 }
 
-candy_tokens_t candy_lexer_next(struct candy_lexer *lex, candy_meta_t *meta) {
+candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap) {
   /* is there a look-ahead token? */
-  if (lex->lookahead.token != CANDY_TK_EOS) {
+  if (self->lookahead.token != CANDY_TK_EOS) {
     /* use this one */
-    candy_tokens_t token = lex->lookahead.token;
-    if (meta != NULL)
-      *meta = lex->lookahead.meta;
+    candy_tokens_t token = self->lookahead.token;
+    if (wrap != NULL)
+      *wrap = self->lookahead.wrap;
     /* and discharge it */
-    lex->lookahead.token = CANDY_TK_EOS;
+    self->lookahead.token = CANDY_TK_EOS;
     return token;
   }
   /* read next token */
-  return _lexer(lex, meta);
+  return _lexer(self, wrap);
 }
 
-candy_tokens_t candy_lexer_lookahead(struct candy_lexer *lex) {
-  if (lex->lookahead.token == CANDY_TK_EOS)
-    lex->lookahead.token = _lexer(lex, &lex->lookahead.meta);
-  return lex->lookahead.token;
+candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
+  if (self->lookahead.token == CANDY_TK_EOS)
+    self->lookahead.token = _lexer(self, &self->lookahead.wrap);
+  return self->lookahead.token;
 }
