@@ -79,7 +79,7 @@ static inline bool candy_wrap_check_lboolean(candy_wrap_t *self) {
 }
 
 static inline bool candy_wrap_check_lstring(candy_wrap_t *self) {
-  return self->s.size > sizeof(self->s.sval);
+  return self->s.size > sizeof(self->s.sval) - 1;
 }
 
 static inline candy_integer_t *candy_wrap_get_integer(candy_wrap_t *self, int *size) {
@@ -146,11 +146,13 @@ static inline void candy_wrap_init_string(candy_wrap_t *self, char *val, int siz
   self->type = CANDY_STRING;
   self->s.size = size;
   if (candy_wrap_check_lstring(self)) {
-    self->s.lval = (char *)calloc(size, sizeof(char));
+    self->s.lval = (char *)calloc(size + 1, sizeof(char));
     memcpy(self->s.lval, val, size * sizeof(char));
+    self->s.lval[size] = 0;
   }
   else {
     memcpy(self->s.sval, val, size * sizeof(char));
+    self->s.sval[size] = 0;
   }
 }
 
