@@ -20,10 +20,30 @@
 
 #define TEST_LEXER(_name, _token, _code, ...) TEST(lexer, _name) {tast_body(_token, _code __VA_OPT__(,) __VA_ARGS__);}
 
+using namespace std;
+
+struct reader_ud {
+  int offset;
+  const char *code;
+};
+
+static int reader(char *buff, int size, void *ud) {
+  reader_ud *info = (reader_ud *)ud;
+  int len = strlen(info->code) + 1;
+  if (size > len - info->offset) {
+    memcpy(buff, info->code + info->offset, len - info->offset);
+    info->offset = len;
+    return 0;
+  }
+  memcpy(buff, info->code + info->offset, size);
+  info->offset += size;
+  return size;
+}
+
 template <typename ... supposed>
 void tast_body(candy_tokens_t token, const char code[], supposed ... value) {
-  uint8_t buffer[1026] = {0x00, 0x04};
-  candy_lexer_t *lex = candy_lexer_create(code, (struct candy_view *)buffer);
+  reader_ud info = {0, code};
+  candy_lexer_t *lex = candy_lexer_create(reader, &info);
   candy_wrap_t wrap;
   candy_tokens_t type = candy_lexer_next(lex, &wrap);
   EXPECT_EQ(type, token);
@@ -31,9 +51,8 @@ void tast_body(candy_tokens_t token, const char code[], supposed ... value) {
     auto val = std::get<0>(std::make_tuple(value ...));
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
       int size;
-    char *str = candy_wrap_get_string(&wrap, &size);
+      char *str = candy_wrap_get_string(&wrap, &size);
       EXPECT_EQ(memcmp(str, val.data(), size), 0);
-      printf("size >>> %d\n", size);
       EXPECT_EQ(size, val.size());
       candy_wrap_deinit(&wrap);
     }
@@ -61,8 +80,6 @@ void tast_body(candy_tokens_t token, const char code[], supposed ... value) {
   }
   candy_lexer_delete(&lex);
 }
-
-namespace std {
 
 TEST_LEXER(comment_0, CANDY_TK_NONE, "#");
 
@@ -160,4 +177,21 @@ TEST_LEXER(CANDY_TK_OPE_LEQUAL , CANDY_TK_OPE_LEQUAL , "<=");
 TEST_LEXER(CANDY_TK_OPE_RSHIFT , CANDY_TK_OPE_RSHIFT , ">>");
 TEST_LEXER(CANDY_TK_OPE_LSHIFT , CANDY_TK_OPE_LSHIFT , "<<");
 
-} /* namespace std */
+TEST(lexer, complex_expression) {
+  reader_ud info = {0,
+    "while True:\n"
+    "  print(\"hello world\\n\")\n"
+  };
+  candy_lexer_t *lex = candy_lexer_create(reader, &info);
+  candy_wrap_t wrap;
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_KW_while);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_KW_True);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_DEL_COLON);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_IDENT);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_DEL_LPAREN);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_CST_STRING);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_DEL_RPAREN);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_NONE);
+  candy_wrap_deinit(&wrap);
+  candy_lexer_delete(&lex);
+}
