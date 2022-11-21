@@ -1,4 +1,5 @@
 #include "candy.h"
+#include "serial.h"
 #include "src/candy_lib.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -39,16 +40,17 @@ int main(int argc, char *argv[]) {
     std::pair{"cfunc4", cfunc4},
     std::pair{"cfunc5", cfunc5}
   );
+//   cdy.regist("__global__");
   // /* auto res1 = */ cdy.call("cfunc1");
   // /* auto res2 = */ cdy.call("cfunc2", 314, 3.14f, "str from cpp");
   // /* auto res3 = */ cdy.call<int>("cfunc3");
   // /* auto res4 = */ cdy.call<int, float, std::string>("cfunc4");
   // /* auto res5 = */ cdy.call<int, float, std::string>("cfunc5", 314, 3.14f, "str from cpp");
-  for (char ch = '0'; ch <= '9'; ch++)
-    printf("is_hex(%c) %d\n", ch, is_hex(ch));
-  for (char ch = 'a'; ch <= 'f'; ch++)
-    printf("is_hex(%c) %d\n", ch, is_hex(ch));
-  for (char ch = 'A'; ch <= 'F'; ch++)
-    printf("is_hex(%c) %d\n", ch, is_hex(ch));
+  auto obuf = serial::pack(std::tuple{314, 3.14f, std::tuple{"hello", (uint8_t)0x55U}, "world", true});
+  for (auto e : obuf)
+  printf("%02X ", e);
+  printf("\n");
+  auto args = serial::unpack<int, float, std::string, uint8_t, std::string, bool>(obuf);
+  printf("arg1,%d,arg2,%f,arg3,%s,arg4,0x%02X,arg5,%s,arg6,%d,\n", std::get<0>(args), std::get<1>(args), std::get<2>(args).data(), std::get<3>(args), std::get<4>(args).data(), std::get<5>(args));
   return 0;
 }

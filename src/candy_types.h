@@ -19,6 +19,7 @@
 extern "C"{
 #endif /* __cplusplus */
 
+#include "candy_config.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -81,11 +82,15 @@ typedef union candy_wrap {
   } s;
 } candy_wrap_t;
 
+typedef struct candy_io candy_io_t;
+
 typedef struct candy_lexer candy_lexer_t;
 
 typedef struct candy_vm candy_vm_t;
 
 typedef struct candy_state candy_state_t;
+
+typedef int (*candy_reader_t)(char *, int, void *);
 
 /**
   * @brief c-function

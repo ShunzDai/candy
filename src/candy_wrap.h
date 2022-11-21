@@ -112,6 +112,22 @@ static inline void candy_wrap_init_string(candy_wrap_t *self, char *val, int siz
 }
 
 static inline int candy_wrap_deinit(candy_wrap_t *self) {
+  switch (self->type) {
+  case CANDY_NONE:
+    break;
+  case CANDY_INTEGER:
+    break;
+  case CANDY_FLOAT:
+    break;
+  case CANDY_BOOLEAN:
+    break;
+  case CANDY_STRING:
+    if (candy_wrap_check_lstring(self))
+      free(self->s.lval);
+    break;
+  default:
+    break;
+  }
   return 0;
 }
 
