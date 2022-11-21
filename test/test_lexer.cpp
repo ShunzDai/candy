@@ -16,30 +16,43 @@
 #include "gtest/gtest.h"
 #include "src/candy_wrap.h"
 #include "src/candy_lexer.h"
+#include <stdio.h>
 #include <string>
 
 #define TEST_LEXER(_name, _token, _code, ...) TEST(lexer, _name) {tast_body(_token, _code __VA_OPT__(,) __VA_ARGS__);}
 
 using namespace std;
 
-struct reader_ud {
-  int offset;
+struct reader_s {
   const char *code;
+  const int size;
+  int offset;
 };
 
-static int reader(char *buff, int size, void *ud) {
-  reader_ud *info = (reader_ud *)ud;
-  int len = strlen(info->code) + 1;
-  len = (size > len - info->offset) ? (len - info->offset) : size;
+struct reader_f {
+  FILE *f;
+  const int size;
+};
+
+static int reader_str(char *buff, const int size, void *ud) {
+  reader_s *info = (reader_s *)ud;
+  int len = (size > info->size - info->offset) ? (info->size - info->offset) : size;
   memcpy(buff, info->code + info->offset, len);
   info->offset += len;
   return len;
 }
 
+static int reader_file(char *buff, const int size, void *ud) {
+  reader_f *info = (reader_f *)ud;
+  int len = (size > info->size - (int)ftell(info->f)) ? (info->size - (int)ftell(info->f)) : size;
+  fread(buff, sizeof(char), len, info->f);
+  return len;
+}
+
 template <typename ... supposed>
 void tast_body(candy_tokens_t token, const char code[], supposed ... value) {
-  reader_ud info = {0, code};
-  candy_lexer_t *lex = candy_lexer_create(reader, &info);
+  reader_s info = {code, (int)strlen(code) + 1, 0};
+  candy_lexer_t *lex = candy_lexer_create(reader_str, &info);
   candy_wrap_t wrap;
   candy_tokens_t type = candy_lexer_next(lex, &wrap);
   EXPECT_EQ(type, token);
@@ -145,6 +158,9 @@ TEST_LEXER(sci_1,   CANDY_TK_CST_FLOAT  , "314.15926e-2", 314.15926e-2);
 
 TEST_LEXER(CANDY_TK_DEL_LPAREN , CANDY_TK_DEL_LPAREN ,  "(");
 TEST_LEXER(CANDY_TK_DEL_RPAREN , CANDY_TK_DEL_RPAREN ,  ")");
+TEST_LEXER(CANDY_TK_DEL_COMMA  , CANDY_TK_DEL_COMMA  ,  ",");
+TEST_LEXER(CANDY_TK_DEL_DOT    , CANDY_TK_DEL_DOT    ,  ".");
+TEST_LEXER(CANDY_TK_DEL_COLON  , CANDY_TK_DEL_COLON  ,  ":");
 TEST_LEXER(CANDY_TK_DEL_LBRACE , CANDY_TK_DEL_LBRACE ,  "[");
 TEST_LEXER(CANDY_TK_DEL_RBRACE , CANDY_TK_DEL_RBRACE ,  "]");
 TEST_LEXER(CANDY_TK_OPE_BITAND , CANDY_TK_OPE_BITAND ,  "&");
@@ -174,11 +190,11 @@ TEST_LEXER(CANDY_TK_OPE_RSHIFT , CANDY_TK_OPE_RSHIFT , ">>");
 TEST_LEXER(CANDY_TK_OPE_LSHIFT , CANDY_TK_OPE_LSHIFT , "<<");
 
 TEST(lexer, complex_expression) {
-  reader_ud info = {0,
+  reader_s info = {
     "while True:\n"
     "  print(\"hello world\\n\")\n"
-  };
-  candy_lexer_t *lex = candy_lexer_create(reader, &info);
+  , 38, 0};
+  candy_lexer_t *lex = candy_lexer_create(reader_str, &info);
   candy_wrap_t wrap;
   EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_KW_while);
   EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_KW_True);
@@ -190,4 +206,25 @@ TEST(lexer, complex_expression) {
   EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_NONE);
   candy_wrap_deinit(&wrap);
   candy_lexer_delete(&lex);
+}
+
+TEST(lexer, file_system) {
+  FILE *f = fopen("../test/test_lexer.cdy", "r");
+  fseek(f, 0, SEEK_END);
+  int size = (int)ftell(f);
+  fseek(f, 0, SEEK_SET);
+  reader_f info = {f, size};
+  candy_lexer_t *lex = candy_lexer_create(reader_file, &info);
+  candy_wrap_t wrap;
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_KW_while);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_KW_True);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_DEL_COLON);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_IDENT);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_DEL_LPAREN);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_CST_STRING);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_DEL_RPAREN);
+  EXPECT_EQ(candy_lexer_next(lex, &wrap), CANDY_TK_NONE);
+  candy_wrap_deinit(&wrap);
+  candy_lexer_delete(&lex);
+  fclose(info.f);
 }
