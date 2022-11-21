@@ -58,7 +58,7 @@ class candy {
 
   std::vector<std::function<int(candy *)>> _funcs;
 
-  static int cfunc_wrap(void *cdy, void *cfunc);
+  static int cfunc_wrap(void *cdy);
 
   void regist(const char obj[], reg_t list[], unsigned size);
 

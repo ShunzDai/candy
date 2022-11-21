@@ -23,6 +23,49 @@ extern "C"{
 #include <stdlib.h>
 #include <string.h>
 
+union candy_wrap {
+  struct {
+    uint32_t type : 4;
+    uint32_t      : 28;
+  };
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
+    union {
+      candy_integer_t sval[sizeof(long) / sizeof(candy_integer_t)];
+      candy_integer_t *lval;
+    };
+  } i;
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
+    union {
+      candy_float_t sval[sizeof(long) / sizeof(candy_float_t)];
+      candy_float_t *lval;
+    };
+  } f;
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
+    union {
+      candy_boolean_t sval[sizeof(long) / sizeof(candy_boolean_t)];
+      candy_boolean_t *lval;
+    };
+  } b;
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
+    union {
+      char sval[sizeof(long) / sizeof(char)];
+      char *lval;
+    };
+  } s;
+};
+
+static inline bool candy_wrap_check_type(candy_wrap_t *self, candy_wraps_t type) {
+  return self->type == type;
+}
+
 static inline bool candy_wrap_check_linteger(candy_wrap_t *self) {
   return self->i.size > sizeof(self->i.sval);
 }
@@ -113,20 +156,26 @@ static inline void candy_wrap_init_string(candy_wrap_t *self, char *val, int siz
 
 static inline int candy_wrap_deinit(candy_wrap_t *self) {
   switch (self->type) {
-  case CANDY_NONE:
-    break;
-  case CANDY_INTEGER:
-    break;
-  case CANDY_FLOAT:
-    break;
-  case CANDY_BOOLEAN:
-    break;
-  case CANDY_STRING:
-    if (candy_wrap_check_lstring(self))
-      free(self->s.lval);
-    break;
-  default:
-    break;
+    case CANDY_NONE:
+      break;
+    case CANDY_INTEGER:
+      if (candy_wrap_check_linteger(self))
+        free(self->i.lval);
+      break;
+    case CANDY_FLOAT:
+      if (candy_wrap_check_lfloat(self))
+        free(self->f.lval);
+      break;
+    case CANDY_BOOLEAN:
+      if (candy_wrap_check_lboolean(self))
+        free(self->b.lval);
+      break;
+    case CANDY_STRING:
+      if (candy_wrap_check_lstring(self))
+        free(self->s.lval);
+      break;
+    default:
+      break;
   }
   return 0;
 }

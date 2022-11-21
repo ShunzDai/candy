@@ -38,6 +38,10 @@ void candy_regist_cfuncs(candy_state_t *self, const char obj[], candy_regist_t l
   }
 }
 
+candy_callinfo_t *candy_callinfo(candy_state_t *self) {
+  return NULL;
+}
+
 void candy_push_integer(candy_state_t *self, candy_integer_t val) {
   candy_vm_push_integer(self->vm, val);
 }

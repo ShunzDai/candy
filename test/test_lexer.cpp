@@ -30,14 +30,10 @@ struct reader_ud {
 static int reader(char *buff, int size, void *ud) {
   reader_ud *info = (reader_ud *)ud;
   int len = strlen(info->code) + 1;
-  if (size > len - info->offset) {
-    memcpy(buff, info->code + info->offset, len - info->offset);
-    info->offset = len;
-    return 0;
-  }
-  memcpy(buff, info->code + info->offset, size);
-  info->offset += size;
-  return size;
+  len = (size > len - info->offset) ? (len - info->offset) : size;
+  memcpy(buff, info->code + info->offset, len);
+  info->offset += len;
+  return len;
 }
 
 template <typename ... supposed>
