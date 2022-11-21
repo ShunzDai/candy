@@ -36,7 +36,7 @@ char candy_io_read(candy_io_t *self) {
 
 void candy_io_write(candy_io_t *self, char ch) {
   self->buffer[self->w++] = ch;
-  if (self->size - self->w < self->size / 2) {
+  if (self->size - self->w < self->size / 4) {
     int size = self->size * 2;
     char *buffer = (char *)calloc(size, sizeof(char));
     memcpy(buffer, self->buffer, self->size);
