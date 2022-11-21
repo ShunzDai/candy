@@ -20,7 +20,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 #define CANDY_IO_LOOKAHEAD_SIZE 3
-#define CANDY_IO_DEFAULT_BUFFER_SIZE 8
+#define CANDY_IO_DEFAULT_BUFFER_SIZE 64
 
 #ifdef __cplusplus
 }
