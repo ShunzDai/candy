@@ -35,7 +35,9 @@ typedef enum candy_tokens {
   #include "src/candy_keyword.list"
   CANDY_TK_DEL_LPAREN   =                   '(', /* 0x28 (  */
   CANDY_TK_DEL_RPAREN   =                   ')', /* 0x29 )  */
-  CANDY_TK_DEL_COLON    =                   ':', /* 0x3A : */
+  CANDY_TK_DEL_COMMA    =                   ',', /* 0x2C ,  */
+  CANDY_TK_DEL_DOT      =                   '.', /* 0x2E .  */
+  CANDY_TK_DEL_COLON    =                   ':', /* 0x3A :  */
   CANDY_TK_DEL_LBRACE   =                   '[', /* 0x5B [  */
   CANDY_TK_DEL_RBRACE   =                   ']', /* 0x5D ]  */
   CANDY_TK_OPE_BITAND   =                   '&', /* 0x26 &  */

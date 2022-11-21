@@ -307,7 +307,6 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
 
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   self->io.w = 0;
-  int len = 0;
   while (1) {
     switch (_view(self, 0)) {
       case '\0':
@@ -321,19 +320,20 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       case '!':
         candy_assert(_view(self, 1) == '=', "unexpected token '%5.5s'", _view(self, 0));
         goto dual_ope;
-      case '+': case '-':
-        if (_view(self, 1) == '=')
-          goto dual_ope;
-        return _read(self);
+      /* 'o', 'o=', 'oo' */
       case '>': case '<': case '*': case '/':
+        /* 'oo' */
         if (_view(self, 1) == _view(self, 0))
           goto dual_ope;
-      case '%': case '=':
+      /* 'o', 'o=' */
+      case '%': case '=': case '+': case '-':
+        /* 'o=' */
         if (_view(self, 1) == '=')
           goto dual_ope;
+      /* 'o' */
       case '&': case '|': case '~': case '^':
       case '(': case ')': case '[': case ']':
-      case ':':
+      case ',': case '.': case ':':
         return _read(self);
       /* is singleline comment */
       case '#':
@@ -341,8 +341,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       /* is string */
       case '"': case '\'':
-        len = _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0));
-        candy_wrap_init_string(wrap, self->io.buffer, len);
+        candy_wrap_init_string(wrap, self->io.buffer, _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
         return CANDY_TK_CST_STRING;
       case '0' ... '9':
         return _get_number(self, wrap);

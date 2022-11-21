@@ -53,7 +53,7 @@ typedef struct candy_vm candy_vm_t;
 
 typedef struct candy_state candy_state_t;
 
-typedef int (*candy_reader_t)(char *, int, void *);
+typedef int (*candy_reader_t)(char *, const int, void *);
 
 /**
   * @brief c-function
