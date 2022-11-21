@@ -2,6 +2,7 @@ file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   candy_queue.c
   candy_object.c
   candy_stack.c
+  candy_io.c
   candy_lexer.c
   candy_vm.c
   candy_state.c

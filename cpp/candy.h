@@ -41,7 +41,7 @@ class candy {
   std::tuple<res_t ...> call(const char func[], arg_t ... args);
 
   template <typename ... func_t>
-  candy *regist(const char obj[], std::pair<const char *, func_t> ... list);
+  candy *regist(const char obj[], const std::pair<const char *, func_t> ... list);
 
   private:
   template<typename first_t, typename ... rest_t>
@@ -138,7 +138,7 @@ void candy::push(arg_t arg) {
 }
 
 template <typename ... func_t>
-candy *candy::regist(const char obj[], std::pair<const char *, func_t> ... list) {
+candy *candy::regist(const char obj[], const std::pair<const char *, func_t> ... list) {
   std::vector<reg_t> clist;
   (clist.push_back(regist(list)), ...);
   regist(obj, clist.data(), clist.size());

@@ -35,6 +35,7 @@ typedef enum candy_tokens {
   #include "src/candy_keyword.list"
   CANDY_TK_DEL_LPAREN   =                   '(', /* 0x28 (  */
   CANDY_TK_DEL_RPAREN   =                   ')', /* 0x29 )  */
+  CANDY_TK_DEL_COLON    =                   ':', /* 0x3A : */
   CANDY_TK_DEL_LBRACE   =                   '[', /* 0x5B [  */
   CANDY_TK_DEL_RBRACE   =                   ']', /* 0x5D ]  */
   CANDY_TK_OPE_BITAND   =                   '&', /* 0x26 &  */
@@ -65,8 +66,8 @@ typedef enum candy_tokens {
   CANDY_TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
-candy_lexer_t *candy_lexer_create(const char code[], struct candy_view *buffer);
-int candy_lexer_delete(candy_lexer_t **lex);
+candy_lexer_t *candy_lexer_create(candy_reader_t reader, void *ud);
+int candy_lexer_delete(candy_lexer_t **self);
 
 candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap);
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);

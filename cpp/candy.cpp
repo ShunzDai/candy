@@ -31,9 +31,9 @@ int candy::cfunc_wrap(void *cdy, void *cfunc) {
 }
 
 void candy::regist(const char obj[], reg_t list[], unsigned size) {
-  printf("regist obj '%s' in >>>\n", obj);
+  printf(">>> regist obj '%s' in, list %p\n", obj, list);
   candy_regist_cfuncs((candy_state *)_cdy, obj, (candy_regist_t *)list, size);
-  printf("regist obj '%s' out <<<\n", obj);
+  printf("<<< regist obj '%s' out, list %p\n", obj, list);
   return;
 }
 
