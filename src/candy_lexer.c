@@ -45,6 +45,10 @@ static const struct {
   #include "src/candy_keyword.list"
 };
 
+static inline char *_buffer(candy_lexer_t *self) {
+  return self->io.buffer;
+}
+
 /**
   * @brief  observer mode of the stream
   * @param  self lexer
@@ -120,17 +124,15 @@ static inline bool _check_dual(candy_lexer_t *self, const char str[]) {
   *         \n\r
   *         first byte of curr pointer has been checked by up layer function
   * @param  self lexer
-  * @return newline bytes
+  * @return none
   */
-static int _get_newline(candy_lexer_t *self) {
-  int head = self->io.w;
+static void _get_newline(candy_lexer_t *self) {
   _save(self);
   _check_dual(self, "\r\n");
 #ifdef CANDY_DEBUG_MODE
   self->dbg.line++;
   self->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
-  return self->io.w - head;
 }
 
 /**
@@ -188,11 +190,11 @@ static inline char _get_hexchar(candy_lexer_t *self) {
 static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   bool is_float = false;
   _save(self);
-  if (*self->io.buffer == '0' && _check_dual(self, "xX")) {
+  if (*_buffer(self) == '0' && _check_dual(self, "xX")) {
     while (is_hex(_view(self, 0)))
       _save(self);
     char *end = NULL;
-    candy_integer_t i = (candy_integer_t)strtol(self->io.buffer, &end, 16);
+    candy_integer_t i = (candy_integer_t)strtol(_buffer(self), &end, 16);
     candy_assert(end != NULL, "invalid hexadecimal number");
     candy_wrap_init_integer(wrap, &i, 1);
     return CANDY_TK_CST_INTEGER;
@@ -214,12 +216,12 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       default:
         if (is_float) {
-          candy_float_t f = (candy_float_t)strtod(self->io.buffer, NULL);
+          candy_float_t f = (candy_float_t)strtod(_buffer(self), NULL);
           candy_wrap_init_float(wrap, &f, 1);
           return CANDY_TK_CST_FLOAT;
         }
         else {
-          candy_integer_t i = (candy_integer_t)strtol(self->io.buffer, NULL, 10);
+          candy_integer_t i = (candy_integer_t)strtol(_buffer(self), NULL, 10);
           candy_wrap_init_integer(wrap, &i, 1);
           return CANDY_TK_CST_INTEGER;
         }
@@ -298,7 +300,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
     _save(self);
   /* check keyword */
   for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
-    if (strncmp(self->io.buffer, _keywords[i].keyword, self->io.w) == 0)
+    if (strncmp(_buffer(self), _keywords[i].keyword, self->io.w) == 0)
       return _keywords[i].token;
   }
   // wrap->hash = djb_hash2(self->buffer->data, self->io.w);
@@ -341,7 +343,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       /* is string */
       case '"': case '\'':
-        candy_wrap_init_string(wrap, self->io.buffer, _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
+        candy_wrap_init_string(wrap, _buffer(self), _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
         return CANDY_TK_CST_STRING;
       case '0' ... '9':
         return _get_number(self, wrap);
