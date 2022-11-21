@@ -37,6 +37,8 @@ candy_wrap_t *candy_stack_top(candy_stack_t *self);
 void candy_stack_push(candy_stack_t *self, candy_wrap_t *data);
 candy_wrap_t *candy_stack_pop(candy_stack_t *self);
 
+bool candy_stack_check_type(candy_stack_t *self, candy_wraps_t type);
+
 void candy_stack_push_integer(candy_stack_t *self, candy_integer_t *val, int size);
 void candy_stack_push_float(candy_stack_t *self, candy_float_t *val, int size);
 void candy_stack_push_boolean(candy_stack_t *self, candy_boolean_t *val, int size);

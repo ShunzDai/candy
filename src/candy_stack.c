@@ -44,7 +44,7 @@ candy_wrap_t *candy_stack_top(candy_stack_t *self) {
 void candy_stack_push(candy_stack_t *self, candy_wrap_t *wrap) {
   if (self->size == self->max_size) {
     void *new = calloc(self->max_size * 2, sizeof(candy_wrap_t));
-    memcpy(new, self->base, sizeof(candy_wrap_t) * self->max_size);
+    memcpy(new, self->base, self->max_size * sizeof(candy_wrap_t));
     self->max_size *= 2;
     free(self->base);
     self->base = new;
@@ -55,6 +55,10 @@ void candy_stack_push(candy_stack_t *self, candy_wrap_t *wrap) {
 
 candy_wrap_t *candy_stack_pop(candy_stack_t *self) {
   return self->size ? &self->base[--self->size] : NULL;
+}
+
+bool candy_stack_check_type(candy_stack_t *self, candy_wraps_t type) {
+  return candy_wrap_check_type(candy_stack_top(self), type);
 }
 
 void candy_stack_push_integer(candy_stack_t *self, candy_integer_t *val, int size) {

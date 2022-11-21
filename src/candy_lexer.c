@@ -45,10 +45,21 @@ static const struct {
   #include "src/candy_keyword.list"
 };
 
+/**
+  * @brief  observer mode of the stream
+  * @param  self lexer
+  * @param  idx  lookahead to the idx byte, idx value between 0 and @ref CANDY_IO_LOOKAHEAD_SIZE - 1
+  * @retval target byte
+  */
 static inline char _view(candy_lexer_t *self, int idx) {
   return candy_io_view(&self->io, idx);
 }
 
+/**
+  * @brief  read out the next byte of the stream
+  * @param  self lexer
+  * @retval target byte
+  */
 static inline char _read(candy_lexer_t *self) {
   #ifdef CANDY_DEBUG_MODE
   ++self->dbg.column;
@@ -56,20 +67,43 @@ static inline char _read(candy_lexer_t *self) {
   return candy_io_read(&self->io);
 }
 
-static inline char _skip(candy_lexer_t *self, int n) {
-  while (--n)
+/**
+  * @brief  skipping n bytes of the stream
+  * @param  self lexer
+  * @param  n    count of bytes
+  * @retval none
+  */
+static inline void _skip(candy_lexer_t *self, int n) {
+  while (n--)
     _read(self);
-  return _read(self);
 }
 
+/**
+  * @brief  store a byte
+  * @param  self lexer
+  * @param  ch   byte to be stored
+  * @retval none
+  */
 static inline void _save_char(candy_lexer_t *self, char ch) {
   candy_io_write(&self->io, ch);
 }
 
+/**
+  * @brief  store the next byte of the stream
+  * @param  self lexer
+  * @retval none
+  */
 static inline void _save(candy_lexer_t *self) {
   _save_char(self, _read(self));
 }
 
+/**
+  * @brief  checks whether the next byte of the stream is one of the two bytes the user expects,
+  *         if so, the byte will be stored
+  * @param  self lexer
+  * @param  str  the string that the user expects
+  * @retval boolean
+  */
 static inline bool _check_dual(candy_lexer_t *self, const char str[]) {
   if (_view(self, 0) == str[0] || _view(self, 0) == str[1]) {
     _save(self);
@@ -102,7 +136,7 @@ static int _get_newline(candy_lexer_t *self) {
 /**
   * @brief  skip comment, like
   *         # hello world
-  * @param  lex lexer
+  * @param  self lexer
   * @retval reserved
   */
 static int _skip_comment(candy_lexer_t *self) {
@@ -203,7 +237,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   * @param  multiline is multiline string or not
   * @retval string length, not include '\0'
   */
-static int _get_string(candy_lexer_t *self, bool multiline) {
+static int _get_string(candy_lexer_t *self, const bool multiline) {
   int head = self->io.w;
   const char del = _view(self, 0);
   /* skip first " or ' */
@@ -262,14 +296,12 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
   /* save number, alpha, or '_' */
   while (is_dec(_view(self, 0)) || is_alpha(_view(self, 0)) || _view(self, 0) == '_')
     _save(self);
-  /* todo: last char padding '\0' */
-  // _save_char(self, '\0');
   /* check keyword */
   for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
     if (strncmp(self->io.buffer, _keywords[i].keyword, self->io.w) == 0)
       return _keywords[i].token;
   }
-  // wrap->hash = candy_hash(self->buffer->data);
+  // wrap->hash = djb_hash2(self->buffer->data, self->io.w);
   return CANDY_TK_IDENT;
 }
 

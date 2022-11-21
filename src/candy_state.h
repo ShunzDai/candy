@@ -52,6 +52,8 @@ void candy_regist_entry(candy_state_t *self, candy_cfunc_t entry);
   */
 void candy_regist_cfuncs(candy_state_t *self, const char obj[], candy_regist_t list[], unsigned size);
 
+candy_callinfo_t *candy_callinfo(candy_state_t *self);
+
 void candy_push_integer(candy_state_t *self, candy_integer_t val);
 void candy_push_float(candy_state_t *self, candy_float_t val);
 void candy_push_boolean(candy_state_t *self, candy_boolean_t val);

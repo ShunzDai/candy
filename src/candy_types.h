@@ -43,44 +43,7 @@ typedef enum candy_wraps {
   CANDY_MAX,
 } candy_wraps_t;
 
-typedef union candy_wrap {
-  struct {
-    uint32_t type : 4;
-    uint32_t      : 28;
-  };
-  struct {
-    uint32_t      : 4;
-    uint32_t size : 28;
-    union {
-      candy_integer_t sval[sizeof(long) / sizeof(candy_integer_t)];
-      candy_integer_t *lval;
-    };
-  } i;
-  struct {
-    uint32_t      : 4;
-    uint32_t size : 28;
-    union {
-      candy_float_t sval[sizeof(long) / sizeof(candy_float_t)];
-      candy_float_t *lval;
-    };
-  } f;
-  struct {
-    uint32_t      : 4;
-    uint32_t size : 28;
-    union {
-      candy_boolean_t sval[sizeof(long) / sizeof(candy_boolean_t)];
-      candy_boolean_t *lval;
-    };
-  } b;
-  struct {
-    uint32_t      : 4;
-    uint32_t size : 28;
-    union {
-      char sval[sizeof(long) / sizeof(char)];
-      char *lval;
-    };
-  } s;
-} candy_wrap_t;
+typedef union candy_wrap candy_wrap_t;
 
 typedef struct candy_io candy_io_t;
 
@@ -95,12 +58,16 @@ typedef int (*candy_reader_t)(char *, int, void *);
 /**
   * @brief c-function
   */
-typedef int (*candy_cfunc_t)(candy_state_t *, void *);
+typedef int (*candy_cfunc_t)(candy_state_t *);
 
 typedef struct candy_regist {
   const char *name;
   candy_cfunc_t cfunc;
 } candy_regist_t;
+
+typedef struct candy_callinfo {
+  candy_cfunc_t cfunc;
+} candy_callinfo_t;
 
 #ifdef __cplusplus
 }
