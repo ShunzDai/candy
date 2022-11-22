@@ -179,6 +179,7 @@ static inline int candy_wrap_deinit(candy_wrap_t *self) {
     default:
       break;
   }
+  self->type = CANDY_NONE;
   return 0;
 }
 

@@ -21,12 +21,10 @@ extern "C"{
 
 #include "src/candy_types.h"
 
-struct candy_parser;
+void candy_parser_print(candy_parser_t *self);
 
-void candy_parser_print(struct candy_parser *parser);
-
-struct candy_parser *candy_parser_create(const char code[]);
-int candy_parser_delete(struct candy_parser **parser);
+candy_parser_t *candy_parse(candy_reader_t reader, void *ud);
+int candy_parser_delete(candy_parser_t **self);
 
 #ifdef __cplusplus
 }

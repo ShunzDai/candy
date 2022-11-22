@@ -20,6 +20,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/candy_types.h"
+#include <setjmp.h>
 
 #define tk_dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
@@ -68,11 +69,13 @@ typedef enum candy_tokens {
   CANDY_TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
-candy_lexer_t *candy_lexer_create(candy_reader_t reader, void *ud);
+candy_lexer_t *candy_lexer_create(jmp_buf *roolback, candy_reader_t reader, void *ud);
 int candy_lexer_delete(candy_lexer_t **self);
 
 candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap);
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);
+
+void candy_lexer_assert(candy_lexer_t *self, const char format[], ...) CANDY_NORETURN;
 
 #ifdef __cplusplus
 }

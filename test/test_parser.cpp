@@ -14,6 +14,7 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
+#include "test_common.h"
 #include "src/candy_parser.h"
 #include "mid_os.h"
 
@@ -54,49 +55,66 @@
 // }
 
 TEST(parser, exp_add_0) {
-  auto parser = candy_parser_create("1 + 2");
+  const char exp[] = "1 + 2";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
 }
 
 TEST(parser, exp_add_1) {
-  auto parser = candy_parser_create("(1 + 2)");
+  const char exp[] = "(1 + 2)";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
 }
 
 TEST(parser, exp_sub_0) {
-  auto parser = candy_parser_create("1 - 2");
+  const char exp[] = "1 - 2";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
 }
 
 TEST(parser, exp_sub_1) {
-  auto parser = candy_parser_create("(1 - 2)");
+  const char exp[] = "(1 - 2)";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
 }
 
 TEST(parser, exp_mul_0) {
-  auto parser = candy_parser_create("1 * 2");
+  const char exp[] = "1 * 2";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
 }
 
 TEST(parser, exp_mul_1) {
-  auto parser = candy_parser_create("(1 * 2)");
+  const char exp[] = "(1 * 2)";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
 }
 
 TEST(parser, exp_div_0) {
-  auto parser = candy_parser_create("1 / 2");
+  const char exp[] = "1 / 2";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
 }
 
 TEST(parser, exp_div_1) {
-  auto parser = candy_parser_create("(1 / 2)");
+  const char exp[] = "(1 / 2)";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
 }
 
 TEST(parser, exp) {
   const char exp[] = "(((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12";
+  reader_s info = {exp, (int)strlen(exp) + 1, 0};
   auto tick = os::tick_us();
-  struct candy_parser *parser = candy_parser_create(exp);
+  auto parser = candy_parse(reader_str, &info);
   candy_parser_delete(&parser);
   printf("delta time = %d us\n", os::tick_us() - tick);
 }

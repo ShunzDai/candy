@@ -17,8 +17,9 @@
 #include "src/candy_lexer.h"
 #include "src/candy_wrap.h"
 #include "src/candy_queue.h"
-#include "src/candy_platform.h"
 #include <stdlib.h>
+
+#define lex_assert(_condition, ...) ((_condition) ? ((void)0U) : candy_lexer_assert(self->lex, __VA_ARGS__))
 
 struct ast_node {
   struct ast_node *l;
@@ -27,15 +28,15 @@ struct ast_node {
 
 struct priv {
   uint8_t token;
-  uint8_t meta[sizeof(candy_meta_t)];
+  uint8_t wrap[sizeof(candy_wrap_t)];
 };
 
 struct candy_parser {
-  candy_lexer_t *self;
+  candy_lexer_t *lex;
   struct ast_node *root;
 };
 
-static struct ast_node *_expression(struct candy_parser *parser);
+static struct ast_node *_expression(candy_parser_t *self);
 
 static inline struct priv *_private(struct ast_node *node) {
   return (struct priv *)((struct {struct ast_node *l; struct ast_node *r; uint8_t args[];} *)node)->args;
@@ -47,25 +48,24 @@ static void _ast_node_print(struct ast_node *node) {
   _ast_node_print(node->l);
   _ast_node_print(node->r);
   // if (_private(node)->token == CANDY_TK_CST_INTEGER)
-  //   printf("CONST\t%ld\ttoken\t%d\n", *(candy_integer_t *)_private(node)->meta, _private(node)->token);
+  //   printf("CONST\t%ld\ttoken\t%d\n", *(candy_integer_t *)_private(node)->wrap, _private(node)->token);
   // else if (_private(node)->token == CANDY_TK_CST_FLOAT)
-  //   printf("CONST\t%.3f\ttoken\t%d\n", *(candy_float_t *)_private(node)->meta, _private(node)->token);
+  //   printf("CONST\t%.3f\ttoken\t%d\n", *(candy_float_t *)_private(node)->wrap, _private(node)->token);
   // else
   //   printf("%c\n", _private(node)->token);
 }
 
-static struct ast_node *_ast_node_create(int8_t token, candy_meta_t *meta, struct ast_node *l, struct ast_node *r) {
-  struct ast_node *node = (struct ast_node *)malloc(sizeof(struct ast_node) + ((meta == NULL) ? sizeof(int8_t) : sizeof(struct priv)));
+static struct ast_node *_ast_node_create(int8_t token, candy_wrap_t *wrap, struct ast_node *l, struct ast_node *r) {
+  struct ast_node *node = (struct ast_node *)malloc(sizeof(struct ast_node) + ((wrap == NULL) ? sizeof(int8_t) : sizeof(struct priv)));
   node->l = l;
   node->r = r;
   _private(node)->token = token;
-  if (meta != NULL)
-    *(candy_meta_t *)_private(node)->meta = *meta;
+  if (wrap != NULL)
+    *(candy_wrap_t *)_private(node)->wrap = *wrap;
   return node;
 }
 
 static int _ast_node_delete(struct ast_node **node) {
-  candy_assert(node != NULL);
   if ((*node)->l != NULL)
     _ast_node_delete(&(*node)->l);
   if ((*node)->r != NULL)
@@ -75,74 +75,76 @@ static int _ast_node_delete(struct ast_node **node) {
   return 0;
 }
 
-static struct ast_node *_factor(struct candy_parser *parser) {
+static struct ast_node *_factor(candy_parser_t *self) {
   struct ast_node *l = NULL;
-  union candy_meta meta;
+  union candy_wrap wrap;
   int sign = 1;
   uint8_t token = CANDY_TK_NONE;
   begin:
-  token = candy_lexer_next(parser->lex, &meta);
+  token = candy_lexer_next(self->lex, &wrap);
   switch (token) {
     case '-':
       sign = -1;
     case '+':
-      token = candy_lexer_lookahead(parser->lex);
-      candy_assert(token == CANDY_TK_CST_INTEGER || token == CANDY_TK_CST_FLOAT, "unexpected token: %c", token);
+      token = candy_lexer_lookahead(self->lex);
+      lex_assert(token == CANDY_TK_CST_INTEGER || token == CANDY_TK_CST_FLOAT, "unexpected token '%c'(0x%02X)", token, token);
       goto begin;
     case CANDY_TK_CST_INTEGER:
-      meta.i *= sign;
+      *candy_wrap_get_integer(&wrap, NULL) *= sign;
       break;
     case CANDY_TK_CST_FLOAT:
-      meta.f *= sign;
+      *candy_wrap_get_float(&wrap, NULL) *= sign;
       break;
     case '(':
-      l = _expression(parser);
-      token = candy_lexer_next(parser->lex, &meta);
-      candy_assert(token == ')', "unexpected token: %d", token);
+      l = _expression(self);
+      token = candy_lexer_next(self->lex, &wrap);
+      lex_assert(token == ')', "unexpected token '%c'(0x%02X)", token, token);
       return l;
     default:
-      candy_assert(0, "unexpected token: %c", token);
+      lex_assert(0, "unexpected token '%c'(0x%02X)", token, token);
   }
-  return _ast_node_create(token, &meta, NULL, NULL);
+  return _ast_node_create(token, &wrap, NULL, NULL);
 }
 
-static struct ast_node *_term(struct candy_parser *parser) {
-  struct ast_node *l = _factor(parser);
-  for (uint8_t token = candy_lexer_lookahead(parser->lex); token == '*' || token == '/'; token = candy_lexer_lookahead(parser->lex)) {
-    token = candy_lexer_next(parser->lex, NULL);
-    l = _ast_node_create(token, NULL, l, _factor(parser));
-  }
-  return l;
-}
-
-static struct ast_node *_expression(struct candy_parser *parser) {
-  struct ast_node *l = _term(parser);
-  for (uint8_t token = candy_lexer_lookahead(parser->lex); token == '+' || token == '-'; token = candy_lexer_lookahead(parser->lex)) {
-    token = candy_lexer_next(parser->lex, NULL);
-    l = _ast_node_create(token, NULL, l, _term(parser));
+static struct ast_node *_term(candy_parser_t *self) {
+  struct ast_node *l = _factor(self);
+  for (uint8_t token = candy_lexer_lookahead(self->lex); token == '*' || token == '/'; token = candy_lexer_lookahead(self->lex)) {
+    token = candy_lexer_next(self->lex, NULL);
+    l = _ast_node_create(token, NULL, l, _factor(self));
   }
   return l;
 }
 
-void candy_parser_print(struct candy_parser *parser) {
-  candy_assert(parser != NULL);
-  _ast_node_print(parser->root);
+static struct ast_node *_expression(candy_parser_t *self) {
+  struct ast_node *l = _term(self);
+  for (uint8_t token = candy_lexer_lookahead(self->lex); token == '+' || token == '-'; token = candy_lexer_lookahead(self->lex)) {
+    token = candy_lexer_next(self->lex, NULL);
+    l = _ast_node_create(token, NULL, l, _term(self));
+  }
+  return l;
 }
 
-struct candy_parser *candy_parser_create(const char code[]) {
-  struct candy_parser *parser = (struct candy_parser *)malloc(sizeof(struct candy_parser));
-  uint8_t buffer[1026] = {0x00, 0x04};
-  parser->lex = candy_lexer_create(code, (struct candy_view *)buffer);
-  parser->root = _expression(parser);
-  return parser;
+void candy_parser_print(candy_parser_t *self) {
+  _ast_node_print(self->root);
 }
 
-int candy_parser_delete(struct candy_parser **parser) {
-  candy_assert(parser != NULL);
-  candy_assert(*parser != NULL);
-  candy_lexer_delete(&(*parser)->lex);
-  _ast_node_delete(&(*parser)->root);
-  free(*parser);
-  *parser = NULL;
+candy_parser_t *candy_parse(candy_reader_t reader, void *ud) {
+  candy_parser_t *self = (candy_parser_t *)malloc(sizeof(struct candy_parser));
+  jmp_buf buf;
+  self->lex = candy_lexer_create(&buf, reader, ud);
+  if(setjmp(buf))
+    goto exit;
+  self->root = _expression(self);
+  return self;
+  exit:
+  candy_parser_delete(&self);
+  return self;
+}
+
+int candy_parser_delete(candy_parser_t **self) {
+  candy_lexer_delete(&(*self)->lex);
+  _ast_node_delete(&(*self)->root);
+  free(*self);
+  *self = NULL;
   return 0;
 }
