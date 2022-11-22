@@ -19,7 +19,7 @@
 #include <assert.h>
 
 char candy_io_view(candy_io_t *self, int idx) {
-  assert(idx < CANDY_IO_LOOKAHEAD_SIZE);
+  assert(self->r + idx < self->size);
   return self->buffer[self->r + idx];
 }
 

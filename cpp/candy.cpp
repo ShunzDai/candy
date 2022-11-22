@@ -25,6 +25,10 @@ candy::~candy() {
   candy_state_delete((candy_state **)&_cdy);
 }
 
+int candy::dostring(const char exp[]) {
+  return 0;
+}
+
 int candy::cfunc_wrap(void *cdy) {
   candy *c = (candy *)candy_ud((candy_state *)cdy);
   return c->_funcs[(size_t)candy_callinfo((candy_state *)cdy)->cfunc](c);

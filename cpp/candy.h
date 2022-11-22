@@ -29,6 +29,8 @@ class candy {
   candy();
   ~candy();
 
+  int dostring(const char exp[]);
+
   /**
     * @brief  cpp call candy function
     *         push args from c as input to the candy-function,
