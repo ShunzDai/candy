@@ -49,6 +49,8 @@ typedef struct candy_io candy_io_t;
 
 typedef struct candy_lexer candy_lexer_t;
 
+typedef struct candy_parser candy_parser_t;
+
 typedef struct candy_vm candy_vm_t;
 
 typedef struct candy_state candy_state_t;
