@@ -25,12 +25,18 @@ extern "C"{
 #define CANDY_IO_LOOKAHEAD_SIZE 3
 /**
   * @brief  smaller buffers mean less space utilization and more load times,
-  * 		which can be decided by the user depending on the usage scenario.
+  *         which can be decided by the user depending on the usage scenario.
   */
 #define CANDY_IO_DEFAULT_BUFFER_SIZE 64
 #if CANDY_IO_DEFAULT_BUFFER_SIZE < 8
 #error "io default buffer size is too small"
 #endif /* CANDY_IO_DEFAULT_BUFFER_SIZE */
+
+#ifdef __GNUC__
+#define CANDY_NORETURN __attribute__((noreturn))
+#else
+#define CANDY_NORETURN
+#endif
 
 #ifdef __cplusplus
 }

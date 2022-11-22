@@ -17,11 +17,15 @@
 #include "src/candy_io.h"
 #include "src/candy_wrap.h"
 #include "src/candy_lib.h"
-#include "src/candy_platform.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+
+#define lex_assert(_condition, ...) ((_condition) ? ((void)0U) : candy_lexer_assert(self, __VA_ARGS__))
 
 struct candy_lexer {
   candy_io_t io;
+  jmp_buf *rollback;
 #ifdef CANDY_DEBUG_MODE
   struct {
     uint16_t line;
@@ -195,7 +199,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
       _save(self);
     char *end = NULL;
     candy_integer_t i = (candy_integer_t)strtol(_buffer(self), &end, 16);
-    candy_assert(end != NULL, "invalid hexadecimal number");
+    lex_assert(end != NULL, "invalid hexadecimal number");
     candy_wrap_init_integer(wrap, &i, 1);
     return CANDY_TK_CST_INTEGER;
   }
@@ -205,9 +209,10 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         _save(self);
         break;
       case '.':
-        candy_assert(!is_float, "invalid float");
+        lex_assert(!is_float, "multiple dots appear");
         is_float = true;
         _save(self);
+        lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x02X)", _view(self, 0), _view(self, 0));
         break;
       case 'e': case 'E':
         is_float = true;
@@ -247,11 +252,11 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
   while (_view(self, 0) != del) {
     switch (_view(self, 0)) {
       case '\0':
-        candy_assert(false, "unexpected end of string");
+        lex_assert(false, "unexpected end of string");
         return -1;
       case '\r': case '\n':
         if (multiline == false) {
-          candy_assert(false, "single line string can not contain newline");
+          lex_assert(false, "single line string can not contain newline");
           return -1;
         }
         _get_newline(self);
@@ -287,7 +292,7 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
     }
   }
   /* skip last " or ' */
-  candy_assert(_view(self, 0) == del && (multiline ? (_view(self, 1) == del && _view(self, 2) == del) : (true)), "unexpected end of string");
+  lex_assert(_view(self, 0) == del && (multiline ? (_view(self, 1) == del && _view(self, 2) == del) : (true)), "unexpected end of string");
   _skip(self, multiline ? 3 : 1);
   return self->io.w - head;
 }
@@ -320,7 +325,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         _read(self);
         break;
       case '!':
-        candy_assert(_view(self, 1) == '=', "unexpected token '%5.5s'", _view(self, 0));
+        lex_assert(_view(self, 1) == '=', "unexpected char '%c'", _view(self, 0));
         goto dual_ope;
       /* 'o', 'o=', 'oo' */
       case '>': case '<': case '*': case '/':
@@ -350,7 +355,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       default:
         if (is_alpha(_view(self, 0)) || _view(self, 0) == '_')
           return _get_ident_or_keyword(self, wrap);
-        candy_assert(false, "unexpected token '%c'", _view(self, 0));
+        lex_assert(false, "unexpected char '%c'(0x%02X)", _view(self, 0), _view(self, 0));
         break;
     }
   }
@@ -358,9 +363,10 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   return tk_dual_ope(_read(self), _read(self));
 }
 
-candy_lexer_t *candy_lexer_create(candy_reader_t reader, void *ud) {
+candy_lexer_t *candy_lexer_create(jmp_buf *rollback, candy_reader_t reader, void *ud) {
   candy_lexer_t *self = (candy_lexer_t *)malloc(sizeof(struct candy_lexer));
   candy_io_init(&self->io, reader, ud);
+  self->rollback = rollback;
 #ifdef CANDY_DEBUG_MODE
   self->dbg.line = 1;
   self->dbg.column = 0;
@@ -371,6 +377,7 @@ candy_lexer_t *candy_lexer_create(candy_reader_t reader, void *ud) {
 
 int candy_lexer_delete(candy_lexer_t **self) {
   candy_io_deinit(&(*self)->io);
+  candy_wrap_deinit(&(*self)->lookahead.wrap);
   free(*self);
   *self = NULL;
   return 0;
@@ -395,4 +402,14 @@ candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
   if (self->lookahead.token == CANDY_TK_EOS)
     self->lookahead.token = _lexer(self, &self->lookahead.wrap);
   return self->lookahead.token;
+}
+
+void candy_lexer_assert(candy_lexer_t *self, const char format[], ...) {
+  va_list ap;
+  printf("line %d, column %d: ", self->dbg.line, self->dbg.column);
+  va_start(ap, format);
+  vprintf(format, ap);
+  va_end(ap);
+  printf("\n");
+  longjmp(*self->rollback, 1);
 }

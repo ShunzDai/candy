@@ -4,9 +4,10 @@ file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   candy_stack.c
   candy_io.c
   candy_lexer.c
+  candy_parser.c
   candy_vm.c
   candy_state.c
-  candy_platform.c
+#   candy_platform.c
 )
 
 add_compile_options(-Wno-implicit-fallthrough -Wno-sizeof-pointer-div)
