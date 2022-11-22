@@ -197,6 +197,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   if (*_buffer(self) == '0' && _check_dual(self, "xX")) {
     while (is_hex(_view(self, 0)))
       _save(self);
+    _save_char(self, '\0');
     char *end = NULL;
     candy_integer_t i = (candy_integer_t)strtol(_buffer(self), &end, 16);
     lex_assert(end != NULL, "invalid hexadecimal number");
@@ -212,14 +213,16 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         lex_assert(!is_float, "multiple dots appear");
         is_float = true;
         _save(self);
-        lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x02X)", _view(self, 0), _view(self, 0));
+        lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
         break;
       case 'e': case 'E':
         is_float = true;
         _save(self);
         _check_dual(self, "+-");
+        lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
         break;
       default:
+        _save_char(self, '\0');
         if (is_float) {
           candy_float_t f = (candy_float_t)strtod(_buffer(self), NULL);
           candy_wrap_init_float(wrap, &f, 1);
@@ -256,7 +259,7 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
         return -1;
       case '\r': case '\n':
         if (multiline == false) {
-          lex_assert(false, "single line string can not contain newline");
+          lex_assert(false, "single line string can not contain line break");
           return -1;
         }
         _get_newline(self);
@@ -291,10 +294,11 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
         break;
     }
   }
+  _save_char(self, '\0');
   /* skip last " or ' */
   lex_assert(_view(self, 0) == del && (multiline ? (_view(self, 1) == del && _view(self, 2) == del) : (true)), "unexpected end of string");
   _skip(self, multiline ? 3 : 1);
-  return self->io.w - head;
+  return self->io.w - head - 1;
 }
 
 static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *wrap) {
@@ -303,12 +307,13 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
   /* save number, alpha, or '_' */
   while (is_dec(_view(self, 0)) || is_alpha(_view(self, 0)) || _view(self, 0) == '_')
     _save(self);
+  _save_char(self, '\0');
   /* check keyword */
   for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
-    if (strncmp(_buffer(self), _keywords[i].keyword, self->io.w) == 0)
+    if (strcmp(_buffer(self), _keywords[i].keyword) == 0)
       return _keywords[i].token;
   }
-  // wrap->hash = djb_hash2(self->buffer->data, self->io.w);
+  // wrap->hash = djb_hash(self->buffer->data);
   return CANDY_TK_IDENT;
 }
 
