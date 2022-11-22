@@ -126,11 +126,11 @@ static inline bool _check_dual(candy_lexer_t *self, const char str[]) {
   *         \n
   *         \r\n
   *         \n\r
-  *         first byte of curr pointer has been checked by up layer function
+  *         first byte has been checked by up layer function
   * @param  self lexer
   * @return none
   */
-static void _get_newline(candy_lexer_t *self) {
+static void _skip_newline(candy_lexer_t *self) {
   _save(self);
   _check_dual(self, "\r\n");
 #ifdef CANDY_DEBUG_MODE
@@ -150,7 +150,7 @@ static int _skip_comment(candy_lexer_t *self) {
   while (1) {
     switch (_view(self, 0)) {
       case '\r': case '\n':
-        _get_newline(self);
+        _skip_newline(self);
       case '\0':
         return 0;
       default:
@@ -262,7 +262,7 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
           lex_assert(false, "single line string can not contain line break");
           return -1;
         }
-        _get_newline(self);
+        _skip_newline(self);
         break;
       case '\\':
         _read(self);
@@ -324,7 +324,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       case '\0':
         return CANDY_TK_NONE;
       case '\r': case '\n':
-        _get_newline(self);
+        _skip_newline(self);
         break;
       case ' ': case '\f': case '\t': case '\v':
         _read(self);
