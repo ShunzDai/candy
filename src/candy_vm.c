@@ -15,7 +15,6 @@
   */
 #include "src/candy_vm.h"
 #include "src/candy_stack.h"
-#include "src/candy_parser.h"
 #include <stdlib.h>
 #include <assert.h>
 
