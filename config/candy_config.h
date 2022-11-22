@@ -23,14 +23,21 @@ extern "C"{
   * @brief  the maximum number of bytes for the lexer to lookahead to.
   */
 #define CANDY_IO_LOOKAHEAD_SIZE 3
+
+/**
+  * @brief  the maximum number of extra bytes that the user can write.
+  */
+#define CANDY_IO_EXTRA_SIZE 1
+
 /**
   * @brief  smaller buffers mean less space utilization and more load times,
   *         which can be decided by the user depending on the usage scenario.
   */
-#define CANDY_IO_DEFAULT_BUFFER_SIZE 64
-#if CANDY_IO_DEFAULT_BUFFER_SIZE < 8
+#define CANDY_IO_ATOMIC_BUFFER_SIZE 64
+
+#if CANDY_IO_ATOMIC_BUFFER_SIZE < CANDY_IO_EXTRA_SIZE + CANDY_IO_LOOKAHEAD_SIZE
 #error "io default buffer size is too small"
-#endif /* CANDY_IO_DEFAULT_BUFFER_SIZE */
+#endif /* CANDY_IO_ATOMIC_BUFFER_SIZE */
 
 #ifdef __GNUC__
 #define CANDY_NORETURN __attribute__((noreturn))
