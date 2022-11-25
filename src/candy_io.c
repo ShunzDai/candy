@@ -24,11 +24,11 @@ char candy_io_view(candy_io_t *self, int idx) {
 }
 
 char candy_io_read(candy_io_t *self) {
-  /* only @ref CANDY_IO_LOOKAHEAD_SIZE bytes left to read */
+  /** only @ref CANDY_IO_LOOKAHEAD_SIZE bytes left to read */
   if (self->r + CANDY_IO_LOOKAHEAD_SIZE == self->size) {
     /* calculates the start position of the read buffer */
     int offset = self->w + CANDY_IO_LOOKAHEAD_SIZE + CANDY_IO_EXTRA_SIZE;
-    /* if the number of bytes that can be filled is less than
+    /** if the number of bytes that can be filled is less than
        @ref CANDY_IO_ATOMIC_BUFFER_SIZE bytes, the buffer will be enlarged */
     if (self->size - offset < CANDY_IO_ATOMIC_BUFFER_SIZE) {
       char *buffer = (char *)calloc(self->size + CANDY_IO_ATOMIC_BUFFER_SIZE, sizeof(char));
@@ -40,12 +40,12 @@ char candy_io_read(candy_io_t *self) {
     }
     /* otherwise buffer will be filled directly */
     else {
-      /* temporarily stores @ref CANDY_IO_LOOKAHEAD_SIZE bytes that have not been read */
+      /** temporarily stores @ref CANDY_IO_LOOKAHEAD_SIZE bytes that have not been read */
       char ahead[CANDY_IO_LOOKAHEAD_SIZE];
       memcpy(ahead, self->buffer + self->r, CANDY_IO_LOOKAHEAD_SIZE);
       /* fill buffer */
       self->reader(self->buffer + offset, self->size - offset, self->ud);
-      /* restore the unread @ref CANDY_IO_LOOKAHEAD_SIZE bytes to the buffer */
+      /** restore the unread @ref CANDY_IO_LOOKAHEAD_SIZE bytes to the buffer */
       memcpy(self->buffer + self->w + CANDY_IO_EXTRA_SIZE, ahead, CANDY_IO_LOOKAHEAD_SIZE);
       self->r = self->w + CANDY_IO_EXTRA_SIZE;
     }
