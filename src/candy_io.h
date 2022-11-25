@@ -21,6 +21,7 @@ extern "C"{
 
 #include "src/candy_types.h"
 
+/** @ref doc/io_memory_model.drawio.png */
 struct candy_io {
   candy_reader_t reader;
   void *ud;
