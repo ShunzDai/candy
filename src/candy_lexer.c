@@ -160,15 +160,6 @@ static int _skip_comment(candy_lexer_t *self) {
   }
 }
 
-static char _get_intchar(candy_lexer_t *self, uint8_t max_len, uint8_t base) {
-  char buff[] = {_view(self, 0), _view(self, 1), _view(self, 2), '\0'};
-  buff[max_len] = '\0';
-  char *end = NULL;
-  char value = strtoul(buff, &end, base);
-  _skip(self, end - buff);
-  return value;
-}
-
 /**
   * @brief  gets octal escape character, like
   *         "0"
@@ -177,8 +168,12 @@ static char _get_intchar(candy_lexer_t *self, uint8_t max_len, uint8_t base) {
   * @param  self lexer
   * @retval octal character
   */
-static inline char _get_octchar(candy_lexer_t *self) {
-  return _get_intchar(self, 3, 8);
+static inline char _get_octch(candy_lexer_t *self) {
+  char buff[] = {_view(self, 0), _view(self, 1), _view(self, 2), '\0'};
+  char *end = NULL;
+  char value = strtoul(buff, &end, 8);
+  _skip(self, end - buff);
+  return value;
 }
 
 /**
@@ -187,8 +182,9 @@ static inline char _get_octchar(candy_lexer_t *self) {
   * @param  self lexer
   * @retval hexadecimal character
   */
-static inline char _get_hexchar(candy_lexer_t *self) {
-  return _get_intchar(self, 2, 16);
+static inline char _get_hexch(candy_lexer_t *self) {
+  lex_assert(is_hex(_view(self, 0)) && is_hex(_view(self, 1)), "invalid hexadecimal escape");
+  return ch2hex(_read(self)) << 4 | ch2hex(_read(self));
 }
 
 static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
@@ -198,9 +194,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
     while (is_hex(_view(self, 0)))
       _save(self);
     _save_char(self, '\0');
-    char *end = NULL;
-    candy_integer_t i = (candy_integer_t)strtol(_buffer(self), &end, 16);
-    lex_assert(end != NULL, "invalid hexadecimal number");
+    candy_integer_t i = (candy_integer_t)strtol(_buffer(self), NULL, 16);
     candy_wrap_init_integer(wrap, &i, 1);
     return CANDY_TK_CST_INTEGER;
   }
@@ -211,15 +205,15 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       case '.':
         lex_assert(!is_float, "multiple dots appear");
-        is_float = true;
         _save(self);
         lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
+        is_float = true;
         break;
       case 'e': case 'E':
-        is_float = true;
         _save(self);
         _check_dual(self, "+-");
         lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
+        is_float = true;
         break;
       default:
         _save_char(self, '\0');
@@ -267,18 +261,18 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
       case '\\':
         _read(self);
         switch (_view(self, 0)) {
-          case         'a': _read(self); _save_char(self,               '\a'); break;
-          case         'b': _read(self); _save_char(self,               '\b'); break;
-          case         't': _read(self); _save_char(self,               '\t'); break;
-          case         'n': _read(self); _save_char(self,               '\n'); break;
-          case         'v': _read(self); _save_char(self,               '\v'); break;
-          case         'f': _read(self); _save_char(self,               '\f'); break;
-          case         'r': _read(self); _save_char(self,               '\r'); break;
-          case        '\\': _read(self); _save_char(self,               '\\'); break;
-          case        '\'': _read(self); _save_char(self,               '\''); break;
-          case         '"': _read(self); _save_char(self,                '"'); break;
-          case         'x': _read(self); _save_char(self, _get_hexchar(self)); break;
-          case '0' ... '7':              _save_char(self, _get_octchar(self)); break;
+          case         'a': _read(self); _save_char(self,             '\a'); break;
+          case         'b': _read(self); _save_char(self,             '\b'); break;
+          case         't': _read(self); _save_char(self,             '\t'); break;
+          case         'n': _read(self); _save_char(self,             '\n'); break;
+          case         'v': _read(self); _save_char(self,             '\v'); break;
+          case         'f': _read(self); _save_char(self,             '\f'); break;
+          case         'r': _read(self); _save_char(self,             '\r'); break;
+          case        '\\': _read(self); _save_char(self,             '\\'); break;
+          case        '\'': _read(self); _save_char(self,             '\''); break;
+          case         '"': _read(self); _save_char(self,              '"'); break;
+          case         'x': _read(self); _save_char(self, _get_hexch(self)); break;
+          case '0' ... '7':              _save_char(self, _get_octch(self)); break;
           /* todo: support unicode */
           default:
             /* is not escape */
