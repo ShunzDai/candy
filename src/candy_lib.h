@@ -54,6 +54,10 @@ static inline bool is_hex(char ch) {
   return is_dec(ch) || ((unsigned)(ch - 'a') <= (unsigned)('f' - 'a')) || ((unsigned)(ch - 'A') <= (unsigned)('F' - 'A'));
 }
 
+static inline uint8_t ch2hex(char ch) {
+  return is_dec(ch) ? (ch - '0') : ((is_capital(ch) ? (ch - 'A') : (ch - 'a')) + 10);
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
