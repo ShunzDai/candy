@@ -20,6 +20,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include <stdint.h>
+#include <ctype.h>
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
@@ -30,16 +31,16 @@ static inline uint32_t djb_hash(char str[]) {
   return (hash & 0x7FFFFFFF);
 }
 
-static inline bool is_capital(char ch) {
-  return (unsigned)(ch - 'A') <= (unsigned)('Z' - 'A');
+static inline bool is_upper(char ch) {
+  return isupper(ch);
 }
 
 static inline bool is_lower(char ch) {
-  return (unsigned)(ch - 'a') <= (unsigned)('z' - 'a');
+  return islower(ch);
 }
 
 static inline bool is_alpha(char ch) {
-  return is_capital(ch) || is_lower(ch);
+  return isalpha(ch);
 }
 
 static inline bool is_oct(char ch) {
@@ -47,15 +48,15 @@ static inline bool is_oct(char ch) {
 }
 
 static inline bool is_dec(char ch) {
-  return (unsigned)(ch - '0') <= (unsigned)('9' - '0');
+  return isdigit(ch);
 }
 
 static inline bool is_hex(char ch) {
-  return is_dec(ch) || ((unsigned)(ch - 'a') <= (unsigned)('f' - 'a')) || ((unsigned)(ch - 'A') <= (unsigned)('F' - 'A'));
+  return isxdigit(ch);
 }
 
 static inline uint8_t ch2hex(char ch) {
-  return is_dec(ch) ? (ch - '0') : ((is_capital(ch) ? (ch - 'A') : (ch - 'a')) + 10);
+  return is_dec(ch) ? (ch - '0') : (toupper(ch) - 'A' + 10);
 }
 
 #ifdef __cplusplus
