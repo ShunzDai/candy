@@ -26,7 +26,7 @@ candy::~candy() {
 }
 
 int candy::dostring(const char exp[]) {
-  return 0;
+  return candy_dostring((candy_state *)_cdy, exp);
 }
 
 int candy::cfunc_wrap(void *cdy) {

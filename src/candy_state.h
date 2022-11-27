@@ -24,6 +24,10 @@ extern "C"{
 candy_state_t *candy_state_create(void *ud);
 int candy_state_delete(candy_state_t **self);
 
+int candy_dostring(candy_state_t *self, const char exp[]);
+
+int candy_dofile(candy_state_t *self, const char name[]);
+
 /**
   * @brief  get user's data.
   * @param  sta   candy state handle.

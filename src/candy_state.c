@@ -1,15 +1,48 @@
 #include "src/candy_state.h"
+#include "src/candy_io.h"
+#include "src/candy_parser.h"
 #include "src/candy_vm.h"
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
+struct info_str {
+  const char *exp;
+  const int size;
+  int offset;
+};
+
+struct info_file {
+  FILE *f;
+  const int size;
+};
+
 struct candy_state {
+  candy_io_t io;
   candy_vm_t *vm;
   void *ud;
 };
 
+static inline int _string_reader(char *buff, const int max_len, void *ud) {
+  struct info_str *info = (struct info_str *)ud;
+  int len = (max_len > info->size - info->offset) ? (info->size - info->offset) : max_len;
+  memcpy(buff, info->exp + info->offset, len);
+  info->offset += len;
+  return len;
+}
+
+static inline int _file_reader(char *buff, const int max_len, void *ud) {
+  struct info_file *info = (struct info_file *)ud;
+  int len = (max_len > info->size - (int)ftell(info->f)) ? (info->size - (int)ftell(info->f)) : max_len;
+  fread(buff, sizeof(char), len, info->f);
+  if ((int)ftell(info->f) == info->size)
+    buff[len] = '\0';
+  return len;
+}
+
 candy_state_t *candy_state_create(void *ud) {
   candy_state_t *self = (candy_state_t *)malloc(sizeof(struct candy_state));
+  candy_io_init(&self->io);
   self->vm = candy_vm_create(self);
   self->ud = ud;
   return self;
@@ -17,8 +50,32 @@ candy_state_t *candy_state_create(void *ud) {
 
 int candy_state_delete(candy_state_t **self) {
   candy_vm_delete(&(*self)->vm);
+  candy_io_deinit(&(*self)->io);
   free(*self);
   *self = NULL;
+  return 0;
+}
+
+int candy_dostring(candy_state_t *self, const char exp[]) {
+  struct info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_set_input(&self->io, _string_reader, &info);
+  if (candy_parse(&self->io) == NULL) {
+    printf("%s", self->io.buffer);
+    return -1;
+  }
+  return 0;
+}
+
+int candy_dofile(candy_state_t *self, const char name[]) {
+  FILE *f = fopen(name, "r");
+  if (f == NULL)
+    return -1;
+  fseek(f, 0, SEEK_END);
+  int size = (int)ftell(f);
+  fseek(f, 0, SEEK_SET);
+  struct info_file info = {f, size};
+  candy_io_set_input(&self->io, _file_reader, &info);
+
   return 0;
 }
 

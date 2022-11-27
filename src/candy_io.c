@@ -58,15 +58,19 @@ void candy_io_write(candy_io_t *self, char ch) {
   self->buffer[self->w++] = ch;
 }
 
-int candy_io_init(candy_io_t *self, candy_reader_t reader, void *ud) {
-  memset(self, 0, sizeof(struct candy_io));
+int candy_io_set_input(candy_io_t *self, candy_reader_t reader, void *ud) {
   self->reader = reader;
   self->ud = ud;
-  self->buffer = (char *)calloc(CANDY_IO_ATOMIC_BUFFER_SIZE, sizeof(char));
-  self->size = CANDY_IO_ATOMIC_BUFFER_SIZE;
   self->r = CANDY_IO_EXTRA_SIZE;
   self->w = 0;
   self->reader(self->buffer + CANDY_IO_EXTRA_SIZE, self->size - CANDY_IO_EXTRA_SIZE, self->ud);
+  return 0;
+}
+
+int candy_io_init(candy_io_t *self) {
+  memset(self, 0, sizeof(struct candy_io));
+  self->buffer = (char *)calloc(CANDY_IO_ATOMIC_BUFFER_SIZE, sizeof(char));
+  self->size = CANDY_IO_ATOMIC_BUFFER_SIZE;
   return 0;
 }
 
