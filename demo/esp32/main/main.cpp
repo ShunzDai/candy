@@ -1,41 +1,33 @@
 #include "candy.h"
+#include "mid_os.h"
+#include "esp_system.h"
 #include <stdio.h>
-
-void cfunc1() {
-  printf("into %s\n", __FUNCTION__);
-}
-
-void cfunc2(int arg1, float arg2, std::string arg3) {
-  printf("into %s, arg1 %d, arg2 %.3f, arg3 '%s'\n", __FUNCTION__, arg1, arg2, arg3.data());
-}
-
-int cfunc3() {
-  printf("into %s\n", __FUNCTION__);
-  return 314;
-}
-
-std::tuple<int, float, std::string> cfunc4() {
-  printf("into %s\n", __FUNCTION__);
-  return {314, 3.14f, __FUNCTION__};
-}
-
-std::tuple<int, float, std::string> cfunc5(int arg1, float arg2, std::string arg3) {
-  printf("into %s, arg1 %d, arg2 %.3f, arg3 '%s'\n", __FUNCTION__, arg1, arg2, arg3.data());
-  return {314, 3.14f, __FUNCTION__};
-}
+#include <iostream>
+#include <string.h>
 
 extern "C" void app_main(void) {
   candy cdy;
-  cdy.regist("__global__",
-    std::pair{"cfunc1", cfunc1},
-    std::pair{"cfunc2", cfunc2},
-    std::pair{"cfunc3", cfunc3},
-    std::pair{"cfunc4", cfunc4},
-    std::pair{"cfunc5", cfunc5}
-  );
-  /* auto res1 = */ cdy.call("cfunc1");
-  /* auto res2 = */ cdy.call("cfunc2", 314, 3.14f, "str from cpp");
-  /* auto res3 = */ cdy.call<int>("cfunc3");
-  /* auto res4 = */ cdy.call<int, float, std::string>("cfunc4");
-  /* auto res5 = */ cdy.call<int, float, std::string>("cfunc5", 314, 3.14f, "str from cpp");
+  std::string line;
+  printf(">>> ");
+  while (1) {
+    int ch = getchar();
+    if (ch < 0) {
+      os::delay_ms(10);
+      continue;
+    }
+    else if (ch != '\n') {
+      line += (char)ch;
+      printf("%c", ch);
+      os::delay_ms(10);
+      continue;
+    }
+    else if (strcmp(line.c_str(), "q") == 0)
+      break;
+    printf("%c\n", ch);
+    cdy.dostring(line.c_str());
+    line.erase();
+    printf(">>> ");
+  }
+  printf("quit\n");
+  esp_restart();
 }

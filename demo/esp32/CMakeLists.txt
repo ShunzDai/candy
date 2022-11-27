@@ -16,6 +16,8 @@ include_directories(
   ../../config
 )
 
+add_definitions(-DCANDY_DEBUG_MODE)
+
 add_subdirectory(../../components/middleware/mid_os ${CMAKE_SOURCE_DIR}/build/middleware/mid_os)
 add_subdirectory(../../src ${CMAKE_SOURCE_DIR}/build/candy_core)
 add_subdirectory(../../cpp ${CMAKE_SOURCE_DIR}/build/candy_cpp)
