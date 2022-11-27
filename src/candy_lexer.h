@@ -19,8 +19,11 @@
 extern "C"{
 #endif /* __cplusplus */
 
+#include "src/candy_io.h"
+#include "src/candy_wrap.h"
 #include "src/candy_types.h"
-#include <setjmp.h>
+
+#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_lexer_assert((candy_lexer_t *)self, "line %d, column %d: " _format "\n", ((candy_lexer_t *)self)->dbg.line, ((candy_lexer_t *)self)->dbg.column, ##__VA_ARGS__))
 
 #define tk_dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
@@ -69,8 +72,25 @@ typedef enum candy_tokens {
   CANDY_TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
-candy_lexer_t *candy_lexer_create(jmp_buf *roolback, candy_reader_t reader, void *ud);
-int candy_lexer_delete(candy_lexer_t **self);
+struct candy_lexer {
+  candy_io_t *io;
+#ifdef CANDY_DEBUG_MODE
+  struct {
+    uint16_t line;
+    uint16_t column;
+  } dbg;
+#endif /* CANDY_DEBUG_MODE */
+  struct {
+    uint8_t type;
+  } indent;
+  struct {
+    uint8_t token;
+    candy_wrap_t wrap;
+  } lookahead;
+};
+
+int candy_lexer_init(candy_lexer_t *self, candy_io_t *io);
+int candy_lexer_deinit(candy_lexer_t *self);
 
 candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap);
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);

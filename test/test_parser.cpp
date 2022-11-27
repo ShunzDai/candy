@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 #include "test_common.h"
 #include "src/candy_parser.h"
+#include "src/candy_io.h"
 
 // extern "C" {
 
@@ -55,63 +56,90 @@
 
 TEST(parser, exp_add_0) {
   const char exp[] = "1 + 2";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }
 
 TEST(parser, exp_add_1) {
   const char exp[] = "(1 + 2)";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }
 
 TEST(parser, exp_sub_0) {
   const char exp[] = "1 - 2";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }
 
 TEST(parser, exp_sub_1) {
   const char exp[] = "(1 - 2)";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }
 
 TEST(parser, exp_mul_0) {
   const char exp[] = "1 * 2";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }
 
 TEST(parser, exp_mul_1) {
   const char exp[] = "(1 * 2)";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }
 
 TEST(parser, exp_div_0) {
   const char exp[] = "1 / 2";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }
 
 TEST(parser, exp_div_1) {
   const char exp[] = "(1 / 2)";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }
 
 TEST(parser, exp) {
   const char exp[] = "(((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12";
-  reader_s info = {exp, (int)strlen(exp) + 1, 0};
-  auto parser = candy_parse(reader_str, &info);
-  candy_parser_delete(&parser);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_io_t io;
+  candy_io_init(&io);
+  candy_io_set_input(&io, _string_reader, &info);
+  candy_parse(&io);
+  candy_io_deinit(&io);
 }

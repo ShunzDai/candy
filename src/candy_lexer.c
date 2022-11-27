@@ -14,32 +14,10 @@
   * limitations under the License.
   */
 #include "src/candy_lexer.h"
-#include "src/candy_io.h"
-#include "src/candy_wrap.h"
 #include "src/candy_lib.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-
-#define lex_assert(_condition, ...) ((_condition) ? ((void)0U) : candy_lexer_assert(self, __VA_ARGS__))
-
-struct candy_lexer {
-  candy_io_t io;
-  jmp_buf *rollback;
-#ifdef CANDY_DEBUG_MODE
-  struct {
-    uint16_t line;
-    uint16_t column;
-  } dbg;
-#endif /* CANDY_DEBUG_MODE */
-  struct {
-    uint8_t type;
-  } indent;
-  struct {
-    uint8_t token;
-    candy_wrap_t wrap;
-  } lookahead;
-};
 
 static const struct {
   candy_tokens_t token;
@@ -50,7 +28,7 @@ static const struct {
 };
 
 static inline char *_buffer(candy_lexer_t *self) {
-  return self->io.buffer;
+  return self->io->buffer;
 }
 
 /**
@@ -60,7 +38,7 @@ static inline char *_buffer(candy_lexer_t *self) {
   * @retval target byte
   */
 static inline char _view(candy_lexer_t *self, int idx) {
-  return candy_io_view(&self->io, idx);
+  return candy_io_view(self->io, idx);
 }
 
 /**
@@ -72,7 +50,7 @@ static inline char _read(candy_lexer_t *self) {
   #ifdef CANDY_DEBUG_MODE
   ++self->dbg.column;
   #endif /* CANDY_DEBUG_MODE */
-  return candy_io_read(&self->io);
+  return candy_io_read(self->io);
 }
 
 /**
@@ -93,7 +71,7 @@ static inline void _skip(candy_lexer_t *self, int n) {
   * @retval none
   */
 static inline void _save_char(candy_lexer_t *self, char ch) {
-  candy_io_write(&self->io, ch);
+  candy_io_write(self->io, ch);
 }
 
 /**
@@ -242,7 +220,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   * @retval string length, not include '\0'
   */
 static int _get_string(candy_lexer_t *self, const bool multiline) {
-  int head = self->io.w;
+  int head = self->io->w;
   const char del = _view(self, 0);
   /* skip first " or ' */
   _skip(self, multiline ? 3 : 1);
@@ -292,7 +270,7 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
   /* skip last " or ' */
   lex_assert(_view(self, 0) == del && (multiline ? (_view(self, 1) == del && _view(self, 2) == del) : (true)), "unexpected end of string");
   _skip(self, multiline ? 3 : 1);
-  return self->io.w - head - 1;
+  return self->io->w - head - 1;
 }
 
 static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *wrap) {
@@ -312,7 +290,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
 }
 
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
-  self->io.w = 0;
+  self->io->w = 0;
   while (1) {
     switch (_view(self, 0)) {
       case '\0':
@@ -362,23 +340,19 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   return tk_dual_ope(_read(self), _read(self));
 }
 
-candy_lexer_t *candy_lexer_create(jmp_buf *rollback, candy_reader_t reader, void *ud) {
-  candy_lexer_t *self = (candy_lexer_t *)malloc(sizeof(struct candy_lexer));
-  candy_io_init(&self->io, reader, ud);
-  self->rollback = rollback;
+int candy_lexer_init(candy_lexer_t *self, candy_io_t *io) {
+  memset(self, 0, sizeof(struct candy_lexer));
+  self->io = io;
 #ifdef CANDY_DEBUG_MODE
   self->dbg.line = 1;
   self->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
   self->lookahead.token = CANDY_TK_EOS;
-  return self;
+  return 0;
 }
 
-int candy_lexer_delete(candy_lexer_t **self) {
-  candy_io_deinit(&(*self)->io);
-  candy_wrap_deinit(&(*self)->lookahead.wrap);
-  free(*self);
-  *self = NULL;
+int candy_lexer_deinit(candy_lexer_t *self) {
+  candy_wrap_deinit(&self->lookahead.wrap);
   return 0;
 }
 
@@ -405,10 +379,8 @@ candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
 
 void candy_lexer_assert(candy_lexer_t *self, const char format[], ...) {
   va_list ap;
-  printf("line %d, column %d: ", self->dbg.line, self->dbg.column);
   va_start(ap, format);
-  vprintf(format, ap);
+  vsnprintf(self->io->buffer, self->io->size, format, ap);
   va_end(ap);
-  printf("\n");
-  longjmp(*self->rollback, 1);
+  longjmp(self->io->rollback, 1);
 }
