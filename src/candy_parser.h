@@ -23,8 +23,7 @@ extern "C"{
 
 void candy_parser_print(candy_parser_t *self);
 
-candy_parser_t *candy_parse(candy_reader_t reader, void *ud);
-int candy_parser_delete(candy_parser_t **self);
+void *candy_parse(candy_io_t *io);
 
 #ifdef __cplusplus
 }
