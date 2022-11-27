@@ -18,6 +18,5 @@ add_subdirectory(components)
 add_subdirectory(src)
 add_subdirectory(cpp)
 add_subdirectory(test)
+add_subdirectory(demo/shell)
 add_subdirectory(dummy)
-
-

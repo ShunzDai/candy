@@ -21,6 +21,8 @@ int candy_stack_delete(candy_stack_t **self) {
   while ((*self)->size)
     candy_wrap_deinit(candy_stack_pop(*self));
   free((*self)->base);
+  (*self)->base = NULL;
+  free(*self);
   *self = NULL;
   return 0;
 }
