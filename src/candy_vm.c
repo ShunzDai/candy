@@ -70,41 +70,41 @@ void candy_vm_regist_entry(candy_vm_t *self, candy_cfunc_t entry) {
   self->entry = entry;
 }
 
-void candy_vm_push_integer(candy_vm_t *self, candy_integer_t val) {
-  candy_stack_push_integer(self->stack, &val, 1);
+void candy_vm_push_integer(candy_vm_t *self, candy_integer_t *val, int size) {
+  candy_stack_push_integer(self->stack, val, size);
 }
 
-void candy_vm_push_float(candy_vm_t *self, candy_float_t val) {
-  candy_stack_push_float(self->stack, &val, 1);
+void candy_vm_push_float(candy_vm_t *self, candy_float_t *val, int size) {
+  candy_stack_push_float(self->stack, val, size);
 }
 
-void candy_vm_push_boolean(candy_vm_t *self, candy_boolean_t val) {
-  candy_stack_push_boolean(self->stack, &val, 1);
+void candy_vm_push_boolean(candy_vm_t *self, candy_boolean_t *val, int size) {
+  candy_stack_push_boolean(self->stack, val, size);
 }
 
 void candy_vm_push_string(candy_vm_t *self, char *val, int size) {
   candy_stack_push_string(self->stack, val, size);
 }
 
-candy_integer_t candy_vm_pull_integer(candy_vm_t *self) {
+candy_integer_t *candy_vm_pull_integer(candy_vm_t *self, int *size) {
   /** @todo error handle */
   candy_stack_check_type(self->stack, CANDY_INTEGER);
   /** @todo if it is lval, push it into gc */
-  return *candy_stack_pull_integer(self->stack, NULL);
+  return candy_stack_pull_integer(self->stack, size);
 }
 
-candy_float_t candy_vm_pull_float(candy_vm_t *self) {
+candy_float_t *candy_vm_pull_float(candy_vm_t *self, int *size) {
   /** @todo error handle */
   candy_stack_check_type(self->stack, CANDY_FLOAT);
   /** @todo if it is lval, push it into gc */
-  return *candy_stack_pull_float(self->stack, NULL);
+  return candy_stack_pull_float(self->stack, size);
 }
 
-candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self) {
+candy_boolean_t *candy_vm_pull_boolean(candy_vm_t *self, int *size) {
   /** @todo error handle */
   candy_stack_check_type(self->stack, CANDY_BOOLEAN);
   /** @todo if it is lval, push it into gc */
-  return *candy_stack_pull_boolean(self->stack, NULL);
+  return candy_stack_pull_boolean(self->stack, size);
 }
 
 char *candy_vm_pull_string(candy_vm_t *self, int *size) {

@@ -100,15 +100,15 @@ candy_callinfo_t *candy_callinfo(candy_state_t *self) {
 }
 
 void candy_push_integer(candy_state_t *self, candy_integer_t val) {
-  candy_vm_push_integer(self->vm, val);
+  candy_vm_push_integer(self->vm, &val, 1);
 }
 
 void candy_push_float(candy_state_t *self, candy_float_t val) {
-  candy_vm_push_float(self->vm, val);
+  candy_vm_push_float(self->vm, &val, 1);
 }
 
 void candy_push_boolean(candy_state_t *self, candy_boolean_t val) {
-  candy_vm_push_boolean(self->vm, val);
+  candy_vm_push_boolean(self->vm, &val, 1);
 }
 
 void candy_push_string(candy_state_t *self, char *val, int size) {
@@ -116,15 +116,15 @@ void candy_push_string(candy_state_t *self, char *val, int size) {
 }
 
 candy_integer_t candy_pull_integer(candy_state_t *self) {
-  return candy_vm_pull_integer(self->vm);
+  return *candy_vm_pull_integer(self->vm, NULL);
 }
 
 candy_float_t candy_pull_float(candy_state_t *self) {
-  return candy_vm_pull_float(self->vm);
+  return *candy_vm_pull_float(self->vm, NULL);
 }
 
 candy_boolean_t candy_pull_boolean(candy_state_t *self) {
-  return candy_vm_pull_boolean(self->vm);
+  return *candy_vm_pull_boolean(self->vm, NULL);
 }
 
 char *candy_pull_string(candy_state_t *self, int *size) {

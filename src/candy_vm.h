@@ -26,14 +26,14 @@ int candy_vm_delete(candy_vm_t **self);
 
 void candy_vm_regist_entry(candy_vm_t *self, candy_cfunc_t entry);
 
-void candy_vm_push_integer(candy_vm_t *self, candy_integer_t val);
-void candy_vm_push_float(candy_vm_t *self, candy_float_t val);
-void candy_vm_push_boolean(candy_vm_t *self, candy_boolean_t val);
+void candy_vm_push_integer(candy_vm_t *self, candy_integer_t *val, int size);
+void candy_vm_push_float(candy_vm_t *self, candy_float_t *val, int size);
+void candy_vm_push_boolean(candy_vm_t *self, candy_boolean_t *val, int size);
 void candy_vm_push_string(candy_vm_t *self, char *val, int size);
 
-candy_integer_t candy_vm_pull_integer(candy_vm_t *self);
-candy_float_t candy_vm_pull_float(candy_vm_t *self);
-candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self);
+candy_integer_t *candy_vm_pull_integer(candy_vm_t *self, int *size);
+candy_float_t *candy_vm_pull_float(candy_vm_t *self, int *size);
+candy_boolean_t *candy_vm_pull_boolean(candy_vm_t *self, int *size);
 char *candy_vm_pull_string(candy_vm_t *self, int *size);
 
 int candy_vm_load(candy_vm_t *self, const uint8_t binary[]);
