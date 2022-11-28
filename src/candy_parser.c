@@ -54,8 +54,8 @@ static void _ast_node_print(struct ast_node *node) {
   //   printf("%c\n", _private(node)->token);
 }
 
-static struct ast_node *_ast_node_create(int8_t token, candy_wrap_t *wrap, struct ast_node *l, struct ast_node *r) {
-  struct ast_node *node = (struct ast_node *)malloc(sizeof(struct ast_node) + ((wrap == NULL) ? sizeof(int8_t) : sizeof(struct priv)));
+static struct ast_node *_ast_node_create(uint8_t token, candy_wrap_t *wrap, struct ast_node *l, struct ast_node *r) {
+  struct ast_node *node = (struct ast_node *)malloc(sizeof(struct ast_node) + ((wrap == NULL) ? sizeof(uint8_t) : sizeof(struct priv)));
   node->l = l;
   node->r = r;
   _private(node)->token = token;
