@@ -1,5 +1,5 @@
 #include "src/candy_state.h"
-#include "src/candy_io.h"
+#include "src/candy_buffer.h"
 #include "src/candy_parser.h"
 #include "src/candy_vm.h"
 #include <stdlib.h>
@@ -18,7 +18,7 @@ struct info_file {
 };
 
 struct candy_state {
-  candy_io_t io;
+  candy_buffer_t buffer;
   candy_vm_t *vm;
   void *ud;
 };
@@ -42,7 +42,7 @@ static inline int _file_reader(char *buff, const int max_len, void *ud) {
 
 candy_state_t *candy_state_create(void *ud) {
   candy_state_t *self = (candy_state_t *)malloc(sizeof(struct candy_state));
-  candy_io_init(&self->io);
+  candy_buffer_init(&self->buffer);
   self->vm = candy_vm_create(self);
   self->ud = ud;
   return self;
@@ -50,7 +50,7 @@ candy_state_t *candy_state_create(void *ud) {
 
 int candy_state_delete(candy_state_t **self) {
   candy_vm_delete(&(*self)->vm);
-  candy_io_deinit(&(*self)->io);
+  candy_buffer_deinit(&(*self)->buffer);
   free(*self);
   *self = NULL;
   return 0;
@@ -58,9 +58,8 @@ int candy_state_delete(candy_state_t **self) {
 
 int candy_dostring(candy_state_t *self, const char exp[]) {
   struct info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_set_input(&self->io, _string_reader, &info);
-  if (candy_parse(&self->io) == NULL) {
-    printf("%s", self->io.buffer);
+  if (candy_parse(&self->buffer, _string_reader, &info) == NULL) {
+    printf("%s\n", candy_buffer_get_data(&self->buffer));
     return -1;
   }
   return 0;
@@ -74,8 +73,10 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   int size = (int)ftell(f);
   fseek(f, 0, SEEK_SET);
   struct info_file info = {f, size};
-  candy_io_set_input(&self->io, _file_reader, &info);
-
+  if (candy_parse(&self->buffer, _file_reader, &info) == NULL) {
+    printf("%s\n", candy_buffer_get_data(&self->buffer));
+    return -1;
+  }
   return 0;
 }
 
