@@ -19,18 +19,18 @@
 extern "C"{
 #endif /* __cplusplus */
 
+#include "src/candy_buffer.h"
 #include "src/candy_types.h"
 #include <setjmp.h>
 
 /** @ref doc/io_memory_model.drawio.png */
 struct candy_io {
+  int w;
+  int r;
   jmp_buf rollback;
+  candy_buffer_t *buffer;
   candy_reader_t reader;
   void *ud;
-  char *buffer;
-  int size;
-  int r;
-  int w;
 };
 
 void candy_io_assert(candy_io_t *self, const char format[], ...) CANDY_NORETURN;
@@ -39,10 +39,7 @@ char candy_io_view(candy_io_t *self, int idx);
 char candy_io_read(candy_io_t *self);
 void candy_io_write(candy_io_t *self, char ch);
 
-int candy_io_set_input(candy_io_t *self, candy_reader_t reader, void *ud);
-
-int candy_io_init(candy_io_t *self);
-int candy_io_deinit(candy_io_t *self);
+int candy_io_set_input(candy_io_t *self, candy_buffer_t *buffer, candy_reader_t reader, void *ud);
 
 #ifdef __cplusplus
 }
