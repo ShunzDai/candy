@@ -23,8 +23,6 @@ extern "C"{
 #include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
-#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_lexer_assert((candy_lexer_t *)self, "line %d, column %d: " _format "\n", ((candy_lexer_t *)self)->dbg.line, ((candy_lexer_t *)self)->dbg.column, ##__VA_ARGS__))
-
 #define tk_dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
 typedef enum candy_tokens {
@@ -94,8 +92,6 @@ int candy_lexer_deinit(candy_lexer_t *self);
 
 candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap);
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);
-
-void candy_lexer_assert(candy_lexer_t *self, const char format[], ...) CANDY_NORETURN;
 
 #ifdef __cplusplus
 }

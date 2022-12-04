@@ -33,7 +33,7 @@ struct candy_io {
   int w;
 };
 
-void candy_io_assert(candy_lexer_t *self, const char format[], ...) CANDY_NORETURN;
+void candy_io_assert(candy_io_t *self, const char format[], ...) CANDY_NORETURN;
 
 char candy_io_view(candy_io_t *self, int idx);
 char candy_io_read(candy_io_t *self);
