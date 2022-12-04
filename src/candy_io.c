@@ -17,6 +17,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdarg.h>
+
+void candy_io_assert(candy_io_t *self, const char format[], ...) {
+  va_list ap;
+  va_start(ap, format);
+  vsnprintf(self->buffer, self->size, format, ap);
+  va_end(ap);
+  longjmp(self->rollback, 1);
+}
 
 char candy_io_view(candy_io_t *self, int idx) {
   assert(self->r + idx < self->size);

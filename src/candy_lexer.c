@@ -16,8 +16,8 @@
 #include "src/candy_lexer.h"
 #include "src/candy_lib.h"
 #include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
+
+#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_io_assert((self)->io, "lexical error: " _format, ##__VA_ARGS__))
 
 static const struct {
   candy_tokens_t token;
@@ -375,12 +375,4 @@ candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
   if (self->lookahead.token == CANDY_TK_EOS)
     self->lookahead.token = _lexer(self, &self->lookahead.wrap);
   return self->lookahead.token;
-}
-
-void candy_lexer_assert(candy_lexer_t *self, const char format[], ...) {
-  va_list ap;
-  va_start(ap, format);
-  vsnprintf(self->io->buffer, self->io->size, format, ap);
-  va_end(ap);
-  longjmp(self->io->rollback, 1);
 }
