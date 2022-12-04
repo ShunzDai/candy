@@ -28,7 +28,7 @@ static const struct {
 };
 
 static inline char *_buffer(candy_lexer_t *self) {
-  return self->io->buffer;
+  return candy_buffer_get_data(self->io->buffer);
 }
 
 /**

@@ -32,6 +32,7 @@ struct priv {
 };
 
 struct candy_parser {
+  candy_io_t io;
   candy_lexer_t lex;
   struct ast_node *root;
 };
@@ -130,11 +131,12 @@ void candy_parser_print(candy_parser_t *self) {
   _ast_node_print(self->root);
 }
 
-void *candy_parse(candy_io_t *io) {
+void *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
   candy_parser_t parser;
   memset(&parser, 0, sizeof(struct candy_parser));
-  candy_lexer_init(&parser.lex, io);
-  if(setjmp(io->rollback))
+  candy_io_set_input(&parser.io, buffer, reader, ud);
+  candy_lexer_init(&parser.lex, &parser.io);
+  if(setjmp(parser.io.rollback))
     goto exit;
   parser.root = _expression(&parser);
   candy_lexer_deinit(&parser.lex);

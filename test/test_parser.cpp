@@ -18,128 +18,24 @@
 #include "src/candy_parser.h"
 #include "src/candy_io.h"
 
-// extern "C" {
+#define PARSER_TEST(_name, _exp) TEST(parser, _name) {test_body(_exp);}
 
-// struct ast_node *_ast_node_create(int8_t token, uint8_t meta[], struct ast_node *l, struct ast_node *r);
-// int _ast_node_delete(struct ast_node **node);
-
-// }
-
-// TEST(parser, tree_1) {
-//   auto root = _ast_node_create(0, NULL, NULL, NULL);
-//   _ast_node_delete(&root);
-// }
-
-// TEST(parser, tree_2) {
-//   auto l = _ast_node_create(0, NULL, NULL, NULL);
-//   auto r = _ast_node_create(0, NULL, NULL, NULL);
-//   auto root = _ast_node_create(0, NULL, l, r);
-//   _ast_node_delete(&root);
-// }
-
-// TEST(parser, tree_3) {
-//   auto l = _ast_node_create(0, NULL, NULL, NULL);
-//   auto root = _ast_node_create(0, NULL, l, NULL);
-//   _ast_node_delete(&root);
-// }
-
-// TEST(parser, tree_4) {
-//   auto ll = _ast_node_create(0, NULL, NULL, NULL);
-//   auto lr = _ast_node_create(0, NULL, NULL, NULL);
-//   auto rl = _ast_node_create(0, NULL, NULL, NULL);
-//   auto rr = _ast_node_create(0, NULL, NULL, NULL);
-//   auto l = _ast_node_create(0, NULL, ll, lr);
-//   auto r = _ast_node_create(0, NULL, rl, rr);
-//   auto root = _ast_node_create(0, NULL, l, r);
-//   _ast_node_delete(&root);
-// }
-
-TEST(parser, exp_add_0) {
-  const char exp[] = "1 + 2";
+static void test_body(const char exp[]) {
   info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_buffer_t buffer;
+  candy_buffer_init(&buffer);
   candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
+  candy_io_set_input(&io, &buffer, _string_reader, &info);
+  candy_parse(&buffer, _string_reader, &info);
+  candy_buffer_deinit(&buffer);
 }
 
-TEST(parser, exp_add_1) {
-  const char exp[] = "(1 + 2)";
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
-}
-
-TEST(parser, exp_sub_0) {
-  const char exp[] = "1 - 2";
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
-}
-
-TEST(parser, exp_sub_1) {
-  const char exp[] = "(1 - 2)";
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
-}
-
-TEST(parser, exp_mul_0) {
-  const char exp[] = "1 * 2";
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
-}
-
-TEST(parser, exp_mul_1) {
-  const char exp[] = "(1 * 2)";
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
-}
-
-TEST(parser, exp_div_0) {
-  const char exp[] = "1 / 2";
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
-}
-
-TEST(parser, exp_div_1) {
-  const char exp[] = "(1 / 2)";
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
-}
-
-TEST(parser, exp) {
-  const char exp[] = "(((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12";
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  candy_io_set_input(&io, _string_reader, &info);
-  candy_parse(&io);
-  candy_io_deinit(&io);
-}
+PARSER_TEST(exp_add_0, "1 + 2")
+PARSER_TEST(exp_add_1, "(1 + 2)")
+PARSER_TEST(exp_sub_0, "1 - 2")
+PARSER_TEST(exp_sub_1, "(1 - 2)")
+PARSER_TEST(exp_mul_0, "1 * 2")
+PARSER_TEST(exp_mul_1, "(1 * 2)")
+PARSER_TEST(exp_div_0, "1 / 2")
+PARSER_TEST(exp_div_1, "(1 / 2)")
+PARSER_TEST(exp, "(((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12")

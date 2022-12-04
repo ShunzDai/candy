@@ -19,11 +19,12 @@
 extern "C"{
 #endif /* __cplusplus */
 
+#include "src/candy_buffer.h"
 #include "src/candy_types.h"
 
 void candy_parser_print(candy_parser_t *self);
 
-void *candy_parse(candy_io_t *io);
+void *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud);
 
 #ifdef __cplusplus
 }
