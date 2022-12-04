@@ -15,10 +15,11 @@
   */
 #include "src/candy_parser.h"
 #include "src/candy_lexer.h"
-#include "src/candy_wrap.h"
 #include "src/candy_queue.h"
 #include <stdlib.h>
 #include <setjmp.h>
+
+#define par_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_io_assert((self)->lex.io, "syntax error: " _format, ##__VA_ARGS__))
 
 struct ast_node {
   struct ast_node *l;
@@ -88,7 +89,7 @@ static struct ast_node *_factor(candy_parser_t *self) {
       sign = -1;
     case '+':
       token = candy_lexer_lookahead(&self->lex);
-      lex_assert(token == CANDY_TK_CST_INTEGER || token == CANDY_TK_CST_FLOAT, "unexpected token (0x%02X)", token);
+      par_assert(token == CANDY_TK_CST_INTEGER || token == CANDY_TK_CST_FLOAT, "unexpected token (0x%02X)", token);
       goto begin;
     case CANDY_TK_CST_INTEGER:
       *candy_wrap_get_integer(&wrap, NULL) *= sign;
@@ -99,10 +100,10 @@ static struct ast_node *_factor(candy_parser_t *self) {
     case '(':
       l = _expression(self);
       token = candy_lexer_next(&self->lex, &wrap);
-      lex_assert(token == ')', "expression not closed");
+      par_assert(token == ')', "expression not closed");
       return l;
     default:
-      lex_assert(0, "unexpected token (0x%02X)", token);
+      par_assert(0, "unexpected token (0x%02X)", token);
   }
   return _ast_node_create(token, &wrap, NULL, NULL);
 }

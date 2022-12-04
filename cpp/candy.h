@@ -17,6 +17,7 @@
 
 #include <string>
 #include <tuple>
+#include <vector>
 #include <functional>
 
 class candy {
