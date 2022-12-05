@@ -22,6 +22,8 @@ extern "C"{
 #include "src/candy_buffer.h"
 #include "src/candy_types.h"
 
+typedef struct candy_parser candy_parser_t;
+
 void candy_parser_print(candy_parser_t *self);
 
 void *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud);
