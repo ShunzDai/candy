@@ -87,6 +87,8 @@ struct candy_lexer {
   } lookahead;
 };
 
+typedef struct candy_lexer candy_lexer_t;
+
 int candy_lexer_init(candy_lexer_t *self, candy_io_t *io);
 int candy_lexer_deinit(candy_lexer_t *self);
 

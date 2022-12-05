@@ -19,13 +19,14 @@
 extern "C"{
 #endif /* __cplusplus */
 
+#include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
 typedef uint16_t candy_stack_size_t;
 
 typedef struct candy_stack candy_stack_t;
 
-candy_stack_t *candy_stack_create(candy_stack_size_t size);
+candy_stack_t *candy_stack_create();
 int candy_stack_delete(candy_stack_t **self);
 
 candy_stack_size_t candy_stack_size(candy_stack_t *self);

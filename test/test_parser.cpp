@@ -23,7 +23,7 @@
 static void test_body(const char exp[]) {
   info_str info = {exp, (int)strlen(exp) + 1, 0};
   candy_buffer_t buffer;
-  candy_buffer_init(&buffer);
+  candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
   candy_io_t io;
   candy_io_set_input(&io, &buffer, _string_reader, &info);
   candy_parse(&buffer, _string_reader, &info);

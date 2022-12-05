@@ -19,34 +19,35 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct candy_buffer {
+struct candy_buffer {
   int size;
-  char *data;
-} candy_buffer_t;
+  void *data;
+};
+
+typedef struct candy_buffer candy_buffer_t;
 
 static inline int candy_buffer_get_size(candy_buffer_t *self) {
   return self->size;
 }
 
-static inline char *candy_buffer_get_data(candy_buffer_t *self) {
+static inline void *candy_buffer_get_data(candy_buffer_t *self) {
   return self->data;
 }
 
-static inline void candy_buffer_expand(candy_buffer_t *self) {
-  char *data = (char *)calloc(self->size + CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
-  memcpy(data, self->data, self->size);
+static inline void candy_buffer_expand(candy_buffer_t *self, int atomic, int size) {
+  void *data = calloc(self->size + atomic, size);
+  memcpy(data, self->data, self->size * size);
   free(self->data);
-  self->size += CANDY_ATOMIC_BUFFER_SIZE;
+  self->size += atomic;
   self->data = data;
 }
 
-static inline int candy_buffer_init(candy_buffer_t *self) {
-  self->size = CANDY_ATOMIC_BUFFER_SIZE;
-  self->data = (char *)calloc(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
+static inline int candy_buffer_init(candy_buffer_t *self, int atomic, int size) {
+  self->size = atomic;
+  self->data = calloc(atomic, size);
   return 0;
 }
 
