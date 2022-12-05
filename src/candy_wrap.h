@@ -62,6 +62,8 @@ union candy_wrap {
   } s;
 };
 
+typedef union candy_wrap candy_wrap_t;
+
 static inline bool candy_wrap_check_type(candy_wrap_t *self, candy_wraps_t type) {
   return self->type == type;
 }

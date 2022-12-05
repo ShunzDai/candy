@@ -21,6 +21,8 @@ extern "C"{
 
 #include "src/candy_types.h"
 
+typedef struct candy_vm candy_vm_t;
+
 candy_vm_t *candy_vm_create(candy_state_t *sta);
 int candy_vm_delete(candy_vm_t **self);
 

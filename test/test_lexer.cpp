@@ -27,7 +27,7 @@ template <typename ... supposed>
 static void tast_body(candy_tokens_t token, const char exp[], supposed ... value) {
   int status = 0;
   candy_buffer_t buffer;
-  candy_buffer_init(&buffer);
+  candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
   candy_io_t io;
   info_str info = {exp, (int)strlen(exp) + 1, 0};
   candy_io_set_input(&io, &buffer, _string_reader, &info);
@@ -181,7 +181,7 @@ TEST(lexer, file_system) {
   int size = (int)ftell(f);
   fseek(f, 0, SEEK_SET);
   candy_buffer_t buffer;
-  candy_buffer_init(&buffer);
+  candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
   candy_io_t io;
   info_file info = {f, size};
   candy_io_set_input(&io, &buffer, _file_reader, &info);

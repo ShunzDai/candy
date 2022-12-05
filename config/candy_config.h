@@ -39,6 +39,8 @@ extern "C"{
 #error "default buffer size is too small"
 #endif /* CANDY_ATOMIC_BUFFER_SIZE */
 
+#define CANDY_ATOMIC_STACK_SIZE 8
+
 #ifdef __GNUC__
 #define CANDY_NORETURN __attribute__((noreturn))
 #else

@@ -23,11 +23,6 @@ extern "C"{
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef struct candy_view {
-  const uint16_t size;
-  char data[];
-} candy_view_t;
-
 typedef int64_t candy_integer_t;
 typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
@@ -43,16 +38,6 @@ typedef enum candy_wraps {
   CANDY_MAX,
 } candy_wraps_t;
 
-typedef union candy_wrap candy_wrap_t;
-
-typedef struct candy_io candy_io_t;
-
-typedef struct candy_lexer candy_lexer_t;
-
-typedef struct candy_parser candy_parser_t;
-
-typedef struct candy_vm candy_vm_t;
-
 typedef struct candy_state candy_state_t;
 
 typedef int (*candy_reader_t)(char *, const int, void *);
@@ -62,14 +47,18 @@ typedef int (*candy_reader_t)(char *, const int, void *);
   */
 typedef int (*candy_cfunc_t)(candy_state_t *);
 
-typedef struct candy_regist {
+struct candy_regist {
   const char *name;
   candy_cfunc_t cfunc;
-} candy_regist_t;
+};
 
-typedef struct candy_callinfo {
+typedef struct candy_regist candy_regist_t;
+
+struct candy_callinfo {
   candy_cfunc_t cfunc;
-} candy_callinfo_t;
+};
+
+typedef struct candy_callinfo candy_callinfo_t;
 
 #ifdef __cplusplus
 }

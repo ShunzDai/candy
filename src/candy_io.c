@@ -18,21 +18,29 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+static inline int _get_buff_size(candy_io_t *self) {
+  return candy_buffer_get_size(self->buffer);
+}
+
+static inline char *_get_buff_data(candy_io_t *self) {
+  return (char *)candy_buffer_get_data(self->buffer);
+}
+
 void candy_io_assert(candy_io_t *self, const char format[], ...) {
   va_list ap;
   va_start(ap, format);
-  vsnprintf(candy_buffer_get_data(self->buffer), candy_buffer_get_size(self->buffer), format, ap);
+  vsnprintf(_get_buff_data(self), _get_buff_size(self), format, ap);
   va_end(ap);
   longjmp(self->rollback, 1);
 }
 
 char candy_io_view(candy_io_t *self, int idx) {
-  assert(self->r + idx < candy_buffer_get_size(self->buffer));
-  return candy_buffer_get_data(self->buffer)[self->r + idx];
+  assert(self->r + idx < _get_buff_size(self));
+  return _get_buff_data(self)[self->r + idx];
 }
 
 char candy_io_read(candy_io_t *self) {
-  int size = candy_buffer_get_size(self->buffer);
+  int size = _get_buff_size(self);
   /** only @ref CANDY_IO_LOOKAHEAD_SIZE bytes left to read */
   if (self->r + CANDY_IO_LOOKAHEAD_SIZE == size) {
     /* calculates the start position of the read buffer */
@@ -40,27 +48,27 @@ char candy_io_read(candy_io_t *self) {
     /** if the number of bytes that can be filled is less than
         @ref CANDY_IO_ATOMIC_BUFFER_SIZE bytes, the buffer will be enlarged */
     if (size - offset < CANDY_ATOMIC_BUFFER_SIZE) {
-      candy_buffer_expand(self->buffer);
-      self->reader(candy_buffer_get_data(self->buffer) + size, CANDY_ATOMIC_BUFFER_SIZE, self->ud);
+      candy_buffer_expand(self->buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
+      self->reader(_get_buff_data(self) + size, CANDY_ATOMIC_BUFFER_SIZE, self->ud);
     }
     /* otherwise buffer will be filled directly */
     else {
       /** temporarily stores @ref CANDY_IO_LOOKAHEAD_SIZE bytes that have not been read */
       char ahead[CANDY_IO_LOOKAHEAD_SIZE];
-      memcpy(ahead, candy_buffer_get_data(self->buffer) + self->r, CANDY_IO_LOOKAHEAD_SIZE);
+      memcpy(ahead, _get_buff_data(self) + self->r, CANDY_IO_LOOKAHEAD_SIZE);
       /* fill buffer */
-      self->reader(candy_buffer_get_data(self->buffer) + offset, size - offset, self->ud);
+      self->reader(_get_buff_data(self) + offset, size - offset, self->ud);
       /** restore the unread @ref CANDY_IO_LOOKAHEAD_SIZE bytes to the buffer */
-      memcpy(candy_buffer_get_data(self->buffer) + self->w + CANDY_IO_EXTRA_SIZE, ahead, CANDY_IO_LOOKAHEAD_SIZE);
+      memcpy(_get_buff_data(self) + self->w + CANDY_IO_EXTRA_SIZE, ahead, CANDY_IO_LOOKAHEAD_SIZE);
       self->r = self->w + CANDY_IO_EXTRA_SIZE;
     }
   }
-  return candy_buffer_get_data(self->buffer)[self->r++];
+  return _get_buff_data(self)[self->r++];
 }
 
 void candy_io_write(candy_io_t *self, char ch) {
   assert(self->r - self->w >= CANDY_IO_EXTRA_SIZE);
-  candy_buffer_get_data(self->buffer)[self->w++] = ch;
+  _get_buff_data(self)[self->w++] = ch;
 }
 
 int candy_io_set_input(candy_io_t *self, candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
@@ -69,6 +77,6 @@ int candy_io_set_input(candy_io_t *self, candy_buffer_t *buffer, candy_reader_t 
   self->ud = ud;
   self->r = CANDY_IO_EXTRA_SIZE;
   self->w = 0;
-  self->reader(candy_buffer_get_data(self->buffer) + CANDY_IO_EXTRA_SIZE, candy_buffer_get_size(self->buffer) - CANDY_IO_EXTRA_SIZE, self->ud);
+  self->reader(_get_buff_data(self) + CANDY_IO_EXTRA_SIZE, _get_buff_size(self) - CANDY_IO_EXTRA_SIZE, self->ud);
   return 0;
 }
