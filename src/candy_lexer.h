@@ -19,7 +19,7 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy_io.h"
+#include "src/candy_buffer.h"
 #include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
@@ -70,8 +70,8 @@ typedef enum candy_tokens {
   CANDY_TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
+/** @ref doc/io_memory_model.drawio.png */
 struct candy_lexer {
-  candy_io_t *io;
 #ifdef CANDY_DEBUG_MODE
   struct {
     uint16_t line;
@@ -85,11 +85,16 @@ struct candy_lexer {
     uint8_t token;
     candy_wrap_t wrap;
   } lookahead;
+  int w;
+  int r;
+  candy_buffer_t *buffer;
+  candy_reader_t reader;
+  void *ud;
 };
 
 typedef struct candy_lexer candy_lexer_t;
 
-int candy_lexer_init(candy_lexer_t *self, candy_io_t *io);
+int candy_lexer_init(candy_lexer_t *self, candy_buffer_t *buffer, candy_reader_t reader, void *ud);
 int candy_lexer_deinit(candy_lexer_t *self);
 
 candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap);

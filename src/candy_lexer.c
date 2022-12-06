@@ -16,8 +16,9 @@
 #include "src/candy_lexer.h"
 #include "src/candy_lib.h"
 #include <stdlib.h>
+#include <assert.h>
 
-#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_assert((self)->io->buffer, "lexical error: " _format, ##__VA_ARGS__))
+#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_assert((self)->buffer, "lexical error: " _format, ##__VA_ARGS__))
 
 static const struct {
   candy_tokens_t token;
@@ -27,18 +28,23 @@ static const struct {
   #include "src/candy_keyword.list"
 };
 
-static inline char *_buffer(candy_lexer_t *self) {
-  return candy_buffer_get_data(self->io->buffer);
+static inline int _get_buff_size(candy_lexer_t *self) {
+  return candy_buffer_get_size(self->buffer);
+}
+
+static inline char *_get_buff_data(candy_lexer_t *self) {
+  return (char *)candy_buffer_get_data(self->buffer);
 }
 
 /**
   * @brief  observer mode of the stream
   * @param  self lexer
-  * @param  idx  lookahead to the idx byte, idx value between 0 and @ref CANDY_IO_LOOKAHEAD_SIZE - 1
+  * @param  idx  lookahead to the idx byte, idx value between 0 and @ref CANDY_LEXER_LOOKAHEAD_SIZE - 1
   * @retval target byte
   */
 static inline char _view(candy_lexer_t *self, int idx) {
-  return candy_io_view(self->io, idx);
+  assert(self->r + idx < _get_buff_size(self));
+  return _get_buff_data(self)[self->r + idx];
 }
 
 /**
@@ -50,7 +56,30 @@ static inline char _read(candy_lexer_t *self) {
   #ifdef CANDY_DEBUG_MODE
   ++self->dbg.column;
   #endif /* CANDY_DEBUG_MODE */
-  return candy_io_read(self->io);
+  int size = _get_buff_size(self);
+  /** only @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes left to read */
+  if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE == size) {
+    /* calculates the start position of the read buffer */
+    int offset = self->w + CANDY_LEXER_LOOKAHEAD_SIZE + CANDY_LEXER_EXTRA_SIZE;
+    /** if the number of bytes that can be filled is less than
+        @ref CANDY_IO_ATOMIC_BUFFER_SIZE bytes, the buffer will be enlarged */
+    if (size - offset < CANDY_ATOMIC_BUFFER_SIZE) {
+      candy_buffer_expand(self->buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
+      self->reader(_get_buff_data(self) + size, CANDY_ATOMIC_BUFFER_SIZE, self->ud);
+    }
+    /* otherwise buffer will be filled directly */
+    else {
+      /** temporarily stores @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes that have not been read */
+      char ahead[CANDY_LEXER_LOOKAHEAD_SIZE];
+      memcpy(ahead, _get_buff_data(self) + self->r, CANDY_LEXER_LOOKAHEAD_SIZE);
+      /* fill buffer */
+      self->reader(_get_buff_data(self) + offset, size - offset, self->ud);
+      /** restore the unread @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes to the buffer */
+      memcpy(_get_buff_data(self) + self->w + CANDY_LEXER_EXTRA_SIZE, ahead, CANDY_LEXER_LOOKAHEAD_SIZE);
+      self->r = self->w + CANDY_LEXER_EXTRA_SIZE;
+    }
+  }
+  return _get_buff_data(self)[self->r++];
 }
 
 /**
@@ -71,7 +100,8 @@ static inline void _skip(candy_lexer_t *self, int n) {
   * @retval none
   */
 static inline void _save_char(candy_lexer_t *self, char ch) {
-  candy_io_write(self->io, ch);
+  assert(self->r - self->w >= CANDY_LEXER_EXTRA_SIZE);
+  _get_buff_data(self)[self->w++] = ch;
 }
 
 /**
@@ -168,11 +198,11 @@ static inline char _get_hexch(candy_lexer_t *self) {
 static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   bool is_float = false;
   _save(self);
-  if (*_buffer(self) == '0' && _check_dual(self, "xX")) {
+  if (*_get_buff_data(self) == '0' && _check_dual(self, "xX")) {
     while (is_hex(_view(self, 0)))
       _save(self);
     _save_char(self, '\0');
-    candy_integer_t i = (candy_integer_t)strtol(_buffer(self), NULL, 16);
+    candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 16);
     candy_wrap_init_integer(wrap, &i, 1);
     return CANDY_TK_CST_INTEGER;
   }
@@ -196,12 +226,12 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
       default:
         _save_char(self, '\0');
         if (is_float) {
-          candy_float_t f = (candy_float_t)strtod(_buffer(self), NULL);
+          candy_float_t f = (candy_float_t)strtod(_get_buff_data(self), NULL);
           candy_wrap_init_float(wrap, &f, 1);
           return CANDY_TK_CST_FLOAT;
         }
         else {
-          candy_integer_t i = (candy_integer_t)strtol(_buffer(self), NULL, 10);
+          candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 10);
           candy_wrap_init_integer(wrap, &i, 1);
           return CANDY_TK_CST_INTEGER;
         }
@@ -220,7 +250,6 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   * @retval string length, not include '\0'
   */
 static int _get_string(candy_lexer_t *self, const bool multiline) {
-  int head = self->io->w;
   const char del = _view(self, 0);
   /* skip first " or ' */
   _skip(self, multiline ? 3 : 1);
@@ -270,7 +299,7 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
   /* skip last " or ' */
   lex_assert(_view(self, 0) == del && (multiline ? (_view(self, 1) == del && _view(self, 2) == del) : (true)), "unexpected end of string");
   _skip(self, multiline ? 3 : 1);
-  return self->io->w - head - 1;
+  return self->w - 1;
 }
 
 static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *wrap) {
@@ -282,7 +311,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
   _save_char(self, '\0');
   /* check keyword */
   for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
-    if (strcmp(_buffer(self), _keywords[i].keyword) == 0)
+    if (strcmp(_get_buff_data(self), _keywords[i].keyword) == 0)
       return _keywords[i].token;
   }
   // wrap->hash = djb_hash(self->buffer->data);
@@ -290,7 +319,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
 }
 
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
-  self->io->w = 0;
+  self->w = 0;
   while (1) {
     switch (_view(self, 0)) {
       case '\0':
@@ -325,7 +354,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       /* is string */
       case '"': case '\'':
-        candy_wrap_init_string(wrap, _buffer(self), _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
+        candy_wrap_init_string(wrap, _get_buff_data(self), _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
         return CANDY_TK_CST_STRING;
       case '0' ... '9':
         return _get_number(self, wrap);
@@ -340,14 +369,19 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   return tk_dual_ope(_read(self), _read(self));
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_io_t *io) {
+int candy_lexer_init(candy_lexer_t *self, candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
   memset(self, 0, sizeof(struct candy_lexer));
-  self->io = io;
 #ifdef CANDY_DEBUG_MODE
   self->dbg.line = 1;
   self->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
   self->lookahead.token = CANDY_TK_EOS;
+  self->buffer = buffer;
+  self->reader = reader;
+  self->ud = ud;
+  self->r = CANDY_LEXER_EXTRA_SIZE;
+  self->w = 0;
+  self->reader(_get_buff_data(self) + CANDY_LEXER_EXTRA_SIZE, _get_buff_size(self) - CANDY_LEXER_EXTRA_SIZE, self->ud);
   return 0;
 }
 
