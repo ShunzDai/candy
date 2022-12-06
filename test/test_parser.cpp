@@ -16,7 +16,6 @@
 #include "gtest/gtest.h"
 #include "test_common.h"
 #include "src/candy_parser.h"
-#include "src/candy_io.h"
 
 #define PARSER_TEST(_name, _exp) TEST(parser, _name) {test_body(_exp);}
 
@@ -24,8 +23,6 @@ static void test_body(const char exp[]) {
   info_str info = {exp, (int)strlen(exp) + 1, 0};
   candy_buffer_t buffer;
   candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
-  candy_io_t io;
-  candy_io_set_input(&io, &buffer, _string_reader, &info);
   candy_parse(&buffer, _string_reader, &info);
   candy_buffer_deinit(&buffer);
 }

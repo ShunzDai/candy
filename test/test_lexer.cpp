@@ -28,13 +28,11 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   int status = 0;
   candy_buffer_t buffer;
   candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
-  candy_io_t io;
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_io_set_input(&io, &buffer, _string_reader, &info);
   candy_lexer_t lex;
-  candy_lexer_init(&lex, &io);
+  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  candy_lexer_init(&lex, &buffer, _string_reader, &info);
   candy_wrap_t wrap;
-  if((status = setjmp(io.buffer->rollback)))
+  if((status = setjmp(lex.buffer->rollback)))
     goto exit;
   EXPECT_EQ(candy_lexer_next(&lex, &wrap), token);
   EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
@@ -45,7 +43,6 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
       char *str = candy_wrap_get_string(&wrap, &size);
       EXPECT_EQ(memcmp(str, val.data(), size), 0);
       EXPECT_EQ(size, val.size());
-      candy_wrap_deinit(&wrap);
     }
     else if constexpr (
       std::is_same<decltype(val),   int8_t>::value ||
@@ -70,6 +67,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
     }
   }
   exit:
+  candy_wrap_deinit(&wrap);
   candy_lexer_deinit(&lex);
   candy_buffer_deinit(&buffer);
   EXPECT_EQ(status, 0);
@@ -182,13 +180,11 @@ TEST(lexer, file_system) {
   fseek(f, 0, SEEK_SET);
   candy_buffer_t buffer;
   candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
-  candy_io_t io;
-  info_file info = {f, size};
-  candy_io_set_input(&io, &buffer, _file_reader, &info);
   candy_lexer_t lex;
-  candy_lexer_init(&lex, &io);
+  info_file info = {f, size};
+  candy_lexer_init(&lex, &buffer, _file_reader, &info);
   candy_wrap_t wrap;
-  if((status = setjmp(io.buffer->rollback)))
+  if((status = setjmp(lex.buffer->rollback)))
     goto exit;
   EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_while);
   EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_True);
