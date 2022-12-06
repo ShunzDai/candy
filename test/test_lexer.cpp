@@ -34,7 +34,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   candy_lexer_t lex;
   candy_lexer_init(&lex, &io);
   candy_wrap_t wrap;
-  if((status = setjmp(io.rollback)))
+  if((status = setjmp(io.buffer->rollback)))
     goto exit;
   EXPECT_EQ(candy_lexer_next(&lex, &wrap), token);
   EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
@@ -188,7 +188,7 @@ TEST(lexer, file_system) {
   candy_lexer_t lex;
   candy_lexer_init(&lex, &io);
   candy_wrap_t wrap;
-  if((status = setjmp(io.rollback)))
+  if((status = setjmp(io.buffer->rollback)))
     goto exit;
   EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_while);
   EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_True);
