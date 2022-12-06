@@ -19,15 +19,20 @@
 extern "C"{
 #endif /* __cplusplus */
 
+#include "src/candy_types.h"
 #include <stdlib.h>
 #include <string.h>
+#include <setjmp.h>
 
 struct candy_buffer {
   int size;
   void *data;
+  jmp_buf rollback;
 };
 
 typedef struct candy_buffer candy_buffer_t;
+
+void candy_assert(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
 
 static inline int candy_buffer_get_size(candy_buffer_t *self) {
   return self->size;
