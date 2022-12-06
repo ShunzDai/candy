@@ -21,21 +21,17 @@ extern "C"{
 
 #include "src/candy_buffer.h"
 #include "src/candy_types.h"
-#include <setjmp.h>
 
 /** @ref doc/io_memory_model.drawio.png */
 struct candy_io {
   int w;
   int r;
-  jmp_buf rollback;
   candy_buffer_t *buffer;
   candy_reader_t reader;
   void *ud;
 };
 
 typedef struct candy_io candy_io_t;
-
-void candy_io_assert(candy_io_t *self, const char format[], ...) CANDY_NORETURN;
 
 char candy_io_view(candy_io_t *self, int idx);
 char candy_io_read(candy_io_t *self);

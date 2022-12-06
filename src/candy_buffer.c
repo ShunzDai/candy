@@ -13,21 +13,14 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_PLATFORM_H
-#define CANDY_SRC_PLATFORM_H
-#ifdef __cplusplus
-extern "C"{
-#endif /* __cplusplus */
+#include "src/candy_buffer.h"
+#include <stdio.h>
+#include <stdarg.h>
 
-#include <stdint.h>
-
-#ifndef candy_assert
-#define candy_assert(condition, ...) ((condition) ? ((void)0U) : candy_platform_assert(__FILE__, __LINE__, __FUNCTION__, #condition " " __VA_ARGS__))
-#endif /* candy_assert */
-
-void candy_platform_assert(const char *file, int line, const char *func, char *format, ...);
-
-#ifdef __cplusplus
+void candy_assert(candy_buffer_t *self, const char format[], ...) {
+  va_list ap;
+  va_start(ap, format);
+  vsnprintf(self->data, self->size, format, ap);
+  va_end(ap);
+  longjmp(self->rollback, 1);
 }
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_PLATFORM_H */

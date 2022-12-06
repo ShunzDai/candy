@@ -15,8 +15,6 @@
   */
 #include "src/candy_io.h"
 #include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
 
 static inline int _get_buff_size(candy_io_t *self) {
   return candy_buffer_get_size(self->buffer);
@@ -24,14 +22,6 @@ static inline int _get_buff_size(candy_io_t *self) {
 
 static inline char *_get_buff_data(candy_io_t *self) {
   return (char *)candy_buffer_get_data(self->buffer);
-}
-
-void candy_io_assert(candy_io_t *self, const char format[], ...) {
-  va_list ap;
-  va_start(ap, format);
-  vsnprintf(_get_buff_data(self), _get_buff_size(self), format, ap);
-  va_end(ap);
-  longjmp(self->rollback, 1);
 }
 
 char candy_io_view(candy_io_t *self, int idx) {

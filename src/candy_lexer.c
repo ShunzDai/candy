@@ -17,7 +17,7 @@
 #include "src/candy_lib.h"
 #include <stdlib.h>
 
-#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_io_assert((self)->io, "lexical error: " _format, ##__VA_ARGS__))
+#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_assert((self)->io->buffer, "lexical error: " _format, ##__VA_ARGS__))
 
 static const struct {
   candy_tokens_t token;
