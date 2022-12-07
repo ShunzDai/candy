@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_assert((self)->buffer, "lexical error: " _format, ##__VA_ARGS__))
+#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_throw((self)->buffer, "lexical error: " _format, ##__VA_ARGS__))
 
 static const struct {
   candy_tokens_t token;

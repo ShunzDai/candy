@@ -22,46 +22,22 @@ extern "C"{
 #include "src/candy_types.h"
 #include <stdlib.h>
 #include <string.h>
-#include <setjmp.h>
-
-struct candy_buffer {
-  int size;
-  void *data;
-  jmp_buf rollback;
-};
 
 typedef struct candy_buffer candy_buffer_t;
 
-void candy_assert(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
+int candy_buffer_get_size(candy_buffer_t *self);
 
-static inline int candy_buffer_get_size(candy_buffer_t *self) {
-  return self->size;
-}
+void *candy_buffer_get_data(candy_buffer_t *self);
 
-static inline void *candy_buffer_get_data(candy_buffer_t *self) {
-  return self->data;
-}
+void candy_buffer_expand(candy_buffer_t *self, int atomic, int size);
 
-static inline void candy_buffer_expand(candy_buffer_t *self, int atomic, int size) {
-  void *data = calloc(self->size + atomic, size);
-  memcpy(data, self->data, self->size * size);
-  free(self->data);
-  self->size += atomic;
-  self->data = data;
-}
+int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud);
 
-static inline int candy_buffer_init(candy_buffer_t *self, int atomic, int size) {
-  self->size = atomic;
-  self->data = calloc(atomic, size);
-  return 0;
-}
+void candy_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
 
-static inline int candy_buffer_deinit(candy_buffer_t *self) {
-  self->size = 0;
-  free(self->data);
-  self->data = NULL;
-  return 0;
-}
+candy_buffer_t *candy_buffer_create(int atomic, int size, bool use_jmp);
+
+int candy_buffer_delete(candy_buffer_t **self);
 
 #ifdef __cplusplus
 }
