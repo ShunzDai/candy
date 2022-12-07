@@ -23,19 +23,24 @@
 
 using namespace std;
 
+void try_func(void *ud) {
+  (*(std::function<void()> *)ud)();
+  delete (std::function<void()> *)ud;
+}
+
 template <typename ... supposed>
 static void tast_body(candy_tokens_t token, const char exp[], supposed ... value) {
   int status = 0;
-  candy_buffer_t buffer;
-  candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
+  candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
   candy_lexer_t lex;
   info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_lexer_init(&lex, &buffer, _string_reader, &info);
+  candy_lexer_init(&lex, buffer, _string_reader, &info);
   candy_wrap_t wrap;
-  if((status = setjmp(lex.buffer->rollback)))
+  if((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, token, &wrap]() {
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), token);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
+  }))) != 0)
     goto exit;
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), token);
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
   if constexpr(sizeof...(value)) {
     auto val = std::get<0>(std::make_tuple(value ...));
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
@@ -69,7 +74,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   exit:
   candy_wrap_deinit(&wrap);
   candy_lexer_deinit(&lex);
-  candy_buffer_deinit(&buffer);
+  candy_buffer_delete(&buffer);
   EXPECT_EQ(status, 0);
 }
 
@@ -178,26 +183,26 @@ TEST(lexer, file_system) {
   fseek(f, 0, SEEK_END);
   int size = (int)ftell(f);
   fseek(f, 0, SEEK_SET);
-  candy_buffer_t buffer;
-  candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
+  candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
   candy_lexer_t lex;
   info_file info = {f, size};
-  candy_lexer_init(&lex, &buffer, _file_reader, &info);
+  candy_lexer_init(&lex, buffer, _file_reader, &info);
   candy_wrap_t wrap;
-  if((status = setjmp(lex.buffer->rollback)))
+  if((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, &wrap]() {
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_while);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_True);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_COLON);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_LPAREN);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_CST_STRING);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_RPAREN);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
+  }))) != 0)
     goto exit;
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_while);
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_True);
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_COLON);
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_LPAREN);
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_CST_STRING);
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_RPAREN);
-  EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
   exit:
   candy_wrap_deinit(&wrap);
   candy_lexer_deinit(&lex);
-  candy_buffer_deinit(&buffer);
+  candy_buffer_delete(&buffer);
   fclose(info.f);
   EXPECT_EQ(status, 0);
 }

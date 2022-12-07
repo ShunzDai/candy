@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <setjmp.h>
 
-#define par_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_assert((self)->lex.buffer, "syntax error: " _format, ##__VA_ARGS__))
+#define par_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_throw((self)->lex.buffer, "syntax error: " _format, ##__VA_ARGS__))
 
 struct ast_node {
   struct ast_node *l;
@@ -130,13 +130,16 @@ void candy_parser_print(candy_parser_t *self) {
   _ast_node_print(self->root);
 }
 
+void func(void *ud) {
+  ((candy_parser_t *)ud)->root = _expression((candy_parser_t *)ud);
+}
+
 void *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
   candy_parser_t parser;
   memset(&parser, 0, sizeof(struct candy_parser));
   candy_lexer_init(&parser.lex, buffer, reader, ud);
-  if(setjmp(parser.lex.buffer->rollback))
+  if(candy_try_catch(buffer, func, &parser) != 0)
     goto exit;
-  parser.root = _expression(&parser);
   candy_lexer_deinit(&parser.lex);
   _ast_node_delete(&parser.root);
   return (void *)1;

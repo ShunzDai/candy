@@ -21,10 +21,9 @@
 
 static void test_body(const char exp[]) {
   info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_buffer_t buffer;
-  candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
-  candy_parse(&buffer, _string_reader, &info);
-  candy_buffer_deinit(&buffer);
+  candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
+  EXPECT_EQ(candy_parse(buffer, _string_reader, &info) == nullptr, false);
+  candy_buffer_delete(&buffer);
 }
 
 PARSER_TEST(exp_add_0, "1 + 2")
