@@ -22,12 +22,11 @@
 
 static void test_body(const char exp[]) {
   info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_buffer_t buffer;
-  candy_buffer_init(&buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
+  candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
   auto tick = os::tick_us();
-  candy_parse(&buffer, _string_reader, &info);
+  EXPECT_EQ(candy_parse(buffer, _string_reader, &info) == nullptr, false);
   printf("delta time = %d us\n", os::tick_us() - tick);
-  candy_buffer_deinit(&buffer);
+  candy_buffer_delete(&buffer);
 }
 
 PARSER_TEST(exp_add_0, "1 + 2")
