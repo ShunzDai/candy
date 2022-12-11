@@ -30,14 +30,14 @@ int candy_dofile(candy_state_t *self, const char name[]);
 
 /**
   * @brief  get user's data.
-  * @param  sta   candy state handle.
+  * @param  self  candy state handle.
   * @return user's data.
   */
 void *candy_ud(candy_state_t *self);
 
 /**
   * @brief  register c-function entry.
-  * @param  sta   candy state handle.
+  * @param  self  candy state handle.
   * @param  entry if it is null, the low layer will use candy_regist_t::cfunc as a callback,
   *               otherwise the low layer will use candy_regist_t::cfunc as an argument to
   *               entry, users can customize the call method in entry, such as casting
@@ -48,7 +48,7 @@ void candy_regist_entry(candy_state_t *self, candy_cfunc_t entry);
 
 /**
   * @brief  register c-function into a object.
-  * @param  sta   candy state handle.
+  * @param  self  candy state handle.
   * @param  obj   name of the object. if it does not exist, create it; otherwise use it.
   * @param  list  the list of c-functions to be registered in object.
   * @param  size  size of the list.
