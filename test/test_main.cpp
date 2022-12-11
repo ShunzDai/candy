@@ -14,13 +14,9 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include <stdlib.h>
-#include <mcheck.h>
 
+/* valgrind --tool=memcheck --leak-check=full ./test/test */
 int main(int argc, char *argv[]) {
-  setenv("MALLOC_TRACE", "output", 1);
-  mtrace();
-
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
