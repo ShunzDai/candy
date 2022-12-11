@@ -31,6 +31,11 @@ union candy_wrap {
   struct {
     uint32_t      : 4;
     uint32_t size : 28;
+    long          : sizeof(long);
+  } n;
+  struct {
+    uint32_t      : 4;
+    uint32_t size : 28;
     union {
       candy_integer_t sval[sizeof(long) / sizeof(candy_integer_t)];
       candy_integer_t *lval;
@@ -106,6 +111,10 @@ static inline char *candy_wrap_get_string(candy_wrap_t *self, int *size) {
   if (size)
     *size = self->s.size;
   return candy_wrap_check_lstring(self) ? self->s.lval : self->s.sval;
+}
+
+static inline void candy_wrap_init_none(candy_wrap_t *self) {
+  memset(self, 0, sizeof(union candy_wrap));
 }
 
 static inline void candy_wrap_init_integer(candy_wrap_t *self, candy_integer_t *val, int size) {

@@ -36,6 +36,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   info_str info = {exp, (int)strlen(exp) + 1, 0};
   candy_lexer_init(&lex, buffer, _string_reader, &info);
   candy_wrap_t wrap;
+  candy_wrap_init_none(&wrap);
   if((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, token, &wrap]() {
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), token);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
@@ -188,6 +189,7 @@ TEST(lexer, file_system) {
   info_file info = {f, size};
   candy_lexer_init(&lex, buffer, _file_reader, &info);
   candy_wrap_t wrap;
+  candy_wrap_init_none(&wrap);
   if((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, &wrap]() {
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_while);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_True);

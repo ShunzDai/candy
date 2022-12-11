@@ -3,8 +3,6 @@
 #include "src/candy_lib.h"
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <mcheck.h>
 
 void cfunc1() {
   printf("into %s\n", __FUNCTION__);
@@ -30,8 +28,6 @@ std::tuple<int, float, std::string> cfunc5(int arg1, float arg2, std::string arg
 }
 
 int main(int argc, char *argv[]) {
-  setenv("MALLOC_TRACE", "output", 1);
-  mtrace();
   candy cdy;
   cdy.regist("__global__",
     std::pair{"cfunc1", cfunc1},
