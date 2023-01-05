@@ -53,7 +53,7 @@ struct candy_vm {
 
 candy_vm_t *candy_vm_create(candy_state_t *sta) {
   candy_vm_t *self = (candy_vm_t *)malloc(sizeof(candy_vm_t));
-  self->stack = candy_stack_create(4);
+  self->stack = candy_stack_create();
   self->entry = NULL;
   self->sta = sta;
   return self;
