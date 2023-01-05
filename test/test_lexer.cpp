@@ -88,47 +88,47 @@ TEST_LEXER(comment_2, CANDY_TK_NONE,
   "# hi\n"
 )
 
-TEST_LEXER(string_0, CANDY_TK_CST_STRING,
+TEST_LEXER(string_0, CANDY_TK_STRING,
   "\"\"",
   ""sv
 )
 
-TEST_LEXER(string_1, CANDY_TK_CST_STRING,
+TEST_LEXER(string_1, CANDY_TK_STRING,
   "\"hello world\"",
   "hello world"sv
 )
 
-TEST_LEXER(string_2, CANDY_TK_CST_STRING,
+TEST_LEXER(string_2, CANDY_TK_STRING,
   "\"\\\\\"",/* "\\" */
   "\\"sv
 )
 
-TEST_LEXER(string_3, CANDY_TK_CST_STRING,
+TEST_LEXER(string_3, CANDY_TK_STRING,
   "\"\\\"\"",/* "\"" */
   "\""sv
 )
 
-TEST_LEXER(string_4, CANDY_TK_CST_STRING,
+TEST_LEXER(string_4, CANDY_TK_STRING,
   "\"\\hello world\"",/* "\hello world" */
   "\\hello world"sv
 )
 
-TEST_LEXER(string_hex, CANDY_TK_CST_STRING,
+TEST_LEXER(string_hex, CANDY_TK_STRING,
   "\"\\x68\\x65\\x6C\\x6C\\x6F\\x20\\x77\\x6F\\x72\\x6C\\x64\"",/* "\x68\x65\x6C\x6C\x6F\x20\x77\x6F\x72\x6C\x64" */
   "hello world"sv
 )
 
-TEST_LEXER(string_oct, CANDY_TK_CST_STRING,
+TEST_LEXER(string_oct, CANDY_TK_STRING,
   "\"\\150\\145\\154\\154\\157\\40\\167\\157\\162\\154\\144\\0\"",/* "\150\145\154\154\157\40\167\157\162\154\144\0" */
   "hello world\0"sv
 )
 
-TEST_LEXER(string_multiline_0, CANDY_TK_CST_STRING,
+TEST_LEXER(string_multiline_0, CANDY_TK_STRING,
   "''''''",
   ""sv
 )
 
-TEST_LEXER(string_multiline_1, CANDY_TK_CST_STRING,
+TEST_LEXER(string_multiline_1, CANDY_TK_STRING,
   "'''\n"
   "hello\n"
   "world\n"
@@ -136,47 +136,47 @@ TEST_LEXER(string_multiline_1, CANDY_TK_CST_STRING,
   "\nhello\nworld\n"sv
 )
 
-TEST_LEXER(integer, CANDY_TK_CST_INTEGER,       "114514",       114514)
-TEST_LEXER(hex,     CANDY_TK_CST_INTEGER,   "0xAbCd1234",   0xAbCd1234)
-TEST_LEXER(float,   CANDY_TK_CST_FLOAT  ,    "3.1415926",    3.1415926)
-TEST_LEXER(sci_0,   CANDY_TK_CST_FLOAT  , "0.31415926e1", 0.31415926e1)
-TEST_LEXER(sci_1,   CANDY_TK_CST_FLOAT  , "314.15926e-2", 314.15926e-2)
+TEST_LEXER(integer, CANDY_TK_INTEGER,       "114514",       114514)
+TEST_LEXER(hex,     CANDY_TK_INTEGER,   "0xAbCd1234",   0xAbCd1234)
+TEST_LEXER(float,   CANDY_TK_FLOAT  ,    "3.1415926",    3.1415926)
+TEST_LEXER(sci_0,   CANDY_TK_FLOAT  , "0.31415926e1", 0.31415926e1)
+TEST_LEXER(sci_1,   CANDY_TK_FLOAT  , "314.15926e-2", 314.15926e-2)
 
 #define CANDY_KW_TEST
 #include "src/candy_keyword.list"
 
-TEST_LEXER(CANDY_TK_DEL_LPAREN , CANDY_TK_DEL_LPAREN ,  "(")
-TEST_LEXER(CANDY_TK_DEL_RPAREN , CANDY_TK_DEL_RPAREN ,  ")")
-TEST_LEXER(CANDY_TK_DEL_COMMA  , CANDY_TK_DEL_COMMA  ,  ",")
-TEST_LEXER(CANDY_TK_DEL_DOT    , CANDY_TK_DEL_DOT    ,  ".")
-TEST_LEXER(CANDY_TK_DEL_COLON  , CANDY_TK_DEL_COLON  ,  ":")
-TEST_LEXER(CANDY_TK_DEL_LBRACE , CANDY_TK_DEL_LBRACE ,  "[")
-TEST_LEXER(CANDY_TK_DEL_RBRACE , CANDY_TK_DEL_RBRACE ,  "]")
-TEST_LEXER(CANDY_TK_OPE_BITAND , CANDY_TK_OPE_BITAND ,  "&")
-TEST_LEXER(CANDY_TK_OPE_BITOR  , CANDY_TK_OPE_BITOR  ,  "|")
-TEST_LEXER(CANDY_TK_OPE_BITNOT , CANDY_TK_OPE_BITNOT ,  "~")
-TEST_LEXER(CANDY_TK_OPE_BITXOR , CANDY_TK_OPE_BITXOR ,  "^")
-TEST_LEXER(CANDY_TK_OPE_MOD    , CANDY_TK_OPE_MOD    ,  "%")
-TEST_LEXER(CANDY_TK_OPE_ADD    , CANDY_TK_OPE_ADD    ,  "+")
-TEST_LEXER(CANDY_TK_OPE_SUB    , CANDY_TK_OPE_SUB    ,  "-")
-TEST_LEXER(CANDY_TK_OPE_MUL    , CANDY_TK_OPE_MUL    ,  "*")
-TEST_LEXER(CANDY_TK_OPE_DIV    , CANDY_TK_OPE_DIV    ,  "/")
-TEST_LEXER(CANDY_TK_OPE_ASSIGN , CANDY_TK_OPE_ASSIGN ,  "=")
-TEST_LEXER(CANDY_TK_OPE_GREATER, CANDY_TK_OPE_GREATER,  ">")
-TEST_LEXER(CANDY_TK_OPE_LESS   , CANDY_TK_OPE_LESS   ,  "<")
-TEST_LEXER(CANDY_TK_OPE_EXP    , CANDY_TK_OPE_EXP    , "**")
-TEST_LEXER(CANDY_TK_OPE_FLRDIV , CANDY_TK_OPE_FLRDIV , "//")
-TEST_LEXER(CANDY_TK_OPE_MODASS , CANDY_TK_OPE_MODASS , "%=")
-TEST_LEXER(CANDY_TK_OPE_NEQUAL , CANDY_TK_OPE_NEQUAL , "!=")
-TEST_LEXER(CANDY_TK_OPE_ADDASS , CANDY_TK_OPE_ADDASS , "+=")
-TEST_LEXER(CANDY_TK_OPE_SUBASS , CANDY_TK_OPE_SUBASS , "-=")
-TEST_LEXER(CANDY_TK_OPE_MULASS , CANDY_TK_OPE_MULASS , "*=")
-TEST_LEXER(CANDY_TK_OPE_DIVASS , CANDY_TK_OPE_DIVASS , "/=")
-TEST_LEXER(CANDY_TK_OPE_EQUAL  , CANDY_TK_OPE_EQUAL  , "==")
-TEST_LEXER(CANDY_TK_OPE_GEQUAL , CANDY_TK_OPE_GEQUAL , ">=")
-TEST_LEXER(CANDY_TK_OPE_LEQUAL , CANDY_TK_OPE_LEQUAL , "<=")
-TEST_LEXER(CANDY_TK_OPE_RSHIFT , CANDY_TK_OPE_RSHIFT , ">>")
-TEST_LEXER(CANDY_TK_OPE_LSHIFT , CANDY_TK_OPE_LSHIFT , "<<")
+TEST_LEXER(CANDY_TK_LPAREN , CANDY_TK_LPAREN ,  "(")
+TEST_LEXER(CANDY_TK_RPAREN , CANDY_TK_RPAREN ,  ")")
+TEST_LEXER(CANDY_TK_COMMA  , CANDY_TK_COMMA  ,  ",")
+TEST_LEXER(CANDY_TK_DOT    , CANDY_TK_DOT    ,  ".")
+TEST_LEXER(CANDY_TK_COLON  , CANDY_TK_COLON  ,  ":")
+TEST_LEXER(CANDY_TK_LBRACE , CANDY_TK_LBRACE ,  "[")
+TEST_LEXER(CANDY_TK_RBRACE , CANDY_TK_RBRACE ,  "]")
+TEST_LEXER(CANDY_TK_BITAND , CANDY_TK_BITAND ,  "&")
+TEST_LEXER(CANDY_TK_BITOR  , CANDY_TK_BITOR  ,  "|")
+TEST_LEXER(CANDY_TK_BITNOT , CANDY_TK_BITNOT ,  "~")
+TEST_LEXER(CANDY_TK_BITXOR , CANDY_TK_BITXOR ,  "^")
+TEST_LEXER(CANDY_TK_MOD    , CANDY_TK_MOD    ,  "%")
+TEST_LEXER(CANDY_TK_ADD    , CANDY_TK_ADD    ,  "+")
+TEST_LEXER(CANDY_TK_SUB    , CANDY_TK_SUB    ,  "-")
+TEST_LEXER(CANDY_TK_MUL    , CANDY_TK_MUL    ,  "*")
+TEST_LEXER(CANDY_TK_DIV    , CANDY_TK_DIV    ,  "/")
+TEST_LEXER(CANDY_TK_ASSIGN , CANDY_TK_ASSIGN ,  "=")
+TEST_LEXER(CANDY_TK_GREATER, CANDY_TK_GREATER,  ">")
+TEST_LEXER(CANDY_TK_LESS   , CANDY_TK_LESS   ,  "<")
+TEST_LEXER(CANDY_TK_EXP    , CANDY_TK_EXP    , "**")
+TEST_LEXER(CANDY_TK_FLRDIV , CANDY_TK_FLRDIV , "//")
+TEST_LEXER(CANDY_TK_MODASS , CANDY_TK_MODASS , "%=")
+TEST_LEXER(CANDY_TK_NEQUAL , CANDY_TK_NEQUAL , "!=")
+TEST_LEXER(CANDY_TK_ADDASS , CANDY_TK_ADDASS , "+=")
+TEST_LEXER(CANDY_TK_SUBASS , CANDY_TK_SUBASS , "-=")
+TEST_LEXER(CANDY_TK_MULASS , CANDY_TK_MULASS , "*=")
+TEST_LEXER(CANDY_TK_DIVASS , CANDY_TK_DIVASS , "/=")
+TEST_LEXER(CANDY_TK_EQUAL  , CANDY_TK_EQUAL  , "==")
+TEST_LEXER(CANDY_TK_GEQUAL , CANDY_TK_GEQUAL , ">=")
+TEST_LEXER(CANDY_TK_LEQUAL , CANDY_TK_LEQUAL , "<=")
+TEST_LEXER(CANDY_TK_RSHIFT , CANDY_TK_RSHIFT , ">>")
+TEST_LEXER(CANDY_TK_LSHIFT , CANDY_TK_LSHIFT , "<<")
 
 TEST(lexer, file_system) {
   int status = 0;
@@ -191,18 +191,34 @@ TEST(lexer, file_system) {
   candy_wrap_t wrap;
   candy_wrap_init_none(&wrap);
   if((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, &wrap]() {
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_while);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_KW_True);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_COLON);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_def);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_LPAREN);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_CST_STRING);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_DEL_RPAREN);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_LPAREN);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_RPAREN);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_COLON);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_LPAREN);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), '+');
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_RPAREN);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_return);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_INTEGER);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_if);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), dual_ope('=', '='));
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
+	candy_wrap_deinit(&wrap);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_COLON);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_LPAREN);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_RPAREN);
+	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
   }))) != 0)
     goto exit;
   exit:
-  candy_wrap_deinit(&wrap);
   candy_lexer_deinit(&lex);
   candy_buffer_delete(&buffer);
   fclose(info.f);

@@ -23,50 +23,50 @@ extern "C"{
 #include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
-#define tk_dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
+#define dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
 typedef enum candy_tokens {
   CANDY_TK_NONE = '\x00',
   CANDY_TK_EOF,
   CANDY_TK_EOS,
-  CANDY_TK_CST_STRING,
-  CANDY_TK_CST_INTEGER,
-  CANDY_TK_CST_FLOAT,
+  CANDY_TK_STRING,
+  CANDY_TK_INTEGER,
+  CANDY_TK_FLOAT,
   CANDY_TK_IDENT,
   #define CANDY_KW_ENUM
   #include "src/candy_keyword.list"
-  CANDY_TK_DEL_LPAREN   =                   '(', /* 0x28 (  */
-  CANDY_TK_DEL_RPAREN   =                   ')', /* 0x29 )  */
-  CANDY_TK_DEL_COMMA    =                   ',', /* 0x2C ,  */
-  CANDY_TK_DEL_DOT      =                   '.', /* 0x2E .  */
-  CANDY_TK_DEL_COLON    =                   ':', /* 0x3A :  */
-  CANDY_TK_DEL_LBRACE   =                   '[', /* 0x5B [  */
-  CANDY_TK_DEL_RBRACE   =                   ']', /* 0x5D ]  */
-  CANDY_TK_OPE_BITAND   =                   '&', /* 0x26 &  */
-  CANDY_TK_OPE_BITOR    =                   '|', /* 0x7C |  */
-  CANDY_TK_OPE_BITNOT   =                   '~', /* 0x7E ~  */
-  CANDY_TK_OPE_BITXOR   =                   '^', /* 0x5E ^  */
-  CANDY_TK_OPE_MOD      =                   '%', /* 0x25 %  */
-  CANDY_TK_OPE_ADD      =                   '+', /* 0x2B +  */
-  CANDY_TK_OPE_SUB      =                   '-', /* 0x2D -  */
-  CANDY_TK_OPE_MUL      =                   '*', /* 0x2A *  */
-  CANDY_TK_OPE_DIV      =                   '/', /* 0x2F /  */
-  CANDY_TK_OPE_ASSIGN   =                   '=', /* 0x3D =  */
-  CANDY_TK_OPE_GREATER  =                   '>', /* 0x3E >  */
-  CANDY_TK_OPE_LESS     =                   '<', /* 0x3C <  */
-  CANDY_TK_OPE_EXP      = tk_dual_ope('*', '*'), /* 0xEA ** */
-  CANDY_TK_OPE_FLRDIV   = tk_dual_ope('/', '/'), /* 0xA9 // */
-  CANDY_TK_OPE_MODASS   = tk_dual_ope('%', '='), /* 0xD9 %= */
-  CANDY_TK_OPE_NEQUAL   = tk_dual_ope('!', '='), /* 0xE4 != */
-  CANDY_TK_OPE_ADDASS   = tk_dual_ope('+', '='), /* 0xC9 += */
-  CANDY_TK_OPE_SUBASS   = tk_dual_ope('-', '='), /* 0xC3 -= */
-  CANDY_TK_OPE_MULASS   = tk_dual_ope('*', '='), /* 0x8C *= */
-  CANDY_TK_OPE_DIVASS   = tk_dual_ope('/', '='), /* 0xBE /= */
-  CANDY_TK_OPE_EQUAL    = tk_dual_ope('=', '='), /* 0x97 == */
-  CANDY_TK_OPE_GEQUAL   = tk_dual_ope('>', '='), /* 0xD4 >= */
-  CANDY_TK_OPE_LEQUAL   = tk_dual_ope('<', '='), /* 0xDA <= */
-  CANDY_TK_OPE_RSHIFT   = tk_dual_ope('>', '>'), /* 0x93 >> */
-  CANDY_TK_OPE_LSHIFT   = tk_dual_ope('<', '<'), /* 0x9E << */
+  CANDY_TK_LPAREN   =                '(', /* 0x28 (  */
+  CANDY_TK_RPAREN   =                ')', /* 0x29 )  */
+  CANDY_TK_COMMA    =                ',', /* 0x2C ,  */
+  CANDY_TK_DOT      =                '.', /* 0x2E .  */
+  CANDY_TK_COLON    =                ':', /* 0x3A :  */
+  CANDY_TK_LBRACE   =                '[', /* 0x5B [  */
+  CANDY_TK_RBRACE   =                ']', /* 0x5D ]  */
+  CANDY_TK_BITAND   =                '&', /* 0x26 &  */
+  CANDY_TK_BITOR    =                '|', /* 0x7C |  */
+  CANDY_TK_BITNOT   =                '~', /* 0x7E ~  */
+  CANDY_TK_BITXOR   =                '^', /* 0x5E ^  */
+  CANDY_TK_MOD      =                '%', /* 0x25 %  */
+  CANDY_TK_ADD      =                '+', /* 0x2B +  */
+  CANDY_TK_SUB      =                '-', /* 0x2D -  */
+  CANDY_TK_MUL      =                '*', /* 0x2A *  */
+  CANDY_TK_DIV      =                '/', /* 0x2F /  */
+  CANDY_TK_ASSIGN   =                '=', /* 0x3D =  */
+  CANDY_TK_GREATER  =                '>', /* 0x3E >  */
+  CANDY_TK_LESS     =                '<', /* 0x3C <  */
+  CANDY_TK_EXP      = dual_ope('*', '*'), /* 0xEA ** */
+  CANDY_TK_FLRDIV   = dual_ope('/', '/'), /* 0xA9 // */
+  CANDY_TK_MODASS   = dual_ope('%', '='), /* 0xD9 %= */
+  CANDY_TK_NEQUAL   = dual_ope('!', '='), /* 0xE4 != */
+  CANDY_TK_ADDASS   = dual_ope('+', '='), /* 0xC9 += */
+  CANDY_TK_SUBASS   = dual_ope('-', '='), /* 0xC3 -= */
+  CANDY_TK_MULASS   = dual_ope('*', '='), /* 0x8C *= */
+  CANDY_TK_DIVASS   = dual_ope('/', '='), /* 0xBE /= */
+  CANDY_TK_EQUAL    = dual_ope('=', '='), /* 0x97 == */
+  CANDY_TK_GEQUAL   = dual_ope('>', '='), /* 0xD4 >= */
+  CANDY_TK_LEQUAL   = dual_ope('<', '='), /* 0xDA <= */
+  CANDY_TK_RSHIFT   = dual_ope('>', '>'), /* 0x93 >> */
+  CANDY_TK_LSHIFT   = dual_ope('<', '<'), /* 0x9E << */
   CANDY_TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
@@ -82,7 +82,7 @@ struct candy_lexer {
     uint8_t type;
   } indent;
   struct {
-    uint8_t token;
+    candy_tokens_t token;
     candy_wrap_t wrap;
   } lookahead;
   int w;
