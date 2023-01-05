@@ -22,6 +22,7 @@ extern "C"{
 #include "candy_config.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h> /** @todo remove it */
 
 typedef int64_t candy_integer_t;
 typedef double candy_float_t;

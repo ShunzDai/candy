@@ -28,11 +28,13 @@ union candy_wrap {
     uint32_t type : 4;
     uint32_t      : 28;
   };
+  /* none */
   struct {
     uint32_t      : 4;
     uint32_t size : 28;
     long          : sizeof(long);
   } n;
+  /* integer */
   struct {
     uint32_t      : 4;
     uint32_t size : 28;
@@ -41,6 +43,7 @@ union candy_wrap {
       candy_integer_t *lval;
     };
   } i;
+  /* float */
   struct {
     uint32_t      : 4;
     uint32_t size : 28;
@@ -49,6 +52,7 @@ union candy_wrap {
       candy_float_t *lval;
     };
   } f;
+  /* boolean */
   struct {
     uint32_t      : 4;
     uint32_t size : 28;
@@ -57,6 +61,7 @@ union candy_wrap {
       candy_boolean_t *lval;
     };
   } b;
+  /* string */
   struct {
     uint32_t      : 4;
     uint32_t size : 28;
@@ -65,6 +70,12 @@ union candy_wrap {
       char *lval;
     };
   } s;
+  /* user's data */
+  struct {
+    uint32_t          : 4;
+    uint32_t callable : 1;
+    void *val;
+  } u;
 };
 
 typedef union candy_wrap candy_wrap_t;
