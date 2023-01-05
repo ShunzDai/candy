@@ -21,7 +21,7 @@
 struct candy_buffer {
   int size;
   void *data;
-  jmp_buf rollback;
+  jmp_buf env;
 };
 
 int candy_buffer_get_size(candy_buffer_t *self) {
@@ -33,7 +33,7 @@ void *candy_buffer_get_data(candy_buffer_t *self) {
 }
 
 int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud) {
-  if(setjmp(self->rollback))
+  if(setjmp(self->env))
     goto catch;
   cb(ud);
   return 0;
@@ -46,7 +46,7 @@ void candy_throw(candy_buffer_t *self, const char format[], ...) {
   va_start(ap, format);
   vsnprintf(self->data, self->size, format, ap);
   va_end(ap);
-  longjmp(self->rollback, 1);
+  longjmp(self->env, 1);
 }
 
 void candy_buffer_expand(candy_buffer_t *self, int atomic, int size) {
