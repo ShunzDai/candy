@@ -27,7 +27,7 @@ struct ast_node {
 };
 
 struct priv {
-  uint8_t token;
+  candy_tokens_t token;
   uint8_t wrap[sizeof(candy_wrap_t)];
 };
 
@@ -47,16 +47,16 @@ static void _ast_node_print(struct ast_node *node) {
     return;
   _ast_node_print(node->l);
   _ast_node_print(node->r);
-  // if (_private(node)->token == CANDY_TK_CST_INTEGER)
+  // if (_private(node)->token == CANDY_TK_INTEGER)
   //   printf("CONST\t%ld\ttoken\t%d\n", *(candy_integer_t *)_private(node)->wrap, _private(node)->token);
-  // else if (_private(node)->token == CANDY_TK_CST_FLOAT)
+  // else if (_private(node)->token == CANDY_TK_FLOAT)
   //   printf("CONST\t%.3f\ttoken\t%d\n", *(candy_float_t *)_private(node)->wrap, _private(node)->token);
   // else
   //   printf("%c\n", _private(node)->token);
 }
 
-static struct ast_node *_ast_node_create(uint8_t token, candy_wrap_t *wrap, struct ast_node *l, struct ast_node *r) {
-  struct ast_node *node = (struct ast_node *)malloc(sizeof(struct ast_node) + ((wrap == NULL) ? sizeof(uint8_t) : sizeof(struct priv)));
+static struct ast_node *_ast_node_create(candy_tokens_t token, candy_wrap_t *wrap, struct ast_node *l, struct ast_node *r) {
+  struct ast_node *node = (struct ast_node *)malloc(sizeof(struct ast_node) + ((wrap == NULL) ? sizeof(candy_tokens_t) : sizeof(struct priv)));
   node->l = l;
   node->r = r;
   _private(node)->token = token;
@@ -81,7 +81,7 @@ static struct ast_node *_factor(candy_parser_t *self) {
   struct ast_node *l = NULL;
   union candy_wrap wrap;
   int sign = 1;
-  uint8_t token = CANDY_TK_NONE;
+  candy_tokens_t token = CANDY_TK_NONE;
   begin:
   token = candy_lexer_next(&self->lex, &wrap);
   switch (token) {
@@ -89,12 +89,12 @@ static struct ast_node *_factor(candy_parser_t *self) {
       sign = -1;
     case '+':
       token = candy_lexer_lookahead(&self->lex);
-      par_assert(token == CANDY_TK_CST_INTEGER || token == CANDY_TK_CST_FLOAT, "unexpected token (0x%02X)", token);
+      par_assert(token == CANDY_TK_INTEGER || token == CANDY_TK_FLOAT, "unexpected token (0x%02X)", token);
       goto begin;
-    case CANDY_TK_CST_INTEGER:
+    case CANDY_TK_INTEGER:
       *candy_wrap_get_integer(&wrap, NULL) *= sign;
       break;
-    case CANDY_TK_CST_FLOAT:
+    case CANDY_TK_FLOAT:
       *candy_wrap_get_float(&wrap, NULL) *= sign;
       break;
     case '(':
@@ -110,7 +110,7 @@ static struct ast_node *_factor(candy_parser_t *self) {
 
 static struct ast_node *_term(candy_parser_t *self) {
   struct ast_node *l = _factor(self);
-  for (uint8_t token = candy_lexer_lookahead(&self->lex); token == '*' || token == '/'; token = candy_lexer_lookahead(&self->lex)) {
+  for (candy_tokens_t token = candy_lexer_lookahead(&self->lex); token == '*' || token == '/'; token = candy_lexer_lookahead(&self->lex)) {
     token = candy_lexer_next(&self->lex, NULL);
     l = _ast_node_create(token, NULL, l, _factor(self));
   }
@@ -119,7 +119,7 @@ static struct ast_node *_term(candy_parser_t *self) {
 
 static struct ast_node *_expression(candy_parser_t *self) {
   struct ast_node *l = _term(self);
-  for (uint8_t token = candy_lexer_lookahead(&self->lex); token == '+' || token == '-'; token = candy_lexer_lookahead(&self->lex)) {
+  for (candy_tokens_t token = candy_lexer_lookahead(&self->lex); token == '+' || token == '-'; token = candy_lexer_lookahead(&self->lex)) {
     token = candy_lexer_next(&self->lex, NULL);
     l = _ast_node_create(token, NULL, l, _term(self));
   }
