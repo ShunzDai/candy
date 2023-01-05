@@ -18,6 +18,8 @@
 
 CANDY_KW(False)
 CANDY_KW(True)
+CANDY_KW(def)
+CANDY_KW(return)
 CANDY_KW(and)
 CANDY_KW(or)
 CANDY_KW(not)
