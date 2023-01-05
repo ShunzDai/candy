@@ -97,20 +97,21 @@ static inline void _skip(candy_lexer_t *self, int n) {
   * @brief  store a byte
   * @param  self lexer
   * @param  ch   byte to be stored
-  * @retval none
+  * @retval target byte
   */
-static inline void _save_char(candy_lexer_t *self, char ch) {
+static inline char _save_char(candy_lexer_t *self, char ch) {
   assert(self->r - self->w >= CANDY_LEXER_EXTRA_SIZE);
   _get_buff_data(self)[self->w++] = ch;
+  return ch;
 }
 
 /**
   * @brief  store the next byte of the stream
   * @param  self lexer
-  * @retval none
+  * @retval target byte
   */
-static inline void _save(candy_lexer_t *self) {
-  _save_char(self, _read(self));
+static inline char _save(candy_lexer_t *self) {
+  return _save_char(self, _read(self));
 }
 
 /**
@@ -120,9 +121,9 @@ static inline void _save(candy_lexer_t *self) {
   * @param  str  the string that the user expects
   * @retval boolean
   */
-static inline bool _check_dual(candy_lexer_t *self, const char str[]) {
+static inline bool _check_dual(candy_lexer_t *self, const char str[], char (*cb)(candy_lexer_t *)) {
   if (_view(self, 0) == str[0] || _view(self, 0) == str[1]) {
-    _save(self);
+    cb(self);
     return true;
   }
   return false;
@@ -136,11 +137,12 @@ static inline bool _check_dual(candy_lexer_t *self, const char str[]) {
   *         \n\r
   *         first byte has been checked by up layer function
   * @param  self lexer
+  * @param  cb   char processing callback
   * @return none
   */
-static void _skip_newline(candy_lexer_t *self) {
-  _save(self);
-  _check_dual(self, "\r\n");
+static void _newline_handler(candy_lexer_t *self, char (*cb)(candy_lexer_t *)) {
+  cb(self);
+  _check_dual(self, "\r\n", cb);
 #ifdef CANDY_DEBUG_MODE
   self->dbg.line++;
   self->dbg.column = 0;
@@ -158,7 +160,7 @@ static int _skip_comment(candy_lexer_t *self) {
   while (1) {
     switch (_view(self, 0)) {
       case '\r': case '\n':
-        _skip_newline(self);
+        _newline_handler(self, _read);
       case '\0':
         return 0;
       default:
@@ -198,13 +200,13 @@ static inline char _get_hexch(candy_lexer_t *self) {
 static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   bool is_float = false;
   _save(self);
-  if (*_get_buff_data(self) == '0' && _check_dual(self, "xX")) {
+  if (*_get_buff_data(self) == '0' && _check_dual(self, "xX", _save)) {
     while (is_hex(_view(self, 0)))
       _save(self);
     _save_char(self, '\0');
     candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 16);
     candy_wrap_init_integer(wrap, &i, 1);
-    return CANDY_TK_CST_INTEGER;
+    return CANDY_TK_INTEGER;
   }
   while (1) {
     switch (_view(self, 0)) {
@@ -219,7 +221,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       case 'e': case 'E':
         _save(self);
-        _check_dual(self, "+-");
+        _check_dual(self, "+-", _save);
         lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
         is_float = true;
         break;
@@ -228,12 +230,12 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         if (is_float) {
           candy_float_t f = (candy_float_t)strtod(_get_buff_data(self), NULL);
           candy_wrap_init_float(wrap, &f, 1);
-          return CANDY_TK_CST_FLOAT;
+          return CANDY_TK_FLOAT;
         }
         else {
           candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 10);
           candy_wrap_init_integer(wrap, &i, 1);
-          return CANDY_TK_CST_INTEGER;
+          return CANDY_TK_INTEGER;
         }
     }
   }
@@ -263,7 +265,7 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
           lex_assert(false, "single line string can not contain line break");
           return -1;
         }
-        _skip_newline(self);
+        _newline_handler(self, _save);
         break;
       case '\\':
         _read(self);
@@ -325,13 +327,13 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       case '\0':
         return CANDY_TK_NONE;
       case '\r': case '\n':
-        _skip_newline(self);
+        _newline_handler(self, _read);
         break;
       case ' ': case '\f': case '\t': case '\v':
         _read(self);
         break;
       case '!':
-        lex_assert(_view(self, 1) == '=', "unexpected char '%c'", _view(self, 0));
+        lex_assert(_view(self, 1) == '=', "unexpected char '%c'", _view(self, 1));
         goto dual_ope;
       /* 'o', 'o=', 'oo' */
       case '>': case '<': case '*': case '/':
@@ -348,14 +350,14 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       case '(': case ')': case '[': case ']':
       case ',': case '.': case ':':
         return _read(self);
-      /* is singleline comment */
+      /* is comment */
       case '#':
         _skip_comment(self);
         break;
       /* is string */
       case '"': case '\'':
         candy_wrap_init_string(wrap, _get_buff_data(self), _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
-        return CANDY_TK_CST_STRING;
+        return CANDY_TK_STRING;
       case '0' ... '9':
         return _get_number(self, wrap);
       default:
@@ -365,8 +367,9 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
     }
   }
+  /* double-byte operator */
   dual_ope:
-  return tk_dual_ope(_read(self), _read(self));
+  return dual_ope(_read(self), _read(self));
 }
 
 int candy_lexer_init(candy_lexer_t *self, candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
