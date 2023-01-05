@@ -90,8 +90,10 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   struct info_file info = {f, size};
   if (candy_parse(self->buffer, _file_reader, &info) == NULL) {
     printf("%s\n", (const char *)candy_buffer_get_data(self->buffer));
+    fclose(f);
     return -1;
   }
+  fclose(f);
   return 0;
 }
 
