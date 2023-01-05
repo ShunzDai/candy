@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022 ShunzDai
+  * Copyright 2022-2023 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -20,5 +20,5 @@
 struct candy_object {
   candy_node_t next;
   uint32_t hash;
-  
+
 };
