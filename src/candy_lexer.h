@@ -27,12 +27,12 @@ extern "C"{
 
 typedef enum candy_tokens {
   CANDY_TK_NONE = '\x00',
-  CANDY_TK_EOF,
   CANDY_TK_EOS,
   CANDY_TK_STRING,
   CANDY_TK_INTEGER,
   CANDY_TK_FLOAT,
   CANDY_TK_IDENT,
+  CANDY_TK_VARARG,
   #define CANDY_KW_ENUM
   #include "src/candy_keyword.list"
   CANDY_TK_LPAREN   =                '(', /* 0x28 (  */
