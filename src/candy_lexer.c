@@ -60,9 +60,9 @@ static inline char _read(candy_lexer_t *self) {
   /** only @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes left to read */
   if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE == size) {
     /* calculates the start position of the read buffer */
-    int offset = self->w + CANDY_LEXER_LOOKAHEAD_SIZE + CANDY_LEXER_EXTRA_SIZE;
+    int offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
     /** if the number of bytes that can be filled is less than
-        @ref CANDY_IO_ATOMIC_BUFFER_SIZE bytes, the buffer will be enlarged */
+        @ref CANDY_ATOMIC_BUFFER_SIZE bytes, the buffer will be enlarged */
     if (size - offset < CANDY_ATOMIC_BUFFER_SIZE) {
       candy_buffer_expand(self->buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
       self->reader(_get_buff_data(self) + size, CANDY_ATOMIC_BUFFER_SIZE, self->ud);
@@ -83,50 +83,67 @@ static inline char _read(candy_lexer_t *self) {
 }
 
 /**
+  * @brief  skip the next byte of the stream
+  * @param  self lexer
+  * @retval none
+  */
+static inline void _skip(candy_lexer_t *self) {
+  _read(self);
+}
+
+/**
   * @brief  skipping n bytes of the stream
   * @param  self lexer
   * @param  n    count of bytes
   * @retval none
   */
-static inline void _skip(candy_lexer_t *self, int n) {
+static inline void _skipn(candy_lexer_t *self, int n) {
   while (n--)
-    _read(self);
+    _skip(self);
 }
 
 /**
   * @brief  store a byte
   * @param  self lexer
   * @param  ch   byte to be stored
-  * @retval target byte
+  * @retval none
   */
-static inline char _save_char(candy_lexer_t *self, char ch) {
+static inline void _save_char(candy_lexer_t *self, char ch) {
   assert(self->r - self->w >= CANDY_LEXER_EXTRA_SIZE);
   _get_buff_data(self)[self->w++] = ch;
-  return ch;
 }
 
 /**
   * @brief  store the next byte of the stream
   * @param  self lexer
-  * @retval target byte
+  * @retval none
   */
-static inline char _save(candy_lexer_t *self) {
-  return _save_char(self, _read(self));
+static inline void _save(candy_lexer_t *self) {
+  _save_char(self, _read(self));
+}
+
+/**
+  * @brief  check whether the next byte of the stream satisfies the check function,
+  *         if so, process this byte with the predicate
+  * @param  self  lexer
+  * @param  check check function
+  * @param  pred  predicate
+  * @retval boolean
+  */
+static inline bool _check_next(candy_lexer_t *self, bool (*check)(char), void (*pred)(candy_lexer_t *)) {
+  return check(_view(self, 0)) ? pred(self), true : false;
 }
 
 /**
   * @brief  checks whether the next byte of the stream is one of the two bytes the user expects,
-  *         if so, the byte will be stored
+  *         if so, process this byte with the predicate
   * @param  self lexer
   * @param  str  the string that the user expects
+  * @param  pred predicate
   * @retval boolean
   */
-static inline bool _check_dual(candy_lexer_t *self, const char str[], char (*cb)(candy_lexer_t *)) {
-  if (_view(self, 0) == str[0] || _view(self, 0) == str[1]) {
-    cb(self);
-    return true;
-  }
-  return false;
+static inline bool _check_dual(candy_lexer_t *self, const char str[], void (*pred)(candy_lexer_t *)) {
+  return (_view(self, 0) == str[0] || _view(self, 0) == str[1]) ? pred(self), true : false;
 }
 
 /**
@@ -137,12 +154,12 @@ static inline bool _check_dual(candy_lexer_t *self, const char str[], char (*cb)
   *         \n\r
   *         first byte has been checked by up layer function
   * @param  self lexer
-  * @param  cb   char processing callback
+  * @param  pred predicate
   * @return none
   */
-static void _newline_handler(candy_lexer_t *self, char (*cb)(candy_lexer_t *)) {
-  cb(self);
-  _check_dual(self, "\r\n", cb);
+static void _handle_newline(candy_lexer_t *self, void (*pred)(candy_lexer_t *)) {
+  pred(self);
+  _check_dual(self, "\r\n", pred);
 #ifdef CANDY_DEBUG_MODE
   self->dbg.line++;
   self->dbg.column = 0;
@@ -153,66 +170,62 @@ static void _newline_handler(candy_lexer_t *self, char (*cb)(candy_lexer_t *)) {
   * @brief  skip comment, like
   *         # hello world
   * @param  self lexer
-  * @retval reserved
+  * @retval none
   */
-static int _skip_comment(candy_lexer_t *self) {
-  _read(self);
+static void _skip_comment(candy_lexer_t *self) {
+  _skip(self);
   while (1) {
     switch (_view(self, 0)) {
       case '\r': case '\n':
-        _newline_handler(self, _read);
+        _handle_newline(self, _skip);
       case '\0':
-        return 0;
+        return;
       default:
-        _read(self);
+        _skip(self);
         break;
     }
   }
 }
 
 /**
-  * @brief  gets octal escape character, like
+  * @brief  save octal escape character, like
   *         "0"
   *         "01"
   *         "012"
   * @param  self lexer
-  * @retval octal character
+  * @retval none
   */
-static inline char _get_octch(candy_lexer_t *self) {
+static inline void _save_oct(candy_lexer_t *self) {
   char buff[] = {_view(self, 0), _view(self, 1), _view(self, 2), '\0'};
   char *end = NULL;
   char value = strtoul(buff, &end, 8);
-  _skip(self, end - buff);
-  return value;
+  _skipn(self, end - buff);
+  _save_char(self, value);
 }
 
 /**
-  * @brief  gets hexadecimal escape character, like
+  * @brief  save hexadecimal escape character, like
   *         "30"
   * @param  self lexer
-  * @retval hexadecimal character
+  * @retval none
   */
-static inline char _get_hexch(candy_lexer_t *self) {
+static inline void _save_hex(candy_lexer_t *self) {
   lex_assert(is_hex(_view(self, 0)) && is_hex(_view(self, 1)), "invalid hexadecimal escape");
-  return ch2hex(_read(self)) << 4 | ch2hex(_read(self));
+  _save_char(self, ch2hex(_read(self)) << 4 | ch2hex(_read(self)));
 }
 
 static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   bool is_float = false;
-  _save(self);
-  if (*_get_buff_data(self) == '0' && _check_dual(self, "xX", _save)) {
-    while (is_hex(_view(self, 0)))
-      _save(self);
+  if (((_view(self, 0) == '0') ? _save(self), true : false) && _check_dual(self, "xX", _save)) {
+    while (_check_next(self, is_hex, _save));
     _save_char(self, '\0');
     candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 16);
     candy_wrap_init_integer(wrap, &i, 1);
     return CANDY_TK_INTEGER;
   }
+  _save(self);
   while (1) {
     switch (_view(self, 0)) {
-      case '0' ... '9':
-        _save(self);
-        break;
       case '.':
         lex_assert(!is_float, "multiple dots appear");
         _save(self);
@@ -226,6 +239,8 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         is_float = true;
         break;
       default:
+        if (_check_next(self, is_dec, _save))
+          break;
         _save_char(self, '\0');
         if (is_float) {
           candy_float_t f = (candy_float_t)strtod(_get_buff_data(self), NULL);
@@ -254,7 +269,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
 static int _get_string(candy_lexer_t *self, const bool multiline) {
   const char del = _view(self, 0);
   /* skip first " or ' */
-  _skip(self, multiline ? 3 : 1);
+  _skipn(self, multiline ? 3 : 1);
   while (_view(self, 0) != del) {
     switch (_view(self, 0)) {
       case '\0':
@@ -265,27 +280,27 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
           lex_assert(false, "single line string can not contain line break");
           return -1;
         }
-        _newline_handler(self, _save);
+        _handle_newline(self, _save);
         break;
       case '\\':
-        _read(self);
+        _skip(self);
         switch (_view(self, 0)) {
-          case         'a': _read(self); _save_char(self,             '\a'); break;
-          case         'b': _read(self); _save_char(self,             '\b'); break;
-          case         't': _read(self); _save_char(self,             '\t'); break;
-          case         'n': _read(self); _save_char(self,             '\n'); break;
-          case         'v': _read(self); _save_char(self,             '\v'); break;
-          case         'f': _read(self); _save_char(self,             '\f'); break;
-          case         'r': _read(self); _save_char(self,             '\r'); break;
-          case        '\\': _read(self); _save_char(self,             '\\'); break;
-          case        '\'': _read(self); _save_char(self,             '\''); break;
-          case         '"': _read(self); _save_char(self,              '"'); break;
-          case         'x': _read(self); _save_char(self, _get_hexch(self)); break;
-          case '0' ... '7':              _save_char(self, _get_octch(self)); break;
-          /* todo: support unicode */
+          case  'a': _skip(self); _save_char(self,             '\a'); break;
+          case  'b': _skip(self); _save_char(self,             '\b'); break;
+          case  't': _skip(self); _save_char(self,             '\t'); break;
+          case  'n': _skip(self); _save_char(self,             '\n'); break;
+          case  'v': _skip(self); _save_char(self,             '\v'); break;
+          case  'f': _skip(self); _save_char(self,             '\f'); break;
+          case  'r': _skip(self); _save_char(self,             '\r'); break;
+          case '\\': _skip(self); _save_char(self,             '\\'); break;
+          case '\'': _skip(self); _save_char(self,             '\''); break;
+          case  '"': _skip(self); _save_char(self,              '"'); break;
+          case  'x': _skip(self); _save_hex(self);                    break;
+          case  'u': lex_assert(false, "unsupported unicode");        break;
           default:
+            if (_check_next(self, is_oct, _save_oct))
+              break;
             /* is not escape */
-            // printf("unknown escape sequence: '\\%c'\n", _view(self, 0));
             _save_char(self, '\\');
             _save(self);
             break;
@@ -300,7 +315,7 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
   _save_char(self, '\0');
   /* skip last " or ' */
   lex_assert(_view(self, 0) == del && (multiline ? (_view(self, 1) == del && _view(self, 2) == del) : (true)), "unexpected end of string");
-  _skip(self, multiline ? 3 : 1);
+  _skipn(self, multiline ? 3 : 1);
   return self->w - 1;
 }
 
@@ -327,13 +342,13 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       case '\0':
         return CANDY_TK_NONE;
       case '\r': case '\n':
-        _newline_handler(self, _read);
+        _handle_newline(self, _skip);
         break;
       case ' ': case '\f': case '\t': case '\v':
-        _read(self);
+        _skip(self);
         break;
       case '!':
-        lex_assert(_view(self, 1) == '=', "unexpected char '%c'", _view(self, 1));
+        lex_assert(_view(self, 1) == '=', "unknown character '%c'(0x%02X)", _view(self, 1), _view(self, 1));
         goto dual_ope;
       /* 'o', 'o=', 'oo' */
       case '>': case '<': case '*': case '/':
@@ -348,8 +363,10 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       /* 'o' */
       case '&': case '|': case '~': case '^':
       case '(': case ')': case '[': case ']':
-      case ',': case '.': case ':':
+      case ',': case ':':
         return _read(self);
+      case '.':
+        return (_view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)) ? _skipn(self, 3), CANDY_TK_VARARG : _read(self);
       /* is comment */
       case '#':
         _skip_comment(self);
@@ -358,13 +375,13 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       case '"': case '\'':
         candy_wrap_init_string(wrap, _get_buff_data(self), _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
         return CANDY_TK_STRING;
-      case '0' ... '9':
-        return _get_number(self, wrap);
       default:
-        if (is_alpha(_view(self, 0)) || _view(self, 0) == '_')
+        if (is_dec(_view(self, 0)))
+          return _get_number(self, wrap);
+        else if (is_alpha(_view(self, 0)) || _view(self, 0) == '_')
           return _get_ident_or_keyword(self, wrap);
-        lex_assert(false, "unexpected char '%c'(0x%02X)", _view(self, 0), _view(self, 0));
-        break;
+        lex_assert(false, "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
+        return -1;
     }
   }
   /* double-byte operator */
@@ -398,7 +415,7 @@ candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap) {
   if (self->lookahead.token != CANDY_TK_EOS) {
     /* use this one */
     candy_tokens_t token = self->lookahead.token;
-    if (wrap != NULL)
+    if (wrap)
       *wrap = self->lookahead.wrap;
     /* and discharge it */
     self->lookahead.token = CANDY_TK_EOS;

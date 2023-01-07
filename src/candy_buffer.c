@@ -33,7 +33,7 @@ void *candy_buffer_get_data(candy_buffer_t *self) {
 }
 
 int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud) {
-  if(setjmp(self->env))
+  if (setjmp(self->env))
     goto catch;
   cb(ud);
   return 0;
