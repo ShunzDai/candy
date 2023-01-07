@@ -37,7 +37,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   candy_lexer_init(&lex, buffer, _string_reader, &info);
   candy_wrap_t wrap;
   candy_wrap_init_none(&wrap);
-  if((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, token, &wrap]() {
+  if ((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, token, &wrap]() {
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), token);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
   }))) != 0)
@@ -142,6 +142,8 @@ TEST_LEXER(float,   CANDY_TK_FLOAT  ,    "3.1415926",    3.1415926)
 TEST_LEXER(sci_0,   CANDY_TK_FLOAT  , "0.31415926e1", 0.31415926e1)
 TEST_LEXER(sci_1,   CANDY_TK_FLOAT  , "314.15926e-2", 314.15926e-2)
 
+TEST_LEXER(vararg, CANDY_TK_VARARG, "...")
+
 #define CANDY_KW_TEST
 #include "src/candy_keyword.list"
 
@@ -179,7 +181,6 @@ TEST_LEXER(CANDY_TK_RSHIFT , CANDY_TK_RSHIFT , ">>")
 TEST_LEXER(CANDY_TK_LSHIFT , CANDY_TK_LSHIFT , "<<")
 
 TEST(lexer, file_system) {
-  int status = 0;
   FILE *f = fopen("../test/test_lexer.cdy", "r");
   fseek(f, 0, SEEK_END);
   int size = (int)ftell(f);
@@ -190,7 +191,7 @@ TEST(lexer, file_system) {
   candy_lexer_init(&lex, buffer, _file_reader, &info);
   candy_wrap_t wrap;
   candy_wrap_init_none(&wrap);
-  if((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, &wrap]() {
+  EXPECT_EQ(candy_try_catch(buffer, try_func, new std::function<void()>([&lex, &wrap]() {
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_def);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_LPAREN);
@@ -199,28 +200,25 @@ TEST(lexer, file_system) {
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_COLON);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_LPAREN);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), '+');
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_RPAREN);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_return);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_INTEGER);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_if);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), dual_ope('=', '='));
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
-	candy_wrap_deinit(&wrap);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_COLON);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_LPAREN);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_RPAREN);
-	EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
-  }))) != 0)
-    goto exit;
-  exit:
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), '+');
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_RPAREN);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_return);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_INTEGER);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_if);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), dual_ope('=', '='));
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
+    candy_wrap_deinit(&wrap);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_COLON);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_LPAREN);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_STRING);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_RPAREN);
+    EXPECT_EQ(candy_lexer_next(&lex, &wrap), CANDY_TK_NONE);
+  })), 0);
   candy_lexer_deinit(&lex);
   candy_buffer_delete(&buffer);
   fclose(info.f);
-  EXPECT_EQ(status, 0);
 }
