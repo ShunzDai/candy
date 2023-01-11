@@ -15,136 +15,109 @@
   */
 #include "src/candy_parser.h"
 #include "src/candy_lexer.h"
-#include "src/candy_queue.h"
 #include <stdlib.h>
-#include <setjmp.h>
 
 #define par_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_throw((self)->lex.buffer, "syntax error: " _format, ##__VA_ARGS__))
-
-struct ast_node {
-  struct ast_node *l;
-  struct ast_node *r;
-};
 
 struct priv {
   candy_tokens_t token;
   uint8_t wrap[sizeof(candy_wrap_t)];
 };
 
-struct candy_parser {
+typedef struct candy_parser {
+  candy_proto_t *proto;
+  /* lexical state */
   candy_lexer_t lex;
-  struct ast_node *root;
-};
+} candy_parser_t;
 
-static struct ast_node *_expression(candy_parser_t *self);
-
-static inline struct priv *_private(struct ast_node *node) {
-  return (struct priv *)((struct {struct ast_node *l; struct ast_node *r; uint8_t args[];} *)node)->args;
+static void _expr(candy_parser_t *self) {
+  
 }
 
-static void _ast_node_print(struct ast_node *node) {
-  if (node == NULL)
-    return;
-  _ast_node_print(node->l);
-  _ast_node_print(node->r);
-  // if (_private(node)->token == CANDY_TK_INTEGER)
-  //   printf("CONST\t%ld\ttoken\t%d\n", *(candy_integer_t *)_private(node)->wrap, _private(node)->token);
-  // else if (_private(node)->token == CANDY_TK_FLOAT)
-  //   printf("CONST\t%.3f\ttoken\t%d\n", *(candy_float_t *)_private(node)->wrap, _private(node)->token);
-  // else
-  //   printf("%c\n", _private(node)->token);
-}
-
-static struct ast_node *_ast_node_create(candy_tokens_t token, candy_wrap_t *wrap, struct ast_node *l, struct ast_node *r) {
-  struct ast_node *node = (struct ast_node *)malloc(sizeof(struct ast_node) + ((wrap == NULL) ? sizeof(candy_tokens_t) : sizeof(struct priv)));
-  node->l = l;
-  node->r = r;
-  _private(node)->token = token;
-  if (wrap != NULL)
-    *(candy_wrap_t *)_private(node)->wrap = *wrap;
-  return node;
-}
-
-static int _ast_node_delete(struct ast_node **node) {
-  if (*node == NULL)
-    return 0;
-  if ((*node)->l != NULL)
-    _ast_node_delete(&(*node)->l);
-  if ((*node)->r != NULL)
-    _ast_node_delete(&(*node)->r);
-  free(*node);
-  *node = NULL;
-  return 0;
-}
-
-static struct ast_node *_factor(candy_parser_t *self) {
-  struct ast_node *l = NULL;
-  union candy_wrap wrap;
-  int sign = 1;
-  candy_tokens_t token = CANDY_TK_NONE;
-  begin:
-  token = candy_lexer_next(&self->lex, &wrap);
-  switch (token) {
-    case '-':
-      sign = -1;
-    case '+':
-      token = candy_lexer_lookahead(&self->lex);
-      par_assert(token == CANDY_TK_INTEGER || token == CANDY_TK_FLOAT, "unexpected token (0x%02X)", token);
-      goto begin;
-    case CANDY_TK_INTEGER:
-      *candy_wrap_get_integer(&wrap, NULL) *= sign;
-      break;
-    case CANDY_TK_FLOAT:
-      *candy_wrap_get_float(&wrap, NULL) *= sign;
+static void _expr_stat(candy_parser_t *self) {
+  candy_wrap_t wrap;
+  /* get ident */
+  candy_lexer_next(&self->lex, &wrap);
+  switch (candy_lexer_lookahead(&self->lex)) {
+    case '=':
+      while (candy_lexer_next(&self->lex, &wrap));
       break;
     case '(':
-      l = _expression(self);
-      token = candy_lexer_next(&self->lex, &wrap);
-      par_assert(token == ')', "expression not closed");
-      return l;
+      candy_lexer_next(&self->lex, &wrap);
+      _expr(self);
+      break;
     default:
-      par_assert(0, "unexpected token (0x%02X)", token);
+      par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->lex));
+      break;
   }
-  return _ast_node_create(token, &wrap, NULL, NULL);
 }
 
-static struct ast_node *_term(candy_parser_t *self) {
-  struct ast_node *l = _factor(self);
-  for (candy_tokens_t token = candy_lexer_lookahead(&self->lex); token == '*' || token == '/'; token = candy_lexer_lookahead(&self->lex)) {
-    token = candy_lexer_next(&self->lex, NULL);
-    l = _ast_node_create(token, NULL, l, _factor(self));
+/**
+  * @brief  if cond : block { elif cond : block } [ else : block ] end
+  * @param  self  parser handle.
+  */
+static void _cond_block(candy_parser_t *self) {
+  /* skip if or elif */
+  candy_lexer_next(&self->lex, NULL);
+  /** @todo read condition */
+  if (candy_lexer_lookahead(&self->lex) == CANDY_TK_break) {
+
   }
-  return l;
 }
 
-static struct ast_node *_expression(candy_parser_t *self) {
-  struct ast_node *l = _term(self);
-  for (candy_tokens_t token = candy_lexer_lookahead(&self->lex); token == '+' || token == '-'; token = candy_lexer_lookahead(&self->lex)) {
-    token = candy_lexer_next(&self->lex, NULL);
-    l = _ast_node_create(token, NULL, l, _term(self));
+static void _if_stat(candy_parser_t *self) {
+  /* if cond : block */
+  _cond_block(self);
+  /* elif cond : block */
+  while (candy_lexer_lookahead(&self->lex) == CANDY_TK_elif)
+    _cond_block(self);
+  /* else : block */
+}
+
+static void _statement(candy_parser_t *self) {
+  switch (candy_lexer_lookahead(&self->lex)) {
+    case CANDY_TK_IDENT:
+      _expr_stat(self);
+      break;
+    case CANDY_TK_if:
+      _if_stat(self);
+      break;
+    case CANDY_TK_while:
+      break;
+    case CANDY_TK_for:
+      break;
+    case CANDY_TK_break:
+      break;
+    default:
+      par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->lex));
+      break;
   }
-  return l;
 }
 
-void candy_parser_print(candy_parser_t *self) {
-  _ast_node_print(self->root);
+static bool _block_follow(candy_parser_t *self) {
+  switch (candy_lexer_lookahead(&self->lex)) {
+    case CANDY_TK_NONE:
+      return true;
+    default:
+      return false;
+  }
 }
 
-void func(void *ud) {
-  ((candy_parser_t *)ud)->root = _expression((candy_parser_t *)ud);
+/** @ref https://blog.csdn.net/initphp/article/details/105247775 */
+static void _statlist(candy_parser_t *self) {
+  while (!_block_follow(self))
+    _statement(self);
 }
 
-void *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
+candy_proto_t *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
   candy_parser_t parser;
-  memset(&parser, 0, sizeof(struct candy_parser));
+  parser.proto = (candy_proto_t *)1;
   candy_lexer_init(&parser.lex, buffer, reader, ud);
-  if(candy_try_catch(buffer, func, &parser) != 0)
+  if (candy_try_catch(buffer, (void (*)(void *))_statlist, &parser) != 0)
     goto exit;
   candy_lexer_deinit(&parser.lex);
-  _ast_node_delete(&parser.root);
-  return (void *)1;
+  return parser.proto;
   exit:
   candy_lexer_deinit(&parser.lex);
-  _ast_node_delete(&parser.root);
   return NULL;
 }

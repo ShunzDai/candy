@@ -26,12 +26,12 @@ static void test_body(const char exp[]) {
   candy_buffer_delete(&buffer);
 }
 
-PARSER_TEST(exp_add_0, "1 + 2")
-PARSER_TEST(exp_add_1, "(1 + 2)")
-PARSER_TEST(exp_sub_0, "1 - 2")
-PARSER_TEST(exp_sub_1, "(1 - 2)")
-PARSER_TEST(exp_mul_0, "1 * 2")
-PARSER_TEST(exp_mul_1, "(1 * 2)")
-PARSER_TEST(exp_div_0, "1 / 2")
-PARSER_TEST(exp_div_1, "(1 / 2)")
-PARSER_TEST(exp, "(((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12")
+PARSER_TEST(exp_add_0, "a = 1 + 2")
+PARSER_TEST(exp_add_1, "a = (1 + 2)")
+PARSER_TEST(exp_sub_0, "a = 1 - 2")
+PARSER_TEST(exp_sub_1, "a = (1 - 2)")
+PARSER_TEST(exp_mul_0, "a = 1 * 2")
+PARSER_TEST(exp_mul_1, "a = (1 * 2)")
+PARSER_TEST(exp_div_0, "a = 1 / 2")
+PARSER_TEST(exp_div_1, "a = (1 / 2)")
+PARSER_TEST(exp, "a = (((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12")
