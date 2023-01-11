@@ -22,11 +22,13 @@ extern "C"{
 #include "src/candy_buffer.h"
 #include "src/candy_types.h"
 
-typedef struct candy_parser candy_parser_t;
+struct candy_proto {
+  void *rsvd;
+};
 
-void candy_parser_print(candy_parser_t *self);
+typedef struct candy_proto * candy_proto_t;
 
-void *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud);
+candy_proto_t *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud);
 
 #ifdef __cplusplus
 }
