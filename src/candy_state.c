@@ -19,7 +19,6 @@
 #include "src/candy_vm.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 struct info_str {
   const char *exp;
@@ -40,17 +39,21 @@ struct candy_state {
 
 static inline int _string_reader(char *buff, const int max_len, void *ud) {
   struct info_str *info = (struct info_str *)ud;
-  int len = (max_len > info->size - info->offset) ? (info->size - info->offset) : max_len;
+  int residual = info->size - info->offset;
+  int len = (max_len > residual) ? residual : max_len;
   memcpy(buff, info->exp + info->offset, len);
   info->offset += len;
+  if (info->offset == info->size && len < max_len)
+    buff[len] = '\0';
   return len;
 }
 
 static inline int _file_reader(char *buff, const int max_len, void *ud) {
   struct info_file *info = (struct info_file *)ud;
-  int len = (max_len > info->size - (int)ftell(info->f)) ? (info->size - (int)ftell(info->f)) : max_len;
+  int residual = info->size - (int)ftell(info->f);
+  int len = (max_len > residual) ? residual : max_len;
   fread(buff, sizeof(char), len, info->f);
-  if ((int)ftell(info->f) == info->size)
+  if ((int)ftell(info->f) == info->size && len < max_len)
     buff[len] = '\0';
   return len;
 }
@@ -72,7 +75,7 @@ int candy_state_delete(candy_state_t **self) {
 }
 
 int candy_dostring(candy_state_t *self, const char exp[]) {
-  struct info_str info = {exp, (int)strlen(exp) + 1, 0};
+  struct info_str info = {exp, (int)strlen(exp), 0};
   if (candy_parse(self->buffer, _string_reader, &info) == NULL) {
     printf("%s\n", (const char *)candy_buffer_get_data(self->buffer));
     return -1;
