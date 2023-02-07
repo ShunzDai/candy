@@ -23,6 +23,8 @@ extern "C"{
 #include <stdlib.h>
 #include <string.h>
 
+#define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_throw(*(candy_buffer_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
+
 typedef struct candy_buffer candy_buffer_t;
 
 int candy_buffer_get_size(candy_buffer_t *self);
