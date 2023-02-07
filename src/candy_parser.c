@@ -17,21 +17,16 @@
 #include "src/candy_lexer.h"
 #include <stdlib.h>
 
-#define par_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_throw((self)->lex.buffer, "syntax error: " _format, ##__VA_ARGS__))
-
-struct priv {
-  candy_tokens_t token;
-  uint8_t wrap[sizeof(candy_wrap_t)];
-};
+#define par_assert(_condition, _format, ...) candy_assert(_condition, syntax, _format, ##__VA_ARGS__)
 
 typedef struct candy_parser {
-  candy_proto_t *proto;
   /* lexical state */
   candy_lexer_t lex;
+  candy_proto_t *proto;
 } candy_parser_t;
 
 static void _expr(candy_parser_t *self) {
-  
+
 }
 
 static void _expr_stat(candy_parser_t *self) {
@@ -47,7 +42,7 @@ static void _expr_stat(candy_parser_t *self) {
       _expr(self);
       break;
     default:
-      par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->lex));
+      par_assert(false, "identifier can only be used as variable or function");
       break;
   }
 }

@@ -72,6 +72,7 @@ typedef enum candy_tokens {
 
 /** @ref doc/io_memory_model.drawio.png */
 struct candy_lexer {
+  candy_buffer_t *buffer;
 #ifdef CANDY_DEBUG_MODE
   struct {
     uint16_t line;
@@ -87,7 +88,6 @@ struct candy_lexer {
   } lookahead;
   int w;
   int r;
-  candy_buffer_t *buffer;
   candy_reader_t reader;
   void *ud;
 };

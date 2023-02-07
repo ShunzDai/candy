@@ -44,7 +44,14 @@ int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud) {
 void candy_throw(candy_buffer_t *self, const char format[], ...) {
   va_list ap;
   va_start(ap, format);
-  vsnprintf(self->data, self->size, format, ap);
+  int len = vsnprintf(NULL, 0, format, ap) + 1;
+  va_end(ap);
+  if (self->size < len) {
+    free(self->data);
+    self->data = calloc(len, sizeof(char));
+  }
+  va_start(ap, format);
+  vsprintf(self->data, format, ap);
   va_end(ap);
   longjmp(self->env, 1);
 }
