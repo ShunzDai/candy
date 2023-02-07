@@ -20,6 +20,7 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <ctype.h>
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))

@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define lex_assert(_condition, _format, ...) ((_condition) ? ((void)0U) : candy_throw((self)->buffer, "lexical error: " _format, ##__VA_ARGS__))
+#define lex_assert(_condition, _format, ...) candy_assert(_condition, lexical, _format, ##__VA_ARGS__)
 
 static const struct {
   candy_tokens_t token;
@@ -53,9 +53,6 @@ static inline char _view(candy_lexer_t *self, int idx) {
   * @retval target byte
   */
 static inline char _read(candy_lexer_t *self) {
-  #ifdef CANDY_DEBUG_MODE
-  ++self->dbg.column;
-  #endif /* CANDY_DEBUG_MODE */
   int size = _get_buff_size(self);
   /** only @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes left to read */
   if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE == size) {
@@ -79,6 +76,9 @@ static inline char _read(candy_lexer_t *self) {
       self->r = self->w + CANDY_LEXER_EXTRA_SIZE;
     }
   }
+  #ifdef CANDY_DEBUG_MODE
+  ++self->dbg.column;
+  #endif /* CANDY_DEBUG_MODE */
   return _get_buff_data(self)[self->r++];
 }
 
