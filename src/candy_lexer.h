@@ -26,48 +26,48 @@ extern "C"{
 #define dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
 typedef enum candy_tokens {
-  CANDY_TK_NONE = '\x00',
-  CANDY_TK_EOS,
-  CANDY_TK_STRING,
-  CANDY_TK_INTEGER,
-  CANDY_TK_FLOAT,
-  CANDY_TK_IDENT,
-  CANDY_TK_VARARG,
+  TK_NONE = '\x00',
+  TK_EOS,
+  TK_STRING,
+  TK_INTEGER,
+  TK_FLOAT,
+  TK_IDENT,
+  TK_VARARG,
   #define CANDY_KW_ENUM
   #include "src/candy_keyword.list"
-  CANDY_TK_LPAREN   =                '(', /* 0x28 (  */
-  CANDY_TK_RPAREN   =                ')', /* 0x29 )  */
-  CANDY_TK_COMMA    =                ',', /* 0x2C ,  */
-  CANDY_TK_DOT      =                '.', /* 0x2E .  */
-  CANDY_TK_COLON    =                ':', /* 0x3A :  */
-  CANDY_TK_LBRACE   =                '[', /* 0x5B [  */
-  CANDY_TK_RBRACE   =                ']', /* 0x5D ]  */
-  CANDY_TK_BITAND   =                '&', /* 0x26 &  */
-  CANDY_TK_BITOR    =                '|', /* 0x7C |  */
-  CANDY_TK_BITNOT   =                '~', /* 0x7E ~  */
-  CANDY_TK_BITXOR   =                '^', /* 0x5E ^  */
-  CANDY_TK_MOD      =                '%', /* 0x25 %  */
-  CANDY_TK_ADD      =                '+', /* 0x2B +  */
-  CANDY_TK_SUB      =                '-', /* 0x2D -  */
-  CANDY_TK_MUL      =                '*', /* 0x2A *  */
-  CANDY_TK_DIV      =                '/', /* 0x2F /  */
-  CANDY_TK_ASSIGN   =                '=', /* 0x3D =  */
-  CANDY_TK_GREATER  =                '>', /* 0x3E >  */
-  CANDY_TK_LESS     =                '<', /* 0x3C <  */
-  CANDY_TK_EXP      = dual_ope('*', '*'), /* 0xEA ** */
-  CANDY_TK_FLRDIV   = dual_ope('/', '/'), /* 0xA9 // */
-  CANDY_TK_MODASS   = dual_ope('%', '='), /* 0xD9 %= */
-  CANDY_TK_NEQUAL   = dual_ope('!', '='), /* 0xE4 != */
-  CANDY_TK_ADDASS   = dual_ope('+', '='), /* 0xC9 += */
-  CANDY_TK_SUBASS   = dual_ope('-', '='), /* 0xC3 -= */
-  CANDY_TK_MULASS   = dual_ope('*', '='), /* 0x8C *= */
-  CANDY_TK_DIVASS   = dual_ope('/', '='), /* 0xBE /= */
-  CANDY_TK_EQUAL    = dual_ope('=', '='), /* 0x97 == */
-  CANDY_TK_GEQUAL   = dual_ope('>', '='), /* 0xD4 >= */
-  CANDY_TK_LEQUAL   = dual_ope('<', '='), /* 0xDA <= */
-  CANDY_TK_RSHIFT   = dual_ope('>', '>'), /* 0x93 >> */
-  CANDY_TK_LSHIFT   = dual_ope('<', '<'), /* 0x9E << */
-  CANDY_TK_ERROR        = 0xFFU,
+  TK_LPAREN   =                '(', /* 0x28 (  */
+  TK_RPAREN   =                ')', /* 0x29 )  */
+  TK_COMMA    =                ',', /* 0x2C ,  */
+  TK_DOT      =                '.', /* 0x2E .  */
+  TK_COLON    =                ':', /* 0x3A :  */
+  TK_LBRACE   =                '[', /* 0x5B [  */
+  TK_RBRACE   =                ']', /* 0x5D ]  */
+  TK_BITAND   =                '&', /* 0x26 &  */
+  TK_BITOR    =                '|', /* 0x7C |  */
+  TK_BITNOT   =                '~', /* 0x7E ~  */
+  TK_BITXOR   =                '^', /* 0x5E ^  */
+  TK_MOD      =                '%', /* 0x25 %  */
+  TK_ADD      =                '+', /* 0x2B +  */
+  TK_SUB      =                '-', /* 0x2D -  */
+  TK_MUL      =                '*', /* 0x2A *  */
+  TK_DIV      =                '/', /* 0x2F /  */
+  TK_ASSIGN   =                '=', /* 0x3D =  */
+  TK_GREATER  =                '>', /* 0x3E >  */
+  TK_LESS     =                '<', /* 0x3C <  */
+  TK_EXP      = dual_ope('*', '*'), /* 0xEA ** */
+  TK_FLRDIV   = dual_ope('/', '/'), /* 0xA9 // */
+  TK_MODASS   = dual_ope('%', '='), /* 0xD9 %= */
+  TK_NEQUAL   = dual_ope('!', '='), /* 0xE4 != */
+  TK_ADDASS   = dual_ope('+', '='), /* 0xC9 += */
+  TK_SUBASS   = dual_ope('-', '='), /* 0xC3 -= */
+  TK_MULASS   = dual_ope('*', '='), /* 0x8C *= */
+  TK_DIVASS   = dual_ope('/', '='), /* 0xBE /= */
+  TK_EQUAL    = dual_ope('=', '='), /* 0x97 == */
+  TK_GEQUAL   = dual_ope('>', '='), /* 0xD4 >= */
+  TK_LEQUAL   = dual_ope('<', '='), /* 0xDA <= */
+  TK_RSHIFT   = dual_ope('>', '>'), /* 0x93 >> */
+  TK_LSHIFT   = dual_ope('<', '<'), /* 0x9E << */
+  TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
 /** @ref doc/io_memory_model.drawio.png */

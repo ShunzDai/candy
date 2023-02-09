@@ -221,7 +221,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
     _save_char(self, '\0');
     candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 16);
     candy_wrap_init_integer(wrap, &i, 1);
-    return CANDY_TK_INTEGER;
+    return TK_INTEGER;
   }
   _save(self);
   while (1) {
@@ -245,12 +245,12 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         if (is_float) {
           candy_float_t f = (candy_float_t)strtod(_get_buff_data(self), NULL);
           candy_wrap_init_float(wrap, &f, 1);
-          return CANDY_TK_FLOAT;
+          return TK_FLOAT;
         }
         else {
           candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 10);
           candy_wrap_init_integer(wrap, &i, 1);
-          return CANDY_TK_INTEGER;
+          return TK_INTEGER;
         }
     }
   }
@@ -332,7 +332,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
       return _keywords[i].token;
   }
   // wrap->hash = djb_hash(self->buffer->data);
-  return CANDY_TK_IDENT;
+  return TK_IDENT;
 }
 
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
@@ -340,7 +340,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   while (1) {
     switch (_view(self, 0)) {
       case '\0':
-        return CANDY_TK_NONE;
+        return TK_NONE;
       case '\r': case '\n':
         _handle_newline(self, _skip);
         break;
@@ -366,7 +366,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       case ',': case ':':
         return _read(self);
       case '.':
-        return (_view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)) ? _skipn(self, 3), CANDY_TK_VARARG : _read(self);
+        return (_view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)) ? _skipn(self, 3), TK_VARARG : _read(self);
       /* is comment */
       case '#':
         _skip_comment(self);
@@ -374,7 +374,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       /* is string */
       case '"': case '\'':
         candy_wrap_init_string(wrap, _get_buff_data(self), _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
-        return CANDY_TK_STRING;
+        return TK_STRING;
       default:
         if (is_dec(_view(self, 0)))
           return _get_number(self, wrap);
@@ -395,7 +395,7 @@ int candy_lexer_init(candy_lexer_t *self, candy_buffer_t *buffer, candy_reader_t
   self->dbg.line = 1;
   self->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
-  self->lookahead.token = CANDY_TK_EOS;
+  self->lookahead.token = TK_EOS;
   self->buffer = buffer;
   self->reader = reader;
   self->ud = ud;
@@ -412,13 +412,13 @@ int candy_lexer_deinit(candy_lexer_t *self) {
 
 candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap) {
   /* is there a look-ahead token? */
-  if (self->lookahead.token != CANDY_TK_EOS) {
+  if (self->lookahead.token != TK_EOS) {
     /* use this one */
     candy_tokens_t token = self->lookahead.token;
     if (wrap)
       *wrap = self->lookahead.wrap;
     /* and discharge it */
-    self->lookahead.token = CANDY_TK_EOS;
+    self->lookahead.token = TK_EOS;
     return token;
   }
   /* read next token */
@@ -426,7 +426,7 @@ candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap) {
 }
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
-  if (self->lookahead.token == CANDY_TK_EOS)
+  if (self->lookahead.token == TK_EOS)
     self->lookahead.token = _lexer(self, &self->lookahead.wrap);
   return self->lookahead.token;
 }
