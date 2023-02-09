@@ -55,7 +55,7 @@ static void _cond_block(candy_parser_t *self) {
   /* skip if or elif */
   candy_lexer_next(&self->lex, NULL);
   /** @todo read condition */
-  if (candy_lexer_lookahead(&self->lex) == CANDY_TK_break) {
+  if (candy_lexer_lookahead(&self->lex) == TK_break) {
 
   }
 }
@@ -64,24 +64,24 @@ static void _if_stat(candy_parser_t *self) {
   /* if cond : block */
   _cond_block(self);
   /* elif cond : block */
-  while (candy_lexer_lookahead(&self->lex) == CANDY_TK_elif)
+  while (candy_lexer_lookahead(&self->lex) == TK_elif)
     _cond_block(self);
   /* else : block */
 }
 
 static void _statement(candy_parser_t *self) {
   switch (candy_lexer_lookahead(&self->lex)) {
-    case CANDY_TK_IDENT:
+    case TK_IDENT:
       _expr_stat(self);
       break;
-    case CANDY_TK_if:
+    case TK_if:
       _if_stat(self);
       break;
-    case CANDY_TK_while:
+    case TK_while:
       break;
-    case CANDY_TK_for:
+    case TK_for:
       break;
-    case CANDY_TK_break:
+    case TK_break:
       break;
     default:
       par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->lex));
@@ -91,7 +91,7 @@ static void _statement(candy_parser_t *self) {
 
 static bool _block_follow(candy_parser_t *self) {
   switch (candy_lexer_lookahead(&self->lex)) {
-    case CANDY_TK_NONE:
+    case TK_NONE:
       return true;
     default:
       return false;
