@@ -24,173 +24,90 @@ extern "C"{
 #include <stdlib.h>
 #include <string.h>
 
-union candy_wrap {
-  struct {
-    uint32_t type :  4;
-    uint32_t      : 28;
+typedef enum candy_wraps {
+  CANDY_NONE,
+  CANDY_INTEGER,
+  CANDY_FLOAT,
+  CANDY_BOOLEAN,
+  CANDY_STRING,
+  CANDY_BUILTIN,
+  CANDY_USERDEF,
+  CANDY_MAX,
+} candy_wraps_t;
+
+struct candy_wrap {
+  uint32_t type :  4;
+  uint32_t size : 28;
+  union {
+    uint64_t    : 64;
+    void *data;
   };
-  /* none */
-  struct {
-    uint32_t      :  4;
-    uint32_t size : 28;
-    long          : sizeof(long);
-  } n;
-  /* integer */
-  struct {
-    uint32_t      :  4;
-    uint32_t size : 28;
-    union {
-      candy_integer_t sval[sizeof(long) / sizeof(candy_integer_t)];
-      candy_integer_t *lval;
-    };
-  } i;
-  /* float */
-  struct {
-    uint32_t      :  4;
-    uint32_t size : 28;
-    union {
-      candy_float_t sval[sizeof(long) / sizeof(candy_float_t)];
-      candy_float_t *lval;
-    };
-  } f;
-  /* boolean */
-  struct {
-    uint32_t      :  4;
-    uint32_t size : 28;
-    union {
-      candy_boolean_t sval[sizeof(long) / sizeof(candy_boolean_t)];
-      candy_boolean_t *lval;
-    };
-  } b;
-  /* string */
-  struct {
-    uint32_t      :  4;
-    uint32_t size : 28;
-    union {
-      char sval[sizeof(long) / sizeof(char)];
-      char *lval;
-    };
-  } s;
-  /* user's data */
-  struct {
-    uint32_t          :  4;
-    uint32_t size     : 27;
-    uint32_t callable :  1;
-    union {
-      void *sval[sizeof(long) / sizeof(void *)];
-      void **lval;
-    };
-  } u;
 };
 
-typedef union candy_wrap candy_wrap_t;
+typedef struct candy_wrap candy_wrap_t;
 
 static inline bool candy_wrap_check_type(candy_wrap_t *self, candy_wraps_t type) {
   return self->type == type;
 }
 
-static inline bool candy_wrap_check_linteger(candy_wrap_t *self) {
-  return self->i.size > candy_lengthof(self->i.sval);
+static inline bool candy_wrap_check_ldata(candy_wrap_t *self, size_t n) {
+  return self->size > (sizeof(self->data) / n);
 }
 
-static inline bool candy_wrap_check_lfloat(candy_wrap_t *self) {
-  return self->f.size > candy_lengthof(self->f.sval);
+static inline void *candy_wrap_get_data(candy_wrap_t *self, int *size, size_t n) {
+  if (size)
+    *size = self->size;
+  return candy_wrap_check_ldata(self, n) ? self->data : &self->data;
 }
 
-static inline bool candy_wrap_check_lboolean(candy_wrap_t *self) {
-  return self->b.size > candy_lengthof(self->b.sval);
-}
-
-static inline bool candy_wrap_check_lstring(candy_wrap_t *self) {
-  return self->s.size > candy_lengthof(self->s.sval) - 1;
-}
-
-static inline bool candy_wrap_check_lud(candy_wrap_t *self) {
-  return self->u.size > candy_lengthof(self->u.sval);
+static inline void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, void *data, int size, size_t n) {
+  self->type = type;
+  self->size = size;
+  memcpy(candy_wrap_check_ldata(self, n) ? (self->data = calloc(size, n)) : &self->data, data, size * n);
 }
 
 static inline candy_integer_t *candy_wrap_get_integer(candy_wrap_t *self, int *size) {
-  if (size)
-    *size = self->i.size;
-  return candy_wrap_check_linteger(self) ? self->i.lval : self->i.sval;
+  return (candy_integer_t *)candy_wrap_get_data(self, size, sizeof(candy_integer_t));
 }
 
 static inline candy_float_t *candy_wrap_get_float(candy_wrap_t *self, int *size) {
-  if (size)
-    *size = self->f.size;
-  return candy_wrap_check_lfloat(self) ? self->f.lval : self->f.sval;
+  return (candy_float_t *)candy_wrap_get_data(self, size, sizeof(candy_float_t));
 }
 
 static inline candy_boolean_t *candy_wrap_get_boolean(candy_wrap_t *self, int *size) {
-  if (size)
-    *size = self->b.size;
-  return candy_wrap_check_lboolean(self) ? self->b.lval : self->b.sval;
+  return (candy_boolean_t *)candy_wrap_get_data(self, size, sizeof(candy_boolean_t));
 }
 
 static inline char *candy_wrap_get_string(candy_wrap_t *self, int *size) {
-  if (size)
-    *size = self->s.size;
-  return candy_wrap_check_lstring(self) ? self->s.lval : self->s.sval;
+  return (char *)candy_wrap_get_data(self, size, sizeof(char));
 }
 
 static inline void **candy_wrap_get_ud(candy_wrap_t *self, int *size) {
-  if (size)
-    *size = self->s.size;
-  return candy_wrap_check_lud(self) ? self->u.lval : self->u.sval;
+  return (void **)candy_wrap_get_data(self, size, sizeof(void *));
 }
 
 static inline void candy_wrap_init_none(candy_wrap_t *self) {
-  memset(self, 0, sizeof(union candy_wrap));
+  memset(self, 0, sizeof(struct candy_wrap));
 }
 
-static inline void candy_wrap_init_integer(candy_wrap_t *self, candy_integer_t *val, int size) {
-  self->type = CANDY_INTEGER;
-  self->i.size = size;
-  if (candy_wrap_check_linteger(self)) {
-    self->i.lval = (candy_integer_t *)calloc(size, sizeof(candy_integer_t));
-    memcpy(self->i.lval, val, size * sizeof(candy_integer_t));
-  }
-  else {
-    memcpy(self->i.sval, val, size * sizeof(candy_integer_t));
-  }
+static inline void candy_wrap_init_integer(candy_wrap_t *self, candy_integer_t *data, int size) {
+  candy_wrap_set_data(self, CANDY_INTEGER, data, size, sizeof(candy_integer_t));
 }
 
-static inline void candy_wrap_init_float(candy_wrap_t *self, candy_float_t *val, int size) {
-  self->type = CANDY_FLOAT;
-  self->f.size = size;
-  if (candy_wrap_check_lfloat(self)) {
-    self->f.lval = (candy_float_t *)calloc(size, sizeof(candy_float_t));
-    memcpy(self->f.lval, val, size * sizeof(candy_float_t));
-  }
-  else {
-    memcpy(self->f.sval, val, size * sizeof(candy_float_t));
-  }
+static inline void candy_wrap_init_float(candy_wrap_t *self, candy_float_t *data, int size) {
+  candy_wrap_set_data(self, CANDY_FLOAT, data, size, sizeof(candy_float_t));
 }
 
-static inline void candy_wrap_init_boolean(candy_wrap_t *self, candy_boolean_t *val, int size) {
-  self->type = CANDY_BOOLEAN;
-  self->b.size = size;
-  if (candy_wrap_check_lboolean(self)) {
-    self->b.lval = (candy_boolean_t *)calloc(size, sizeof(candy_boolean_t));
-    memcpy(self->b.lval, val, size * sizeof(candy_boolean_t));
-  }
-  else {
-    memcpy(self->b.sval, val, size * sizeof(candy_boolean_t));
-  }
+static inline void candy_wrap_init_boolean(candy_wrap_t *self, candy_boolean_t *data, int size) {
+  candy_wrap_set_data(self, CANDY_BOOLEAN, data, size, sizeof(candy_boolean_t));
 }
 
-static inline void candy_wrap_init_string(candy_wrap_t *self, char *val, int size) {
-  self->type = CANDY_STRING;
-  self->s.size = size;
-  if (candy_wrap_check_lstring(self)) {
-    self->s.lval = (char *)calloc(size + 1, sizeof(char));
-    memcpy(self->s.lval, val, size * sizeof(char));
-    self->s.lval[size] = 0;
-  }
-  else {
-    memcpy(self->s.sval, val, size * sizeof(char));
-    self->s.sval[size] = 0;
-  }
+static inline void candy_wrap_init_string(candy_wrap_t *self, char *data, int size) {
+  candy_wrap_set_data(self, CANDY_STRING, data, size, sizeof(char));
+}
+
+static inline void candy_wrap_init_ud(candy_wrap_t *self, void **data, int size) {
+  candy_wrap_set_data(self, CANDY_STRING, data, size, sizeof(void *));
 }
 
 static inline int candy_wrap_deinit(candy_wrap_t *self) {
@@ -198,20 +115,20 @@ static inline int candy_wrap_deinit(candy_wrap_t *self) {
     case CANDY_NONE:
       break;
     case CANDY_INTEGER:
-      if (candy_wrap_check_linteger(self))
-        free(self->i.lval);
+      if (candy_wrap_check_ldata(self, sizeof(candy_integer_t)))
+        free(self->data);
       break;
     case CANDY_FLOAT:
-      if (candy_wrap_check_lfloat(self))
-        free(self->f.lval);
+      if (candy_wrap_check_ldata(self, sizeof(candy_float_t)))
+        free(self->data);
       break;
     case CANDY_BOOLEAN:
-      if (candy_wrap_check_lboolean(self))
-        free(self->b.lval);
+      if (candy_wrap_check_ldata(self, sizeof(candy_boolean_t)))
+        free(self->data);
       break;
     case CANDY_STRING:
-      if (candy_wrap_check_lstring(self))
-        free(self->s.lval);
+      if (candy_wrap_check_ldata(self, sizeof(char)))
+        free(self->data);
       break;
     default:
       break;
