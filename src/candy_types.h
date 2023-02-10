@@ -28,17 +28,6 @@ typedef int64_t candy_integer_t;
 typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
 
-typedef enum candy_wraps {
-  CANDY_NONE,
-  CANDY_INTEGER,
-  CANDY_FLOAT,
-  CANDY_BOOLEAN,
-  CANDY_STRING,
-  CANDY_CFUNCTION,
-  CANDY_OBJECT,
-  CANDY_MAX,
-} candy_wraps_t;
-
 typedef struct candy_state candy_state_t;
 
 typedef int (*candy_reader_t)(char *, const int, void *);
