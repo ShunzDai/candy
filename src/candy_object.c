@@ -15,10 +15,11 @@
   */
 #include "src/candy_object.h"
 #include "src/candy_lib.h"
-#include "src/candy_queue.h"
+#include "src/candy_node.h"
+#include "candy_wrap.h"
 
 struct candy_object {
-  candy_node_t next;
+  struct candy_object *next;
   uint32_t hash;
 
 };
