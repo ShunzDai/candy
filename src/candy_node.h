@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_QUEUE_H
-#define CANDY_SRC_QUEUE_H
+#ifndef CANDY_SRC_NODE_H
+#define CANDY_SRC_NODE_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -24,16 +24,6 @@ extern "C"{
 
 typedef struct candy_node candy_node_t;
 
-struct candy_node {
-  candy_node_t *next;
-};
-
-typedef struct candy_queue candy_queue_t;
-
-struct candy_queue {
-  candy_node_t *head;
-};
-
 /**
   * @brief  free the heap space, for example, free(*node).
   */
@@ -41,19 +31,15 @@ typedef int (*candy_destroy_t)(candy_node_t **);
 
 typedef int (*candy_iterator_t)(candy_node_t **, void *);
 
-bool candy_queue_empty(candy_queue_t *self);
-uint32_t candy_queue_size(candy_queue_t *self);
-int candy_queue_iterator(candy_queue_t *self, candy_iterator_t func, void *args);
-candy_node_t **candy_queue_pointer(candy_queue_t *self, int32_t idx);
-int candy_queue_clear(candy_queue_t *self, candy_destroy_t func);
+bool candy_node_empty(candy_node_t *self);
+int candy_node_iterator(candy_node_t *self, candy_iterator_t func, void *args);
+int candy_node_clear(candy_node_t *self, candy_destroy_t func);
+int candy_node_add(candy_node_t *self, candy_node_t *node);
 
-candy_queue_t *candy_queue_create(void);
-int candy_queue_delete(candy_queue_t **self, candy_destroy_t func);
-
-int candy_enqueue(candy_queue_t *self, int32_t idx, candy_node_t *node);
-int candy_dequeue(candy_queue_t *self, int32_t idx, candy_destroy_t func);
+candy_node_t *candy_node_create(int size);
+int candy_node_delete(candy_node_t **self, candy_destroy_t func);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_QUEUE_H */
+#endif /* CANDY_SRC_NODE_H */
