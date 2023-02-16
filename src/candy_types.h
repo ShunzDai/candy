@@ -28,6 +28,9 @@ typedef int64_t candy_integer_t;
 typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
 
+typedef struct candy_wrap candy_wrap_t;
+typedef struct candy_node candy_node_t;
+typedef struct candy_object candy_object_t;
 typedef struct candy_state candy_state_t;
 
 typedef int (*candy_reader_t)(char *, const int, void *);
