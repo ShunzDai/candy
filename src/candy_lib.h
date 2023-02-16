@@ -25,7 +25,7 @@ extern "C"{
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
-static inline uint32_t djb_hash(char str[]) {
+static inline uint32_t djb_hash(const char str[]) {
   uint32_t hash = 5381;
   while (*str)
     hash += (hash << 5) + (*str++);

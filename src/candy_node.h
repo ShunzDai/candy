@@ -19,13 +19,10 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include <stdint.h>
-#include <stdbool.h>
-
-typedef struct candy_node candy_node_t;
+#include "src/candy_types.h"
 
 /**
-  * @brief  free the heap space, for example, free(*node).
+  * @brief  destroy payload, do not operate node
   */
 typedef int (*candy_destroy_t)(candy_node_t **);
 
