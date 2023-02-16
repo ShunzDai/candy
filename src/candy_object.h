@@ -21,7 +21,17 @@ extern "C"{
 
 #include "src/candy_types.h"
 
+void candy_object_print(candy_object_t *self);
+int candy_object_add_object(candy_object_t *self, const candy_object_t *obj);
+int candy_object_add_wrap(candy_object_t *self, const char name[], candy_wrap_t *wrap);
+int candy_object_add_integer(candy_object_t *self, const char name[], const candy_integer_t val[], size_t size);
+int candy_object_add_float(candy_object_t *self, const char name[], const candy_float_t val[], size_t size);
+int candy_object_add_boolean(candy_object_t *self, const char name[], const candy_boolean_t val[], size_t size);
+int candy_object_add_string(candy_object_t *self, const char name[], const char val[], size_t size);
+int candy_object_add_cfunc(candy_object_t *self, const char name[], candy_cfunc_t func);
 
+candy_object_t *candy_object_create(const char name[]);
+int candy_object_delete(candy_object_t **self);
 
 #ifdef __cplusplus
 }

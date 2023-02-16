@@ -39,20 +39,17 @@ int candy_node_clear(candy_node_t *self, candy_destroy_t func) {
     candy_node_delete(&self->next, func);
   return 0;
 }
-#include <stdio.h>
 
 candy_node_t *candy_node_create(int size) {
   assert(sizeof(struct candy_node) < (size_t)size);
   candy_node_t *self = (candy_node_t *)malloc(size);
   memset(self, 0, size);
-  printf(">>> %p\n", self);
   return self;
 }
 int candy_node_delete(candy_node_t **self, candy_destroy_t func) {
   candy_node_t *next = (*self)->next;
   if (func)
-	func(self);
-  printf(">>> %p, next %p\n", *self, next);
+    func(self);
   free(*self);
   *self = next;
   return 0;
