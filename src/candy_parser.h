@@ -26,7 +26,7 @@ struct candy_proto {
   void *rsvd;
 };
 
-typedef struct candy_proto * candy_proto_t;
+typedef struct candy_proto candy_proto_t;
 
 candy_proto_t *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud);
 

@@ -19,7 +19,7 @@
 #include <string.h>
 
 int main(int argc, char *argv[]) {
-  candy cdy;
+  candy::state sta;
   printf("candy (%s, %s)\ntype 'q' to quit\n", __DATE__, __TIME__);
   while (1) {
     std::string line;
@@ -27,6 +27,6 @@ int main(int argc, char *argv[]) {
     std::getline(std::cin, line);
     if (strcmp(line.c_str(), "q") == 0)
       break;
-    cdy.dostring(line.c_str());
+    sta.dostring(line.c_str());
   }
 }

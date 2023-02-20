@@ -28,8 +28,7 @@ TEST(object, recursive) {
   candy_object_t *self = candy_object_create("");
   for (int i = 0; i < depth; i++) {
     candy_object_t *obj = candy_object_create("");
-    candy_float_t flt = 3.1415926;
-    candy_object_add_float(obj, "", &flt, 1);
+    candy_object_add_float(obj, "", 3.1415926);
     candy_object_add_string(obj, "", "hello world", sizeof("hello world"));
     candy_object_add_object(obj, self);
     self = obj;

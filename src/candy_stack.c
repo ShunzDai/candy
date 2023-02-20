@@ -15,6 +15,7 @@
   */
 #include "src/candy_stack.h"
 #include "src/candy_buffer.h"
+#include "src/candy_wrap.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -74,46 +75,46 @@ candy_wrap_t *candy_stack_pop(candy_stack_t *self) {
   return self->size ? &_get_buff_data(self)[--self->size] : NULL;
 }
 
-bool candy_stack_check_type(candy_stack_t *self, candy_wraps_t type) {
-  return candy_wrap_check_type(candy_stack_top(self), type);
+candy_wraps_t candy_stack_type(candy_stack_t *self) {
+  return candy_wrap_type(candy_stack_top(self));
 }
 
-void candy_stack_push_integer(candy_stack_t *self, candy_integer_t *val, int size) {
+void candy_stack_push_integer(candy_stack_t *self, const candy_integer_t val) {
   candy_wrap_t wrap;
-  candy_wrap_init_integer(&wrap, val, size);
+  candy_wrap_init_integer(&wrap, &val, 1);
   candy_stack_push(self, &wrap);
 }
 
-void candy_stack_push_float(candy_stack_t *self, candy_float_t *val, int size) {
+void candy_stack_push_float(candy_stack_t *self, const candy_float_t val) {
   candy_wrap_t wrap;
-  candy_wrap_init_float(&wrap, val, size);
+  candy_wrap_init_float(&wrap, &val, 1);
   candy_stack_push(self, &wrap);
 }
 
-void candy_stack_push_boolean(candy_stack_t *self, candy_boolean_t *val, int size) {
+void candy_stack_push_boolean(candy_stack_t *self, const candy_boolean_t val) {
   candy_wrap_t wrap;
-  candy_wrap_init_boolean(&wrap, val, size);
+  candy_wrap_init_boolean(&wrap, &val, 1);
   candy_stack_push(self, &wrap);
 }
 
-void candy_stack_push_string(candy_stack_t *self, char *val, int size) {
+void candy_stack_push_string(candy_stack_t *self, const char val[], size_t size) {
   candy_wrap_t wrap;
   candy_wrap_init_string(&wrap, val, size);
   candy_stack_push(self, &wrap);
 }
 
-candy_integer_t *candy_stack_pull_integer(candy_stack_t *self, int *size) {
-  return candy_wrap_get_integer(candy_stack_pop(self), size);
+candy_integer_t candy_stack_pull_integer(candy_stack_t *self) {
+  return *candy_wrap_get_integer(candy_stack_pop(self), NULL);
 }
 
-candy_float_t *candy_stack_pull_float(candy_stack_t *self, int *size) {
-  return candy_wrap_get_float(candy_stack_pop(self), size);
+candy_float_t candy_stack_pull_float(candy_stack_t *self) {
+  return *candy_wrap_get_float(candy_stack_pop(self), NULL);
 }
 
-candy_boolean_t *candy_stack_pull_boolean(candy_stack_t *self, int *size) {
-  return candy_wrap_get_boolean(candy_stack_pop(self), size);
+candy_boolean_t candy_stack_pull_boolean(candy_stack_t *self) {
+  return *candy_wrap_get_boolean(candy_stack_pop(self), NULL);
 }
 
-char *candy_stack_pull_string(candy_stack_t *self, int *size) {
+const char *candy_stack_pull_string(candy_stack_t *self, size_t *size) {
   return candy_wrap_get_string(candy_stack_pop(self), size);
 }

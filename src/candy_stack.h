@@ -19,7 +19,6 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
 typedef uint16_t candy_stack_size_t;
@@ -38,17 +37,17 @@ candy_wrap_t *candy_stack_top(candy_stack_t *self);
 void candy_stack_push(candy_stack_t *self, candy_wrap_t *data);
 candy_wrap_t *candy_stack_pop(candy_stack_t *self);
 
-bool candy_stack_check_type(candy_stack_t *self, candy_wraps_t type);
+candy_wraps_t candy_stack_type(candy_stack_t *self);
 
-void candy_stack_push_integer(candy_stack_t *self, candy_integer_t *val, int size);
-void candy_stack_push_float(candy_stack_t *self, candy_float_t *val, int size);
-void candy_stack_push_boolean(candy_stack_t *self, candy_boolean_t *val, int size);
-void candy_stack_push_string(candy_stack_t *self, char *val, int size);
+void candy_stack_push_integer(candy_stack_t *self, const candy_integer_t val);
+void candy_stack_push_float(candy_stack_t *self, const candy_float_t val);
+void candy_stack_push_boolean(candy_stack_t *self, const candy_boolean_t val);
+void candy_stack_push_string(candy_stack_t *self, const char val[], size_t size);
 
-candy_integer_t *candy_stack_pull_integer(candy_stack_t *self, int *size);
-candy_float_t *candy_stack_pull_float(candy_stack_t *self, int *size);
-candy_boolean_t *candy_stack_pull_boolean(candy_stack_t *self, int *size);
-char *candy_stack_pull_string(candy_stack_t *self, int *size);
+candy_integer_t candy_stack_pull_integer(candy_stack_t *self);
+candy_float_t candy_stack_pull_float(candy_stack_t *self);
+candy_boolean_t candy_stack_pull_boolean(candy_stack_t *self);
+const char *candy_stack_pull_string(candy_stack_t *self, size_t *size);
 
 #ifdef __cplusplus
 }

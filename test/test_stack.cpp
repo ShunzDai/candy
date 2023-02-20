@@ -24,25 +24,24 @@ TEST(stack, init) {
 
 TEST(stack, push_pop) {
   candy_stack_t *s = candy_stack_create();
-  candy_integer_t i = 114514;
-  candy_stack_push_integer(s, &i, 1);
-  candy_stack_push_integer(s, &i, 1);
-  candy_stack_push_integer(s, &i, 1);
-  candy_stack_push_integer(s, &i, 1);
-  candy_stack_push_integer(s, &i, 1);
-  candy_stack_push_integer(s, &i, 1);
-  candy_stack_push_integer(s, &i, 1);
-  candy_stack_push_integer(s, &i, 1);
-  candy_stack_push_integer(s, &i, 1);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
-  EXPECT_EQ(candy_stack_pull_integer(s, nullptr)[0], 114514);
+  candy_stack_push_integer(s, 0);
+  candy_stack_push_integer(s, 1);
+  candy_stack_push_integer(s, 2);
+  candy_stack_push_integer(s, 3);
+  candy_stack_push_integer(s, 4);
+  candy_stack_push_integer(s, 5);
+  candy_stack_push_integer(s, 6);
+  candy_stack_push_integer(s, 7);
+  candy_stack_push_integer(s, 8);
+  EXPECT_EQ(candy_stack_pull_integer(s), 8);
+  EXPECT_EQ(candy_stack_pull_integer(s), 7);
+  EXPECT_EQ(candy_stack_pull_integer(s), 6);
+  EXPECT_EQ(candy_stack_pull_integer(s), 5);
+  EXPECT_EQ(candy_stack_pull_integer(s), 4);
+  EXPECT_EQ(candy_stack_pull_integer(s), 3);
+  EXPECT_EQ(candy_stack_pull_integer(s), 2);
+  EXPECT_EQ(candy_stack_pull_integer(s), 1);
+  EXPECT_EQ(candy_stack_pull_integer(s), 0);
   candy_stack_delete(&s);
   EXPECT_EQ((uint64_t)s, 0);
 }
