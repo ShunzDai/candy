@@ -42,7 +42,7 @@ static void _expr_stat(candy_parser_t *self) {
       _expr(self);
       break;
     default:
-      par_assert(false, "identifier can only be used as variable or function");
+      par_assert(false, "identifiers can only be used for assignment or invocation");
       break;
   }
 }

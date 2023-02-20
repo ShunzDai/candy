@@ -6,7 +6,7 @@
 #include <string.h>
 
 extern "C" void app_main(void) {
-  candy cdy;
+  candy::state sta;
   std::string line;
   printf(">>> ");
   while (1) {
@@ -24,10 +24,9 @@ extern "C" void app_main(void) {
     else if (strcmp(line.c_str(), "q") == 0)
       break;
     printf("%c\n", ch);
-    cdy.dostring(line.c_str());
+    sta.dostring(line.c_str());
     line.erase();
     printf(">>> ");
   }
-  printf("quit\n");
   esp_restart();
 }
