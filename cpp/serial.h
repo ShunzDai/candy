@@ -84,7 +84,7 @@ constexpr void serial::pack_one(obuf_t &obuf, arg_t && arg) {
     std::is_same<arg_t, uint64_t>::value ||
     std::is_same<arg_t,    float>::value ||
     std::is_same<arg_t,   double>::value ||
-  std::is_same<arg_t,     bool>::value
+    std::is_same<arg_t,     bool>::value
   ) {
     obuf.append((const uint8_t *)&arg, sizeof(arg_t));
   }
@@ -125,7 +125,7 @@ constexpr arg_t serial::unpack_one(ibuf_t & ibuf) {
     std::is_same<arg_t, uint64_t>::value ||
     std::is_same<arg_t,    float>::value ||
     std::is_same<arg_t,   double>::value ||
-  std::is_same<arg_t,     bool>::value
+    std::is_same<arg_t,     bool>::value
   ) {
     arg = *(arg_t *)ibuf.data();
     ibuf.remove_prefix(sizeof(arg_t));

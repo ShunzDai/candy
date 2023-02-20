@@ -27,11 +27,11 @@ bool candy_node_empty(candy_node_t *self) {
 }
 
 int candy_node_iterator(candy_node_t *self, candy_iterator_t func, void *args) {
-  for (candy_node_t **node = &self->next; *node; node = &(*node)->next) {
-    if (func(node, args) != 0)
-      break;
+  for (candy_node_t **node = &self; *node; node = &(*node)->next) {
+    if (func(node, args) == 0)
+      return 0;
   }
-  return 0;
+  return -1;
 }
 
 int candy_node_clear(candy_node_t *self, candy_destroy_t func) {
