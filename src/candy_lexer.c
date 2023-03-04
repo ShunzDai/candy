@@ -28,12 +28,12 @@ static const struct {
   #include "src/candy_keyword.list"
 };
 
-static inline int _get_buff_size(candy_lexer_t *self) {
-  return candy_buffer_get_size(self->buffer);
+static inline size_t _get_buff_size(candy_lexer_t *self) {
+  return self->buffer->size;
 }
 
 static inline char *_get_buff_data(candy_lexer_t *self) {
-  return (char *)candy_buffer_get_data(self->buffer);
+  return (char *)self->buffer->data;
 }
 
 /**
@@ -42,7 +42,7 @@ static inline char *_get_buff_data(candy_lexer_t *self) {
   * @param  idx  lookahead to the idx byte, idx value between 0 and @ref CANDY_LEXER_LOOKAHEAD_SIZE - 1
   * @retval target byte
   */
-static inline char _view(candy_lexer_t *self, int idx) {
+static inline char _view(candy_lexer_t *self, size_t idx) {
   assert(self->r + idx < _get_buff_size(self));
   return _get_buff_data(self)[self->r + idx];
 }
@@ -53,7 +53,7 @@ static inline char _view(candy_lexer_t *self, int idx) {
   * @retval target byte
   */
 static inline char _read(candy_lexer_t *self) {
-  int size = _get_buff_size(self);
+  size_t size = _get_buff_size(self);
   /** only @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes left to read */
   if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE == size) {
     /* calculates the start position of the read buffer */

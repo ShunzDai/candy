@@ -13,3 +13,5 @@
 [4]猎户座. Python技法：实现简单的递归下降Parser[DB/OL]. [link](https://zhuanlan.zhihu.com/p/512300174), 2022年05月10日, 2022年07月02日
 
 [5]Manistein. dummylua[DB/OL]. [link](https://github.com/Manistein/dummylua-tutorial), 2021年11月17日, 2022年11月10日
+
+[6]游戏猫. Lua5.1.5源码分析之table实现[DB/OL]. [link](https://blog.csdn.net/gamekit/article/details/122975184), 2022年02月17, 2023年02月24日
