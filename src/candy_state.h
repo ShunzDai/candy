@@ -31,7 +31,7 @@ int candy_dofile(candy_state_t *self, const char name[]);
 /**
   * @brief  register builtin-function into a object.
   * @param  self  candy state handle.
-  * @param  obj   name of the object. if it does not exist, create it; otherwise use it.
+  * @param  name  name of the object. if it does not exist, create it; otherwise use it.
   * @param  list  the list of c-functions to be registered in object.
   * @param  size  size of the list.
   * @return none.

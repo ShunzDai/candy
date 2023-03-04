@@ -24,12 +24,12 @@ struct candy_stack {
   candy_stack_size_t size;
 };
 
-static inline int _get_buff_size(candy_stack_t *self) {
-  return candy_buffer_get_size(self->base);
+static inline size_t _get_buff_size(candy_stack_t *self) {
+  return self->base->size;
 }
 
 static inline candy_wrap_t *_get_buff_data(candy_stack_t *self) {
-  return (candy_wrap_t *)candy_buffer_get_data(self->base);
+  return (candy_wrap_t *)self->base->data;
 }
 
 candy_stack_t *candy_stack_create() {
