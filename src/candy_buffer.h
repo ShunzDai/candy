@@ -20,24 +20,23 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/candy_types.h"
-#include <stdlib.h>
-#include <string.h>
 
 #define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_throw(*(candy_buffer_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
 
 typedef struct candy_buffer candy_buffer_t;
 
-int candy_buffer_get_size(candy_buffer_t *self);
+struct candy_buffer {
+  const uint32_t size;
+  void *data;
+};
 
-void *candy_buffer_get_data(candy_buffer_t *self);
-
-void candy_buffer_expand(candy_buffer_t *self, int atomic, int size);
+void candy_buffer_expand(candy_buffer_t *self, int atomic, int n);
 
 int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud);
 
 void candy_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
 
-candy_buffer_t *candy_buffer_create(int atomic, int size, bool use_jmp);
+candy_buffer_t *candy_buffer_create(int atomic, int n, bool use_jmp);
 
 int candy_buffer_delete(candy_buffer_t **self);
 
