@@ -20,7 +20,7 @@ TEST(wrap, sstring) {
   candy_wrap_t wrap;
   candy_wrap_init_string(&wrap, (char *)"hello", sizeof("hello"));
   EXPECT_EQ(wrap.size, sizeof("hello"));
-  EXPECT_STREQ(candy_wrap_get_string(&wrap, NULL), (char *)"hello");
+  EXPECT_STREQ(candy_wrap_get_string(&wrap), (char *)"hello");
   candy_wrap_deinit(&wrap);
 }
 
@@ -28,6 +28,6 @@ TEST(wrap, lstring) {
   candy_wrap_t wrap;
   candy_wrap_init_string(&wrap, (char *)"hello world", sizeof("hello world"));
   EXPECT_EQ(wrap.size, sizeof("hello world"));
-  EXPECT_STREQ(candy_wrap_get_string(&wrap, NULL), (char *)"hello world");
+  EXPECT_STREQ(candy_wrap_get_string(&wrap), (char *)"hello world");
   candy_wrap_deinit(&wrap);
 }

@@ -85,10 +85,10 @@ int candy_vm_call(candy_vm_t *self, const char name[], int nargs, int nresults) 
   candy_wrap_t *func = candy_object_find_wrap(self->glb, name);
   if (func == NULL)
     return -1;
-  self->info.func = *candy_wrap_get_builtin(func, NULL);
+  self->info.func = *candy_wrap_get_builtin(func);
   candy_wrap_t *entry = candy_object_find_wrap(self->glb, "__entry__");
   if (entry) {
-    (*candy_wrap_get_builtin(entry, NULL))(self->sta);
+    (*candy_wrap_get_builtin(entry))(self->sta);
   }
   return 0;
 }
