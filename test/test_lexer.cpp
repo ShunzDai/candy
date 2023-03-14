@@ -45,10 +45,9 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   if constexpr(sizeof...(value)) {
     auto val = std::get<0>(std::make_tuple(value ...));
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
-      size_t size;
-      char *str = candy_wrap_get_string(&wrap, &size);
-      EXPECT_EQ(memcmp(str, val.data(), size), 0);
-      EXPECT_EQ(size, val.size());
+      char *str = candy_wrap_get_string(&wrap);
+      EXPECT_EQ(wrap.size, val.size());
+      EXPECT_EQ(memcmp(str, val.data(), val.size()), 0);
     }
     else if constexpr (
       std::is_same<decltype(val),   int8_t>::value ||
@@ -60,13 +59,13 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
       std::is_same<decltype(val), uint32_t>::value ||
       std::is_same<decltype(val), uint64_t>::value
     ) {
-      EXPECT_EQ(*candy_wrap_get_integer(&wrap, NULL), val);
+      EXPECT_EQ(*candy_wrap_get_integer(&wrap), val);
     }
     else if constexpr (
       std::is_same<decltype(val),  float>::value ||
       std::is_same<decltype(val), double>::value
     ) {
-      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&wrap, NULL), val);
+      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&wrap), val);
     }
     else {
       assert(0);

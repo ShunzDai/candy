@@ -37,9 +37,9 @@ static const char *_wrap_type[] = {
 
 static int _destroy(candy_object_t **self) {
   /* clear branch */
-  if (candy_wrap_type(&(*self)->wrap) == CANDY_OBJECT) {
-    candy_node_clear(*(candy_node_t **)candy_wrap_get_object(&(*self)->wrap, NULL), (candy_destroy_t)_destroy);
-    candy_node_delete((candy_node_t **)candy_wrap_get_object(&(*self)->wrap, NULL), (candy_destroy_t)_destroy);
+  if ((*self)->wrap.type == CANDY_OBJECT) {
+    candy_node_clear(*(candy_node_t **)candy_wrap_get_object(&(*self)->wrap), (candy_destroy_t)_destroy);
+    candy_node_delete((candy_node_t **)candy_wrap_get_object(&(*self)->wrap), (candy_destroy_t)_destroy);
   }
   return candy_wrap_deinit(&(*self)->wrap);
 }
@@ -54,14 +54,14 @@ static void _print(candy_object_t *self, int depth) {
   while (self != NULL) {
     printf("%s[%d-%d]\t\t%p\t%s\t%d\t0x%08X\t", offset, depth, count, self, _wrap_type[self->wrap.type], self->wrap.size, self->hash);
     switch (self->wrap.type) {
-      case CANDY_NONE:    printf("NA\n");                                                             break;
-      case CANDY_INTEGER: printf("%ld\n", *candy_wrap_get_integer(&self->wrap, NULL));                break;
-      case CANDY_FLOAT:   printf("%.3f\n", *candy_wrap_get_float(&self->wrap, NULL));                 break;
-      case CANDY_BOOLEAN: printf("%d\n", *candy_wrap_get_boolean(&self->wrap, NULL));                 break;
-      case CANDY_STRING:  printf("%s\n", candy_wrap_get_string(&self->wrap, NULL));                   break;
-      case CANDY_USERDEF: printf("%p\n", *candy_wrap_get_ud(&self->wrap, NULL));                      break;
-      case CANDY_BUILTIN: printf("%p\n", *candy_wrap_get_builtin(&self->wrap, NULL));                 break;
-      case CANDY_OBJECT:  printf("\n"); _print(*candy_wrap_get_object(&self->wrap, NULL), depth + 1); break;
+      case CANDY_NONE:    printf("NA\n");                                                       break;
+      case CANDY_INTEGER: printf("%ld\n", *candy_wrap_get_integer(&self->wrap));                break;
+      case CANDY_FLOAT:   printf("%.3f\n", *candy_wrap_get_float(&self->wrap));                 break;
+      case CANDY_BOOLEAN: printf("%d\n", *candy_wrap_get_boolean(&self->wrap));                 break;
+      case CANDY_STRING:  printf("%s\n", candy_wrap_get_string(&self->wrap));                   break;
+      case CANDY_USERDEF: printf("%p\n", *candy_wrap_get_ud(&self->wrap));                      break;
+      case CANDY_BUILTIN: printf("%p\n", *candy_wrap_get_builtin(&self->wrap));                 break;
+      case CANDY_OBJECT:  printf("\n"); _print(*candy_wrap_get_object(&self->wrap), depth + 1); break;
       default: printf("NA\n"); break;
     }
     count++;
@@ -99,8 +99,8 @@ candy_wrap_t *candy_object_find_wrap(candy_object_t *self, const char name[]) {
     .hash = djb_hash(name),
     .wrap = NULL,
   };
-  if (candy_wrap_type(&self->wrap) == CANDY_OBJECT)
-    candy_node_iterator(*(candy_node_t **)candy_wrap_get_object(&self->wrap, NULL), (candy_iterator_t)_iterator, &it);
+  if (self->wrap.type == CANDY_OBJECT)
+    candy_node_iterator(*(candy_node_t **)candy_wrap_get_object(&self->wrap), (candy_iterator_t)_iterator, &it);
   return it.wrap;
 }
 
@@ -148,7 +148,7 @@ int candy_object_add_builtin(candy_object_t *self, const char name[], const cand
 
 int candy_object_add_object(candy_object_t *self, const candy_object_t *val) {
   assert(val->next == NULL);
-  if (candy_wrap_type(&self->wrap) != CANDY_NONE)
-    *(candy_object_t **)&val->next = *candy_wrap_get_object(&self->wrap, NULL);
+  if (self->wrap.type != CANDY_NONE)
+    *(candy_object_t **)&val->next = *candy_wrap_get_object(&self->wrap);
   return candy_wrap_init_object(&self->wrap, &val, 1), 0;
 }
