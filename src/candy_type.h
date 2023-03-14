@@ -13,22 +13,21 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#define CANDY_KEYWORD_LIST
-#include "src/candy_keyword.h"
+#ifndef CANDY_TYPE_LIST
+#error "can only be include by candy_type.list"
+#endif /* CANDY_TYPE_LIST */
 
-#ifdef CANDY_KW
-CANDY_KW(False)
-CANDY_KW(True)
-CANDY_KW(def)
-CANDY_KW(return)
-CANDY_KW(and)
-CANDY_KW(or)
-CANDY_KW(not)
-CANDY_KW(if)
-CANDY_KW(elif)
-CANDY_KW(else)
-CANDY_KW(while)
-CANDY_KW(for)
-CANDY_KW(break)
-CANDY_KW(continue)
-#endif /* CANDY_KW */
+#ifdef CANDY_TYPE
+#undef CANDY_TYPE
+#endif /* CANDY_TYPE */
+
+#ifdef CANDY_TYPE_ENUM
+#undef CANDY_TYPE_ENUM
+#define CANDY_TYPE(_type, ...) CANDY_##_type,
+#endif /* CANDY_TYPE_ENUM */
+
+
+#ifdef CANDY_TYPE_SIZE
+#undef CANDY_TYPE_SIZE
+#define CANDY_TYPE(_type, _n) _n,
+#endif /* CANDY_TYPE_SIZE */
