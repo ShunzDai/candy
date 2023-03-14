@@ -14,8 +14,8 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "test_common.h"
 #include "src/candy_lexer.h"
+#include "src/candy_reader.h"
 #include "mid_os.h"
 #include <string>
 
@@ -33,8 +33,8 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   int status = 0;
   candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
   candy_lexer_t lex;
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
-  candy_lexer_init(&lex, buffer, _string_reader, &info);
+  str_info info = {exp, strlen(exp), 0};
+  candy_lexer_init(&lex, buffer, string_reader, &info);
   candy_wrap_t wrap;
   candy_wrap_init_none(&wrap);
   if ((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, token, &wrap]() {
@@ -183,12 +183,12 @@ TEST_LEXER(TK_LSHIFT , TK_LSHIFT , "<<")
 TEST(lexer, file_system) {
   FILE *f = fopen("../test/test_lexer.cdy", "r");
   fseek(f, 0, SEEK_END);
-  int size = (int)ftell(f);
+  size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
   candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
   candy_lexer_t lex;
-  info_file info = {f, size};
-  candy_lexer_init(&lex, buffer, _file_reader, &info);
+  file_info info = {f, size};
+  candy_lexer_init(&lex, buffer, file_reader, &info);
   candy_wrap_t wrap;
   candy_wrap_init_none(&wrap);
   EXPECT_EQ(candy_try_catch(buffer, try_func, new std::function<void()>([&lex, &wrap]() {

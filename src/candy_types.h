@@ -45,7 +45,7 @@ typedef struct candy_node candy_node_t;
 typedef struct candy_object candy_object_t;
 typedef struct candy_state candy_state_t;
 
-typedef int (*candy_reader_t)(char *, const int, void *);
+typedef int (*candy_reader_t)(char *, const size_t, void *);
 
 /**
   * @brief builtin-function

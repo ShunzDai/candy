@@ -14,17 +14,17 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "test_common.h"
 #include "src/candy_parser.h"
+#include "src/candy_reader.h"
 #include "mid_os.h"
 
 #define PARSER_TEST(_name, _exp) TEST(parser, _name) {test_body(_exp);}
 
 static void test_body(const char exp[]) {
-  info_str info = {exp, (int)strlen(exp) + 1, 0};
+  str_info info = {exp, strlen(exp), 0};
   candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
   auto tick = os::tick_ns();
-  EXPECT_EQ(candy_parse(buffer, _string_reader, &info) == nullptr, false);
+  EXPECT_EQ(candy_parse(buffer, string_reader, &info) == nullptr, false);
   printf("delta time = %ld ns\n", os::tick_ns() - tick);
   candy_buffer_delete(&buffer);
 }
