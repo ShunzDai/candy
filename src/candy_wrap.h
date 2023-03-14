@@ -26,23 +26,26 @@ extern "C"{
 #include <assert.h>
 
 struct candy_wrap {
+  uint32_t data[2];
   uint32_t type :  4;
   uint32_t size : 28;
-  uint32_t data[2];
 };
 
-static inline candy_wraps_t candy_wrap_type(candy_wrap_t *self) {
-  return (candy_wraps_t)self->type;
+static inline size_t candy_wrap_sizeof(candy_wrap_t *self) {
+  static const size_t list[] = {
+#define CANDY_TYPE_SIZE
+#include "candy_type.list"
+  };
+  assert(self->type < CANDY_MAX);
+  return list[self->type];
 }
 
 static inline bool candy_wrap_check_ldata(candy_wrap_t *self, size_t n) {
   return self->size > ((sizeof(struct candy_wrap) - sizeof(uint32_t)) / n);
 }
 
-static inline void *candy_wrap_get_data(candy_wrap_t *self, size_t *size, size_t n) {
-  if (size)
-    *size = self->size;
-  return candy_wrap_check_ldata(self, n) ? *(void **)&self->data : (void *)&self->data;
+static inline void *candy_wrap_get_data(candy_wrap_t *self) {
+  return candy_wrap_check_ldata(self, candy_wrap_sizeof(self)) ? *(void **)&self->data : (void *)&self->data;
 }
 
 static inline void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, size_t size, size_t n) {
@@ -51,39 +54,39 @@ static inline void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, c
   memcpy(candy_wrap_check_ldata(self, n) ? (*(void **)&self->data = calloc(size, n)) : &self->data, data, size * n);
 }
 
-static inline candy_integer_t *candy_wrap_get_integer(candy_wrap_t *self, size_t *size) {
-  assert(candy_wrap_type(self) == CANDY_INTEGER);
-  return (candy_integer_t *)candy_wrap_get_data(self, size, sizeof(candy_integer_t));
+static inline candy_integer_t *candy_wrap_get_integer(candy_wrap_t *self) {
+  assert(self->type == CANDY_INTEGER);
+  return (candy_integer_t *)candy_wrap_get_data(self);
 }
 
-static inline candy_float_t *candy_wrap_get_float(candy_wrap_t *self, size_t *size) {
-  assert(candy_wrap_type(self) == CANDY_FLOAT);
-  return (candy_float_t *)candy_wrap_get_data(self, size, sizeof(candy_float_t));
+static inline candy_float_t *candy_wrap_get_float(candy_wrap_t *self) {
+  assert(self->type == CANDY_FLOAT);
+  return (candy_float_t *)candy_wrap_get_data(self);
 }
 
-static inline candy_boolean_t *candy_wrap_get_boolean(candy_wrap_t *self, size_t *size) {
-  assert(candy_wrap_type(self) == CANDY_BOOLEAN);
-  return (candy_boolean_t *)candy_wrap_get_data(self, size, sizeof(candy_boolean_t));
+static inline candy_boolean_t *candy_wrap_get_boolean(candy_wrap_t *self) {
+  assert(self->type == CANDY_BOOLEAN);
+  return (candy_boolean_t *)candy_wrap_get_data(self);
 }
 
-static inline char *candy_wrap_get_string(candy_wrap_t *self, size_t *size) {
-  assert(candy_wrap_type(self) == CANDY_STRING);
-  return (char *)candy_wrap_get_data(self, size, sizeof(char));
+static inline char *candy_wrap_get_string(candy_wrap_t *self) {
+  assert(self->type == CANDY_STRING);
+  return (char *)candy_wrap_get_data(self);
 }
 
-static inline void **candy_wrap_get_ud(candy_wrap_t *self, size_t *size) {
-  assert(candy_wrap_type(self) == CANDY_USERDEF);
-  return (void **)candy_wrap_get_data(self, size, sizeof(void *));
+static inline void **candy_wrap_get_ud(candy_wrap_t *self) {
+  assert(self->type == CANDY_USERDEF);
+  return (void **)candy_wrap_get_data(self);
 }
 
-static inline candy_object_t **candy_wrap_get_object(candy_wrap_t *self, size_t *size) {
-  assert(candy_wrap_type(self) == CANDY_OBJECT);
-  return (candy_object_t **)candy_wrap_get_data(self, size, sizeof(candy_object_t *));
+static inline candy_object_t **candy_wrap_get_object(candy_wrap_t *self) {
+  assert(self->type == CANDY_OBJECT);
+  return (candy_object_t **)candy_wrap_get_data(self);
 }
 
-static inline candy_builtin_t *candy_wrap_get_builtin(candy_wrap_t *self, size_t *size) {
-  assert(candy_wrap_type(self) == CANDY_BUILTIN);
-  return (candy_builtin_t *)candy_wrap_get_data(self, size, sizeof(candy_builtin_t));
+static inline candy_builtin_t *candy_wrap_get_builtin(candy_wrap_t *self) {
+  assert(self->type == CANDY_BUILTIN);
+  return (candy_builtin_t *)candy_wrap_get_data(self);
 }
 
 static inline void candy_wrap_init_none(candy_wrap_t *self) {
@@ -119,12 +122,7 @@ static inline void candy_wrap_init_builtin(candy_wrap_t *self, const candy_built
 }
 
 static inline int candy_wrap_deinit(candy_wrap_t *self) {
-  const size_t list[] = {
-      0xFFFFFFFF, sizeof(candy_integer_t),    sizeof(candy_float_t), sizeof(candy_boolean_t),
-    sizeof(char),          sizeof(void *), sizeof(candy_builtin_t), sizeof(candy_object_t *),
-  };
-  assert(self->type < CANDY_MAX);
-  if (candy_wrap_check_ldata(self, list[self->type]))
+  if (candy_wrap_check_ldata(self, candy_wrap_sizeof(self)))
     free(*(void **)&self->data);
   memset(self, 0, sizeof(struct candy_wrap));
   return 0;

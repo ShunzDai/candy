@@ -27,14 +27,14 @@ typedef struct candy_buffer candy_buffer_t;
 
 struct candy_buffer {
   const uint32_t size;
-  void *data;
+  void * const data;
 };
-
-void candy_buffer_expand(candy_buffer_t *self, int atomic, int n);
 
 int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud);
 
 void candy_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
+
+void candy_buffer_expand(candy_buffer_t *self, int atomic, int n);
 
 candy_buffer_t *candy_buffer_create(int atomic, int n, bool use_jmp);
 

@@ -76,7 +76,7 @@ candy_wrap_t *candy_stack_pop(candy_stack_t *self) {
 }
 
 candy_wraps_t candy_stack_type(candy_stack_t *self) {
-  return candy_wrap_type(candy_stack_top(self));
+  return candy_stack_top(self)->type;
 }
 
 void candy_stack_push_integer(candy_stack_t *self, const candy_integer_t val) {
@@ -104,17 +104,17 @@ void candy_stack_push_string(candy_stack_t *self, const char val[], size_t size)
 }
 
 candy_integer_t candy_stack_pull_integer(candy_stack_t *self) {
-  return *candy_wrap_get_integer(candy_stack_pop(self), NULL);
+  return *candy_wrap_get_integer(candy_stack_pop(self));
 }
 
 candy_float_t candy_stack_pull_float(candy_stack_t *self) {
-  return *candy_wrap_get_float(candy_stack_pop(self), NULL);
+  return *candy_wrap_get_float(candy_stack_pop(self));
 }
 
 candy_boolean_t candy_stack_pull_boolean(candy_stack_t *self) {
-  return *candy_wrap_get_boolean(candy_stack_pop(self), NULL);
+  return *candy_wrap_get_boolean(candy_stack_pop(self));
 }
 
 const char *candy_stack_pull_string(candy_stack_t *self, size_t *size) {
-  return candy_wrap_get_string(candy_stack_pop(self), size);
+  return candy_wrap_get_string(candy_stack_pop(self));
 }
