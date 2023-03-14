@@ -29,13 +29,13 @@ std::tuple<int, float, std::string> func5(bool arg1, int arg2, float arg3, std::
 
 int main(int argc, char *argv[]) {
   candy::state sta;
-  sta.add("__global__", candy::list(
+  sta.add("__global__",
     std::pair{"func1", func1},
     std::pair{"func2", func2},
     std::pair{"func3", func3},
     std::pair{"func4", func4},
     std::pair{"func5", func5}
-  ));
+  );
 
   /* auto res1 = */ sta.call("func1");
   /* auto res2 = */ sta.call("func2", 314, 3.14f, "cpp str");
