@@ -16,47 +16,16 @@
 #include "src/candy_state.h"
 #include "src/candy_buffer.h"
 #include "src/candy_parser.h"
+#include "src/candy_reader.h"
 #include "src/candy_vm.h"
 #include <stdlib.h>
 #include <string.h>
-
-struct info_str {
-  const char *exp;
-  const int size;
-  int offset;
-};
-
-struct info_file {
-  FILE *f;
-  const int size;
-};
 
 struct candy_state {
   candy_buffer_t *buffer;
   candy_vm_t *vm;
   void *ud;
 };
-
-static inline int _string_reader(char *buff, const int max_len, void *ud) {
-  struct info_str *info = (struct info_str *)ud;
-  int residual = info->size - info->offset;
-  int len = (max_len > residual) ? residual : max_len;
-  memcpy(buff, info->exp + info->offset, len);
-  info->offset += len;
-  if (info->offset == info->size && len < max_len)
-    buff[len] = '\0';
-  return len;
-}
-
-static inline int _file_reader(char *buff, const int max_len, void *ud) {
-  struct info_file *info = (struct info_file *)ud;
-  int residual = info->size - (int)ftell(info->f);
-  int len = (max_len > residual) ? residual : max_len;
-  fread(buff, sizeof(char), len, info->f);
-  if ((int)ftell(info->f) == info->size && len < max_len)
-    buff[len] = '\0';
-  return len;
-}
 
 candy_state_t *candy_state_create(void *ud) {
   candy_state_t *self = (candy_state_t *)malloc(sizeof(struct candy_state));
@@ -75,8 +44,8 @@ int candy_state_delete(candy_state_t **self) {
 }
 
 int candy_dostring(candy_state_t *self, const char exp[]) {
-  struct info_str info = {exp, (int)strlen(exp), 0};
-  if (candy_parse(self->buffer, _string_reader, &info) == NULL) {
+  struct str_info info = {exp, strlen(exp), 0};
+  if (candy_parse(self->buffer, string_reader, &info) == NULL) {
     printf("%s\n", (const char *)self->buffer->data);
     return -1;
   }
@@ -88,10 +57,10 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   if (f == NULL)
     return -1;
   fseek(f, 0, SEEK_END);
-  int size = (int)ftell(f);
+  size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
-  struct info_file info = {f, size};
-  if (candy_parse(self->buffer, _file_reader, &info) == NULL) {
+  struct file_info info = {f, size};
+  if (candy_parse(self->buffer, file_reader, &info) == NULL) {
     printf("%s\n", (const char *)self->buffer->data);
     fclose(f);
     return -1;

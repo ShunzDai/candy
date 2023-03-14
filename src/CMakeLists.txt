@@ -5,6 +5,7 @@ file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   candy_stack.c
   candy_lexer.c
   candy_parser.c
+  candy_reader.c
   candy_vm.c
   candy_state.c
 )
