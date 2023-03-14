@@ -25,15 +25,8 @@ extern "C"{
 #include <stdio.h> /** @todo remove it */
 
 typedef enum candy_wraps {
-  CANDY_NONE,
-  CANDY_INTEGER,
-  CANDY_FLOAT,
-  CANDY_BOOLEAN,
-  CANDY_STRING,
-  CANDY_USERDEF,
-  CANDY_BUILTIN,
-  CANDY_OBJECT,
-  CANDY_MAX,
+#define CANDY_TYPE_ENUM
+#include "candy_type.list"
 } candy_wraps_t;
 
 typedef int64_t candy_integer_t;

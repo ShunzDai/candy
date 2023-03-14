@@ -16,6 +16,8 @@
 #define CANDY_OPCODE_LIST
 #include "src/candy_opcode.h"
 
+#ifdef CANDY_OP
 CANDY_OP(LOAD,
   break;
 )
+#endif /* CANDY_OP */
