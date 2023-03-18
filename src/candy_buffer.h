@@ -26,17 +26,17 @@ extern "C"{
 typedef struct candy_buffer candy_buffer_t;
 
 struct candy_buffer {
-  const uint32_t size;
   void * const data;
+  const size_t size;
 };
 
 int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud);
 
 void candy_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
 
-void candy_buffer_expand(candy_buffer_t *self, int atomic, int n);
+void candy_buffer_expand(candy_buffer_t *self, int size, int n);
 
-candy_buffer_t *candy_buffer_create(int atomic, int n, bool use_jmp);
+candy_buffer_t *candy_buffer_create(int size, int n, bool use_jmp);
 
 int candy_buffer_delete(candy_buffer_t **self);
 

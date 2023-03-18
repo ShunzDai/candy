@@ -33,11 +33,11 @@ extern "C"{
   * @brief  smaller buffers mean less space utilization and more load times,
   *         which can be decided by the user depending on the usage scenario.
   */
-#define CANDY_ATOMIC_BUFFER_SIZE 64
+#define CANDY_ATOMIC_IO_SIZE 64
 
-#if CANDY_ATOMIC_BUFFER_SIZE < CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE
-#error "default buffer size is too small"
-#endif /* CANDY_ATOMIC_BUFFER_SIZE */
+#if CANDY_ATOMIC_IO_SIZE < CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE
+#error "io buffer size is too small"
+#endif /* CANDY_ATOMIC_IO_SIZE */
 
 #define CANDY_ATOMIC_STACK_SIZE 8
 
