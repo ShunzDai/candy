@@ -15,6 +15,7 @@
   */
 #define CANDY_TYPE_LIST
 #include "src/candy_type.h"
+#undef CANDY_TYPE_LIST
 
 #ifdef CANDY_TYPE
 CANDY_TYPE(NONE,    0xFFFFFFFF)
