@@ -31,13 +31,13 @@ void try_func(void *ud) {
 template <typename ... supposed>
 static void tast_body(candy_tokens_t token, const char exp[], supposed ... value) {
   int status = 0;
-  candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
+  candy_buffer_t *io = candy_buffer_create(CANDY_ATOMIC_IO_SIZE, sizeof(char), true);
   candy_lexer_t lex;
   str_info info = {exp, strlen(exp), 0};
-  candy_lexer_init(&lex, buffer, string_reader, &info);
+  candy_lexer_init(&lex, io, string_reader, &info);
   candy_wrap_t wrap;
   candy_wrap_init_none(&wrap);
-  if ((status = candy_try_catch(buffer, try_func, new std::function<void()>([&lex, token, &wrap]() {
+  if ((status = candy_try_catch(io, try_func, new std::function<void()>([&lex, token, &wrap]() {
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), token);
     EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_NONE);
   }))) != 0)
@@ -74,7 +74,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   exit:
   candy_wrap_deinit(&wrap);
   candy_lexer_deinit(&lex);
-  candy_buffer_delete(&buffer);
+  candy_buffer_delete(&io);
   EXPECT_EQ(status, 0);
 }
 
@@ -184,7 +184,7 @@ TEST(lexer, file_system) {
   fseek(f, 0, SEEK_END);
   size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
-  candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_BUFFER_SIZE, sizeof(char), true);
+  candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_IO_SIZE, sizeof(char), true);
   candy_lexer_t lex;
   file_info info = {f, size};
   candy_lexer_init(&lex, buffer, file_reader, &info);

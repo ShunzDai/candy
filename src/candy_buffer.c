@@ -21,8 +21,8 @@
 #include <string.h>
 
 struct priv {
-  uint32_t size;
   void *data;
+  size_t size;
   jmp_buf env;
 };
 
@@ -54,18 +54,18 @@ void candy_throw(candy_buffer_t *self, const char format[], ...) {
   longjmp(_priv(self)->env, 1);
 }
 
-void candy_buffer_expand(candy_buffer_t *self, int atomic, int n) {
-  void *data = calloc(_priv(self)->size + atomic, n);
+void candy_buffer_expand(candy_buffer_t *self, int size, int n) {
+  void *data = calloc(_priv(self)->size + size, n);
   memcpy(data, _priv(self)->data, _priv(self)->size * n);
   free(_priv(self)->data);
-  _priv(self)->size += atomic;
+  _priv(self)->size += size;
   _priv(self)->data = data;
 }
 
-candy_buffer_t *candy_buffer_create(int atomic, int n, bool use_jmp) {
+candy_buffer_t *candy_buffer_create(int size, int n, bool use_jmp) {
   candy_buffer_t *self = (candy_buffer_t *)malloc(use_jmp ? sizeof(struct priv) : (sizeof(struct priv) - sizeof(jmp_buf)));
-  _priv(self)->size = atomic;
-  _priv(self)->data = calloc(atomic, n);
+  _priv(self)->size = size;
+  _priv(self)->data = calloc(size, n);
   return self;
 }
 
