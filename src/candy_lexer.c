@@ -16,6 +16,7 @@
 #include "src/candy_lexer.h"
 #include "src/candy_lib.h"
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #define lex_assert(_condition, _format, ...) candy_assert(_condition, lexical, _format, ##__VA_ARGS__)
@@ -59,10 +60,10 @@ static inline char _read(candy_lexer_t *self) {
     /* calculates the start position of the read buffer */
     int offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
     /** if the number of bytes that can be filled is less than
-        @ref CANDY_ATOMIC_BUFFER_SIZE bytes, the buffer will be enlarged */
-    if (size - offset < CANDY_ATOMIC_BUFFER_SIZE) {
-      candy_buffer_expand(self->buffer, CANDY_ATOMIC_BUFFER_SIZE, sizeof(char));
-      self->reader(_get_buff_data(self) + size, CANDY_ATOMIC_BUFFER_SIZE, self->ud);
+        @ref CANDY_ATOMIC_IO_SIZE bytes, the buffer will be enlarged */
+    if (size - offset < CANDY_ATOMIC_IO_SIZE) {
+      candy_buffer_expand(self->buffer, CANDY_ATOMIC_IO_SIZE, sizeof(char));
+      self->reader(_get_buff_data(self) + size, CANDY_ATOMIC_IO_SIZE, self->ud);
     }
     /* otherwise buffer will be filled directly */
     else {
