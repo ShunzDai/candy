@@ -221,7 +221,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
     while (_check_next(self, is_hex, _save));
     _save_char(self, '\0');
     candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 16);
-    candy_wrap_init_integer(wrap, &i, 1);
+    candy_wrap_set_integer(wrap, &i, 1);
     return TK_INTEGER;
   }
   _save(self);
@@ -245,12 +245,12 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
         _save_char(self, '\0');
         if (is_float) {
           candy_float_t f = (candy_float_t)strtod(_get_buff_data(self), NULL);
-          candy_wrap_init_float(wrap, &f, 1);
+          candy_wrap_set_float(wrap, &f, 1);
           return TK_FLOAT;
         }
         else {
           candy_integer_t i = (candy_integer_t)strtol(_get_buff_data(self), NULL, 10);
-          candy_wrap_init_integer(wrap, &i, 1);
+          candy_wrap_set_integer(wrap, &i, 1);
           return TK_INTEGER;
         }
     }
@@ -374,7 +374,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       /* is string */
       case '"': case '\'':
-        candy_wrap_init_string(wrap, _get_buff_data(self), _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
+        candy_wrap_set_string(wrap, _get_buff_data(self), _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
         return TK_STRING;
       default:
         if (is_dec(_view(self, 0)))
