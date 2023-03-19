@@ -17,6 +17,7 @@
 #include "src/candy_node.h"
 #include "src/candy_lib.h"
 #include "candy_wrap.h"
+#include <string.h>
 
 struct candy_object {
   candy_object_t *next;
@@ -112,37 +113,37 @@ int candy_object_add_wrap(candy_object_t *self, const char name[], candy_wrap_t 
 
 int candy_object_add_integer(candy_object_t *self, const char name[], const candy_integer_t val) {
   candy_wrap_t wrap;
-  candy_wrap_init_integer(&wrap, &val, 1);
+  candy_wrap_set_integer(&wrap, &val, 1);
   return candy_object_add_wrap(self, name, &wrap);
 }
 
 int candy_object_add_float(candy_object_t *self, const char name[], const candy_float_t val) {
   candy_wrap_t wrap;
-  candy_wrap_init_float(&wrap, &val, 1);
+  candy_wrap_set_float(&wrap, &val, 1);
   return candy_object_add_wrap(self, name, &wrap);
 }
 
 int candy_object_add_boolean(candy_object_t *self, const char name[], const candy_boolean_t val) {
   candy_wrap_t wrap;
-  candy_wrap_init_boolean(&wrap, &val, 1);
+  candy_wrap_set_boolean(&wrap, &val, 1);
   return candy_object_add_wrap(self, name, &wrap);
 }
 
 int candy_object_add_string(candy_object_t *self, const char name[], const char val[], size_t size) {
   candy_wrap_t wrap;
-  candy_wrap_init_string(&wrap, val, size);
+  candy_wrap_set_string(&wrap, val, size);
   return candy_object_add_wrap(self, name, &wrap);
 }
 
 int candy_object_add_ud(candy_object_t *self, const char name[], const void *val) {
   candy_wrap_t wrap;
-  candy_wrap_init_ud(&wrap, &val, 1);
+  candy_wrap_set_ud(&wrap, &val, 1);
   return candy_object_add_wrap(self, name, &wrap);
 }
 
 int candy_object_add_builtin(candy_object_t *self, const char name[], const candy_builtin_t val) {
   candy_wrap_t wrap;
-  candy_wrap_init_builtin(&wrap, &val, 1);
+  candy_wrap_set_builtin(&wrap, &val, 1);
   return candy_object_add_wrap(self, name, &wrap);
 }
 
@@ -150,5 +151,5 @@ int candy_object_add_object(candy_object_t *self, const candy_object_t *val) {
   assert(val->next == NULL);
   if (self->wrap.type != CANDY_NONE)
     *(candy_object_t **)&val->next = *candy_wrap_get_object(&self->wrap);
-  return candy_wrap_init_object(&self->wrap, &val, 1), 0;
+  return candy_wrap_set_object(&self->wrap, &val, 1), 0;
 }
