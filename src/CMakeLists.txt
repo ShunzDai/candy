@@ -1,5 +1,6 @@
 file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   candy_buffer.c
+  candy_wrap.c
   candy_node.c
   candy_object.c
   candy_stack.c
@@ -10,7 +11,7 @@ file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   candy_state.c
 )
 
-add_compile_options(-Wno-implicit-fallthrough -Wno-sizeof-pointer-div)
+add_compile_options(-Wno-implicit-fallthrough)
 
 add_library(candy_core STATIC ${SOURCES_CANDY})
 
