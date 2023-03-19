@@ -55,17 +55,19 @@ void candy_throw(candy_buffer_t *self, const char format[], ...) {
 }
 
 void candy_buffer_expand(candy_buffer_t *self, int size, int n) {
-  void *data = calloc(_priv(self)->size + size, n);
-  memcpy(data, _priv(self)->data, _priv(self)->size * n);
-  free(_priv(self)->data);
-  _priv(self)->size += size;
-  _priv(self)->data = data;
+  size_t old_size = _priv(self)->size;
+  void *old_data = _priv(self)->data;
+  _priv(self)->size = _priv(self)->size + size;
+  _priv(self)->data = calloc(_priv(self)->size, n);
+  memcpy(_priv(self)->data, old_data, old_size * n);
+  free(old_data);
+  old_data = NULL;
 }
 
 candy_buffer_t *candy_buffer_create(int size, int n, bool use_jmp) {
   candy_buffer_t *self = (candy_buffer_t *)malloc(use_jmp ? sizeof(struct priv) : (sizeof(struct priv) - sizeof(jmp_buf)));
   _priv(self)->size = size;
-  _priv(self)->data = calloc(size, n);
+  _priv(self)->data = calloc(_priv(self)->size, n);
   return self;
 }
 
