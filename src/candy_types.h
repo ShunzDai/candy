@@ -26,7 +26,7 @@ extern "C"{
 
 typedef enum candy_wraps {
 #define CANDY_TYPE_ENUM
-#include "candy_type.list"
+#include "src/candy_type.list"
 } candy_wraps_t;
 
 typedef int64_t candy_integer_t;
@@ -34,8 +34,7 @@ typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
 
 typedef struct candy_wrap candy_wrap_t;
-typedef struct candy_node candy_node_t;
-typedef struct candy_object candy_object_t;
+typedef struct candy_table candy_table_t;
 typedef struct candy_state candy_state_t;
 
 typedef int (*candy_reader_t)(char *, const size_t, void *);

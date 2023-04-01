@@ -15,10 +15,10 @@
   */
 #include "src/candy_vm.h"
 #include "src/candy_wrap.h"
+#include "src/candy_table.h"
 #include "src/candy_stack.h"
-#include "src/candy_object.h"
-#include "src/candy_lib.h"
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #define CANDY_OP_SIZE 6
@@ -47,9 +47,9 @@ typedef union candy_opmode {
 } candy_opmode_t;
 
 struct candy_vm {
-  candy_stack_t *stack;
-  candy_object_t *glb;
   candy_state_t *sta;
+  candy_stack_t *stack;
+  candy_table_t *glb;
   void *gc;
   void *err;
   candy_callinfo_t info;
@@ -58,38 +58,45 @@ struct candy_vm {
 candy_vm_t *candy_vm_create(candy_state_t *sta) {
   candy_vm_t *self = (candy_vm_t *)malloc(sizeof(candy_vm_t));
   self->stack = candy_stack_create();
-  self->glb = candy_object_create("__global__");
+  self->glb = candy_table_create();
   self->sta = sta;
   return self;
 }
 
 int candy_vm_delete(candy_vm_t **self) {
   candy_stack_delete(&(*self)->stack);
-  candy_object_delete(&(*self)->glb);
+  candy_table_delete(&(*self)->glb);
   free(*self);
   *self = NULL;
   return 0;
 }
 
 int candy_vm_builtin(candy_vm_t *self, const char name[], candy_regist_t list[], size_t size) {
-  candy_object_t *obj = candy_object_hash(self->glb) == djb_hash(name) ? self->glb : candy_object_create(name);
-  for (unsigned idx = 0; idx < size; ++idx)
-    candy_object_add_builtin(obj, list[idx].name, list[idx].func);
-  if (obj != self->glb)
-    candy_object_add_object(self->glb, obj);
-  candy_object_print(self->glb);
+  printf("obj [%s]\n", name);
+  for (unsigned idx = 0; idx < size; ++idx) {
+    candy_wrap_t key, val;
+    candy_wrap_init(&key);
+    candy_wrap_init(&val);
+    candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name) + 1);
+    candy_wrap_set_builtin(&val, &list[idx].func, 1);
+    candy_table_set(self->glb, &key, &val);
+  }
+  candy_table_print(self->glb);
   return 0;
 }
 
 int candy_vm_call(candy_vm_t *self, const char name[], int nargs, int nresults) {
-  candy_wrap_t *func = candy_object_find_wrap(self->glb, name);
-  if (func == NULL)
+  candy_wrap_t key;
+  candy_wrap_set_string(&key, name, strlen(name) + 1);
+  const candy_wrap_t *func = candy_table_get(self->glb, &key);
+  candy_wrap_deinit(&key);
+  if (func->type != CANDY_BUILTIN)
     return -1;
   self->info.func = *candy_wrap_get_builtin(func);
-  candy_wrap_t *entry = candy_object_find_wrap(self->glb, "__entry__");
-  if (entry) {
-    (*candy_wrap_get_builtin(entry))(self->sta);
-  }
+  candy_wrap_set_string(&key, "__entry__", 10);
+  const candy_wrap_t *entry = candy_table_get(self->glb, &key);
+  candy_wrap_deinit(&key);
+  (*candy_wrap_get_builtin(entry->type != CANDY_BUILTIN ? func : entry))(self->sta);
   return 0;
 }
 
