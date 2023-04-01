@@ -1,8 +1,7 @@
 file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   candy_buffer.c
   candy_wrap.c
-  candy_node.c
-  candy_object.c
+  candy_table.c
   candy_stack.c
   candy_lexer.c
   candy_parser.c
