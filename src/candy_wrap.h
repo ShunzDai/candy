@@ -37,7 +37,7 @@ int candy_wrap_deinit(candy_wrap_t *self);
 static inline size_t candy_wrap_sizeof(const candy_wrap_t *self) {
   static const size_t list[] = {
 #define CANDY_TYPE_SIZE
-#include "candy_type.list"
+#include "src/candy_type.list"
   };
   return list[self->type];
 }
@@ -71,14 +71,14 @@ static inline void **candy_wrap_get_ud(const candy_wrap_t *self) {
   return (void **)candy_wrap_get_data(self);
 }
 
-static inline candy_object_t **candy_wrap_get_object(const candy_wrap_t *self) {
-  assert(self->type == CANDY_OBJECT);
-  return (candy_object_t **)candy_wrap_get_data(self);
-}
-
 static inline candy_builtin_t *candy_wrap_get_builtin(const candy_wrap_t *self) {
   assert(self->type == CANDY_BUILTIN);
   return (candy_builtin_t *)candy_wrap_get_data(self);
+}
+
+static inline candy_table_t **candy_wrap_get_table(const candy_wrap_t *self) {
+  assert(self->type == CANDY_TABLE);
+  return (candy_table_t **)candy_wrap_get_data(self);
 }
 
 static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t val[], size_t size) {
@@ -101,12 +101,12 @@ static inline void candy_wrap_set_ud(candy_wrap_t *self, const void *val[], size
   candy_wrap_set_data(self, CANDY_USERDEF, val, size, sizeof(void *));
 }
 
-static inline void candy_wrap_set_object(candy_wrap_t *self, const candy_object_t *val[], size_t size) {
-  candy_wrap_set_data(self, CANDY_OBJECT, val, size, sizeof(candy_object_t *));
-}
-
 static inline void candy_wrap_set_builtin(candy_wrap_t *self, const candy_builtin_t val[], size_t size) {
   candy_wrap_set_data(self, CANDY_BUILTIN, val, size, sizeof(candy_builtin_t));
+}
+
+static inline void candy_wrap_set_table(candy_wrap_t *self, const candy_table_t *val[], size_t size) {
+  candy_wrap_set_data(self, CANDY_TABLE, val, size, sizeof(candy_table_t *));
 }
 
 #ifdef __cplusplus
