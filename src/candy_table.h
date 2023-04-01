@@ -13,47 +13,22 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_LIB_H
-#define CANDY_SRC_LIB_H
+#ifndef CANDY_SRC_TABLE_H
+#define CANDY_SRC_TABLE_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <ctype.h>
+#include "src/candy_types.h"
 
-#define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
+candy_table_t *candy_table_create();
+int candy_table_delete(candy_table_t **self);
 
-static inline bool is_upper(char ch) {
-  return isupper(ch);
-}
-
-static inline bool is_lower(char ch) {
-  return islower(ch);
-}
-
-static inline bool is_alpha(char ch) {
-  return isalpha(ch);
-}
-
-static inline bool is_oct(char ch) {
-  return (unsigned)(ch - '0') <= (unsigned)('7' - '0');
-}
-
-static inline bool is_dec(char ch) {
-  return isdigit(ch);
-}
-
-static inline bool is_hex(char ch) {
-  return isxdigit(ch);
-}
-
-static inline uint8_t ch2hex(char ch) {
-  return is_dec(ch) ? (ch - '0') : (toupper(ch) - 'A' + 10);
-}
+void candy_table_print(candy_table_t *self);
+const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key);
+int candy_table_set(candy_table_t *self, const candy_wrap_t *key, const candy_wrap_t *val);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_LIB_H */
+#endif /* CANDY_SRC_TABLE_H */
