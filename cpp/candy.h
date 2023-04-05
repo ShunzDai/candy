@@ -38,7 +38,7 @@ class state {
   int dofile(const char path[]);
 
   template <typename ... func_t>
-  int add(const char name[], const std::pair<const char *, func_t> & ... list);
+  int add(const std::pair<const char *, func_t> & ... list);
 
   /**
     * @brief  cpp call candy function
@@ -83,9 +83,8 @@ class state {
   void *_csta;
 
   static int entry(void *csta);
-  static int deinit(void *cobj);
 
-  int add(const char name[], pair_t list[], size_t size);
+  int add(pair_t list[], size_t size);
   int ccall(const char name[], int nargs, int nresults);
 
   void push_integer(const int64_t &val);
@@ -113,9 +112,9 @@ class state {
 };
 
 template <typename ... func_t>
-int state::add(const char name[], const std::pair<const char *, func_t> & ... list) {
+int state::add(const std::pair<const char *, func_t> & ... list) {
   auto clist = toclist(list ...);
-  return add(name, clist.data(), clist.size());
+  return add(clist.data(), clist.size());
 }
 
 template <typename ... res_t, typename ... arg_t>

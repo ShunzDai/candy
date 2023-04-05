@@ -16,7 +16,8 @@
 #include "src/candy_vm.h"
 #include "src/candy_wrap.h"
 #include "src/candy_table.h"
-#include "src/candy_stack.h"
+#include "src/candy_buffer.h"
+#include "src/candy_lib.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -48,31 +49,52 @@ typedef union candy_opmode {
 
 struct candy_vm {
   candy_state_t *sta;
-  candy_stack_t *stack;
+  candy_buffer_t *base;
   candy_table_t *glb;
-  void *gc;
-  void *err;
+  size_t size;
   candy_callinfo_t info;
 };
 
-candy_vm_t *candy_vm_create(candy_state_t *sta) {
+static inline size_t _get_buff_size(candy_vm_t *self) {
+  return self->base->size;
+}
+
+static inline candy_wrap_t *_get_buff_data(candy_vm_t *self) {
+  return (candy_wrap_t *)self->base->data;
+}
+
+void _push(candy_vm_t *self, const candy_wrap_t *wrap) {
+  if (self->size == _get_buff_size(self))
+    candy_buffer_expand(self->base, CANDY_ATOMIC_STACK_SIZE, sizeof(candy_wrap_t));
+  memset(&_get_buff_data(self)[self->size], 0, sizeof(candy_wrap_t));
+  _get_buff_data(self)[self->size++] = *wrap;
+}
+
+candy_wrap_t *_pop(candy_vm_t *self) {
+  return self->size ? &_get_buff_data(self)[--self->size] : NULL;
+}
+
+candy_vm_t *candy_vm_create(candy_state_t *sta, candy_builtin_t entry) {
   candy_vm_t *self = (candy_vm_t *)malloc(sizeof(candy_vm_t));
-  self->stack = candy_stack_create();
-  self->glb = candy_table_create();
   self->sta = sta;
+  self->base = candy_buffer_create(CANDY_ATOMIC_STACK_SIZE, sizeof(candy_wrap_t), false);
+  self->glb = candy_table_create();
+  candy_regist_t list[] = {
+    {CANDY_BUILTIN_NAME_ENTRY, entry},
+  };
+  candy_vm_builtin(self, list, candy_lengthof(list));
   return self;
 }
 
 int candy_vm_delete(candy_vm_t **self) {
-  candy_stack_delete(&(*self)->stack);
+  candy_buffer_delete(&(*self)->base);
   candy_table_delete(&(*self)->glb);
   free(*self);
   *self = NULL;
   return 0;
 }
 
-int candy_vm_builtin(candy_vm_t *self, const char name[], candy_regist_t list[], size_t size) {
-  printf("obj [%s]\n", name);
+int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
   for (unsigned idx = 0; idx < size; ++idx) {
     candy_wrap_t key, val;
     candy_wrap_init(&key);
@@ -85,18 +107,19 @@ int candy_vm_builtin(candy_vm_t *self, const char name[], candy_regist_t list[],
   return 0;
 }
 
-int candy_vm_call(candy_vm_t *self, const char name[], int nargs, int nresults) {
+int candy_vm_get_global(candy_vm_t *self, const char name[]) {
   candy_wrap_t key;
   candy_wrap_set_string(&key, name, strlen(name) + 1);
-  const candy_wrap_t *func = candy_table_get(self->glb, &key);
+  _push(self, candy_table_get(self->glb, &key));
   candy_wrap_deinit(&key);
-  if (func->type != CANDY_BUILTIN)
-    return -1;
-  self->info.func = *candy_wrap_get_builtin(func);
-  candy_wrap_set_string(&key, "__entry__", 10);
-  const candy_wrap_t *entry = candy_table_get(self->glb, &key);
+  return 0;
+}
+
+int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
+  candy_wrap_t key;
+  candy_wrap_set_string(&key, CANDY_BUILTIN_NAME_ENTRY, sizeof(CANDY_BUILTIN_NAME_ENTRY));
+  (*candy_wrap_get_builtin(candy_table_get(self->glb, &key)))(self->sta);
   candy_wrap_deinit(&key);
-  (*candy_wrap_get_builtin(entry->type != CANDY_BUILTIN ? func : entry))(self->sta);
   return 0;
 }
 
@@ -105,47 +128,57 @@ candy_callinfo_t *candy_vm_callinfo(candy_vm_t *self) {
 }
 
 void candy_vm_push_integer(candy_vm_t *self, const candy_integer_t val) {
-  candy_stack_push_integer(self->stack, val);
+  candy_wrap_t wrap;
+  candy_wrap_set_integer(&wrap, &val, 1);
+  _push(self, &wrap);
 }
 
 void candy_vm_push_float(candy_vm_t *self, const candy_float_t val) {
-  candy_stack_push_float(self->stack, val);
+  candy_wrap_t wrap;
+  candy_wrap_set_float(&wrap, &val, 1);
+  _push(self, &wrap);
 }
 
 void candy_vm_push_boolean(candy_vm_t *self, const candy_boolean_t val) {
-  candy_stack_push_boolean(self->stack, val);
+  candy_wrap_t wrap;
+  candy_wrap_set_boolean(&wrap, &val, 1);
+  _push(self, &wrap);
 }
 
 void candy_vm_push_string(candy_vm_t *self, const char val[], size_t size) {
-  candy_stack_push_string(self->stack, val, size);
+  candy_wrap_t wrap;
+  candy_wrap_set_string(&wrap, val, size);
+  _push(self, &wrap);
 }
 
 candy_integer_t candy_vm_pull_integer(candy_vm_t *self) {
   /** @todo error handle */
-  candy_stack_type(self->stack);
   /** @todo if it is lval, push it into gc */
-  return candy_stack_pull_integer(self->stack);
+  return *candy_wrap_get_integer(_pop(self));
 }
 
 candy_float_t candy_vm_pull_float(candy_vm_t *self) {
   /** @todo error handle */
-  candy_stack_type(self->stack);
   /** @todo if it is lval, push it into gc */
-  return candy_stack_pull_float(self->stack);
+  return *candy_wrap_get_float(_pop(self));
 }
 
 candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self) {
   /** @todo error handle */
-  candy_stack_type(self->stack);
   /** @todo if it is lval, push it into gc */
-  return candy_stack_pull_boolean(self->stack);
+  return *candy_wrap_get_boolean(_pop(self));
 }
 
 const char *candy_vm_pull_string(candy_vm_t *self, size_t *size) {
   /** @todo error handle */
-  candy_stack_type(self->stack);
   /** @todo if it is lval, push it into gc */
-  return candy_stack_pull_string(self->stack, size);
+  return candy_wrap_get_string(_pop(self));
+}
+
+candy_builtin_t candy_vm_pull_builtin(candy_vm_t *self) {
+  /** @todo error handle */
+  /** @todo if it is lval, push it into gc */
+  return *candy_wrap_get_builtin(_pop(self));
 }
 
 int candy_vm_execute(candy_vm_t *self) {

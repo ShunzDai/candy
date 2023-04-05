@@ -36,9 +36,9 @@ int candy_dofile(candy_state_t *self, const char name[]);
   * @param  size  size of the list.
   * @return none.
   */
-int candy_add_builtin(candy_state_t *self, const char name[], candy_regist_t list[], size_t size);
-
-int candy_call(candy_state_t *self, const char name[], int nargs, int nresults);
+int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size);
+int candy_get_global(candy_state_t *self, const char name[]);
+int candy_call(candy_state_t *self, int nargs, int nresults);
 
 /**
   * @brief  get user's data.
@@ -59,6 +59,7 @@ candy_integer_t candy_pull_integer(candy_state_t *self);
 candy_float_t candy_pull_float(candy_state_t *self);
 candy_boolean_t candy_pull_boolean(candy_state_t *self);
 const char *candy_pull_string(candy_state_t *self, size_t *size);
+candy_builtin_t candy_pull_builtin(candy_state_t *self);
 
 #ifdef __cplusplus
 }

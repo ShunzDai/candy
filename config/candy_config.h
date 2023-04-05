@@ -41,6 +41,8 @@ extern "C"{
 
 #define CANDY_ATOMIC_STACK_SIZE 8
 
+#define CANDY_BUILTIN_NAME_ENTRY "__entry__"
+
 #ifdef __GNUC__
 #define CANDY_NORETURN __attribute__((noreturn))
 #else

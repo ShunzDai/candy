@@ -1,5 +1,5 @@
 file(GLOB_RECURSE SOURCES_TEST LIST_DIRECTORIES false
-  test_stack.cpp
+  # test_stack.cpp
   # test_node.cpp
   test_wrap.cpp
   # test_object.cpp
@@ -12,4 +12,4 @@ add_compile_options(-std=gnu++17)
 
 add_executable(test ${SOURCES_TEST})
 
-target_link_libraries(test PUBLIC -Wl,--whole-archive candy_core -Wl,-no-whole-archive gtest)
+target_link_libraries(test PUBLIC candy_core mid_os gtest)

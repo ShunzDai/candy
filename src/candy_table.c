@@ -130,7 +130,7 @@ void candy_table_print(candy_table_t *self) {
 
 const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key) {
   candy_node_t *node = main_position(self, key);
-  for (int32_t next = 0; _boundary_check(self, node + next); next = _get_next(next)) {
+  for (int32_t next = 0; _boundary_check(self, node + next); next += _get_next(next)) {
     if (equal(&(node + next)->key, key))
       return &(node + next)->val;
     else if ((node + next)->key.type == CANDY_NULL)
@@ -141,13 +141,17 @@ const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key
 
 int candy_table_set(candy_table_t *self, const candy_wrap_t *key, const candy_wrap_t *val) {
   candy_node_t *node = main_position(self, key);
-  for (int32_t next = 0; _boundary_check(self, node + next); next = _get_next(next)) {
+  for (int32_t next = 0; _boundary_check(self, node + next); next += _get_next(next)) {
     switch ((node + next)->key.type) {
       case CANDY_NULL: case CANDY_DEL:
         (node + next)->key = *key;
         (node + next)->val = *val;
         return 0;
       default:
+        if (equal(&(node + next)->key, key)) {
+          (node + next)->val = *val;
+          return 0;
+        }
         break;
     }
   }

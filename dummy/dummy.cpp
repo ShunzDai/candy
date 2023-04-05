@@ -29,7 +29,8 @@ std::tuple<int, float, std::string> func5(bool arg1, int arg2, float arg3, std::
 
 int main(int argc, char *argv[]) {
   candy::state sta;
-  sta.add("__global__",
+  printf(">>> 0\n");
+  sta.add(
     std::pair{"func1", func1},
     std::pair{"func2", func2},
     std::pair{"func3", func3},
