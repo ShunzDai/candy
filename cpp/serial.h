@@ -17,20 +17,32 @@
 
 #include <string.h>
 #include <assert.h>
+#include <utility>
 #include <string_view>
 #include <string>
 
 class serial {
   public:
+  using ibuf_t = std::basic_string_view<uint8_t>;
+  using obuf_t = std::basic_string<uint8_t>;
+
+  template <typename ... arg_t>
+  constexpr static obuf_t pack(const arg_t & ... args);
+  template <typename ... arg_t>
+  constexpr static std::tuple<arg_t ...> unpack(ibuf_t &&ibuf);
+
+  private:
   template<typename first_t, typename ... rest_t>
   struct is_tuple {
-    static const bool value = false;
+    static const bool value =
+    std::is_same<first_t, std::tuple<>>::value;
   };
 
   template<typename first_t, typename ... rest_t>
   struct is_tuple<std::tuple<first_t, rest_t ...>> {
     static const bool value = true;
   };
+
   template<typename first_t, typename ... rest_t>
   struct is_pair {
     static const bool value = false;
@@ -40,103 +52,82 @@ class serial {
   struct is_pair<std::pair<first_t, rest_t ...>> {
     static const bool value = true;
   };
-  using ibuf_t = std::basic_string_view<uint8_t>;
-  using obuf_t = std::basic_string<uint8_t>;
-  template <typename ... arg_t>
-  static constexpr obuf_t pack(arg_t && ... args);
-  template <typename ... arg_t>
-  static constexpr std::tuple<arg_t ...> unpack(ibuf_t ibuf);
-  template <typename res_t, typename ... arg_t>
-  int call(res_t(*func)(arg_t ...));
-  private:
+
   template <typename arg_t>
-  static constexpr void pack_one(obuf_t &obuf, arg_t && arg);
+  struct is_base {
+    static const bool value =
+    std::is_integral<arg_t>::value ||
+    std::is_floating_point<arg_t>::value;
+  };
+
+  template <typename arg_t>
+  struct is_string {
+    static const bool value =
+    std::is_same<arg_t,      std::string>::value ||
+    std::is_same<arg_t, std::string_view>::value;
+  };
+
+  template <typename arg_t>
+  constexpr static obuf_t pack_one(const arg_t &arg);
   template <typename ... arg_t, size_t ... seq>
-  static constexpr void pack_one(obuf_t &obuf, std::tuple<arg_t ...> && arg, std::index_sequence<seq ...>);
+  constexpr static obuf_t pack_one(const std::tuple<arg_t ...> &arg, std::index_sequence<seq ...>);
   template <typename arg_t>
-  static constexpr arg_t unpack_one(ibuf_t & ibuf);
+  constexpr static arg_t unpack_one(ibuf_t &ibuf);
 };
 
 template <typename arg_t>
-constexpr void serial::pack_one(obuf_t &obuf, arg_t && arg) {
+constexpr serial::obuf_t serial::pack_one(const arg_t &arg) {
   if constexpr (std::is_same<arg_t, const char *>::value) {
-    obuf.append((const uint8_t *)arg, strlen(arg) + 1);
+    return obuf_t((const uint8_t *)arg, strlen(arg) + 1);
   }
-  else if constexpr (std::is_same<arg_t, std::string>::value) {
-    obuf.append((const uint8_t *)arg.data(), arg.size());
-    obuf.append((const uint8_t *)"\0", 1);
+  else if constexpr (is_string<arg_t>::value) {
+    return obuf_t((const uint8_t *)arg.data(), arg.size()) + obuf_t((const uint8_t *)"\0", 1);
   }
   else if constexpr (is_tuple<arg_t>::value) {
-    pack_one(obuf, std::forward<decltype(arg)>(arg), std::make_index_sequence<std::tuple_size<arg_t>::value> {});
+    return pack_one(std::forward<decltype(arg)>(arg), std::make_index_sequence<std::tuple_size<arg_t>::value> {});
   }
   else if constexpr (is_pair<arg_t>::value) {
-    pack_one(obuf, std::forward<decltype(arg.first)>(arg.first));
-    pack_one(obuf, std::forward<decltype(arg.second)>(arg.second));
+    return pack_one(std::forward<decltype(arg.first)>(arg.first)) + pack_one(std::forward<decltype(arg.second)>(arg.second));
   }
-  else if constexpr (
-    std::is_same<arg_t,   int8_t>::value ||
-    std::is_same<arg_t,  int16_t>::value ||
-    std::is_same<arg_t,  int32_t>::value ||
-    std::is_same<arg_t,  int64_t>::value ||
-    std::is_same<arg_t,  uint8_t>::value ||
-    std::is_same<arg_t, uint16_t>::value ||
-    std::is_same<arg_t, uint32_t>::value ||
-    std::is_same<arg_t, uint64_t>::value ||
-    std::is_same<arg_t,    float>::value ||
-    std::is_same<arg_t,   double>::value ||
-    std::is_same<arg_t,     bool>::value
-  ) {
-    obuf.append((const uint8_t *)&arg, sizeof(arg_t));
+  else if constexpr (is_base<arg_t>::value) {
+    return obuf_t((const uint8_t *)&arg, sizeof(arg_t));
   }
   else {
-    assert(0);
+    static_assert(!std::is_same<arg_t, arg_t>::value, "unknown arg type");
   }
 }
 
 template <typename ... arg_t, size_t ... seq>
-constexpr void serial::pack_one(obuf_t &obuf, std::tuple<arg_t ...> && arg, std::index_sequence<seq ...>) {
-  (pack_one(obuf, std::get<seq>(std::forward<decltype(arg)>(arg))), ...);
+constexpr serial::obuf_t serial::pack_one(const std::tuple<arg_t ...> &arg, std::index_sequence<seq ...>) {
+  return (pack_one(std::get<seq>(std::forward<decltype(arg)>(arg))) + ...);
 }
 
 template <typename ... arg_t>
-constexpr serial::obuf_t serial::pack(arg_t && ... args) {
+constexpr serial::obuf_t serial::pack(const arg_t & ... args) {
   if constexpr (sizeof...(args) == 0)
     return {};
-  obuf_t obuf;
-  (pack_one(obuf, std::forward<decltype(args)>(args)), ...);
-  return obuf;
+  return (pack_one(std::forward<decltype(args)>(args)) + ...);
 }
 
 template <typename arg_t>
-constexpr arg_t serial::unpack_one(ibuf_t & ibuf) {
-  arg_t arg;
-  if constexpr (std::is_same<arg_t, std::string>::value) {
-    arg = std::string((const char *)ibuf.data(), strlen((const char *)ibuf.data()) + 1);
+constexpr arg_t serial::unpack_one(ibuf_t &ibuf) {
+  if constexpr (std::is_same<arg_t, char *>::value) {
+    arg_t arg = (char *)ibuf.data();
     ibuf.remove_prefix(strlen((const char *)ibuf.data()) + 1);
+    return arg;
   }
-  else if constexpr (
-    std::is_same<arg_t,   int8_t>::value ||
-    std::is_same<arg_t,  int16_t>::value ||
-    std::is_same<arg_t,  int32_t>::value ||
-    std::is_same<arg_t,  int64_t>::value ||
-    std::is_same<arg_t,  uint8_t>::value ||
-    std::is_same<arg_t, uint16_t>::value ||
-    std::is_same<arg_t, uint32_t>::value ||
-    std::is_same<arg_t, uint64_t>::value ||
-    std::is_same<arg_t,    float>::value ||
-    std::is_same<arg_t,   double>::value ||
-    std::is_same<arg_t,     bool>::value
-  ) {
-    arg = *(arg_t *)ibuf.data();
+  else if constexpr (is_base<arg_t>::value) {
+    arg_t &arg = *(arg_t *)ibuf.data();
     ibuf.remove_prefix(sizeof(arg_t));
+    return arg;
   }
   else {
-    assert(0);
+    static_assert(!std::is_same<arg_t, arg_t>::value, "unknown arg type");
   }
-  return arg;
 }
 
 template <typename ... arg_t>
-constexpr std::tuple<arg_t ...> serial::unpack(ibuf_t ibuf) {
+constexpr std::tuple<arg_t ...> serial::unpack(ibuf_t &&ibuf) {
+  assert(ibuf.data() && ibuf.size());
   return {unpack_one<arg_t>(ibuf) ...};
 }

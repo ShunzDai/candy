@@ -33,7 +33,7 @@ state::~state() {
 
 int state::entry(void *csta) {
   state *sta = (state *)candy_ud((candy_state *)csta);
-  return (*(builtin_t *)candy_callinfo((candy_state *)csta)->func)(sta);
+  return (*(builtin_t *)candy_callinfo((candy_state *)csta)->ebp)(sta);
 }
 
 int state::deinit(void *cobj) {
@@ -57,43 +57,43 @@ int state::ccall(const char name[], int nargs, int nresults) {
   return candy_call((candy_state *)_csta, name, nargs, nresults);
 }
 
-void state::push_integer(const int64_t val) {
-  // printf("into %s\n", __FUNCTION__);
+void state::push_integer(const int64_t &val) {
+  printf("into %s\n", __FUNCTION__);
   candy_push_integer((candy_state *)_csta, val);
 }
 
-void state::push_float(const double val) {
-  // printf("into %s\n", __FUNCTION__);
+void state::push_float(const double &val) {
+  printf("into %s\n", __FUNCTION__);
   candy_push_float((candy_state *)_csta, val);
 }
 
-void state::push_boolean(const bool val) {
-  // printf("into %s\n", __FUNCTION__);
+void state::push_boolean(const bool &val) {
+  printf("into %s\n", __FUNCTION__);
   candy_push_boolean((candy_state *)_csta, val);
 }
 
-void state::push_string(const std::string val) {
-  // printf("into %s\n", __FUNCTION__);
+void state::push_string(const std::string &val) {
+  printf("into %s\n", __FUNCTION__);
   candy_push_string((candy_state *)_csta, val.data(), val.size());
 }
 
 int64_t state::pull_integer() {
-  // printf("into %s\n", __FUNCTION__);
+  printf("into %s\n", __FUNCTION__);
   return candy_pull_integer((candy_state *)_csta);
 }
 
 double state::pull_float() {
-  // printf("into %s\n", __FUNCTION__);
+  printf("into %s\n", __FUNCTION__);
   return candy_pull_float((candy_state *)_csta);
 }
 
 bool state::pull_boolean() {
-  // printf("into %s\n", __FUNCTION__);
+  printf("into %s\n", __FUNCTION__);
   return candy_pull_boolean((candy_state *)_csta);
 }
 
 std::string state::pull_string() {
-  // printf("into %s\n", __FUNCTION__);
+  printf("into %s\n", __FUNCTION__);
   size_t size = 0;
   return {candy_pull_string((candy_state *)_csta, &size), size};
 }
