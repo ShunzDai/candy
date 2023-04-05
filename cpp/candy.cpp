@@ -21,10 +21,9 @@ namespace candy {
 state::state() :
 _csta((void *)candy_state_create(this)) {
   candy_regist_t list[] = {
-    {"__entry__", (candy_builtin_t)entry},
-    {"__deinit__", (candy_builtin_t)deinit},
+    {CANDY_BUILTIN_NAME_ENTRY, (candy_builtin_t)entry},
   };
-  candy_add_builtin((candy_state *)_csta, "__global__", list, 2);
+  candy_add_builtin((candy_state *)_csta, list, 1);
 }
 
 state::~state() {
@@ -33,12 +32,8 @@ state::~state() {
 
 int state::entry(void *csta) {
   state *sta = (state *)candy_ud((candy_state *)csta);
-  return (*(builtin_t *)candy_callinfo((candy_state *)csta)->ebp)(sta);
-}
-
-int state::deinit(void *cobj) {
-
-  return 0;
+  printf(">>> 1\n");
+  return (*(builtin_t *)candy_pull_builtin((candy_state *)csta))(sta);
 }
 
 int state::dostring(const char exp[]) {
@@ -49,12 +44,13 @@ int state::dofile(const char path[]) {
   return candy_dofile((candy_state *)_csta, path);
 }
 
-int state::add(const char name[], pair_t list[], size_t size) {
-  return candy_add_builtin((candy_state *)_csta, name, (candy_regist_t *)list, size);
+int state::add(pair_t list[], size_t size) {
+  return candy_add_builtin((candy_state *)_csta, (candy_regist_t *)list, size);
 }
 
 int state::ccall(const char name[], int nargs, int nresults) {
-  return candy_call((candy_state *)_csta, name, nargs, nresults);
+  candy_get_global((candy_state *)_csta, name);
+  return candy_call((candy_state *)_csta, nargs, nresults);
 }
 
 void state::push_integer(const int64_t &val) {

@@ -28,10 +28,14 @@ struct candy_state {
   void *ud;
 };
 
+static int _default_entry(candy_state_t *self) {
+  return candy_pull_builtin(self)(self);
+}
+
 candy_state_t *candy_state_create(void *ud) {
   candy_state_t *self = (candy_state_t *)malloc(sizeof(struct candy_state));
   self->io = candy_buffer_create(CANDY_ATOMIC_IO_SIZE, sizeof(char), true);
-  self->vm = candy_vm_create(self);
+  self->vm = candy_vm_create(self, _default_entry);
   self->ud = ud;
   return self;
 }
@@ -70,12 +74,16 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   return 0;
 }
 
-int candy_add_builtin(candy_state_t *self, const char name[], candy_regist_t list[], size_t size) {
-  return candy_vm_builtin(self->vm, name, list, size);
+int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size) {
+  return candy_vm_builtin(self->vm, list, size);
 }
 
-int candy_call(candy_state_t *self, const char name[], int nargs, int nresults) {
-  return candy_vm_call(self->vm, name, nargs, nresults);
+int candy_get_global(candy_state_t *self, const char name[]) {
+  return candy_vm_get_global(self->vm, name);
+}
+
+int candy_call(candy_state_t *self, int nargs, int nresults) {
+  return candy_vm_call(self->vm, nargs, nresults);
 }
 
 void *candy_ud(candy_state_t *self) {
@@ -116,4 +124,8 @@ candy_boolean_t candy_pull_boolean(candy_state_t *self) {
 
 const char *candy_pull_string(candy_state_t *self, size_t *size) {
   return candy_vm_pull_string(self->vm, size);
+}
+
+candy_builtin_t candy_pull_builtin(candy_state_t *self) {
+  return candy_vm_pull_builtin(self->vm);
 }
