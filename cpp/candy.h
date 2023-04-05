@@ -38,7 +38,7 @@ class state {
   int dofile(const char path[]);
 
   template <typename ... func_t>
-  int add(const char name[], const std::pair<const char *, func_t> ... list);
+  int add(const char name[], const std::pair<const char *, func_t> & ... list);
 
   /**
     * @brief  cpp call candy function
@@ -49,7 +49,7 @@ class state {
     * @return candy-function's results
     */
   template <typename ... res_t, typename ... arg_t>
-  std::tuple<res_t ...> call(const char func[], arg_t ... args);
+  std::tuple<res_t ...> call(const char func[], const arg_t & ... args);
 
   /**
     * @brief  candy call cpp function
@@ -64,32 +64,12 @@ class state {
   private:
   template<typename first_t, typename ... rest_t>
   struct is_tuple {
-    static const bool value = false;
+    static const bool value = std::is_same<first_t, std::tuple<>>::value;
   };
 
   template<typename first_t, typename ... rest_t>
   struct is_tuple<std::tuple<first_t, rest_t ...>> {
     static const bool value = true;
-  };
-
-  template <typename arg_t>
-  struct is_integer {
-    static const bool value =
-    std::is_same<arg_t,   int8_t>::value ||
-    std::is_same<arg_t,  int16_t>::value ||
-    std::is_same<arg_t,  int32_t>::value ||
-    std::is_same<arg_t,  int64_t>::value ||
-    std::is_same<arg_t,  uint8_t>::value ||
-    std::is_same<arg_t, uint16_t>::value ||
-    std::is_same<arg_t, uint32_t>::value ||
-    std::is_same<arg_t, uint64_t>::value;
-  };
-
-  template <typename arg_t>
-  struct is_float {
-    static const bool value =
-    std::is_same<arg_t, double>::value ||
-    std::is_same<arg_t,  float>::value;
   };
 
   template <typename arg_t>
@@ -108,10 +88,10 @@ class state {
   int add(const char name[], pair_t list[], size_t size);
   int ccall(const char name[], int nargs, int nresults);
 
-  void push_integer(const int64_t val);
-  void push_float(const double val);
-  void push_boolean(const bool val);
-  void push_string(const std::string val);
+  void push_integer(const int64_t &val);
+  void push_float(const double &val);
+  void push_boolean(const bool &val);
+  void push_string(const std::string &val);
 
   int64_t pull_integer();
   double pull_float();
@@ -129,17 +109,17 @@ class state {
   std::tuple<arg_t ...> pull_tuple();
 
   template <typename ... func_t>
-  constexpr std::array<state::pair_t, sizeof...(func_t)> toclist(const std::pair<const char *, func_t> ... list);
+  constexpr std::array<state::pair_t, sizeof...(func_t)> toclist(const std::pair<const char *, func_t> & ... list);
 };
 
 template <typename ... func_t>
-int state::add(const char name[], const std::pair<const char *, func_t> ... list) {
+int state::add(const char name[], const std::pair<const char *, func_t> & ... list) {
   auto clist = toclist(list ...);
   return add(name, clist.data(), clist.size());
 }
 
 template <typename ... res_t, typename ... arg_t>
-std::tuple<res_t ...> state::call(const char func[], arg_t ... args) {
+std::tuple<res_t ...> state::call(const char func[], const arg_t & ... args) {
   (push(args), ...);
   ccall(func, sizeof...(arg_t), sizeof...(res_t));
   return pull_tuple<res_t ...>();
@@ -163,12 +143,12 @@ int state::call(res_t(*func)(arg_t ...)) {
 
 template <typename arg_t>
 void state::push(arg_t arg) {
-  if constexpr (is_integer<arg_t>::value)
-    push_integer(arg);
-  else if constexpr (is_float<arg_t>::value)
-    push_float(arg);
-  else if constexpr (std::is_same<arg_t, bool>::value)
+  if constexpr (std::is_same<arg_t, bool>::value)
     push_boolean(arg);
+  else if constexpr (std::is_integral<arg_t>::value)
+    push_integer(arg);
+  else if constexpr (std::is_floating_point<arg_t>::value)
+    push_float(arg);
   else if constexpr (is_string<arg_t>::value)
     push_string(arg);
   else
@@ -182,12 +162,12 @@ void state::push_tuple(std::tuple<arg_t ...> args, std::index_sequence<seq ...>)
 
 template <typename arg_t>
 arg_t state::pull() {
-  if constexpr (is_integer<arg_t>::value)
-    return (arg_t)pull_integer();
-  else if constexpr (is_float<arg_t>::value)
-    return (arg_t)pull_float();
-  else if constexpr (std::is_same<arg_t, bool>::value)
+  if constexpr (std::is_same<arg_t, bool>::value)
     return (arg_t)pull_boolean();
+  else if constexpr (std::is_integral<arg_t>::value)
+    return (arg_t)pull_integer();
+  else if constexpr (std::is_floating_point<arg_t>::value)
+    return (arg_t)pull_float();
   else if constexpr (is_string<arg_t>::value)
     return (arg_t)pull_string();
   else
@@ -200,7 +180,7 @@ std::tuple<arg_t ...> state::pull_tuple() {
 }
 
 template <typename ... func_t>
-constexpr std::array<state::pair_t, sizeof...(func_t)> state::toclist(const std::pair<const char *, func_t> ... list) {
+constexpr std::array<state::pair_t, sizeof...(func_t)> state::toclist(const std::pair<const char *, func_t> & ... list) {
   auto lambda = [](const char name[], auto func) -> pair_t {
     return {name, new builtin_t([func](state *cdy) { return cdy->call(func); })};
   };

@@ -43,11 +43,11 @@ int main(int argc, char *argv[]) {
   /* auto res4 = */ sta.call<int, float, std::string>("func4");
   /* auto res5 = */ sta.call<int, float, std::string>("func5", true, 314, 3.14f, "cpp str");
 
-  // auto obuf = serial::pack(std::tuple{314, 3.14f, std::tuple{"hello", (uint8_t)0x55U}, "world", true});
-  // for (auto e : obuf)
-  // printf("%02X ", e);
-  // printf("\n");
-  // auto args = serial::unpack<int, float, std::string, uint8_t, std::string, bool>(obuf);
-  // printf("arg1,%d,arg2,%f,arg3,%s,arg4,0x%02X,arg5,%s,arg6,%d,\n", std::get<0>(args), std::get<1>(args), std::get<2>(args).data(), std::get<3>(args), std::get<4>(args).data(), std::get<5>(args));
+  auto obuf = serial::pack(114514, std::tuple{314, 3.14f, std::tuple{"hello", (uint8_t)0x55U}, "world", true});
+  for (auto e : obuf)
+  printf("%02X ", e);
+  printf("\n");
+  auto [arg1, arg2, arg3, arg4, arg5, arg6, arg7] = serial::unpack<int, int, float, char *, uint8_t, char *, bool>(obuf);
+  printf("arg1,%d,arg2,%d,arg3,%.2f,arg4,%s,arg5,%02X,arg6,%s,arg7,%d,\n", arg1, arg2, arg3, arg4, arg5, arg6, arg7);
   return 0;
 }
