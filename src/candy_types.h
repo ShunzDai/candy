@@ -52,7 +52,8 @@ struct candy_regist {
 typedef struct candy_regist candy_regist_t;
 
 struct candy_callinfo {
-  candy_builtin_t func;
+  size_t esp;
+  size_t ebp;
 };
 
 typedef struct candy_callinfo candy_callinfo_t;
