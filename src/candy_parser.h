@@ -19,7 +19,6 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy_buffer.h"
 #include "src/candy_types.h"
 
 struct candy_proto {
@@ -28,7 +27,7 @@ struct candy_proto {
 
 typedef struct candy_proto candy_proto_t;
 
-candy_proto_t *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud);
+candy_proto_t *candy_parse(candy_buffer_t *io, candy_reader_t reader, void *ud);
 
 #ifdef __cplusplus
 }

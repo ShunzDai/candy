@@ -19,7 +19,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define lex_assert(_condition, _format, ...) candy_assert(_condition, lexical, _format, ##__VA_ARGS__)
+#define lex_assert(_condition, _format, ...) candy_assert(*(candy_buffer_t **)(self), _condition, lexical, _format, ##__VA_ARGS__)
 
 static const struct {
   candy_tokens_t token;
@@ -30,11 +30,11 @@ static const struct {
 };
 
 static inline size_t _get_buff_size(candy_lexer_t *self) {
-  return self->buffer->size;
+  return self->io->size;
 }
 
 static inline char *_get_buff_data(candy_lexer_t *self) {
-  return (char *)self->buffer->data;
+  return (char *)self->io->data;
 }
 
 /**
@@ -62,7 +62,7 @@ static inline char _read(candy_lexer_t *self) {
     /** if the number of bytes that can be filled is less than
         @ref CANDY_ATOMIC_IO_SIZE bytes, the buffer will be enlarged */
     if (size - offset < CANDY_ATOMIC_IO_SIZE) {
-      candy_buffer_expand(self->buffer, CANDY_ATOMIC_IO_SIZE, sizeof(char));
+      candy_buffer_expand(self->io, CANDY_ATOMIC_IO_SIZE, sizeof(char));
       self->reader(_get_buff_data(self) + size, CANDY_ATOMIC_IO_SIZE, self->ud);
     }
     /* otherwise buffer will be filled directly */
@@ -341,7 +341,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   while (1) {
     switch (_view(self, 0)) {
       case '\0':
-        return TK_NONE;
+        return TK_NULL;
       case '\r': case '\n':
         _handle_newline(self, _skip);
         break;
@@ -390,14 +390,14 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   return dual_ope(_read(self), _read(self));
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
+int candy_lexer_init(candy_lexer_t *self, candy_buffer_t *io, candy_reader_t reader, void *ud) {
   memset(self, 0, sizeof(struct candy_lexer));
 #ifdef CANDY_DEBUG_MODE
   self->dbg.line = 1;
   self->dbg.column = 0;
 #endif /* CANDY_DEBUG_MODE */
   self->lookahead.token = TK_EOS;
-  self->buffer = buffer;
+  self->io = io;
   self->reader = reader;
   self->ud = ud;
   self->r = CANDY_LEXER_EXTRA_SIZE;

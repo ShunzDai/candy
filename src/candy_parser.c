@@ -17,7 +17,7 @@
 #include "src/candy_lexer.h"
 #include <stdlib.h>
 
-#define par_assert(_condition, _format, ...) candy_assert(_condition, syntax, _format, ##__VA_ARGS__)
+#define par_assert(_condition, _format, ...) candy_assert(*(candy_buffer_t **)(self), _condition, syntax, _format, ##__VA_ARGS__)
 
 typedef struct candy_parser {
   /* lexical state */
@@ -91,7 +91,7 @@ static void _statement(candy_parser_t *self) {
 
 static bool _block_follow(candy_parser_t *self) {
   switch (candy_lexer_lookahead(&self->lex)) {
-    case TK_NONE:
+    case TK_NULL:
       return true;
     default:
       return false;
@@ -99,16 +99,16 @@ static bool _block_follow(candy_parser_t *self) {
 }
 
 /** @ref https://blog.csdn.net/initphp/article/details/105247775 */
-static void _statlist(candy_parser_t *self) {
+static void _statlist(candy_parser_t *self, void *ud) {
   while (!_block_follow(self))
     _statement(self);
 }
 
-candy_proto_t *candy_parse(candy_buffer_t *buffer, candy_reader_t reader, void *ud) {
+candy_proto_t *candy_parse(candy_buffer_t *io, candy_reader_t reader, void *ud) {
   candy_parser_t parser;
   parser.proto = (candy_proto_t *)1;
-  candy_lexer_init(&parser.lex, buffer, reader, ud);
-  if (candy_try_catch(buffer, (void (*)(void *))_statlist, &parser) != 0)
+  candy_lexer_init(&parser.lex, io, reader, ud);
+  if (candy_try_catch(io, (candy_try_catch_cb_t)_statlist, &parser, NULL) != 0)
     goto exit;
   candy_lexer_deinit(&parser.lex);
   return parser.proto;
