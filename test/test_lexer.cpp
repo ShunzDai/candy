@@ -23,30 +23,27 @@
 
 using namespace std;
 
-void try_func(void *ud) {
-  (*(std::function<void()> *)ud)();
-  delete (std::function<void()> *)ud;
-}
+struct arg {
+  candy_tokens_t token;
+  candy_wrap_t wrap;
+};
 
 template <typename ... supposed>
 static void tast_body(candy_tokens_t token, const char exp[], supposed ... value) {
-  int status = 0;
   candy_buffer_t *io = candy_buffer_create(CANDY_ATOMIC_IO_SIZE, sizeof(char), true);
   candy_lexer_t lex;
   str_info info = {exp, strlen(exp), 0};
   candy_lexer_init(&lex, io, string_reader, &info);
-  candy_wrap_t wrap;
-  candy_wrap_init(&wrap);
-  if ((status = candy_try_catch(io, try_func, new std::function<void()>([&lex, token, &wrap]() {
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), token);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_NONE);
-  }))) != 0)
-    goto exit;
+  arg ud = {token, {}};
+  ASSERT_EQ(candy_try_catch(io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, arg *ud) {
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), ud->token);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_NULL);
+  }, &lex, &ud), 0);
   if constexpr(sizeof...(value)) {
     auto val = std::get<0>(std::make_tuple(value ...));
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
-      char *str = candy_wrap_get_string(&wrap);
-      EXPECT_EQ(wrap.size, val.size());
+      char *str = candy_wrap_get_string(&ud.wrap);
+      EXPECT_EQ(ud.wrap.size, val.size());
       EXPECT_EQ(memcmp(str, val.data(), val.size()), 0);
     }
     else if constexpr (
@@ -59,30 +56,28 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
       std::is_same<decltype(val), uint32_t>::value ||
       std::is_same<decltype(val), uint64_t>::value
     ) {
-      EXPECT_EQ(*candy_wrap_get_integer(&wrap), val);
+      EXPECT_EQ(*candy_wrap_get_integer(&ud.wrap), val);
     }
     else if constexpr (
       std::is_same<decltype(val),  float>::value ||
       std::is_same<decltype(val), double>::value
     ) {
-      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&wrap), val);
+      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&ud.wrap), val);
     }
     else {
       assert(0);
     }
   }
-  exit:
-  candy_wrap_deinit(&wrap);
+  candy_wrap_deinit(&ud.wrap);
   candy_lexer_deinit(&lex);
   candy_buffer_delete(&io);
-  EXPECT_EQ(status, 0);
 }
 
-TEST_LEXER(comment_0, TK_NONE, "#")
+TEST_LEXER(comment_0, TK_NULL, "#")
 
-TEST_LEXER(comment_1, TK_NONE, "# hello world\r\n")
+TEST_LEXER(comment_1, TK_NULL, "# hello world\r\n")
 
-TEST_LEXER(comment_2, TK_NONE,
+TEST_LEXER(comment_2, TK_NULL,
   "# hello world\n"
   "# hi\n"
 )
@@ -184,40 +179,39 @@ TEST(lexer, file_system) {
   fseek(f, 0, SEEK_END);
   size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
-  candy_buffer_t *buffer = candy_buffer_create(CANDY_ATOMIC_IO_SIZE, sizeof(char), true);
+  candy_buffer_t *io = candy_buffer_create(CANDY_ATOMIC_IO_SIZE, sizeof(char), true);
   candy_lexer_t lex;
   file_info info = {f, size};
-  candy_lexer_init(&lex, buffer, file_reader, &info);
-  candy_wrap_t wrap;
-  candy_wrap_init(&wrap);
-  EXPECT_EQ(candy_try_catch(buffer, try_func, new std::function<void()>([&lex, &wrap]() {
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_def);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_IDENT);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_LPAREN);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_IDENT);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_RPAREN);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_COLON);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_IDENT);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_LPAREN);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_IDENT);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), '+');
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_STRING);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_RPAREN);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_return);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_INTEGER);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_if);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_IDENT);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), dual_ope('=', '='));
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_STRING);
-    candy_wrap_deinit(&wrap);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_COLON);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_IDENT);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_LPAREN);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_STRING);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_RPAREN);
-    EXPECT_EQ(candy_lexer_next(&lex, &wrap), TK_NONE);
-  })), 0);
+  candy_lexer_init(&lex, io, file_reader, &info);
+  arg ud = {TK_NULL, {}};
+  ASSERT_EQ(candy_try_catch(io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, arg *ud) {
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_def);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_LPAREN);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_RPAREN);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_COLON);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_LPAREN);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), '+');
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_STRING);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_RPAREN);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_return);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_INTEGER);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_if);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), dual_ope('=', '='));
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_STRING);
+    candy_wrap_deinit(&ud->wrap);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_COLON);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_IDENT);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_LPAREN);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_STRING);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_RPAREN);
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_NULL);
+  }, &lex, &ud), 0);
   candy_lexer_deinit(&lex);
-  candy_buffer_delete(&buffer);
+  candy_buffer_delete(&io);
   fclose(info.f);
 }

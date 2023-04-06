@@ -24,6 +24,8 @@
 
 #define CANDY_OP_SIZE 6
 
+#define vm_assert(_condition, _format, ...) candy_assert(**(candy_buffer_t ***)(self), _condition, vm, _format, ##__VA_ARGS__)
+
 typedef enum candy_opcode {
   #define CANDY_OP_ENUM
   #include "src/candy_opcode.list"
