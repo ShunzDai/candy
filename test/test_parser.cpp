@@ -14,6 +14,7 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
+#include "src/candy_buffer.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
 
