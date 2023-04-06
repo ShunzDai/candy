@@ -30,10 +30,10 @@ static inline struct priv *_priv(candy_buffer_t *self) {
   return (struct priv *)self;
 }
 
-int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud) {
+int candy_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
   if (setjmp(_priv(self)->env))
     goto catch;
-  cb(ud);
+  cb(handle, ud);
   return 0;
   catch:
   return -1;

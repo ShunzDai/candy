@@ -21,16 +21,16 @@ extern "C"{
 
 #include "src/candy_types.h"
 
-#define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_throw(*(candy_buffer_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
-
-typedef struct candy_buffer candy_buffer_t;
+#define candy_assert(_self, _condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_throw((_self), #_type " error: " _format, ##__VA_ARGS__))
 
 struct candy_buffer {
   void * const data;
   const size_t size;
 };
 
-int candy_try_catch(candy_buffer_t *self, void (*cb)(void *), void *ud);
+typedef void (*candy_try_catch_cb_t)(void *, void *);
+
+int candy_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud);
 
 void candy_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
 
