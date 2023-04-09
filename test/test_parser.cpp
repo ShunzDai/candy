@@ -23,7 +23,7 @@
 
 static void test_body(const char exp[]) {
   str_info info = {exp, strlen(exp), 0};
-  candy_buffer_t *io = candy_buffer_create(CANDY_ATOMIC_IO_SIZE, sizeof(char), true);
+  candy_buffer_t *io = candy_buffer_create(CANDY_DEFAULT_IO_SIZE, sizeof(char), true);
   auto tick = os::tick_ns();
   EXPECT_EQ(candy_parse(io, string_reader, &info) == nullptr, false);
   printf("delta time = %ld ns\n", os::tick_ns() - tick);

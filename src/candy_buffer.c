@@ -14,24 +14,18 @@
   * limitations under the License.
   */
 #include "src/candy_buffer.h"
-#include <setjmp.h>
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-
-struct priv {
-  void *data;
-  size_t size;
-  jmp_buf env;
-};
 
 static inline struct priv *_priv(candy_buffer_t *self) {
   return (struct priv *)self;
 }
 
 int candy_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
-  if (setjmp(_priv(self)->env))
+  if (setjmp(self->env))
     goto catch;
   cb(handle, ud);
   return 0;
@@ -44,36 +38,36 @@ void candy_throw(candy_buffer_t *self, const char format[], ...) {
   va_start(ap, format);
   size_t len = vsnprintf(NULL, 0, format, ap) + 1;
   va_end(ap);
-  if (_priv(self)->size < len) {
-    free(_priv(self)->data);
-    _priv(self)->data = calloc(len, sizeof(char));
+  if (self->size < len) {
+    free(self->data);
+    self->data = calloc(len, sizeof(char));
   }
   va_start(ap, format);
-  vsprintf(_priv(self)->data, format, ap);
+  vsprintf(self->data, format, ap);
   va_end(ap);
-  longjmp(_priv(self)->env, 1);
+  longjmp(self->env, 1);
 }
 
-void candy_buffer_expand(candy_buffer_t *self, int size, int n) {
-  size_t old_size = _priv(self)->size;
-  void *old_data = _priv(self)->data;
-  _priv(self)->size = _priv(self)->size + size;
-  _priv(self)->data = calloc(_priv(self)->size, n);
-  memcpy(_priv(self)->data, old_data, old_size * n);
+void candy_buffer_expand(candy_buffer_t *self, size_t size, size_t n) {
+  size_t old_size = self->size;
+  void *old_data = self->data;
+  self->size = self->size + size;
+  self->data = calloc(self->size, n);
+  memcpy(self->data, old_data, old_size * n);
   free(old_data);
   old_data = NULL;
 }
 
-candy_buffer_t *candy_buffer_create(int size, int n, bool use_jmp) {
-  candy_buffer_t *self = (candy_buffer_t *)malloc(use_jmp ? sizeof(struct priv) : (sizeof(struct priv) - sizeof(jmp_buf)));
-  _priv(self)->size = size;
-  _priv(self)->data = calloc(_priv(self)->size, n);
+candy_buffer_t *candy_buffer_create(size_t size, size_t n, bool use_jmp) {
+  candy_buffer_t *self = (candy_buffer_t *)malloc(use_jmp ? sizeof(struct candy_buffer) : (sizeof(struct candy_buffer) - sizeof(jmp_buf)));
+  self->size = size;
+  self->data = calloc(self->size, n);
   return self;
 }
 
 int candy_buffer_delete(candy_buffer_t **self) {
-  free(_priv(*self)->data);
-  _priv(*self)->data = NULL;
+  free((*self)->data);
+  (*self)->data = NULL;
   free(_priv(*self));
   *self = NULL;
   return 0;

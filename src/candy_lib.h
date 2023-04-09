@@ -25,6 +25,20 @@ extern "C"{
 
 #define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
 
+static inline bool is_power2(size_t n) {
+  return (n & (n - 1)) == 0;
+}
+
+static inline size_t next_power2(size_t n) {
+  --n;
+  n |= n >> 1;
+  n |= n >> 2;
+  n |= n >> 4;
+  n |= n >> 8;
+  n |= n >> 16;
+  return ++n;
+}
+
 static inline bool is_upper(char ch) {
   return isupper(ch);
 }
