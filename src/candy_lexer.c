@@ -19,7 +19,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define lex_assert(_condition, _format, ...) candy_assert(*(candy_buffer_t **)(self), _condition, lexical, _format, ##__VA_ARGS__)
+#define lex_assert(_condition, _format, ...) candy_assert(_condition, lexical, _format, ##__VA_ARGS__)
 
 static const struct {
   candy_tokens_t token;
@@ -60,10 +60,10 @@ static inline char _read(candy_lexer_t *self) {
     /* calculates the start position of the read buffer */
     int offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
     /** if the number of bytes that can be filled is less than
-        @ref CANDY_ATOMIC_IO_SIZE bytes, the buffer will be enlarged */
-    if (size - offset < CANDY_ATOMIC_IO_SIZE) {
-      candy_buffer_expand(self->io, CANDY_ATOMIC_IO_SIZE, sizeof(char));
-      self->reader(_get_buff_data(self) + size, CANDY_ATOMIC_IO_SIZE, self->ud);
+        @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
+    if (size - offset < CANDY_DEFAULT_IO_SIZE) {
+      candy_buffer_expand(self->io, CANDY_DEFAULT_IO_SIZE, sizeof(char));
+      self->reader(_get_buff_data(self) + size, CANDY_DEFAULT_IO_SIZE, self->ud);
     }
     /* otherwise buffer will be filled directly */
     else {
@@ -328,7 +328,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
     _save(self);
   _save_char(self, '\0');
   /* check keyword */
-  for (unsigned i = 0; i < candy_lengthof(_keywords); i++) {
+  for (size_t i = 0; i < candy_lengthof(_keywords); i++) {
     if (strcmp(_get_buff_data(self), _keywords[i].keyword) == 0)
       return _keywords[i].token;
   }

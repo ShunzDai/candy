@@ -20,12 +20,14 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/candy_types.h"
+#include <setjmp.h>
 
-#define candy_assert(_self, _condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_throw((_self), #_type " error: " _format, ##__VA_ARGS__))
+#define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_throw(*(candy_buffer_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
 
 struct candy_buffer {
-  void * const data;
-  const size_t size;
+  void *data;
+  size_t size;
+  jmp_buf env;
 };
 
 typedef void (*candy_try_catch_cb_t)(void *, void *);
@@ -34,9 +36,9 @@ int candy_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle,
 
 void candy_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
 
-void candy_buffer_expand(candy_buffer_t *self, int size, int n);
+void candy_buffer_expand(candy_buffer_t *self, size_t size, size_t n);
 
-candy_buffer_t *candy_buffer_create(int size, int n, bool use_jmp);
+candy_buffer_t *candy_buffer_create(size_t size, size_t n, bool use_jmp);
 
 int candy_buffer_delete(candy_buffer_t **self);
 

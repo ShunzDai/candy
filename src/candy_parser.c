@@ -17,7 +17,7 @@
 #include "src/candy_lexer.h"
 #include <stdlib.h>
 
-#define par_assert(_condition, _format, ...) candy_assert(*(candy_buffer_t **)(self), _condition, syntax, _format, ##__VA_ARGS__)
+#define par_assert(_condition, _format, ...) candy_assert(_condition, syntax, _format, ##__VA_ARGS__)
 
 typedef struct candy_parser {
   /* lexical state */
