@@ -24,7 +24,7 @@
 
 #define CANDY_OP_SIZE 6
 
-#define vm_assert(_condition, _format, ...) candy_assert(**(candy_buffer_t ***)(self), _condition, vm, _format, ##__VA_ARGS__)
+#define vm_assert(_condition, _format, ...) candy_assert(_condition, vm, _format, ##__VA_ARGS__)
 
 typedef enum candy_opcode {
   #define CANDY_OP_ENUM
@@ -97,7 +97,7 @@ int candy_vm_delete(candy_vm_t **self) {
 }
 
 int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
-  for (unsigned idx = 0; idx < size; ++idx) {
+  for (size_t idx = 0; idx < size; ++idx) {
     candy_wrap_t key, val;
     candy_wrap_init(&key);
     candy_wrap_init(&val);

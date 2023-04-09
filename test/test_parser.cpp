@@ -22,7 +22,7 @@
 
 static void test_body(const char exp[]) {
   str_info info = {exp, strlen(exp), 0};
-  candy_buffer_t *io = candy_buffer_create(CANDY_ATOMIC_IO_SIZE, sizeof(char), true);
+  candy_buffer_t *io = candy_buffer_create(CANDY_DEFAULT_IO_SIZE, sizeof(char), true);
   EXPECT_EQ(candy_parse(io, string_reader, &info) == nullptr, false);
   candy_buffer_delete(&io);
 }
