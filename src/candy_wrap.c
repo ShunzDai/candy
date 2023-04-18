@@ -4,13 +4,29 @@
 #include <stdlib.h>
 
 void *candy_wrap_get_data(const candy_wrap_t *self) {
-  return candy_wrap_check_ldata(self, candy_wrap_sizeof(self)) ? *(void **)&self->data : (void *)&self->data;
+  return candy_wrap_check_ldata(self) ? *(void **)&self->data : (void *)&self->data;
 }
 
-void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, size_t size, size_t n) {
-  self->type = type;
-  self->size = size;
-  memcpy(candy_wrap_check_ldata(self, n) ? (*(void **)&self->data = calloc(next_power2(size), n)) : (void *)&self->data, data, size * n);
+void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, size_t size) {
+  self->type = (uint32_t)type;
+  self->size = (uint32_t)size;
+  memcpy(candy_wrap_check_ldata(self) ? (*(void **)&self->data = calloc(next_power2(size), candy_wrap_sizeof(self))) : (void *)&self->data, data, size * candy_wrap_sizeof(self));
+}
+
+void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size) {
+  size_t limit = next_power2(self->size + size);
+  if (next_power2(self->size) < limit && limit > (sizeof(self->data) / candy_wrap_sizeof(self))) {
+    void *new = calloc(limit, candy_wrap_sizeof(self));
+    memcpy(new, candy_wrap_get_data(self), self->size * candy_wrap_sizeof(self));
+    memcpy(new + self->size * candy_wrap_sizeof(self), data, size * candy_wrap_sizeof(self));
+    if (candy_wrap_check_ldata(self))
+      free(*(void **)&self->data);
+    *(void **)&self->data = new;
+  }
+  else {
+    memcpy(candy_wrap_get_data(self) + self->size * candy_wrap_sizeof(self), data, size * candy_wrap_sizeof(self));
+  }
+  self->size += size;
 }
 
 void candy_wrap_init(candy_wrap_t *self) {
@@ -18,7 +34,7 @@ void candy_wrap_init(candy_wrap_t *self) {
 }
 
 int candy_wrap_deinit(candy_wrap_t *self) {
-  if (candy_wrap_check_ldata(self, candy_wrap_sizeof(self)))
+  if (candy_wrap_check_ldata(self))
     free(*(void **)&self->data);
   memset(self, 0, sizeof(struct candy_wrap));
   return 0;
