@@ -1,5 +1,5 @@
 file(GLOB_RECURSE SOURCES_DUMMY LIST_DIRECTORIES false
-  dummy.cpp
+  main.cpp
 )
 
 add_executable(dummy ${SOURCES_DUMMY})
