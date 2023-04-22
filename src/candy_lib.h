@@ -19,6 +19,8 @@
 extern "C"{
 #endif /* __cplusplus */
 
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <ctype.h>
@@ -37,6 +39,15 @@ static inline size_t next_power2(size_t n) {
   n |= n >> 8;
   n |= n >> 16;
   return ++n;
+}
+
+static inline void *expand(void *p, size_t n, size_t before, size_t after) {
+  size_t limit = next_power2(after);
+  if (next_power2(before) >= limit)
+    return p;
+  void *m = calloc(limit, n);
+  memcpy(m, p, before * n);
+  return m;
 }
 
 static inline bool is_upper(char ch) {

@@ -14,18 +14,17 @@ void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *dat
 }
 
 void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size) {
-  size_t limit = next_power2(self->size + size);
-  if (next_power2(self->size) < limit && limit > (sizeof(self->data) / candy_wrap_sizeof(self))) {
-    void *new = calloc(limit, candy_wrap_sizeof(self));
-    memcpy(new, candy_wrap_get_data(self), self->size * candy_wrap_sizeof(self));
-    memcpy(new + self->size * candy_wrap_sizeof(self), data, size * candy_wrap_sizeof(self));
-    if (candy_wrap_check_ldata(self))
-      free(*(void **)&self->data);
-    *(void **)&self->data = new;
+  void *dst = candy_wrap_get_data(self);
+  if (self->size + size > (sizeof(self->data) / candy_wrap_sizeof(self))) {
+    void *new = expand(dst, candy_wrap_sizeof(self), self->size, self->size + size);
+    if (dst != new) {
+      dst = new;
+      if (candy_wrap_check_ldata(self))
+        free(*(void **)&self->data);
+      *(void **)&self->data = new;
+    }
   }
-  else {
-    memcpy(candy_wrap_get_data(self) + self->size * candy_wrap_sizeof(self), data, size * candy_wrap_sizeof(self));
-  }
+  memcpy(dst + self->size * candy_wrap_sizeof(self), data, size * candy_wrap_sizeof(self));
   self->size += size;
 }
 
