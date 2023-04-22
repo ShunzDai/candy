@@ -38,7 +38,7 @@ class state {
   int dofile(const char path[]);
 
   template <typename ... func_t>
-  int add(const std::pair<const char *, func_t> & ... list);
+  int add(const std::tuple<const char *, func_t> & ... list);
 
   /**
     * @brief  cpp call candy function
@@ -108,11 +108,11 @@ class state {
   std::tuple<arg_t ...> pull_tuple();
 
   template <typename ... func_t>
-  constexpr std::array<state::pair_t, sizeof...(func_t)> toclist(const std::pair<const char *, func_t> & ... list);
+  constexpr std::array<state::pair_t, sizeof...(func_t)> toclist(const std::tuple<const char *, func_t> & ... list);
 };
 
 template <typename ... func_t>
-int state::add(const std::pair<const char *, func_t> & ... list) {
+int state::add(const std::tuple<const char *, func_t> & ... list) {
   auto clist = toclist(list ...);
   return add(clist.data(), clist.size());
 }
@@ -179,11 +179,8 @@ std::tuple<arg_t ...> state::pull_tuple() {
 }
 
 template <typename ... func_t>
-constexpr std::array<state::pair_t, sizeof...(func_t)> state::toclist(const std::pair<const char *, func_t> & ... list) {
-  auto lambda = [](const char name[], auto func) -> pair_t {
-    return {name, new builtin_t([func](state *cdy) { return cdy->call(func); })};
-  };
-  return {lambda(list.first, list.second) ...};
+constexpr std::array<state::pair_t, sizeof...(func_t)> state::toclist(const std::tuple<const char *, func_t> & ... list) {
+  return {pair_t{std::get<0>(list), new builtin_t([func = std::get<1>(list)](state *cdy) { return cdy->call(func); })} ...};
 }
 
 } /* namespace candy */
