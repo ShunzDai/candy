@@ -182,14 +182,3 @@ candy_builtin_t candy_vm_pull_builtin(candy_vm_t *self) {
   /** @todo if it is lval, push it into gc */
   return *candy_wrap_get_builtin(_pop(self));
 }
-
-int candy_vm_execute(candy_vm_t *self) {
-
-  while (1) {
-    switch (1) {
-      #define CANDY_OP_CASE
-      #include "src/candy_opcode.list"
-    }
-  }
-  return 0;
-}
