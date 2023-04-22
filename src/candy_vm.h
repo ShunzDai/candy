@@ -42,8 +42,6 @@ candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self);
 const char *candy_vm_pull_string(candy_vm_t *self, size_t *size);
 candy_builtin_t candy_vm_pull_builtin(candy_vm_t *self);
 
-int candy_vm_execute(candy_vm_t *self);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

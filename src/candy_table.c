@@ -55,7 +55,7 @@ static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buf
       sprintf(buff, "%16s", "NA");
       break;
     case CANDY_INTEGER:
-      sprintf(buff, "%16ld", *candy_wrap_get_integer(wrap));
+      sprintf(buff, "%16lld", *candy_wrap_get_integer(wrap));
       break;
     case CANDY_FLOAT:
       sprintf(buff, "%16f", *candy_wrap_get_float(wrap));

@@ -28,21 +28,20 @@ std::tuple<int, float, std::string> func5(bool arg1, int arg2, float arg3, std::
 
 
 int main(int argc, char *argv[]) {
-  // candy::state sta;
-  // printf(">>> 0\n");
-  // sta.add(
-  //   std::pair{"func1", func1},
-  //   std::pair{"func2", func2},
-  //   std::pair{"func3", func3},
-  //   std::pair{"func4", func4},
-  //   std::pair{"func5", func5}
-  // );
+  candy::state sta;
+  sta.add(
+    std::tuple{"func1", func1},
+    std::tuple{"func2", func2},
+    std::tuple{"func3", func3},
+    std::tuple{"func4", func4},
+    std::tuple{"func5", func5}
+  );
 
-  // /* auto res1 = */ sta.call("func1");
-  // /* auto res2 = */ sta.call("func2", 314, 3.14f, "cpp str");
-  // /* auto res3 = */ sta.call<int>("func3");
-  // /* auto res4 = */ sta.call<int, float, std::string>("func4");
-  // /* auto res5 = */ sta.call<int, float, std::string>("func5", true, 314, 3.14f, "cpp str");
+  /* auto res1 = */ sta.call("func1");
+  /* auto res2 = */ sta.call("func2", 314, 3.14f, "cpp str");
+  /* auto res3 = */ sta.call<int>("func3");
+  /* auto res4 = */ sta.call<int, float, std::string>("func4");
+  /* auto res5 = */ sta.call<int, float, std::string>("func5", true, 314, 3.14f, "cpp str");
 
   return 0;
 }
