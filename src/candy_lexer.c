@@ -56,7 +56,7 @@ static inline char _read(candy_lexer_t *self) {
         @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
     if (size - offset < CANDY_DEFAULT_IO_SIZE) {
       candy_io_expand(self->io);
-      self->reader(self->io->buff + size, CANDY_DEFAULT_IO_SIZE, self->ud);
+      self->reader(self->io->buff + size, self->io->size - size, self->ud);
     }
     /* otherwise buffer will be filled directly */
     else {
@@ -279,18 +279,18 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
       case '\\':
         _skip(self);
         switch (_view(self, 0)) {
-          case  'a': _skip(self); _save_char(self,             '\a'); break;
-          case  'b': _skip(self); _save_char(self,             '\b'); break;
-          case  't': _skip(self); _save_char(self,             '\t'); break;
-          case  'n': _skip(self); _save_char(self,             '\n'); break;
-          case  'v': _skip(self); _save_char(self,             '\v'); break;
-          case  'f': _skip(self); _save_char(self,             '\f'); break;
-          case  'r': _skip(self); _save_char(self,             '\r'); break;
-          case '\\': _skip(self); _save_char(self,             '\\'); break;
-          case '\'': _skip(self); _save_char(self,             '\''); break;
-          case  '"': _skip(self); _save_char(self,              '"'); break;
-          case  'x': _skip(self); _save_hex(self);                    break;
-          case  'u': lex_assert(false, "unsupported unicode");        break;
+          case  'a': _skip(self); _save_char(self,      '\a'); break;
+          case  'b': _skip(self); _save_char(self,      '\b'); break;
+          case  't': _skip(self); _save_char(self,      '\t'); break;
+          case  'n': _skip(self); _save_char(self,      '\n'); break;
+          case  'v': _skip(self); _save_char(self,      '\v'); break;
+          case  'f': _skip(self); _save_char(self,      '\f'); break;
+          case  'r': _skip(self); _save_char(self,      '\r'); break;
+          case '\\': _skip(self); _save_char(self,      '\\'); break;
+          case '\'': _skip(self); _save_char(self,      '\''); break;
+          case  '"': _skip(self); _save_char(self,       '"'); break;
+          case  'x': _skip(self); _save_hex(self);             break;
+          case  'u': lex_assert(false, "unsupported unicode"); break;
           default:
             if (_check_next(self, is_oct, _save_oct))
               break;
