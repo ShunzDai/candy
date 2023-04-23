@@ -13,14 +13,14 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "src/candy_buffer.h"
+#include "src/candy_io.h"
 #include "src/candy_lib.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
-int candy_buffer_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
+int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
   if (setjmp(self->env))
     goto catch;
   cb(handle, ud);
@@ -29,7 +29,7 @@ int candy_buffer_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *
   return -1;
 }
 
-void candy_buffer_throw(candy_buffer_t *self, const char format[], ...) {
+void candy_io_throw(candy_io_t *self, const char format[], ...) {
   va_list ap;
   va_start(ap, format);
   size_t len = vsnprintf(NULL, 0, format, ap) + 1;
@@ -44,20 +44,20 @@ void candy_buffer_throw(candy_buffer_t *self, const char format[], ...) {
   longjmp(self->env, 1);
 }
 
-void candy_buffer_expand(candy_buffer_t *self) {
+void candy_io_expand(candy_io_t *self) {
   char *new = (char *)expand(self->buff, sizeof(char), self->size, self->size + 1);
   free(self->buff);
   self->buff = new;
   self->size = next_power2(self->size + 1);
 }
 
-int candy_buffer_init(candy_buffer_t *self) {
+int candy_io_init(candy_io_t *self) {
   self->buff = calloc(CANDY_DEFAULT_IO_SIZE, sizeof(char));
   self->size = CANDY_DEFAULT_IO_SIZE;
   return 0;
 }
 
-int candy_buffer_deinit(candy_buffer_t *self) {
+int candy_io_deinit(candy_io_t *self) {
   free(self->buff);
   self->buff = NULL;
   self->size = 0;

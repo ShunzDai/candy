@@ -27,7 +27,7 @@ struct candy_proto {
 
 typedef struct candy_proto candy_proto_t;
 
-candy_proto_t *candy_parse(candy_buffer_t *io, candy_reader_t reader, void *ud);
+candy_proto_t *candy_parse(candy_io_t *io, candy_reader_t reader, void *ud);
 
 #ifdef __cplusplus
 }
