@@ -258,9 +258,9 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   *         '\041\042\043'
   * @param  self lexer
   * @param  multiline is multiline string or not
-  * @retval string length, not include '\0'
+  * @retval tokens enum
   */
-static int _get_string(candy_lexer_t *self, const bool multiline) {
+static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const bool multiline) {
   const char del = _view(self, 0);
   /* skip first " or ' */
   _skipn(self, multiline ? 3 : 1);
@@ -306,11 +306,11 @@ static int _get_string(candy_lexer_t *self, const bool multiline) {
         break;
     }
   }
-  _save_char(self, '\0');
   /* skip last " or ' */
   lex_assert(_view(self, 0) == del && (multiline ? (_view(self, 1) == del && _view(self, 2) == del) : (true)), "unexpected end of string");
   _skipn(self, multiline ? 3 : 1);
-  return self->w - 1;
+  candy_wrap_set_string(wrap, self->io->buff, self->w);
+  return TK_STRING;
 }
 
 static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *wrap) {
@@ -319,13 +319,12 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
   /* save number, alpha, or '_' */
   while (is_dec(_view(self, 0)) || is_alpha(_view(self, 0)) || _view(self, 0) == '_')
     _save(self);
-  _save_char(self, '\0');
   /* check keyword */
   for (size_t i = 0; i < candy_lengthof(_keywords); i++) {
-    if (strcmp(self->io->buff, _keywords[i].keyword) == 0)
+    if (strncmp(self->io->buff, _keywords[i].keyword, strlen(_keywords[i].keyword)) == 0)
       return _keywords[i].token;
   }
-  // wrap->hash = djb_hash(self->buffer->data);
+  candy_wrap_set_string(wrap, self->io->buff, self->w);
   return TK_IDENT;
 }
 
@@ -367,8 +366,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       /* is string */
       case '"': case '\'':
-        candy_wrap_set_string(wrap, self->io->buff, _get_string(self, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)));
-        return TK_STRING;
+        return _get_string(self, wrap, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0));
       default:
         if (is_dec(_view(self, 0)))
           return _get_number(self, wrap);
