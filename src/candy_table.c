@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "src/candy_table.h"
-#include "src/candy_buffer.h"
+#include "src/candy_io.h"
 #include "src/candy_wrap.h"
 #include <stdlib.h>
 #include <string.h>

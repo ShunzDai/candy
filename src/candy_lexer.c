@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "src/candy_lexer.h"
-#include "src/candy_buffer.h"
+#include "src/candy_io.h"
 #include "src/candy_lib.h"
 #include <stdlib.h>
 #include <string.h>
@@ -55,7 +55,7 @@ static inline char _read(candy_lexer_t *self) {
     /** if the number of bytes that can be filled is less than
         @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
     if (size - offset < CANDY_DEFAULT_IO_SIZE) {
-      candy_buffer_expand(self->io);
+      candy_io_expand(self->io);
       self->reader(self->io->buff + size, CANDY_DEFAULT_IO_SIZE, self->ud);
     }
     /* otherwise buffer will be filled directly */
@@ -383,7 +383,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   return dual_ope(_read(self), _read(self));
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_buffer_t *io, candy_reader_t reader, void *ud) {
+int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud) {
   memset(self, 0, sizeof(struct candy_lexer));
 #ifdef CANDY_DEBUG_MODE
   self->dbg.line = 1;
