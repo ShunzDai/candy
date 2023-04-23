@@ -51,35 +51,30 @@ typedef union candy_opmode {
 
 struct candy_vm {
   candy_state_t *sta;
-  candy_buffer_t *base;
-  candy_table_t *glb;
+  candy_wrap_t *base;
   size_t size;
+  candy_table_t *glb;
   candy_callinfo_t info;
 };
 
-static inline size_t _get_buff_size(candy_vm_t *self) {
-  return self->base->size;
-}
-
-static inline candy_wrap_t *_get_buff_data(candy_vm_t *self) {
-  return (candy_wrap_t *)self->base->data;
-}
-
 void _push(candy_vm_t *self, const candy_wrap_t *wrap) {
-  if (self->size == _get_buff_size(self))
-    candy_buffer_expand(self->base, CANDY_ATOMIC_STACK_SIZE, sizeof(candy_wrap_t));
-  memset(&_get_buff_data(self)[self->size], 0, sizeof(candy_wrap_t));
-  _get_buff_data(self)[self->size++] = *wrap;
+  candy_wrap_t *new = (candy_wrap_t *)expand(self->base, sizeof(candy_wrap_t), self->size, self->size + 1);
+  if (self->base != new) {
+    free(self->base);
+    self->base = new;
+  }
+  // memset(&self->base[self->size], 0, sizeof(candy_wrap_t));
+  self->base[self->size++] = *wrap;
 }
 
 candy_wrap_t *_pop(candy_vm_t *self) {
-  return self->size ? &_get_buff_data(self)[--self->size] : NULL;
+  return self->size ? &self->base[--self->size] : NULL;
 }
 
 candy_vm_t *candy_vm_create(candy_state_t *sta, candy_builtin_t entry) {
-  candy_vm_t *self = (candy_vm_t *)malloc(sizeof(candy_vm_t));
+  candy_vm_t *self = (candy_vm_t *)calloc(1, sizeof(struct candy_vm));
   self->sta = sta;
-  self->base = candy_buffer_create(CANDY_ATOMIC_STACK_SIZE, sizeof(candy_wrap_t), false);
+  self->base = calloc(CANDY_DEFAULT_STACK_SIZE, sizeof(candy_wrap_t));
   self->glb = candy_table_create();
   candy_regist_t list[] = {
     {CANDY_BUILTIN_NAME_ENTRY, entry},
@@ -89,7 +84,8 @@ candy_vm_t *candy_vm_create(candy_state_t *sta, candy_builtin_t entry) {
 }
 
 int candy_vm_delete(candy_vm_t **self) {
-  candy_buffer_delete(&(*self)->base);
+  free((*self)->base);
+  (*self)->base = NULL;
   candy_table_delete(&(*self)->glb);
   free(*self);
   *self = NULL;
