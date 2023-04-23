@@ -14,17 +14,13 @@
   * limitations under the License.
   */
 #include "src/candy_buffer.h"
-
+#include "src/candy_lib.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
-static inline struct priv *_priv(candy_buffer_t *self) {
-  return (struct priv *)self;
-}
-
-int candy_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
+int candy_buffer_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
   if (setjmp(self->env))
     goto catch;
   cb(handle, ud);
@@ -33,42 +29,37 @@ int candy_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle,
   return -1;
 }
 
-void candy_throw(candy_buffer_t *self, const char format[], ...) {
+void candy_buffer_throw(candy_buffer_t *self, const char format[], ...) {
   va_list ap;
   va_start(ap, format);
   size_t len = vsnprintf(NULL, 0, format, ap) + 1;
   va_end(ap);
   if (self->size < len) {
-    free(self->data);
-    self->data = calloc(len, sizeof(char));
+    free(self->buff);
+    self->buff = calloc(len, sizeof(char));
   }
   va_start(ap, format);
-  vsprintf(self->data, format, ap);
+  vsprintf(self->buff, format, ap);
   va_end(ap);
   longjmp(self->env, 1);
 }
 
-void candy_buffer_expand(candy_buffer_t *self, size_t size, size_t n) {
-  size_t old_size = self->size;
-  void *old_data = self->data;
-  self->size = self->size + size;
-  self->data = calloc(self->size, n);
-  memcpy(self->data, old_data, old_size * n);
-  free(old_data);
-  old_data = NULL;
+void candy_buffer_expand(candy_buffer_t *self) {
+  char *new = (char *)expand(self->buff, sizeof(char), self->size, self->size + 1);
+  free(self->buff);
+  self->buff = new;
+  self->size = next_power2(self->size + 1);
 }
 
-candy_buffer_t *candy_buffer_create(size_t size, size_t n, bool use_jmp) {
-  candy_buffer_t *self = (candy_buffer_t *)malloc(use_jmp ? sizeof(struct candy_buffer) : (sizeof(struct candy_buffer) - sizeof(jmp_buf)));
-  self->size = size;
-  self->data = calloc(self->size, n);
-  return self;
+int candy_buffer_init(candy_buffer_t *self) {
+  self->buff = calloc(CANDY_DEFAULT_IO_SIZE, sizeof(char));
+  self->size = CANDY_DEFAULT_IO_SIZE;
+  return 0;
 }
 
-int candy_buffer_delete(candy_buffer_t **self) {
-  free((*self)->data);
-  (*self)->data = NULL;
-  free(_priv(*self));
-  *self = NULL;
+int candy_buffer_deinit(candy_buffer_t *self) {
+  free(self->buff);
+  self->buff = NULL;
+  self->size = 0;
   return 0;
 }

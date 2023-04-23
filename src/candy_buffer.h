@@ -22,25 +22,22 @@ extern "C"{
 #include "src/candy_types.h"
 #include <setjmp.h>
 
-#define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_throw(*(candy_buffer_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
+#define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_buffer_throw(*(candy_buffer_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
 
 struct candy_buffer {
-  void *data;
+  char *buff;
   size_t size;
   jmp_buf env;
 };
 
 typedef void (*candy_try_catch_cb_t)(void *, void *);
 
-int candy_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud);
+int candy_buffer_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud);
+void candy_buffer_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
+void candy_buffer_expand(candy_buffer_t *self);
 
-void candy_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
-
-void candy_buffer_expand(candy_buffer_t *self, size_t size, size_t n);
-
-candy_buffer_t *candy_buffer_create(size_t size, size_t n, bool use_jmp);
-
-int candy_buffer_delete(candy_buffer_t **self);
+int candy_buffer_init(candy_buffer_t *self);
+int candy_buffer_deinit(candy_buffer_t *self);
 
 #ifdef __cplusplus
 }
