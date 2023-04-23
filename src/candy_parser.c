@@ -14,6 +14,7 @@
   * limitations under the License.
   */
 #include "src/candy_parser.h"
+#include "src/candy_buffer.h"
 #include "src/candy_lexer.h"
 #include <stdlib.h>
 
@@ -108,7 +109,7 @@ candy_proto_t *candy_parse(candy_buffer_t *io, candy_reader_t reader, void *ud) 
   candy_parser_t parser;
   parser.proto = (candy_proto_t *)1;
   candy_lexer_init(&parser.lex, io, reader, ud);
-  if (candy_try_catch(io, (candy_try_catch_cb_t)_statlist, &parser, NULL) != 0)
+  if (candy_buffer_try_catch(io, (candy_try_catch_cb_t)_statlist, &parser, NULL) != 0)
     goto exit;
   candy_lexer_deinit(&parser.lex);
   return parser.proto;
