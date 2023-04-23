@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
-#include "src/candy_buffer.h"
+#include "src/candy_io.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
 
@@ -22,10 +22,10 @@
 
 static void test_body(const char exp[]) {
   str_info info = {exp, strlen(exp), 0};
-  candy_buffer_t io;
-  candy_buffer_init(&io);
+  candy_io_t io;
+  candy_io_init(&io);
   EXPECT_EQ(candy_parse(&io, string_reader, &info) == nullptr, false);
-  candy_buffer_deinit(&io);
+  candy_io_deinit(&io);
 }
 
 PARSER_TEST(exp_add_0, "a = 1 + 2")

@@ -1,5 +1,5 @@
 file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
-  candy_buffer.c
+  candy_io.c
   candy_wrap.c
   candy_table.c
   candy_lexer.c

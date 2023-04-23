@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_BUFFER_H
-#define CANDY_SRC_BUFFER_H
+#ifndef CANDY_SRC_IO_H
+#define CANDY_SRC_IO_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -22,9 +22,9 @@ extern "C"{
 #include "src/candy_types.h"
 #include <setjmp.h>
 
-#define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_buffer_throw(*(candy_buffer_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
+#define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_io_throw(*(candy_io_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
 
-struct candy_buffer {
+struct candy_io {
   char *buff;
   size_t size;
   jmp_buf env;
@@ -32,14 +32,14 @@ struct candy_buffer {
 
 typedef void (*candy_try_catch_cb_t)(void *, void *);
 
-int candy_buffer_try_catch(candy_buffer_t *self, candy_try_catch_cb_t cb, void *handle, void *ud);
-void candy_buffer_throw(candy_buffer_t *self, const char format[], ...) CANDY_NORETURN;
-void candy_buffer_expand(candy_buffer_t *self);
+int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud);
+void candy_io_throw(candy_io_t *self, const char format[], ...) CANDY_NORETURN;
+void candy_io_expand(candy_io_t *self);
 
-int candy_buffer_init(candy_buffer_t *self);
-int candy_buffer_deinit(candy_buffer_t *self);
+int candy_io_init(candy_io_t *self);
+int candy_io_deinit(candy_io_t *self);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_BUFFER_H */
+#endif /* CANDY_SRC_IO_H */

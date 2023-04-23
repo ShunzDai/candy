@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "src/candy_state.h"
-#include "src/candy_buffer.h"
+#include "src/candy_io.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
 #include "src/candy_vm.h"
@@ -23,7 +23,7 @@
 
 struct candy_state {
   /* global input-output buffer */
-  candy_buffer_t io;
+  candy_io_t io;
   candy_vm_t *vm;
   void *ud;
 };
@@ -34,7 +34,7 @@ static int _default_entry(candy_state_t *self) {
 
 candy_state_t *candy_state_create(void *ud) {
   candy_state_t *self = (candy_state_t *)malloc(sizeof(struct candy_state));
-  candy_buffer_init(&self->io);
+  candy_io_init(&self->io);
   self->vm = candy_vm_create(self, _default_entry);
   self->ud = ud;
   return self;
@@ -42,7 +42,7 @@ candy_state_t *candy_state_create(void *ud) {
 
 int candy_state_delete(candy_state_t **self) {
   candy_vm_delete(&(*self)->vm);
-  candy_buffer_deinit(&(*self)->io);
+  candy_io_deinit(&(*self)->io);
   free(*self);
   *self = NULL;
   return 0;
