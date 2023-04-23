@@ -14,6 +14,7 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
+#include "src/candy_buffer.h"
 #include "src/candy_lexer.h"
 #include "src/candy_reader.h"
 #include "mid_os.h"
@@ -30,12 +31,13 @@ struct arg {
 
 template <typename ... supposed>
 static void tast_body(candy_tokens_t token, const char exp[], supposed ... value) {
-  candy_buffer_t *io = candy_buffer_create(CANDY_DEFAULT_IO_SIZE, sizeof(char), true);
+  candy_buffer_t io;
   candy_lexer_t lex;
   str_info info = {exp, strlen(exp), 0};
-  candy_lexer_init(&lex, io, string_reader, &info);
+  candy_buffer_init(&io);
+  candy_lexer_init(&lex, &io, string_reader, &info);
   arg ud = {token, {}};
-  ASSERT_EQ(candy_try_catch(io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, arg *ud) {
+  ASSERT_EQ(candy_buffer_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, arg *ud) {
     EXPECT_EQ(candy_lexer_next(self, &ud->wrap), ud->token);
     EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_NULL);
   }, &lex, &ud), 0);
@@ -70,7 +72,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   }
   candy_wrap_deinit(&ud.wrap);
   candy_lexer_deinit(&lex);
-  candy_buffer_delete(&io);
+  candy_buffer_deinit(&io);
 }
 
 TEST_LEXER(comment_0, TK_NULL, "#")
@@ -179,12 +181,13 @@ TEST(lexer, file_system) {
   fseek(f, 0, SEEK_END);
   size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
-  candy_buffer_t *io = candy_buffer_create(CANDY_DEFAULT_IO_SIZE, sizeof(char), true);
+  candy_buffer_t io;
   candy_lexer_t lex;
   file_info info = {f, size};
-  candy_lexer_init(&lex, io, file_reader, &info);
+  candy_buffer_init(&io);
+  candy_lexer_init(&lex, &io, file_reader, &info);
   arg ud = {TK_NULL, {}};
-  ASSERT_EQ(candy_try_catch(io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, arg *ud) {
+  ASSERT_EQ(candy_buffer_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, arg *ud) {
     EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_def);
     candy_wrap_deinit(&ud->wrap);
     EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_IDENT);
@@ -235,6 +238,6 @@ TEST(lexer, file_system) {
     candy_wrap_deinit(&ud->wrap);
   }, &lex, &ud), 0);
   candy_lexer_deinit(&lex);
-  candy_buffer_delete(&io);
+  candy_buffer_deinit(&io);
   fclose(info.f);
 }

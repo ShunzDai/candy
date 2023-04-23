@@ -39,7 +39,7 @@ extern "C"{
 #error "io buffer size is too small"
 #endif /* CANDY_DEFAULT_IO_SIZE */
 
-#define CANDY_ATOMIC_STACK_SIZE 8
+#define CANDY_DEFAULT_STACK_SIZE 8
 
 #define CANDY_BUILTIN_NAME_ENTRY "__entry__"
 

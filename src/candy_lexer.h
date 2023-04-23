@@ -19,7 +19,6 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy_buffer.h"
 #include "src/candy_wrap.h"
 #include "src/candy_types.h"
 

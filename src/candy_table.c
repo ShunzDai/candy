@@ -26,14 +26,19 @@ struct candy_node {
   candy_wrap_t val;
 };
 
+struct candy_table {
+  candy_node_t *head;
+  size_t size;
+};
+
 static const candy_wrap_t _null = {{0, 0}, CANDY_NULL, 0};
 
 static inline size_t _size(candy_table_t *self) {
-  return ((candy_buffer_t *)self)->size;
+  return self->size;
 }
 
 static inline candy_node_t *_head(candy_table_t *self) {
-  return (candy_node_t *)((candy_buffer_t *)self)->data;
+  return self->head;
 }
 
 static inline candy_node_t *_tail(candy_table_t *self) {
@@ -117,11 +122,18 @@ static bool equal(const candy_wrap_t *keyl, const candy_wrap_t *keyr) {
 }
 
 candy_table_t *candy_table_create() {
-  return (candy_table_t *)candy_buffer_create(16, sizeof(struct candy_node), false);
+  candy_table_t *self = calloc(1, sizeof(struct candy_table));
+  self->head = calloc(16, sizeof(struct candy_node));
+  self->size = 16;
+  return self;
 }
 
 int candy_table_delete(candy_table_t **self) {
-  return candy_buffer_delete((candy_buffer_t **)self);
+  free((*self)->head);
+  (*self)->head = NULL;
+  free(*self);
+  *self = NULL;
+  return 0;
 }
 
 void candy_table_print(candy_table_t *self) {
