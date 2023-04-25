@@ -10,12 +10,12 @@ void *candy_wrap_get_data(const candy_wrap_t *self) {
 void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, size_t size) {
   self->type = (uint32_t)type;
   self->size = (uint32_t)size;
-  memcpy(candy_wrap_check_ldata(self) ? (*(void **)&self->data = calloc(next_power2(size), candy_wrap_sizeof(self))) : (void *)&self->data, data, size * candy_wrap_sizeof(self));
+  memcpy(candy_wrap_check_ldata(self) ? (*(void **)&self->data = calloc(size, candy_wrap_sizeof(self))) : (void *)&self->data, data, size * candy_wrap_sizeof(self));
 }
 
 void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size) {
   void *dst = candy_wrap_get_data(self);
-  if (self->size + size > (sizeof(self->data) / candy_wrap_sizeof(self))) {
+  if (self->size + size > sizeof(self->data) / candy_wrap_sizeof(self)) {
     void *new = expand(dst, candy_wrap_sizeof(self), self->size, self->size + size);
     if (dst != new) {
       dst = new;
