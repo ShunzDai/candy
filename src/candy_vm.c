@@ -58,12 +58,11 @@ struct candy_vm {
 };
 
 void _push(candy_vm_t *self, const candy_wrap_t *wrap) {
-  candy_wrap_t *new = (candy_wrap_t *)expand(self->base, sizeof(candy_wrap_t), self->size, self->size + 1);
-  if (self->base != new) {
+  candy_wrap_t *dst = (candy_wrap_t *)expand(self->base, sizeof(candy_wrap_t), self->size, self->size + 1);
+  if (self->base != dst) {
     free(self->base);
-    self->base = new;
+    self->base = dst;
   }
-  // memset(&self->base[self->size], 0, sizeof(candy_wrap_t));
   self->base[self->size++] = *wrap;
 }
 
@@ -150,31 +149,21 @@ void candy_vm_push_string(candy_vm_t *self, const char val[], size_t size) {
 }
 
 candy_integer_t candy_vm_pull_integer(candy_vm_t *self) {
-  /** @todo error handle */
-  /** @todo if it is lval, push it into gc */
   return *candy_wrap_get_integer(_pop(self));
 }
 
 candy_float_t candy_vm_pull_float(candy_vm_t *self) {
-  /** @todo error handle */
-  /** @todo if it is lval, push it into gc */
   return *candy_wrap_get_float(_pop(self));
 }
 
 candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self) {
-  /** @todo error handle */
-  /** @todo if it is lval, push it into gc */
   return *candy_wrap_get_boolean(_pop(self));
 }
 
 const char *candy_vm_pull_string(candy_vm_t *self, size_t *size) {
-  /** @todo error handle */
-  /** @todo if it is lval, push it into gc */
   return candy_wrap_get_string(_pop(self));
 }
 
 candy_builtin_t candy_vm_pull_builtin(candy_vm_t *self) {
-  /** @todo error handle */
-  /** @todo if it is lval, push it into gc */
   return *candy_wrap_get_builtin(_pop(self));
 }
