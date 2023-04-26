@@ -66,8 +66,8 @@ void _push(candy_vm_t *self, const candy_wrap_t *wrap) {
   self->base[self->size++] = *wrap;
 }
 
-candy_wrap_t *_pop(candy_vm_t *self) {
-  return self->size ? &self->base[--self->size] : NULL;
+const candy_wrap_t *_pop(candy_vm_t *self) {
+  return self->size ? &self->base[--self->size] : &null;
 }
 
 candy_vm_t *candy_vm_create(candy_state_t *sta, candy_builtin_t entry) {
