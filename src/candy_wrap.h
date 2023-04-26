@@ -28,6 +28,8 @@ struct candy_wrap {
   uint32_t size : 28;
 };
 
+extern const candy_wrap_t null;
+
 void *candy_wrap_get_data(const candy_wrap_t *self);
 void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, size_t size);
 void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size);

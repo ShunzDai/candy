@@ -31,8 +31,6 @@ struct candy_table {
   size_t size;
 };
 
-static const candy_wrap_t _null = {{0, 0}, CANDY_NULL, 0};
-
 static inline size_t _size(candy_table_t *self) {
   return self->size;
 }
@@ -148,7 +146,7 @@ const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key
     else if ((node + next)->key.type == CANDY_NULL)
       break;
   }
-  return &_null;
+  return &null;
 }
 
 int candy_table_set(candy_table_t *self, const candy_wrap_t *key, const candy_wrap_t *val) {
