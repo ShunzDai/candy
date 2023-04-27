@@ -22,6 +22,7 @@ extern "C"{
 #include "candy_config.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h> /** @todo remove it */
 
 typedef enum candy_wraps {
@@ -51,13 +52,6 @@ struct candy_regist {
 };
 
 typedef struct candy_regist candy_regist_t;
-
-struct candy_callinfo {
-  size_t esp;
-  size_t ebp;
-};
-
-typedef struct candy_callinfo candy_callinfo_t;
 
 #ifdef __cplusplus
 }

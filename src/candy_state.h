@@ -37,6 +37,8 @@ int candy_dofile(candy_state_t *self, const char name[]);
   * @return none.
   */
 int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size);
+
+int candy_set_global(candy_state_t *self, const char name[]);
 int candy_get_global(candy_state_t *self, const char name[]);
 int candy_call(candy_state_t *self, int nargs, int nresults);
 
@@ -47,19 +49,19 @@ int candy_call(candy_state_t *self, int nargs, int nresults);
   */
 void *candy_ud(candy_state_t *self);
 
-candy_callinfo_t *candy_callinfo(candy_state_t *self);
-
-void candy_push_integer(candy_state_t *self, const candy_integer_t val);
-void candy_push_float(candy_state_t *self, const candy_float_t val);
-void candy_push_boolean(candy_state_t *self, const candy_boolean_t val);
+void candy_push_integer(candy_state_t *self, const candy_integer_t val[], size_t size);
+void candy_push_float(candy_state_t *self, const candy_float_t val[], size_t size);
+void candy_push_boolean(candy_state_t *self, const candy_boolean_t val[], size_t size);
 void candy_push_string(candy_state_t *self, const char val[], size_t size);
-void candy_push_ud(candy_state_t *self, const void *val);
+void candy_push_ud(candy_state_t *self, const void *val[], size_t size);
+void candy_push_builtin(candy_state_t *self, const candy_builtin_t val[], size_t size);
 
-candy_integer_t candy_pull_integer(candy_state_t *self);
-candy_float_t candy_pull_float(candy_state_t *self);
-candy_boolean_t candy_pull_boolean(candy_state_t *self);
+const candy_integer_t *candy_pull_integer(candy_state_t *self, size_t *size);
+const candy_float_t *candy_pull_float(candy_state_t *self, size_t *size);
+const candy_boolean_t *candy_pull_boolean(candy_state_t *self, size_t *size);
 const char *candy_pull_string(candy_state_t *self, size_t *size);
-candy_builtin_t candy_pull_builtin(candy_state_t *self);
+const void **candy_pull_ud(candy_state_t *self, size_t *size);
+const candy_builtin_t *candy_pull_builtin(candy_state_t *self, size_t *size);
 
 #ifdef __cplusplus
 }
