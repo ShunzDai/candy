@@ -20,20 +20,14 @@ namespace candy {
 
 state::state() :
 _csta((void *)candy_state_create(this)) {
-  candy_regist_t list[] = {
-    {CANDY_BUILTIN_NAME_ENTRY, (candy_builtin_t)entry},
-  };
-  candy_add_builtin((candy_state *)_csta, list, 1);
 }
 
 state::~state() {
   candy_state_delete((candy_state **)&_csta);
 }
 
-int state::entry(void *csta) {
-  state *sta = (state *)candy_ud((candy_state *)csta);
-  printf(">>> 1\n");
-  return (*(builtin_t *)candy_pull_builtin((candy_state *)csta))(sta);
+state *state::self(void *csta) {
+  return (state *)candy_ud((candy_state *)csta);;
 }
 
 int state::dostring(const char exp[]) {
@@ -44,28 +38,35 @@ int state::dofile(const char path[]) {
   return candy_dofile((candy_state *)_csta, path);
 }
 
-int state::add(pair_t list[], size_t size) {
-  return candy_add_builtin((candy_state *)_csta, (candy_regist_t *)list, size);
+int state::add(const char name[], void *func, int (*wrap)(void *)) {
+  // candy_add_builtin((candy_state *)_csta, (candy_regist_t *)list, size);
+  const void *val[] = {func, (void *)wrap};
+  candy_push_ud((candy_state *)_csta, val, 2);
+  candy_set_global((candy_state *)_csta, name);
+  return 0;
 }
 
 int state::ccall(const char name[], int nargs, int nresults) {
   candy_get_global((candy_state *)_csta, name);
+  const void **val = candy_pull_ud((candy_state_t *)_csta, nullptr);
+  candy_push_ud((candy_state *)_csta, &val[0], 1);
+  candy_push_builtin((candy_state *)_csta, (candy_builtin_t *)&val[1], 1);
   return candy_call((candy_state *)_csta, nargs, nresults);
 }
 
-void state::push_integer(const int64_t &val) {
+void state::push_integer(const candy_integer_t &val) {
   printf("into %s\n", __FUNCTION__);
-  candy_push_integer((candy_state *)_csta, val);
+  candy_push_integer((candy_state *)_csta, &val, 1);
 }
 
-void state::push_float(const double &val) {
+void state::push_float(const candy_float_t &val) {
   printf("into %s\n", __FUNCTION__);
-  candy_push_float((candy_state *)_csta, val);
+  candy_push_float((candy_state *)_csta, &val, 1);
 }
 
-void state::push_boolean(const bool &val) {
+void state::push_boolean(const candy_boolean_t &val) {
   printf("into %s\n", __FUNCTION__);
-  candy_push_boolean((candy_state *)_csta, val);
+  candy_push_boolean((candy_state *)_csta, &val, 1);
 }
 
 void state::push_string(const std::string &val) {
@@ -73,25 +74,30 @@ void state::push_string(const std::string &val) {
   candy_push_string((candy_state *)_csta, val.data(), val.size());
 }
 
-int64_t state::pull_integer() {
+candy_integer_t state::pull_integer() {
   printf("into %s\n", __FUNCTION__);
-  return candy_pull_integer((candy_state *)_csta);
+  return *candy_pull_integer((candy_state *)_csta, nullptr);
 }
 
-double state::pull_float() {
+candy_float_t state::pull_float() {
   printf("into %s\n", __FUNCTION__);
-  return candy_pull_float((candy_state *)_csta);
+  return *candy_pull_float((candy_state *)_csta, nullptr);
 }
 
-bool state::pull_boolean() {
+candy_boolean_t state::pull_boolean() {
   printf("into %s\n", __FUNCTION__);
-  return candy_pull_boolean((candy_state *)_csta);
+  return *candy_pull_boolean((candy_state *)_csta, nullptr);
 }
 
 std::string state::pull_string() {
   printf("into %s\n", __FUNCTION__);
   size_t size = 0;
   return {candy_pull_string((candy_state *)_csta, &size), size};
+}
+
+const void *state::pull_ud() {
+  printf("into %s\n", __FUNCTION__);
+  return *candy_pull_ud((candy_state_t *)_csta, nullptr);
 }
 
 }

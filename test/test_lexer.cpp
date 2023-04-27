@@ -44,7 +44,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   if constexpr(sizeof...(value)) {
     auto val = std::get<0>(std::make_tuple(value ...));
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
-      char *str = candy_wrap_get_string(&ud.wrap);
+      auto *str = candy_wrap_get_string(&ud.wrap);
       EXPECT_EQ(ud.wrap.size, val.size());
       EXPECT_EQ(memcmp(str, val.data(), val.size()), 0);
     }
