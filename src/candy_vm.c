@@ -104,7 +104,7 @@ int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
 
 int candy_vm_set_global(candy_vm_t *self, const char name[]) {
   candy_wrap_t key;
-  candy_wrap_set_string(&key, name, strlen(name) + 1);
+  candy_wrap_set_string(&key, name, strlen(name));
   candy_table_set(self->glb, &key, _pop(self));
   candy_wrap_deinit(&key);
   return 0;
@@ -112,7 +112,7 @@ int candy_vm_set_global(candy_vm_t *self, const char name[]) {
 
 int candy_vm_get_global(candy_vm_t *self, const char name[]) {
   candy_wrap_t key;
-  candy_wrap_set_string(&key, name, strlen(name) + 1);
+  candy_wrap_set_string(&key, name, strlen(name));
   _push(self, candy_table_get(self->glb, &key));
   candy_wrap_deinit(&key);
   return 0;
