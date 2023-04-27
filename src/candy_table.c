@@ -48,7 +48,6 @@ static inline bool _boundary_check(candy_table_t *self, candy_node_t *node) {
 }
 
 static inline int32_t _get_next(int32_t now) {
-  printf ("now %d\n", ((now <= 0) - now) << 1);
   return ((now <= 0) - now) << 1;
 }
 
@@ -114,7 +113,6 @@ static size_t hash(const candy_wrap_t *key) {
 }
 
 static inline candy_node_t *main_position(candy_table_t *self, const candy_wrap_t *key) {
-  printf("str [%s] pos %ld\n", candy_wrap_get_string(key), hash(key) % _size(self));
   return _head(self) + hash(key) % _size(self);
 }
 
