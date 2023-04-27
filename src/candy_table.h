@@ -24,7 +24,7 @@ extern "C"{
 candy_table_t *candy_table_create();
 int candy_table_delete(candy_table_t **self);
 
-void candy_table_print(candy_table_t *self);
+void candy_table_dump(candy_table_t *self);
 const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key);
 int candy_table_set(candy_table_t *self, const candy_wrap_t *key, const candy_wrap_t *val);
 
