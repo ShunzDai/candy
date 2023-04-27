@@ -26,6 +26,8 @@ typedef struct candy_vm candy_vm_t;
 candy_vm_t *candy_vm_create(candy_state_t *sta);
 int candy_vm_delete(candy_vm_t **self);
 
+void candy_vm_dump_global(candy_vm_t *self);
+
 int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size);
 int candy_vm_set_global(candy_vm_t *self, const char name[]);
 int candy_vm_get_global(candy_vm_t *self, const char name[]);

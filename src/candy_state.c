@@ -74,6 +74,10 @@ int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size) {
   return candy_vm_builtin(self->vm, list, size);
 }
 
+void candy_dump_global(candy_state_t *self) {
+  candy_vm_dump_global(self->vm);
+}
+
 int candy_set_global(candy_state_t *self, const char name[]) {
   return candy_vm_set_global(self->vm, name);
 }

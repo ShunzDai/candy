@@ -38,8 +38,11 @@ int state::dofile(const char path[]) {
   return candy_dofile((candy_state *)_csta, path);
 }
 
+void state::dump_global(void) {
+  candy_dump_global((candy_state *)_csta);
+}
+
 int state::add(const char name[], void *func, int (*wrap)(void *)) {
-  // candy_add_builtin((candy_state *)_csta, (candy_regist_t *)list, size);
   const void *val[] = {func, (void *)wrap};
   candy_push_ud((candy_state *)_csta, val, 2);
   candy_set_global((candy_state *)_csta, name);
@@ -74,28 +77,28 @@ void state::push_string(const std::string &val) {
   candy_push_string((candy_state *)_csta, val.data(), val.size());
 }
 
-candy_integer_t state::pull_integer() {
+candy_integer_t state::pull_integer(void) {
   printf("into %s\n", __FUNCTION__);
   return *candy_pull_integer((candy_state *)_csta, nullptr);
 }
 
-candy_float_t state::pull_float() {
+candy_float_t state::pull_float(void) {
   printf("into %s\n", __FUNCTION__);
   return *candy_pull_float((candy_state *)_csta, nullptr);
 }
 
-candy_boolean_t state::pull_boolean() {
+candy_boolean_t state::pull_boolean(void) {
   printf("into %s\n", __FUNCTION__);
   return *candy_pull_boolean((candy_state *)_csta, nullptr);
 }
 
-std::string state::pull_string() {
+std::string state::pull_string(void) {
   printf("into %s\n", __FUNCTION__);
   size_t size = 0;
   return {candy_pull_string((candy_state *)_csta, &size), size};
 }
 
-const void *state::pull_ud() {
+const void *state::pull_ud(void) {
   printf("into %s\n", __FUNCTION__);
   return *candy_pull_ud((candy_state_t *)_csta, nullptr);
 }

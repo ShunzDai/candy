@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-const candy_wrap_t null = {{0, 0}, CANDY_NULL, 0};
+const candy_wrap_t null = {{0, 0}, {0}};
 
 void *candy_wrap_get_data(const candy_wrap_t *self) {
   return candy_wrap_check_ldata(self) ? *(void **)&self->data : (void *)&self->data;

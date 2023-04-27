@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
     std::tuple{"func5", func5}
   );
 
+  sta.dump_global();
+
   /* auto res1 = */ sta.call("func1");
   /* auto res2 = */ sta.call("func2", 314, 3.14f, "cpp str");
   /* auto res3 = */ sta.call<int>("func3");
