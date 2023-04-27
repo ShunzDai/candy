@@ -175,9 +175,10 @@ arg_t state::pull() {
 
 template <typename ... arg_t, size_t ... seq>
 std::tuple<arg_t ...> state::pull_tuple(std::index_sequence<seq ...>) {
-  // (printf("sizeof...(arg_t) - seq %zu\n", seq), ...);
   auto t = std::tuple{pull<std::tuple_element_t<sizeof...(arg_t) - seq - 1, std::tuple<arg_t ...>>>() ...};
-  return {std::get<sizeof...(arg_t) - seq - 1>(t) ...};
+  if constexpr (sizeof...(arg_t))
+    return {std::get<sizeof...(arg_t) - seq - 1>(t) ...};
+  return t;
 }
 
 } /* namespace candy */
