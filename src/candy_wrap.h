@@ -24,8 +24,13 @@ extern "C"{
 
 struct candy_wrap {
   uint32_t data[2];
-  uint32_t type :  4;
-  uint32_t size : 28;
+  union {
+    uint32_t mask;
+    struct {
+      uint32_t type :  4;
+      uint32_t size : 28;
+    };
+  };
 };
 
 extern const candy_wrap_t null;

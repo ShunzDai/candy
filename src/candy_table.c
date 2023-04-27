@@ -66,6 +66,9 @@ static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buf
     case CANDY_STRING:
       sprintf(buff, "%16s", candy_wrap_get_string(wrap));
       break;
+    case CANDY_USERDEF:
+      sprintf(buff, "%16p", *candy_wrap_get_ud(wrap));
+      break;
     case CANDY_BUILTIN:
       sprintf(buff, "%16p", *candy_wrap_get_builtin(wrap));
       break;
@@ -77,7 +80,7 @@ static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buf
   }
 }
 
-static void _print(candy_table_t *self, int depth) {
+static void _dump(candy_table_t *self, int depth) {
   static const char *type[] = {
 #define CANDY_TYPE_STR
 #include "src/candy_type.list"
@@ -86,8 +89,8 @@ static void _print(candy_table_t *self, int depth) {
   printf("%*sdepth  pos  key-type         key-val  val-type         val-val\n", depth * 2, "");
   for (candy_node_t *node = _head(self); node <= _tail(self); ++node) {
     char key[17], val[17];
-    _wrap_sprint(self, &node->key, key, _print, depth);
-    _wrap_sprint(self, &node->val, val, _print, depth);
+    _wrap_sprint(self, &node->key, key, _dump, depth);
+    _wrap_sprint(self, &node->val, val, _dump, depth);
     printf("%*s%5d%5ld%10s%s%10s%s\n", depth * 2, "", depth, node - _head(self), type[node->key.type], key, type[node->val.type], val);
   }
   printf("%*s\033[1;35m<<< table tail\033[0m\n", depth * 2, "");
@@ -116,7 +119,9 @@ static inline candy_node_t *main_position(candy_table_t *self, const candy_wrap_
 }
 
 static bool equal(const candy_wrap_t *keyl, const candy_wrap_t *keyr) {
-  return strcmp(candy_wrap_get_string(keyl), candy_wrap_get_string(keyr)) == 0;
+  if (keyl->mask != keyr->mask)
+    return false;
+  return memcmp(candy_wrap_get_data(keyl), candy_wrap_get_data(keyr), keyl->size * candy_wrap_sizeof(keyl)) == 0;
 }
 
 candy_table_t *candy_table_create() {
@@ -134,8 +139,8 @@ int candy_table_delete(candy_table_t **self) {
   return 0;
 }
 
-void candy_table_print(candy_table_t *self) {
-  _print(self, 0);
+void candy_table_dump(candy_table_t *self) {
+  _dump(self, 0);
 }
 
 const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key) {

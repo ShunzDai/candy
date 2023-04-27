@@ -31,6 +31,8 @@ class state {
 
   int dofile(const char path[]);
 
+  void dump_global(void);
+
   template <typename ... func_t>
   int add(const std::tuple<const char *, func_t> & ... list);
 
@@ -92,11 +94,11 @@ class state {
   void push_boolean(const candy_boolean_t &val);
   void push_string(const std::string &val);
 
-  candy_integer_t pull_integer();
-  candy_float_t pull_float();
-  candy_boolean_t pull_boolean();
-  std::string pull_string();
-  const void *pull_ud();
+  candy_integer_t pull_integer(void);
+  candy_float_t pull_float(void);
+  candy_boolean_t pull_boolean(void);
+  std::string pull_string(void);
+  const void *pull_ud(void);
 
   template <typename arg_t>
   void push(arg_t arg);
@@ -105,8 +107,8 @@ class state {
 
   template <typename arg_t>
   arg_t pull();
-  template <typename ... arg_t>
-  std::tuple<arg_t ...> pull_tuple();
+  template <typename ... arg_t, size_t ... seq>
+  std::tuple<arg_t ...> pull_tuple(std::index_sequence<seq ...>);
 };
 
 template <typename ... func_t>
@@ -119,21 +121,21 @@ template <typename ... res_t, typename ... arg_t>
 std::tuple<res_t ...> state::call(const char func[], const arg_t & ... args) {
   (push(args), ...);
   ccall(func, sizeof...(arg_t), sizeof...(res_t));
-  return pull_tuple<res_t ...>();
+  return pull_tuple<res_t ...>(std::make_index_sequence<sizeof...(res_t)> {});
 }
 
 template <typename res_t, typename ... arg_t>
 int state::call(res_t(*func)(arg_t ...)) {
   if constexpr (std::is_void<res_t>::value) {
-    std::apply(func, pull_tuple<arg_t ...>());
+    std::apply(func, pull_tuple<arg_t ...>(std::make_index_sequence<sizeof...(arg_t)> {}));
     return 0;
   }
   else if constexpr (is_tuple<res_t>::value) {
-    push_tuple(std::apply(func, pull_tuple<arg_t ...>()), std::make_index_sequence<std::tuple_size<res_t>::value> {});
+    push_tuple(std::apply(func, pull_tuple<arg_t ...>(std::make_index_sequence<sizeof...(arg_t)> {})), std::make_index_sequence<std::tuple_size<res_t>::value> {});
     return std::tuple_size<res_t>::value;
   }
   else {
-    push(std::apply(func, pull_tuple<arg_t ...>()));
+    push(std::apply(func, pull_tuple<arg_t ...>(std::make_index_sequence<sizeof...(arg_t)> {})));
     return 1;
   }
 }
@@ -171,9 +173,11 @@ arg_t state::pull() {
     static_assert(!std::is_same<arg_t, arg_t>::value, "unknown arg type");
 }
 
-template <typename ... arg_t>
-std::tuple<arg_t ...> state::pull_tuple() {
-  return {pull<arg_t>() ...};
+template <typename ... arg_t, size_t ... seq>
+std::tuple<arg_t ...> state::pull_tuple(std::index_sequence<seq ...>) {
+  // (printf("sizeof...(arg_t) - seq %zu\n", seq), ...);
+  auto t = std::tuple{pull<std::tuple_element_t<sizeof...(arg_t) - seq - 1, std::tuple<arg_t ...>>>() ...};
+  return {std::get<sizeof...(arg_t) - seq - 1>(t) ...};
 }
 
 } /* namespace candy */
