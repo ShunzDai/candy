@@ -15,6 +15,7 @@
   */
 #pragma once
 
+#include "src/candy_types.h"
 #include <string>
 #include <tuple>
 #include <functional>
@@ -23,13 +24,6 @@ namespace candy {
 
 class state {
   public:
-  using builtin_t = std::function<int(state *)>;
-
-  struct pair_t {
-    const char *name;
-    builtin_t *func;
-  };
-
   state();
   ~state();
 
@@ -62,6 +56,12 @@ class state {
   int call(res_t(*func)(arg_t ...));
 
   private:
+  struct builtin_t {
+    const char *name;
+    int (*wrap)(void *);
+    void *func;
+  };
+
   template<typename first_t, typename ... rest_t>
   struct is_tuple {
     static const bool value = std::is_same<first_t, std::tuple<>>::value;
@@ -82,20 +82,21 @@ class state {
 
   void *_csta;
 
-  static int entry(void *csta);
+  static state *self(void *);
 
-  int add(pair_t list[], size_t size);
+  int add(const char name[], void *func, int (*wrap)(void *));
   int ccall(const char name[], int nargs, int nresults);
 
-  void push_integer(const int64_t &val);
-  void push_float(const double &val);
-  void push_boolean(const bool &val);
+  void push_integer(const candy_integer_t &val);
+  void push_float(const candy_float_t &val);
+  void push_boolean(const candy_boolean_t &val);
   void push_string(const std::string &val);
 
-  int64_t pull_integer();
-  double pull_float();
-  bool pull_boolean();
+  candy_integer_t pull_integer();
+  candy_float_t pull_float();
+  candy_boolean_t pull_boolean();
   std::string pull_string();
+  const void *pull_ud();
 
   template <typename arg_t>
   void push(arg_t arg);
@@ -106,15 +107,12 @@ class state {
   arg_t pull();
   template <typename ... arg_t>
   std::tuple<arg_t ...> pull_tuple();
-
-  template <typename ... func_t>
-  constexpr std::array<state::pair_t, sizeof...(func_t)> toclist(const std::tuple<const char *, func_t> & ... list);
 };
 
 template <typename ... func_t>
 int state::add(const std::tuple<const char *, func_t> & ... list) {
-  auto clist = toclist(list ...);
-  return add(clist.data(), clist.size());
+  (add(std::get<0>(list), (void *)std::get<1>(list), +[](void *csta) { return self(csta)->call((func_t)self(csta)->pull_ud()); }), ...);
+  return 0;
 }
 
 template <typename ... res_t, typename ... arg_t>
@@ -175,12 +173,7 @@ arg_t state::pull() {
 
 template <typename ... arg_t>
 std::tuple<arg_t ...> state::pull_tuple() {
-  return std::make_tuple(pull<arg_t>() ...);
-}
-
-template <typename ... func_t>
-constexpr std::array<state::pair_t, sizeof...(func_t)> state::toclist(const std::tuple<const char *, func_t> & ... list) {
-  return {pair_t{std::get<0>(list), new builtin_t([func = std::get<1>(list)](state *cdy) { return cdy->call(func); })} ...};
+  return {pull<arg_t>() ...};
 }
 
 } /* namespace candy */

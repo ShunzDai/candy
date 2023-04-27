@@ -23,24 +23,27 @@ extern "C"{
 
 typedef struct candy_vm candy_vm_t;
 
-candy_vm_t *candy_vm_create(candy_state_t *sta, candy_builtin_t entry);
+candy_vm_t *candy_vm_create(candy_state_t *sta);
 int candy_vm_delete(candy_vm_t **self);
 
 int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size);
+int candy_vm_set_global(candy_vm_t *self, const char name[]);
 int candy_vm_get_global(candy_vm_t *self, const char name[]);
 int candy_vm_call(candy_vm_t *self, int nargs, int nresults);
-candy_callinfo_t *candy_vm_callinfo(candy_vm_t *self);
 
-void candy_vm_push_integer(candy_vm_t *self, const candy_integer_t val);
-void candy_vm_push_float(candy_vm_t *self, const candy_float_t val);
-void candy_vm_push_boolean(candy_vm_t *self, const candy_boolean_t val);
+void candy_vm_push_integer(candy_vm_t *self, const candy_integer_t val[], size_t size);
+void candy_vm_push_float(candy_vm_t *self, const candy_float_t val[], size_t size);
+void candy_vm_push_boolean(candy_vm_t *self, const candy_boolean_t val[], size_t size);
 void candy_vm_push_string(candy_vm_t *self, const char val[], size_t size);
+void candy_vm_push_ud(candy_vm_t *self, const void *val[], size_t size);
+void candy_vm_push_builtin(candy_vm_t *self, const candy_builtin_t val[], size_t size);
 
-candy_integer_t candy_vm_pull_integer(candy_vm_t *self);
-candy_float_t candy_vm_pull_float(candy_vm_t *self);
-candy_boolean_t candy_vm_pull_boolean(candy_vm_t *self);
+const candy_integer_t *candy_vm_pull_integer(candy_vm_t *self, size_t *size);
+const candy_float_t *candy_vm_pull_float(candy_vm_t *self, size_t *size);
+const candy_boolean_t *candy_vm_pull_boolean(candy_vm_t *self, size_t *size);
 const char *candy_vm_pull_string(candy_vm_t *self, size_t *size);
-candy_builtin_t candy_vm_pull_builtin(candy_vm_t *self);
+const void **candy_vm_pull_ud(candy_vm_t *self, size_t *size);
+const candy_builtin_t *candy_vm_pull_builtin(candy_vm_t *self, size_t *size);
 
 #ifdef __cplusplus
 }
