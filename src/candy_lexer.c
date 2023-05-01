@@ -328,7 +328,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
   return TK_IDENT;
 }
 
-static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
+static candy_tokens_t _lexical(candy_lexer_t *self, candy_wrap_t *wrap) {
   self->w = 0;
   while (1) {
     switch (_view(self, 0)) {
@@ -398,27 +398,27 @@ int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader,
 }
 
 int candy_lexer_deinit(candy_lexer_t *self) {
+  candy_wrap_deinit(&self->curr.wrap);
   candy_wrap_deinit(&self->lookahead.wrap);
   return 0;
 }
 
-candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap) {
+candy_tokens_t candy_lexer_next(candy_lexer_t *self) {
   /* is there a look-ahead token? */
   if (self->lookahead.token != TK_EOS) {
     /* use this one */
-    candy_tokens_t token = self->lookahead.token;
-    if (wrap)
-      *wrap = self->lookahead.wrap;
+    self->curr.token = self->lookahead.token;
+    self->curr.wrap = self->lookahead.wrap;
     /* and discharge it */
     self->lookahead.token = TK_EOS;
-    return token;
+    return self->curr.token;
   }
   /* read next token */
-  return _lexer(self, wrap);
+  return _lexical(self, &self->curr.wrap);
 }
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
   if (self->lookahead.token == TK_EOS)
-    self->lookahead.token = _lexer(self, &self->lookahead.wrap);
+    self->lookahead.token = _lexical(self, &self->lookahead.wrap);
   return self->lookahead.token;
 }
