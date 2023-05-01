@@ -91,7 +91,7 @@ static void _statement(candy_parser_t *self) {
 
 static bool _block_follow(candy_parser_t *self) {
   switch (candy_lexer_lookahead(&self->lex)) {
-    case TK_NULL:
+    case TK_EOF:
       return true;
     default:
       return false;
