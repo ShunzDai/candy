@@ -172,7 +172,7 @@ static void _skip_comment(candy_lexer_t *self) {
     switch (_view(self, 0)) {
       case '\r': case '\n':
         _handle_newline(self, _skip);
-      case '\0':
+      case (char)EOF:
         return;
       default:
         _skip(self);
@@ -307,7 +307,7 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
     }
   }
   /* skip last " or ' */
-  lex_assert(_view(self, 0) == del && (multiline ? (_view(self, 1) == del && _view(self, 2) == del) : (true)), "unexpected end of string");
+  lex_assert(multiline ? (_view(self, 1) == del && _view(self, 2) == del) : true, "unexpected end of string");
   _skipn(self, multiline ? 3 : 1);
   candy_wrap_set_string(wrap, self->io->buff, self->w);
   return TK_STRING;
@@ -332,8 +332,8 @@ static candy_tokens_t _lexical(candy_lexer_t *self, candy_wrap_t *wrap) {
   self->w = 0;
   while (1) {
     switch (_view(self, 0)) {
-      case '\0':
-        return TK_NULL;
+      case (char)EOF:
+        return TK_EOF;
       case '\r': case '\n':
         _handle_newline(self, _skip);
         break;
