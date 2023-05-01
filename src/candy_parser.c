@@ -31,14 +31,15 @@ static void _expr(candy_parser_t *self) {
 }
 
 static void _expr_stat(candy_parser_t *self) {
+  candy_wrap_t wrap;
   /* get ident */
-  candy_lexer_next(&self->lex);
+  candy_lexer_next(&self->lex, &wrap);
   switch (candy_lexer_lookahead(&self->lex)) {
     case '=':
-      while (candy_lexer_next(&self->lex));
+      while (candy_lexer_next(&self->lex, &wrap));
       break;
     case '(':
-      candy_lexer_next(&self->lex);
+      candy_lexer_next(&self->lex, &wrap);
       _expr(self);
       break;
     default:
@@ -53,7 +54,7 @@ static void _expr_stat(candy_parser_t *self) {
   */
 static void _cond_block(candy_parser_t *self) {
   /* skip if or elif */
-  candy_lexer_next(&self->lex);
+  candy_lexer_next(&self->lex, NULL);
   /** @todo read condition */
   if (candy_lexer_lookahead(&self->lex) == TK_break) {
 

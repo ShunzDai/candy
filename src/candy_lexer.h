@@ -69,11 +69,6 @@ typedef enum candy_tokens {
   TK_ERROR        = 0xFFU,
 } candy_tokens_t;
 
-typedef struct candy_token {
-  candy_tokens_t token;
-  candy_wrap_t wrap;
-} candy_token_t;
-
 /** @ref doc/io_memory_model.drawio.png */
 struct candy_lexer {
   candy_io_t *io;
@@ -86,8 +81,10 @@ struct candy_lexer {
   struct {
     uint8_t type;
   } indent;
-  candy_token_t curr;
-  candy_token_t lookahead;
+  struct {
+    candy_tokens_t token;
+    candy_wrap_t wrap;
+  } lookahead;
   size_t w;
   size_t r;
   candy_reader_t reader;
@@ -99,7 +96,7 @@ typedef struct candy_lexer candy_lexer_t;
 int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud);
 int candy_lexer_deinit(candy_lexer_t *self);
 
-candy_tokens_t candy_lexer_next(candy_lexer_t *self);
+candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap);
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);
 
 #ifdef __cplusplus
