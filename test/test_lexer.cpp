@@ -33,7 +33,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   candy_lexer_init(&lex, &io, string_reader, &info);
   ASSERT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, void *ud) {
     EXPECT_EQ(candy_lexer_next(self), *(candy_tokens_t *)ud);
-    EXPECT_EQ(candy_lexer_next(self), TK_NULL);
+    EXPECT_EQ(candy_lexer_next(self), TK_EOF);
   }, &lex, &token), 0);
   if constexpr(sizeof...(value)) {
     auto val = std::get<0>(std::make_tuple(value ...));
@@ -68,11 +68,11 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
   candy_io_deinit(&io);
 }
 
-TEST_LEXER(comment_0, TK_NULL, "#")
+TEST_LEXER(comment_0, TK_EOF, "#")
 
-TEST_LEXER(comment_1, TK_NULL, "# hello world\r\n")
+TEST_LEXER(comment_1, TK_EOF, "# hello world\r\n")
 
-TEST_LEXER(comment_2, TK_NULL,
+TEST_LEXER(comment_2, TK_EOF,
   "# hello world\n"
   "# hi\n"
 )
@@ -226,7 +226,7 @@ TEST(lexer, file_system) {
     candy_wrap_deinit(&self->curr.wrap);
     EXPECT_EQ(candy_lexer_next(self), ')');
     candy_wrap_deinit(&self->curr.wrap);
-    EXPECT_EQ(candy_lexer_next(self), TK_NULL);
+    EXPECT_EQ(candy_lexer_next(self), TK_EOF);
     candy_wrap_deinit(&self->curr.wrap);
   }, &lex, nullptr), 0);
   candy_lexer_deinit(&lex);

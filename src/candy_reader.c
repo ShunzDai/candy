@@ -8,7 +8,7 @@ int string_reader(char *buff, const size_t max_len, void *ud) {
   memcpy(buff, info->exp + info->offset, len);
   info->offset += len;
   if (info->offset == info->size && len < max_len)
-    buff[len] = '\0';
+    buff[len] = (char)EOF;
   return len;
 }
 
@@ -18,6 +18,6 @@ int file_reader(char *buff, const size_t max_len, void *ud) {
   size_t len = (max_len > residual) ? residual : max_len;
   fread(buff, sizeof(char), len, info->f);
   if ((size_t)ftell(info->f) == info->size && len < max_len)
-    buff[len] = '\0';
+    buff[len] = (char)EOF;
   return len;
 }
