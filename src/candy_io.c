@@ -26,6 +26,7 @@ int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, 
   cb(handle, ud);
   return 0;
   catch:
+  printf("%s\n", self->buff);
   return -1;
 }
 
