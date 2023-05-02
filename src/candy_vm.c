@@ -86,8 +86,8 @@ int candy_vm_delete(candy_vm_t **self) {
   return 0;
 }
 
-void candy_vm_dump_global(candy_vm_t *self) {
-  candy_table_dump(self->glb);
+int candy_vm_dump_global(candy_vm_t *self) {
+  return candy_table_dump(self->glb);
 }
 
 int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
