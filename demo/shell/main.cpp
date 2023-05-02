@@ -20,13 +20,11 @@
 
 int main(int argc, char *argv[]) {
   candy::state sta;
-  printf("candy (%s, %s)\ntype 'q' to quit\n", __DATE__, __TIME__);
+  printf("candy (%s, %s)\ntype 'exit()' to quit\n", __DATE__, __TIME__);
   while (1) {
     std::string line;
     printf(">>> ");
     std::getline(std::cin, line);
-    if (strcmp(line.c_str(), "q") == 0)
-      break;
     sta.dostring(line.c_str());
   }
 }

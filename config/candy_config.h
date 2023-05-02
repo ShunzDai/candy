@@ -41,6 +41,8 @@ extern "C"{
 
 #define CANDY_DEFAULT_STACK_SIZE 8
 
+#define CANDY_OPCODE_SIZE 6
+
 #ifdef __GNUC__
 #define CANDY_NORETURN __attribute__((noreturn))
 #else

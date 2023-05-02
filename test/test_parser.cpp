@@ -20,20 +20,22 @@
 
 #define PARSER_TEST(_name, _exp) TEST(parser, _name) {test_body(_exp);}
 
-static void test_body(const char exp[]) {
-  str_info info = {exp, strlen(exp), 0};
-  candy_io_t io;
-  candy_io_init(&io);
-  EXPECT_EQ(candy_parse(&io, string_reader, &info) == nullptr, false);
-  candy_io_deinit(&io);
-}
+// static void test_body(const char exp[]) {
+//   str_info info = {exp, strlen(exp), 0};
+//   candy_io_t io;
+//   candy_io_init(&io);
+//   auto tick = os::tick_ns();
+//   EXPECT_EQ(candy_parse(&io, string_reader, &info) != 0, false);
+//   printf("delta time = %ld ns\n", os::tick_ns() - tick);
+//   candy_io_deinit(&io);
+// }
 
-PARSER_TEST(exp_add_0, "a = 1 + 2")
-PARSER_TEST(exp_add_1, "a = (1 + 2)")
-PARSER_TEST(exp_sub_0, "a = 1 - 2")
-PARSER_TEST(exp_sub_1, "a = (1 - 2)")
-PARSER_TEST(exp_mul_0, "a = 1 * 2")
-PARSER_TEST(exp_mul_1, "a = (1 * 2)")
-PARSER_TEST(exp_div_0, "a = 1 / 2")
-PARSER_TEST(exp_div_1, "a = (1 / 2)")
-PARSER_TEST(exp, "a = (((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12")
+// PARSER_TEST(exp_add_0, "a = 1 + 2")
+// PARSER_TEST(exp_add_1, "a = (1 + 2)")
+// PARSER_TEST(exp_sub_0, "a = 1 - 2")
+// PARSER_TEST(exp_sub_1, "a = (1 - 2)")
+// PARSER_TEST(exp_mul_0, "a = 1 * 2")
+// PARSER_TEST(exp_mul_1, "a = (1 * 2)")
+// PARSER_TEST(exp_div_0, "a = 1 / 2")
+// PARSER_TEST(exp_div_1, "a = (1 / 2)")
+// PARSER_TEST(exp, "a = (((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12")

@@ -14,40 +14,16 @@
   * limitations under the License.
   */
 #include "src/candy_vm.h"
+#include "src/candy_io.h"
 #include "src/candy_wrap.h"
 #include "src/candy_table.h"
-#include "src/candy_io.h"
+#include "src/candy_block.h"
 #include "src/candy_lib.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-#define CANDY_OP_SIZE 6
-
 #define vm_assert(_condition, _format, ...) candy_assert(_condition, vm, _format, ##__VA_ARGS__)
-
-typedef enum candy_opcode {
-  #define CANDY_OP_ENUM
-  #include "src/candy_opcode.list"
-} candy_opcode_t;
-
-typedef union candy_opmode {
-  struct {
-    uint32_t op : CANDY_OP_SIZE;
-    uint32_t    :            24;
-  };
-  struct {
-    uint32_t    : CANDY_OP_SIZE;
-    uint32_t  a :             8;
-    uint32_t  b :             9;
-    uint32_t  c :             9;
-  } iABC;
-  struct {
-    uint32_t    : CANDY_OP_SIZE;
-    uint32_t  a :             8;
-    uint32_t  b :            18;
-  } iABx;
-} candy_opmode_t;
 
 struct candy_vm {
   candy_state_t *sta;
@@ -95,7 +71,7 @@ int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
     candy_wrap_t key, val;
     candy_wrap_init(&key);
     candy_wrap_init(&val);
-    candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name) + 1);
+    candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name));
     candy_wrap_set_builtin(&val, &list[idx].func, 1);
     candy_table_set(self->glb, &key, &val);
   }
@@ -120,6 +96,18 @@ int candy_vm_get_global(candy_vm_t *self, const char name[]) {
 
 int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
   (*candy_wrap_get_builtin(_pop(self)))(self->sta);
+  return 0;
+}
+
+int candy_vm_execute(candy_vm_t *self, candy_block_t *block) {
+  for (const candy_opcode_t *ins = candy_wrap_get_opcode(&block->opcode); ins - candy_wrap_get_opcode(&block->opcode) < block->opcode.size; ++ins) {
+    switch (ins->op) {
+      #define CANDY_OP_CASE
+      #include "src/candy_opcode.list"
+      default:
+      break;
+    }
+  }
   return 0;
 }
 

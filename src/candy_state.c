@@ -17,6 +17,7 @@
 #include "src/candy_io.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
+#include "src/candy_block.h"
 #include "src/candy_vm.h"
 #include <stdlib.h>
 #include <string.h>
@@ -46,10 +47,11 @@ int candy_state_delete(candy_state_t **self) {
 
 int candy_dostring(candy_state_t *self, const char exp[]) {
   struct str_info info = {exp, strlen(exp), 0};
-  if (candy_parse(&self->io, string_reader, &info) == NULL) {
-    printf("%s\n", self->io.buff);
+  candy_block_t *block = candy_parse(&self->io, string_reader, &info);
+  if (block == NULL)
     return -1;
-  }
+  candy_vm_execute(self->vm, block);
+  candy_block_delete(&block);
   return 0;
 }
 
@@ -61,12 +63,10 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
   struct file_info info = {f, size};
-  if (candy_parse(&self->io, file_reader, &info) == NULL) {
-    printf("%s\n", self->io.buff);
-    fclose(f);
-    return -1;
-  }
+  candy_block_t *block = candy_parse(&self->io, file_reader, &info);
   fclose(f);
+  if (block == NULL)
+    return -1;
   return 0;
 }
 

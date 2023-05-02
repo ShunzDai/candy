@@ -13,17 +13,18 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_PARSER_H
-#define CANDY_SRC_PARSER_H
-#ifdef __cplusplus
-extern "C"{
-#endif /* __cplusplus */
+#include "src/candy_builtin.h"
+#include "src/candy_state.h"
+#include "src/candy_lib.h"
+#include <stdlib.h>
 
-#include "src/candy_types.h"
-
-candy_block_t *candy_parse(candy_io_t *io, candy_reader_t reader, void *ud);
-
-#ifdef __cplusplus
+int candy_builtin_exit(candy_state_t *self) {
+  exit(0);
 }
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_PARSER_H */
+
+candy_regist_t candy_builtin_list[] = {
+  {"exit", candy_builtin_exit},
+  {"global", candy_dump_global},
+};
+
+size_t candy_builtin_size = candy_lengthof(candy_builtin_list);

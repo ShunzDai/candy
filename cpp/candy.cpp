@@ -15,11 +15,13 @@
   */
 #include "candy.h"
 #include "src/candy_state.h"
+#include "src/candy_builtin.h"
 
 namespace candy {
 
 state::state() :
 _csta((void *)candy_state_create(this)) {
+  candy_add_builtin((candy_state *)_csta, candy_builtin_list, candy_builtin_size);
 }
 
 state::~state() {
@@ -27,7 +29,7 @@ state::~state() {
 }
 
 state *state::self(void *csta) {
-  return (state *)candy_ud((candy_state *)csta);;
+  return (state *)candy_ud((candy_state *)csta);
 }
 
 int state::dostring(const char exp[]) {
