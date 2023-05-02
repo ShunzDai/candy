@@ -17,3 +17,5 @@
 [6]游戏猫. Lua5.1.5源码分析之table实现[DB/OL]. [link](https://blog.csdn.net/gamekit/article/details/122975184), 2022-02-17, 2023-02-24
 
 [7]co lin. 深入Lua：Table的实现[DB/OL]. [link](https://www.zhihu.com/collection/685811848), 2019-12-17, 2023-04-01
+
+[8]frog-game. [Lua5.4.4源码].指令集[DB/OL]. [link](https://zhuanlan.zhihu.com/p/610168640), 2023-02-28, 2023-05-01

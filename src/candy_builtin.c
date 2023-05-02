@@ -13,18 +13,18 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy.h"
-#include "mid_os.h"
-#include <iostream>
-#include <string.h>
+#include "src/candy_builtin.h"
+#include "src/candy_state.h"
+#include "src/candy_lib.h"
+#include <stdlib.h>
 
-int main(int argc, char *argv[]) {
-  candy::state sta;
-  printf("candy (%s, %s)\ntype 'exit()' to quit\n", __DATE__, __TIME__);
-  while (1) {
-    std::string line;
-    printf(">>> ");
-    std::getline(std::cin, line);
-    sta.dostring(line.c_str());
-  }
+int candy_builtin_exit(candy_state_t *self) {
+  exit(0);
 }
+
+candy_regist_t candy_builtin_list[] = {
+  {"exit", candy_builtin_exit},
+  {"global", candy_dump_global},
+};
+
+size_t candy_builtin_size = candy_lengthof(candy_builtin_list);

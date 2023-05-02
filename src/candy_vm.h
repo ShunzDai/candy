@@ -32,6 +32,7 @@ int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size);
 int candy_vm_set_global(candy_vm_t *self, const char name[]);
 int candy_vm_get_global(candy_vm_t *self, const char name[]);
 int candy_vm_call(candy_vm_t *self, int nargs, int nresults);
+int candy_vm_execute(candy_vm_t *self, candy_block_t *block);
 
 void candy_vm_push_integer(candy_vm_t *self, const candy_integer_t val[], size_t size);
 void candy_vm_push_float(candy_vm_t *self, const candy_float_t val[], size_t size);
