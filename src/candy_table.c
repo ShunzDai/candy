@@ -51,7 +51,7 @@ static inline int32_t _get_next(int32_t now) {
   return ((now <= 0) - now) << 1;
 }
 
-static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buff[], void(*print)(candy_table_t *self, int depth), int depth) {
+static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buff[], int(*print)(candy_table_t *self, int depth), int depth) {
   switch (wrap->type) {
     case CANDY_NULL: case CANDY_DEL: case CANDY_NONE:
       sprintf(buff, "%16s", "NA");
@@ -79,7 +79,7 @@ static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buf
   }
 }
 
-static void _dump(candy_table_t *self, int depth) {
+static int _dump(candy_table_t *self, int depth) {
   static const char *type[] = {
 #define CANDY_TYPE_STR
 #include "src/candy_type.list"
@@ -93,6 +93,7 @@ static void _dump(candy_table_t *self, int depth) {
     printf("%*s%5d%5ld%10s%s%10s%s\n", depth * 2, "", depth, node - _head(self), type[node->key.type], key, type[node->val.type], val);
   }
   printf("%*s\033[1;35m<<< table tail\033[0m\n", depth * 2, "");
+  return 0;
 }
 
 static inline size_t hash_string(const char str[], size_t size) {
@@ -137,8 +138,8 @@ int candy_table_delete(candy_table_t **self) {
   return 0;
 }
 
-void candy_table_dump(candy_table_t *self) {
-  _dump(self, 0);
+int candy_table_dump(candy_table_t *self) {
+  return _dump(self, 0);
 }
 
 const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key) {
