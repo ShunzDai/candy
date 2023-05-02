@@ -54,6 +54,16 @@ static inline bool candy_wrap_check_ldata(const candy_wrap_t *self) {
   return self->size > (sizeof(self->data) / candy_wrap_sizeof(self));
 }
 
+static inline const candy_opcode_t *candy_wrap_get_opcode(const candy_wrap_t *self) {
+  assert(self->type == CANDY_OPCODE);
+  return (const candy_opcode_t *)candy_wrap_get_data(self);
+}
+
+static inline const candy_wrap_t *candy_wrap_get_wrap(const candy_wrap_t *self) {
+  assert(self->type == CANDY_WRAP);
+  return (const candy_wrap_t *)candy_wrap_get_data(self);
+}
+
 static inline const candy_integer_t *candy_wrap_get_integer(const candy_wrap_t *self) {
   assert(self->type == CANDY_INTEGER);
   return (const candy_integer_t *)candy_wrap_get_data(self);
@@ -89,6 +99,14 @@ static inline const candy_table_t **candy_wrap_get_table(const candy_wrap_t *sel
   return (const candy_table_t **)candy_wrap_get_data(self);
 }
 
+static inline void candy_wrap_set_opcode(candy_wrap_t *self, const candy_opcode_t val[], size_t size) {
+  candy_wrap_set_data(self, CANDY_OPCODE, val, size);
+}
+
+static inline void candy_wrap_set_wrap(candy_wrap_t *self, const candy_wrap_t val[], size_t size) {
+  candy_wrap_set_data(self, CANDY_WRAP, val, size);
+}
+
 static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t val[], size_t size) {
   candy_wrap_set_data(self, CANDY_INTEGER, val, size);
 }
@@ -117,6 +135,14 @@ static inline void candy_wrap_set_table(candy_wrap_t *self, const candy_table_t 
   candy_wrap_set_data(self, CANDY_TABLE, val, size);
 }
 
+static inline void candy_wrap_append_opcode(candy_wrap_t *self, const candy_opcode_t val[], size_t size) {
+  candy_wrap_append(self, val, size);
+}
+
+static inline void candy_wrap_append_wrap(candy_wrap_t *self, const candy_wrap_t val[], size_t size) {
+  candy_wrap_append(self, val, size);
+}
+
 static inline void candy_wrap_append_integer(candy_wrap_t *self, const candy_integer_t val[], size_t size) {
   candy_wrap_append(self, val, size);
 }
@@ -142,7 +168,7 @@ static inline void candy_wrap_append_builtin(candy_wrap_t *self, const candy_bui
 }
 
 static inline void candy_wrap_append_table(candy_wrap_t *self, const candy_table_t *val[], size_t size) {
-  candy_wrap_set_data(self, CANDY_TABLE, val, size);
+  candy_wrap_append(self, val, size);
 }
 
 #ifdef __cplusplus
