@@ -32,13 +32,13 @@ struct candy_vm {
   candy_table_t *glb;
 };
 
-void _push(candy_vm_t *self, const candy_wrap_t *wrap) {
+candy_wrap_t *_push(candy_vm_t *self) {
   candy_wrap_t *dst = (candy_wrap_t *)expand(self->base, sizeof(candy_wrap_t), self->size, self->size + 1);
   if (self->base != dst) {
     free(self->base);
     self->base = dst;
   }
-  self->base[self->size++] = *wrap;
+  return &self->base[self->size++];
 }
 
 const candy_wrap_t *_pop(candy_vm_t *self) {
@@ -89,7 +89,7 @@ int candy_vm_set_global(candy_vm_t *self, const char name[]) {
 int candy_vm_get_global(candy_vm_t *self, const char name[]) {
   candy_wrap_t key;
   candy_wrap_set_string(&key, name, strlen(name));
-  _push(self, candy_table_get(self->glb, &key));
+  *_push(self) = *candy_table_get(self->glb, &key);
   candy_wrap_deinit(&key);
   return 0;
 }
@@ -112,39 +112,27 @@ int candy_vm_execute(candy_vm_t *self, candy_block_t *block) {
 }
 
 void candy_vm_push_integer(candy_vm_t *self, const candy_integer_t val[], size_t size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_integer(&wrap, val, size);
-  _push(self, &wrap);
+  candy_wrap_set_integer(_push(self), val, size);
 }
 
 void candy_vm_push_float(candy_vm_t *self, const candy_float_t val[], size_t size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_float(&wrap, val, size);
-  _push(self, &wrap);
+  candy_wrap_set_float(_push(self), val, size);
 }
 
 void candy_vm_push_boolean(candy_vm_t *self, const candy_boolean_t val[], size_t size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_boolean(&wrap, val, size);
-  _push(self, &wrap);
+  candy_wrap_set_boolean(_push(self), val, size);
 }
 
 void candy_vm_push_string(candy_vm_t *self, const char val[], size_t size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_string(&wrap, val, size);
-  _push(self, &wrap);
+  candy_wrap_set_string(_push(self), val, size);
 }
 
 void candy_vm_push_ud(candy_vm_t *self, const void *val[], size_t size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_ud(&wrap, val, size);
-  _push(self, &wrap);
+  candy_wrap_set_ud(_push(self), val, size);
 }
 
 void candy_vm_push_builtin(candy_vm_t *self, const candy_builtin_t val[], size_t size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_builtin(&wrap, val, size);
-  _push(self, &wrap);
+  candy_wrap_set_builtin(_push(self), val, size);
 }
 
 const candy_integer_t *candy_vm_pull_integer(candy_vm_t *self, size_t *size) {
