@@ -19,7 +19,7 @@
 
 #ifdef CANDY_OP
 CANDY_OP(GETTABUP,
-  _push(self, candy_table_get(self->glb, &candy_wrap_get_wrap(&block->pool)[ins->iABC.c]));
+  *_push(self) = *candy_table_get(self->glb, &candy_wrap_get_wrap(&block->pool)[ins->iABC.c]);
   break;
 )
 
