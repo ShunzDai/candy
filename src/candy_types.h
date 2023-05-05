@@ -25,6 +25,12 @@ extern "C"{
 #include <stddef.h>
 #include <stdio.h> /** @todo remove it */
 
+#ifdef __GNUC__
+#define CANDY_NORETURN __attribute__((noreturn))
+#else
+#define CANDY_NORETURN
+#endif
+
 typedef enum candy_wraps {
 #define CANDY_TYPE_ENUM
 #include "src/candy_type.list"
@@ -53,6 +59,7 @@ typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
 
 typedef struct candy_io candy_io_t;
+typedef CANDY_MASK_TYPE candy_mask_t;
 typedef struct candy_wrap candy_wrap_t;
 typedef struct candy_table candy_table_t;
 typedef struct candy_block candy_block_t;

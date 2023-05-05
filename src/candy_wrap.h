@@ -23,12 +23,12 @@ extern "C"{
 #include <assert.h>
 
 struct candy_wrap {
-  uint32_t data[2];
+  candy_mask_t data[8 / sizeof(candy_mask_t)];
   union {
-    uint32_t mask;
+    candy_mask_t mask;
     struct {
-      uint32_t type :  4;
-      uint32_t size : 28;
+      candy_mask_t type : CANDY_BASIC_TYPE_SIZE;
+      candy_mask_t size : sizeof(candy_mask_t) * 8 - CANDY_BASIC_TYPE_SIZE;
     };
   };
 };
@@ -51,7 +51,7 @@ static inline size_t candy_wrap_sizeof(const candy_wrap_t *self) {
 }
 
 static inline bool candy_wrap_check_ldata(const candy_wrap_t *self) {
-  return self->size > (sizeof(self->data) / candy_wrap_sizeof(self));
+  return self->size * candy_wrap_sizeof(self) > sizeof(self->data);
 }
 
 static inline const candy_opcode_t *candy_wrap_get_opcode(const candy_wrap_t *self) {
