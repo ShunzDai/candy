@@ -100,7 +100,7 @@ int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
 }
 
 int candy_vm_execute(candy_vm_t *self, candy_block_t *block) {
-  for (const candy_opcode_t *ins = candy_wrap_get_opcode(&block->opcode); ins - candy_wrap_get_opcode(&block->opcode) < block->opcode.size; ++ins) {
+  for (const candy_opcode_t *ins = candy_wrap_get_opcode(&block->opcode); (size_t)(ins - candy_wrap_get_opcode(&block->opcode)) < (size_t)block->opcode.size; ++ins) {
     switch (ins->op) {
       #define CANDY_OP_CASE
       #include "src/candy_opcode.list"

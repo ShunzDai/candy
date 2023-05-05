@@ -20,7 +20,7 @@ void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *dat
 
 void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size) {
   void *dst = candy_wrap_get_data(self);
-  if (self->size + size > sizeof(self->data) / candy_wrap_sizeof(self)) {
+  if ((self->size + size) * candy_wrap_sizeof(self) > sizeof(self->data)) {
     void *new = expand(dst, candy_wrap_sizeof(self), self->size, self->size + size);
     if (dst != new) {
       dst = new;

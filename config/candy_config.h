@@ -20,6 +20,16 @@ extern "C"{
 #endif /* __cplusplus */
 
 /**
+  * @brief  larger mask means project can support more basic types and array size
+  */
+#define CANDY_MASK_TYPE uint16_t
+
+/**
+  * @brief  the logarithm base 2 of the number of basic types
+  */
+#define CANDY_BASIC_TYPE_SIZE 4
+
+/**
   * @brief  the maximum number of bytes for the lexer to lookahead to.
   */
 #define CANDY_LEXER_LOOKAHEAD_SIZE 3
@@ -42,12 +52,6 @@ extern "C"{
 #define CANDY_DEFAULT_STACK_SIZE 8
 
 #define CANDY_OPCODE_SIZE 6
-
-#ifdef __GNUC__
-#define CANDY_NORETURN __attribute__((noreturn))
-#else
-#define CANDY_NORETURN
-#endif
 
 #ifdef __cplusplus
 }
