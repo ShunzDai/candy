@@ -30,12 +30,12 @@ int candy_block_delete(candy_block_t **self) {
   return 0;
 }
 
-candy_wrap_t *candy_block_add_const(candy_block_t *self) {
+void candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap) {
   self->pool.type == CANDY_NULL ? candy_wrap_set_wrap(&self->pool, NULL, 1) : candy_wrap_append_wrap(&self->pool, NULL, 1);
-  return (candy_wrap_t *)&candy_wrap_get_wrap(&self->pool)[self->pool.size - 1];
+  *(candy_wrap_t *)&candy_wrap_get_wrap(&self->pool)[self->pool.size - 1] = *wrap;
 }
 
-candy_opcode_t *candy_block_add_op(candy_block_t *self) {
+void candy_block_add_op(candy_block_t *self, candy_opcode_t code) {
   self->opcode.type == CANDY_NULL ? candy_wrap_set_opcode(&self->opcode, NULL, 1) : candy_wrap_append_opcode(&self->opcode, NULL, 1);
-  return (candy_opcode_t *)&candy_wrap_get_opcode(&self->opcode)[self->opcode.size - 1];
+  *(candy_opcode_t *)&candy_wrap_get_opcode(&self->opcode)[self->opcode.size - 1] = code;
 }
