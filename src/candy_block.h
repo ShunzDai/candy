@@ -36,8 +36,8 @@ struct candy_block {
 candy_block_t *candy_block_create(candy_block_t *prev);
 int candy_block_delete(candy_block_t **self);
 
-candy_wrap_t *candy_block_add_const(candy_block_t *self);
-candy_opcode_t *candy_block_add_op(candy_block_t *self);
+void candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap);
+void candy_block_add_op(candy_block_t *self, candy_opcode_t code);
 
 #ifdef __cplusplus
 }
