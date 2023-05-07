@@ -42,13 +42,13 @@ typedef union candy_opcode {
     uint32_t    : 24;
   };
   struct {
-    uint32_t    : CANDY_OPCODE_SIZE;
+    uint32_t op : CANDY_OPCODE_SIZE;
     uint32_t  a : 8;
     uint32_t  b : 9;
     uint32_t  c : 9;
   } iABC;
   struct {
-    uint32_t    : CANDY_OPCODE_SIZE;
+    uint32_t op : CANDY_OPCODE_SIZE;
     uint32_t  a :  8;
     uint32_t  b : 18;
   } iABx;
