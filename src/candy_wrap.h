@@ -54,9 +54,9 @@ static inline bool candy_wrap_check_ldata(const candy_wrap_t *self) {
   return self->size * candy_wrap_sizeof(self) > sizeof(self->data);
 }
 
-static inline const candy_opcode_t *candy_wrap_get_opcode(const candy_wrap_t *self) {
-  assert(self->type == CANDY_OPCODE);
-  return (const candy_opcode_t *)candy_wrap_get_data(self);
+static inline const candy_instruc_t *candy_wrap_get_instruc(const candy_wrap_t *self) {
+  assert(self->type == CANDY_INSTRUC);
+  return (const candy_instruc_t *)candy_wrap_get_data(self);
 }
 
 static inline const candy_wrap_t *candy_wrap_get_wrap(const candy_wrap_t *self) {
@@ -99,8 +99,8 @@ static inline const candy_table_t **candy_wrap_get_table(const candy_wrap_t *sel
   return (const candy_table_t **)candy_wrap_get_data(self);
 }
 
-static inline void candy_wrap_set_opcode(candy_wrap_t *self, const candy_opcode_t val[], size_t size) {
-  candy_wrap_set_data(self, CANDY_OPCODE, val, size);
+static inline void candy_wrap_set_instruc(candy_wrap_t *self, const candy_instruc_t val[], size_t size) {
+  candy_wrap_set_data(self, CANDY_INSTRUC, val, size);
 }
 
 static inline void candy_wrap_set_wrap(candy_wrap_t *self, const candy_wrap_t val[], size_t size) {
@@ -135,7 +135,7 @@ static inline void candy_wrap_set_table(candy_wrap_t *self, const candy_table_t 
   candy_wrap_set_data(self, CANDY_TABLE, val, size);
 }
 
-static inline void candy_wrap_append_opcode(candy_wrap_t *self, const candy_opcode_t val[], size_t size) {
+static inline void candy_wrap_append_instruc(candy_wrap_t *self, const candy_instruc_t val[], size_t size) {
   candy_wrap_append(self, val, size);
 }
 

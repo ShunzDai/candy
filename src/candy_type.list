@@ -21,7 +21,7 @@
 CANDY_TYPE(NULL,    UINT_MAX)
 CANDY_TYPE(DEL,     UINT_MAX)
 CANDY_TYPE(NONE,    UINT_MAX)
-CANDY_TYPE(OPCODE,  sizeof(candy_opcode_t))
+CANDY_TYPE(INSTRUC, sizeof(candy_instruc_t))
 CANDY_TYPE(WRAP,    sizeof(candy_wrap_t))
 CANDY_TYPE(INTEGER, sizeof(candy_integer_t))
 CANDY_TYPE(FLOAT,   sizeof(candy_float_t))

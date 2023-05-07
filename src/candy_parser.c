@@ -28,7 +28,7 @@ typedef struct candy_parser {
 } candy_parser_t;
 
 void _add_iabc(candy_parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
-  candy_opcode_t code = {
+  candy_instruc_t ins = {
     .iABC = {
       .op = (uint32_t)op,
       .a = a,
@@ -36,7 +36,7 @@ void _add_iabc(candy_parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b,
       .c = c,
     },
   };
-  candy_block_add_op(self->head, code);
+  candy_block_add_instruc(self->head, ins);
 }
 
 static void _expr(candy_parser_t *self) {
