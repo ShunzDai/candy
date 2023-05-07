@@ -36,7 +36,7 @@ typedef enum candy_wraps {
 #include "src/candy_type.list"
 } candy_wraps_t;
 
-typedef union candy_opcode {
+typedef union candy_instruc {
   struct {
     uint32_t op : CANDY_OPCODE_SIZE;
     uint32_t    : 24;
@@ -52,7 +52,7 @@ typedef union candy_opcode {
     uint32_t  a :  8;
     uint32_t  b : 18;
   } iABx;
-} candy_opcode_t;
+} candy_instruc_t;
 
 typedef int64_t candy_integer_t;
 typedef double candy_float_t;

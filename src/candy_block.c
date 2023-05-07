@@ -23,7 +23,7 @@ candy_block_t *candy_block_create(candy_block_t *prev) {
 }
 
 int candy_block_delete(candy_block_t **self) {
-  candy_wrap_deinit(&(*self)->opcode);
+  candy_wrap_deinit(&(*self)->ins);
   candy_wrap_deinit(&(*self)->pool);
   free(*self);
   *self = NULL;
@@ -35,7 +35,7 @@ void candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap) {
   *(candy_wrap_t *)&candy_wrap_get_wrap(&self->pool)[self->pool.size - 1] = *wrap;
 }
 
-void candy_block_add_op(candy_block_t *self, candy_opcode_t code) {
-  self->opcode.type == CANDY_NULL ? candy_wrap_set_opcode(&self->opcode, NULL, 1) : candy_wrap_append_opcode(&self->opcode, NULL, 1);
-  *(candy_opcode_t *)&candy_wrap_get_opcode(&self->opcode)[self->opcode.size - 1] = code;
+void candy_block_add_instruc(candy_block_t *self, candy_instruc_t ins) {
+  self->ins.type == CANDY_NULL ? candy_wrap_set_instruc(&self->ins, NULL, 1) : candy_wrap_append_instruc(&self->ins, NULL, 1);
+  *(candy_instruc_t *)&candy_wrap_get_instruc(&self->ins)[self->ins.size - 1] = ins;
 }
