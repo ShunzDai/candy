@@ -66,7 +66,7 @@ typedef enum candy_tokens {
   TK_LEQUAL   = dual_ope('<', '='), /* 0xDA <= */
   TK_RSHIFT   = dual_ope('>', '>'), /* 0x93 >> */
   TK_LSHIFT   = dual_ope('<', '<'), /* 0x9E << */
-  TK_ERROR        = 0xFFU,
+  TK_ERROR    = 0xFFU,
 } candy_tokens_t;
 
 /** @ref doc/io_memory_model.drawio.png */
