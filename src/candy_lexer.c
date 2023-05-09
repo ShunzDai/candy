@@ -22,14 +22,6 @@
 
 #define lex_assert(_condition, _format, ...) candy_assert(_condition, lexical, _format, ##__VA_ARGS__)
 
-static const struct {
-  candy_tokens_t token;
-  const char * const keyword;
-} _keywords[] = {
-  #define CANDY_KW_MATCH
-  #include "src/candy_keyword.list"
-};
-
 /**
   * @brief  observer mode of the stream
   * @param  self lexer
@@ -314,6 +306,13 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
 }
 
 static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *wrap) {
+  static const struct {
+    candy_tokens_t token;
+    const char * const keyword;
+  } _keywords[] = {
+    #define CANDY_KW_MATCH
+    #include "src/candy_keyword.list"
+  };
   /* save alpha, or '_' */
   _save(self);
   /* save number, alpha, or '_' */
@@ -321,7 +320,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
     _save(self);
   /* check keyword */
   for (size_t i = 0; i < candy_lengthof(_keywords); i++) {
-    if (strncmp(self->io->buff, _keywords[i].keyword, strlen(_keywords[i].keyword)) == 0)
+    if (strncmp(self->io->buff, _keywords[i].keyword, self->w) == 0)
       return _keywords[i].token;
   }
   candy_wrap_set_string(wrap, self->io->buff, self->w);
