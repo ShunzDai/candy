@@ -101,10 +101,8 @@ static void _if_stat(candy_parser_t *self) {
 
 /** @ref https://blog.csdn.net/initphp/article/details/105247775 */
 static void _statement(candy_parser_t *self, void *ud) {
-  while (1) {
+  while (candy_lexer_lookahead(&self->lex) != TK_EOS) {
     switch (candy_lexer_lookahead(&self->lex)) {
-      case TK_EOF:
-        return;
       case TK_IDENT:
         _expr_stat(self);
         break;
