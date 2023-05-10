@@ -22,50 +22,49 @@ extern "C"{
 #include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
-#define dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
+#define binary_ope(_l, _r) ((_l) << 8 | (_r))
 
 typedef enum candy_tokens {
   TK_EOS,
-  TK_STRING,
+  TK_LPAREN   =                  '(', /* (  */
+  TK_RPAREN   =                  ')', /* )  */
+  TK_COMMA    =                  ',', /* ,  */
+  TK_DOT      =                  '.', /* .  */
+  TK_COLON    =                  ':', /* :  */
+  TK_LBRACE   =                  '[', /* [  */
+  TK_RBRACE   =                  ']', /* ]  */
+  TK_BITAND   =                  '&', /* &  */
+  TK_BITOR    =                  '|', /* |  */
+  TK_BITNOT   =                  '~', /* ~  */
+  TK_BITXOR   =                  '^', /* ^  */
+  TK_MOD      =                  '%', /* %  */
+  TK_ADD      =                  '+', /* +  */
+  TK_SUB      =                  '-', /* -  */
+  TK_MUL      =                  '*', /* *  */
+  TK_DIV      =                  '/', /* /  */
+  TK_ASSIGN   =                  '=', /* =  */
+  TK_GREATER  =                  '>', /* >  */
+  TK_LESS     =                  '<', /* <  */
+  TK_EXP      = binary_ope('*', '*'), /* ** */
+  TK_FLRDIV   = binary_ope('/', '/'), /* // */
+  TK_MODASS   = binary_ope('%', '='), /* %= */
+  TK_NEQUAL   = binary_ope('!', '='), /* != */
+  TK_ADDASS   = binary_ope('+', '='), /* += */
+  TK_SUBASS   = binary_ope('-', '='), /* -= */
+  TK_MULASS   = binary_ope('*', '='), /* *= */
+  TK_DIVASS   = binary_ope('/', '='), /* /= */
+  TK_EQUAL    = binary_ope('=', '='), /* == */
+  TK_GEQUAL   = binary_ope('>', '='), /* >= */
+  TK_LEQUAL   = binary_ope('<', '='), /* <= */
+  TK_RSHIFT   = binary_ope('>', '>'), /* >> */
+  TK_LSHIFT   = binary_ope('<', '<'), /* << */
   TK_INTEGER,
   TK_FLOAT,
+  TK_STRING,
   TK_IDENT,
   TK_VARARG,
   #define CANDY_KW_ENUM
   #include "src/candy_keyword.list"
-  TK_LPAREN   =                '(', /* 0x28 (  */
-  TK_RPAREN   =                ')', /* 0x29 )  */
-  TK_COMMA    =                ',', /* 0x2C ,  */
-  TK_DOT      =                '.', /* 0x2E .  */
-  TK_COLON    =                ':', /* 0x3A :  */
-  TK_LBRACE   =                '[', /* 0x5B [  */
-  TK_RBRACE   =                ']', /* 0x5D ]  */
-  TK_BITAND   =                '&', /* 0x26 &  */
-  TK_BITOR    =                '|', /* 0x7C |  */
-  TK_BITNOT   =                '~', /* 0x7E ~  */
-  TK_BITXOR   =                '^', /* 0x5E ^  */
-  TK_MOD      =                '%', /* 0x25 %  */
-  TK_ADD      =                '+', /* 0x2B +  */
-  TK_SUB      =                '-', /* 0x2D -  */
-  TK_MUL      =                '*', /* 0x2A *  */
-  TK_DIV      =                '/', /* 0x2F /  */
-  TK_ASSIGN   =                '=', /* 0x3D =  */
-  TK_GREATER  =                '>', /* 0x3E >  */
-  TK_LESS     =                '<', /* 0x3C <  */
-  TK_EXP      = dual_ope('*', '*'), /* 0xEA ** */
-  TK_FLRDIV   = dual_ope('/', '/'), /* 0xA9 // */
-  TK_MODASS   = dual_ope('%', '='), /* 0xD9 %= */
-  TK_NEQUAL   = dual_ope('!', '='), /* 0xE4 != */
-  TK_ADDASS   = dual_ope('+', '='), /* 0xC9 += */
-  TK_SUBASS   = dual_ope('-', '='), /* 0xC3 -= */
-  TK_MULASS   = dual_ope('*', '='), /* 0x8C *= */
-  TK_DIVASS   = dual_ope('/', '='), /* 0xBE /= */
-  TK_EQUAL    = dual_ope('=', '='), /* 0x97 == */
-  TK_GEQUAL   = dual_ope('>', '='), /* 0xD4 >= */
-  TK_LEQUAL   = dual_ope('<', '='), /* 0xDA <= */
-  TK_RSHIFT   = dual_ope('>', '>'), /* 0x93 >> */
-  TK_LSHIFT   = dual_ope('<', '<'), /* 0x9E << */
-  TK_ERROR    = 0xFFU,
 } candy_tokens_t;
 
 /** @ref doc/io_memory_model.drawio.png */
