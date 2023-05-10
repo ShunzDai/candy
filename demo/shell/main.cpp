@@ -19,12 +19,16 @@
 #include <string.h>
 
 int main(int argc, char *argv[]) {
-  candy::state sta;
+  candy::state state;
+  if (argc > 1)
+    return state.dofile(argv[1]);
   printf("candy (%s, %s)\ntype 'exit()' to quit\n", __DATE__, __TIME__);
   while (1) {
     std::string line;
     printf(">>> ");
     std::getline(std::cin, line);
-    sta.dostring(line.c_str());
+    state.dostring(line.c_str());
   }
+  /* it will never get here */
+  abort();
 }
