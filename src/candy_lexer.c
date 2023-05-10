@@ -332,7 +332,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   while (1) {
     switch (_view(self, 0)) {
       case (char)EOF:
-        return TK_EOF;
+        return TK_EOS;
       case '\r': case '\n':
         _handle_newline(self, _skip);
         break;

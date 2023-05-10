@@ -25,7 +25,6 @@ extern "C"{
 #define dual_ope(_l, _r) ((uint8_t)(((_l) * (_r)) % 0xFF) | 0x80)
 
 typedef enum candy_tokens {
-  TK_EOF,
   TK_EOS,
   TK_STRING,
   TK_INTEGER,

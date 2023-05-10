@@ -19,3 +19,5 @@
 [7]co lin. 深入Lua：Table的实现[DB/OL]. [link](https://www.zhihu.com/collection/685811848), 2019-12-17, 2023-04-01
 
 [8]frog-game. [Lua5.4.4源码].指令集[DB/OL]. [link](https://zhuanlan.zhihu.com/p/610168640), 2023-02-28, 2023-05-01
+
+[9]科研者. 语法格式描述规范BNF、EBNF、ABNF[DB/OL]. [link](https://www.jianshu.com/p/15efcb0c06c8), 2017-09-22, 2023-05-04
