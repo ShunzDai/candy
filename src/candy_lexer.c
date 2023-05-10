@@ -341,17 +341,17 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         break;
       case '!':
         lex_assert(_view(self, 1) == '=', "unknown character '%c'(0x%02X)", _view(self, 1), _view(self, 1));
-        goto dual_ope;
+        goto binary;
       /* 'o', 'o=', 'oo' */
       case '>': case '<': case '*': case '/':
         /* 'oo' */
         if (_view(self, 1) == _view(self, 0))
-          goto dual_ope;
+          goto binary;
       /* 'o', 'o=' */
       case '%': case '=': case '+': case '-':
         /* 'o=' */
         if (_view(self, 1) == '=')
-          goto dual_ope;
+          goto binary;
       /* 'o' */
       case '&': case '|': case '~': case '^':
       case '(': case ')': case '[': case ']':
@@ -376,8 +376,8 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
     }
   }
   /* double-byte operator */
-  dual_ope:
-  return dual_ope(_read(self), _read(self));
+  binary:
+  return binary_ope(_read(self), _read(self));
 }
 
 int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud) {
