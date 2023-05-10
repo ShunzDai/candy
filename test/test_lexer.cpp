@@ -220,7 +220,7 @@ TEST(lexer, file_system) {
     candy_wrap_deinit(&ud->wrap);
     EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_IDENT);
     candy_wrap_deinit(&ud->wrap);
-    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), dual_ope('=', '='));
+    EXPECT_EQ(candy_lexer_next(self, &ud->wrap), binary_ope('=', '='));
     candy_wrap_deinit(&ud->wrap);
     EXPECT_EQ(candy_lexer_next(self, &ud->wrap), TK_STRING);
     candy_wrap_deinit(&ud->wrap);
