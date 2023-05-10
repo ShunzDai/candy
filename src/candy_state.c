@@ -58,7 +58,7 @@ int candy_dostring(candy_state_t *self, const char exp[]) {
 int candy_dofile(candy_state_t *self, const char name[]) {
   FILE *f = fopen(name, "r");
   if (f == NULL)
-    return -1;
+    return perror(NULL), -1;
   fseek(f, 0, SEEK_END);
   size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
