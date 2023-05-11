@@ -67,7 +67,7 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
       EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&ud.wrap), val);
     }
     else {
-      assert(0);
+      static_assert(!std::is_same<decltype(val), decltype(val)>::value);
     }
   }
   candy_wrap_deinit(&ud.wrap);
@@ -130,6 +130,11 @@ TEST_LEXER(string_multiline_1, TK_STRING,
   "world\n"
   "'''",
   "\nhello\nworld\n"sv
+)
+
+TEST_LEXER(string_chinese, TK_STRING,
+  "'你好世界'",
+  "你好世界"sv
 )
 
 TEST_LEXER(integer, TK_INTEGER,       "114514",       114514)
