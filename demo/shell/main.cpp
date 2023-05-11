@@ -18,8 +18,8 @@
 #include <iostream>
 #include <string.h>
 
-int main(int argc, char *argv[]) {
-  candy::state state;
+int main(int argc, const char *argv[]) {
+  candy::state state(argc, argv);
   if (argc > 1)
     return state.dofile(argv[1]);
   printf("candy (%s, %s)\ntype 'exit()' to quit\n", __DATE__, __TIME__);
