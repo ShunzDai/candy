@@ -99,6 +99,10 @@ static inline const candy_table_t **candy_wrap_get_table(const candy_wrap_t *sel
   return (const candy_table_t **)candy_wrap_get_data(self);
 }
 
+static inline void candy_wrap_copy(candy_wrap_t *self, candy_wrap_t *src) {
+  candy_wrap_set_data(self, (candy_wraps_t)src->type, candy_wrap_get_data(src), src->size);
+}
+
 static inline void candy_wrap_set_instruc(candy_wrap_t *self, const candy_instruc_t val[], size_t size) {
   candy_wrap_set_data(self, CANDY_INSTRUC, val, size);
 }

@@ -18,6 +18,30 @@
 
 #define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
 
+TEST(wrap, scopy) {
+  candy_wrap_t src{}, dst{};
+  candy_wrap_set_string(&src, (char *)"hello", sizeof("hello"));
+  candy_wrap_copy(&dst, &src);
+  EXPECT_EQ(src.size, sizeof("hello"));
+  EXPECT_MEMEQ(candy_wrap_get_string(&src), (char *)"hello", src.size);
+  EXPECT_EQ(dst.size, sizeof("hello"));
+  EXPECT_MEMEQ(candy_wrap_get_string(&dst), (char *)"hello", dst.size);
+  candy_wrap_deinit(&src);
+  candy_wrap_deinit(&dst);
+}
+
+TEST(wrap, lcopy) {
+  candy_wrap_t src{}, dst{};
+  candy_wrap_set_string(&src, (char *)"hello world", sizeof("hello world"));
+  candy_wrap_copy(&dst, &src);
+  EXPECT_EQ(src.size, sizeof("hello world"));
+  EXPECT_MEMEQ(candy_wrap_get_string(&src), (char *)"hello world", src.size);
+  EXPECT_EQ(dst.size, sizeof("hello world"));
+  EXPECT_MEMEQ(candy_wrap_get_string(&dst), (char *)"hello world", dst.size);
+  candy_wrap_deinit(&src);
+  candy_wrap_deinit(&dst);
+}
+
 TEST(wrap, sstring) {
   candy_wrap_t wrap{};
   candy_wrap_set_string(&wrap, (char *)"hello", sizeof("hello"));
