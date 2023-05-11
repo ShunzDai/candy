@@ -24,7 +24,7 @@ namespace candy {
 
 class state {
   public:
-  state();
+  state(int argc = 0, const char *argv[] = nullptr);
   ~state();
 
   int dostring(const char exp[]);

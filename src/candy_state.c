@@ -29,7 +29,7 @@ struct candy_state {
   void *ud;
 };
 
-candy_state_t *candy_state_create(void *ud) {
+candy_state_t *candy_state_create(int argc, const char *argv[], void *ud) {
   candy_state_t *self = (candy_state_t *)malloc(sizeof(struct candy_state));
   candy_io_init(&self->io);
   self->vm = candy_vm_create(self);

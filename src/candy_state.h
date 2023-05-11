@@ -21,7 +21,7 @@ extern "C"{
 
 #include "src/candy_types.h"
 
-candy_state_t *candy_state_create(void *ud);
+candy_state_t *candy_state_create(int argc, const char *argv[], void *ud);
 int candy_state_delete(candy_state_t **self);
 
 int candy_dostring(candy_state_t *self, const char exp[]);
