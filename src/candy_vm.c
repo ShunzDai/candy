@@ -25,13 +25,6 @@
 
 #define vm_assert(_condition, _format, ...) candy_assert(_condition, vm, _format, ##__VA_ARGS__)
 
-struct candy_vm {
-  candy_state_t *sta;
-  candy_wrap_t *base;
-  size_t size;
-  candy_table_t *glb;
-};
-
 void _push(candy_vm_t *self, const candy_wrap_t *wrap) {
   candy_wrap_t *dst = (candy_wrap_t *)expand(self->base, sizeof(candy_wrap_t), self->size, self->size + 1);
   if (self->base != dst) {
@@ -45,20 +38,17 @@ const candy_wrap_t *_pop(candy_vm_t *self) {
   return self->size ? &self->base[--self->size] : &null;
 }
 
-candy_vm_t *candy_vm_create(candy_state_t *sta) {
-  candy_vm_t *self = (candy_vm_t *)calloc(1, sizeof(struct candy_vm));
+int candy_vm_init(candy_vm_t *self, candy_state_t *sta) {
   self->sta = sta;
   self->base = calloc(CANDY_DEFAULT_STACK_SIZE, sizeof(candy_wrap_t));
   self->glb = candy_table_create();
-  return self;
+  return 0;
 }
 
-int candy_vm_delete(candy_vm_t **self) {
-  free((*self)->base);
-  (*self)->base = NULL;
-  candy_table_delete(&(*self)->glb);
-  free(*self);
-  *self = NULL;
+int candy_vm_deinit(candy_vm_t *self) {
+  free(self->base);
+  self->base = NULL;
+  candy_table_delete(&self->glb);
   return 0;
 }
 
