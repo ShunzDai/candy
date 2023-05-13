@@ -23,8 +23,15 @@ extern "C"{
 
 typedef struct candy_vm candy_vm_t;
 
-candy_vm_t *candy_vm_create(candy_state_t *sta);
-int candy_vm_delete(candy_vm_t **self);
+struct candy_vm {
+  candy_state_t *sta;
+  candy_wrap_t *base;
+  size_t size;
+  candy_table_t *glb;
+};
+
+int candy_vm_init(candy_vm_t *self, candy_state_t *sta);
+int candy_vm_deinit(candy_vm_t *self);
 
 int candy_vm_dump_global(candy_vm_t *self);
 
