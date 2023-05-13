@@ -25,20 +25,20 @@
 struct candy_state {
   /* global input-output buffer */
   candy_io_t io;
-  candy_vm_t *vm;
+  candy_vm_t vm;
   void *ud;
 };
 
 candy_state_t *candy_state_create(int argc, const char *argv[], void *ud) {
   candy_state_t *self = (candy_state_t *)malloc(sizeof(struct candy_state));
   candy_io_init(&self->io);
-  self->vm = candy_vm_create(self);
+  candy_vm_init(&self->vm, self);
   self->ud = ud;
   return self;
 }
 
 int candy_state_delete(candy_state_t **self) {
-  candy_vm_delete(&(*self)->vm);
+  candy_vm_deinit(&(*self)->vm);
   candy_io_deinit(&(*self)->io);
   free(*self);
   *self = NULL;
@@ -50,7 +50,7 @@ int candy_dostring(candy_state_t *self, const char exp[]) {
   candy_block_t *block = candy_parse(&self->io, string_reader, &info);
   if (block == NULL)
     return -1;
-  candy_vm_execute(self->vm, block);
+  candy_vm_execute(&self->vm, block);
   candy_block_delete(&block);
   return 0;
 }
@@ -71,23 +71,23 @@ int candy_dofile(candy_state_t *self, const char name[]) {
 }
 
 int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size) {
-  return candy_vm_builtin(self->vm, list, size);
+  return candy_vm_builtin(&self->vm, list, size);
 }
 
 int candy_dump_global(candy_state_t *self) {
-  return candy_vm_dump_global(self->vm);
+  return candy_vm_dump_global(&self->vm);
 }
 
 int candy_set_global(candy_state_t *self, const char name[]) {
-  return candy_vm_set_global(self->vm, name);
+  return candy_vm_set_global(&self->vm, name);
 }
 
 int candy_get_global(candy_state_t *self, const char name[]) {
-  return candy_vm_get_global(self->vm, name);
+  return candy_vm_get_global(&self->vm, name);
 }
 
 int candy_call(candy_state_t *self, int nargs, int nresults) {
-  return candy_vm_call(self->vm, nargs, nresults);
+  return candy_vm_call(&self->vm, nargs, nresults);
 }
 
 void *candy_ud(candy_state_t *self) {
@@ -95,49 +95,49 @@ void *candy_ud(candy_state_t *self) {
 }
 
 void candy_push_integer(candy_state_t *self, const candy_integer_t val[], size_t size) {
-  candy_vm_push_integer(self->vm, val, size);
+  candy_vm_push_integer(&self->vm, val, size);
 }
 
 void candy_push_float(candy_state_t *self, const candy_float_t val[], size_t size) {
-  candy_vm_push_float(self->vm, val, size);
+  candy_vm_push_float(&self->vm, val, size);
 }
 
 void candy_push_boolean(candy_state_t *self, const candy_boolean_t val[], size_t size) {
-  candy_vm_push_boolean(self->vm, val, size);
+  candy_vm_push_boolean(&self->vm, val, size);
 }
 
 void candy_push_string(candy_state_t *self, const char val[], size_t size) {
-  candy_vm_push_string(self->vm, val, size);
+  candy_vm_push_string(&self->vm, val, size);
 }
 
 void candy_push_ud(candy_state_t *self, const void *val[], size_t size) {
-  candy_vm_push_ud(self->vm, val, size);
+  candy_vm_push_ud(&self->vm, val, size);
 }
 
 void candy_push_builtin(candy_state_t *self, const candy_builtin_t val[], size_t size) {
-  candy_vm_push_builtin(self->vm, val, size);
+  candy_vm_push_builtin(&self->vm, val, size);
 }
 
 const candy_integer_t *candy_pull_integer(candy_state_t *self, size_t *size) {
-  return candy_vm_pull_integer(self->vm, size);
+  return candy_vm_pull_integer(&self->vm, size);
 }
 
 const candy_float_t *candy_pull_float(candy_state_t *self, size_t *size) {
-  return candy_vm_pull_float(self->vm, size);
+  return candy_vm_pull_float(&self->vm, size);
 }
 
 const candy_boolean_t *candy_pull_boolean(candy_state_t *self, size_t *size) {
-  return candy_vm_pull_boolean(self->vm, size);
+  return candy_vm_pull_boolean(&self->vm, size);
 }
 
 const char *candy_pull_string(candy_state_t *self, size_t *size) {
-  return candy_vm_pull_string(self->vm, size);
+  return candy_vm_pull_string(&self->vm, size);
 }
 
 const void **candy_pull_ud(candy_state_t *self, size_t *size) {
-  return candy_vm_pull_ud(self->vm, size);
+  return candy_vm_pull_ud(&self->vm, size);
 }
 
 const candy_builtin_t *candy_pull_builtin(candy_state_t *self, size_t *size) {
-  return candy_vm_pull_builtin(self->vm, size);
+  return candy_vm_pull_builtin(&self->vm, size);
 }
