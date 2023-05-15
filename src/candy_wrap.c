@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-const candy_wrap_t null = {{0, 0}, {0}};
+const candy_wrap_t null = {{0}, {0, 0}};
 
 void *candy_wrap_get_data(const candy_wrap_t *self) {
   return candy_wrap_check_ldata(self) ? *(void **)&self->data : (void *)&self->data;
@@ -24,7 +24,7 @@ void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size) {
     void *new = expand(dst, candy_wrap_sizeof(self), self->size, self->size + size);
     if (dst != new) {
       dst = new;
-      if (candy_wrap_check_ldata(self))
+      if (candy_wrap_check_ldata(self) && *(void **)&self->data)
         free(*(void **)&self->data);
       *(void **)&self->data = new;
     }
