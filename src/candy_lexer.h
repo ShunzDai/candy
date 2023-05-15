@@ -94,8 +94,8 @@ typedef struct candy_lexer candy_lexer_t;
 int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud);
 int candy_lexer_deinit(candy_lexer_t *self);
 
-candy_tokens_t candy_lexer_next(candy_lexer_t *self, candy_wrap_t *wrap);
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);
+const candy_wrap_t *candy_lexer_next(candy_lexer_t *self);
 
 #ifdef __cplusplus
 }
