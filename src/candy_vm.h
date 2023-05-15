@@ -19,14 +19,14 @@
 extern "C"{
 #endif /* __cplusplus */
 
+#include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
 typedef struct candy_vm candy_vm_t;
 
 struct candy_vm {
   candy_state_t *sta;
-  candy_wrap_t *base;
-  size_t size;
+  candy_wrap_t base;
   candy_table_t *glb;
 };
 
