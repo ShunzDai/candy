@@ -22,8 +22,12 @@ extern "C"{
 #include "src/candy_types.h"
 #include <assert.h>
 
+typedef enum candy_wraps {
+#define CANDY_TYPE_ENUM
+#include "src/candy_type.list"
+} candy_wraps_t;
+
 struct candy_wrap {
-  candy_mask_t data[8 / sizeof(candy_mask_t)];
   union {
     candy_mask_t mask;
     struct {
@@ -31,6 +35,7 @@ struct candy_wrap {
       candy_mask_t size : sizeof(candy_mask_t) * 8 - CANDY_BASIC_TYPE_SIZE;
     };
   };
+  candy_mask_t data[8 / sizeof(candy_mask_t)];
 };
 
 extern const candy_wrap_t null;

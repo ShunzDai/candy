@@ -31,11 +31,6 @@ extern "C"{
 #define CANDY_NORETURN
 #endif
 
-typedef enum candy_wraps {
-#define CANDY_TYPE_ENUM
-#include "src/candy_type.list"
-} candy_wraps_t;
-
 typedef union candy_instruc {
   struct {
     uint32_t op : CANDY_OPCODE_SIZE;
