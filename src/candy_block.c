@@ -19,6 +19,8 @@
 candy_block_t *candy_block_create(candy_block_t *prev) {
   candy_block_t *self = (candy_block_t *)calloc(1, sizeof(struct candy_block));
   self->prev = prev;
+  self->pool.type = CANDY_WRAP;
+  self->ins.type = CANDY_INSTRUC;
   return self;
 }
 
@@ -31,11 +33,11 @@ int candy_block_delete(candy_block_t **self) {
 }
 
 void candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap) {
-  self->pool.type == CANDY_NULL ? candy_wrap_set_wrap(&self->pool, NULL, 1) : candy_wrap_append_wrap(&self->pool, NULL, 1);
+  candy_wrap_append_wrap(&self->pool, NULL, 1);
   *(candy_wrap_t *)&candy_wrap_get_wrap(&self->pool)[self->pool.size - 1] = *wrap;
 }
 
 void candy_block_add_instruc(candy_block_t *self, candy_instruc_t ins) {
-  self->ins.type == CANDY_NULL ? candy_wrap_set_instruc(&self->ins, NULL, 1) : candy_wrap_append_instruc(&self->ins, NULL, 1);
+  candy_wrap_append_instruc(&self->ins, NULL, 1);
   *(candy_instruc_t *)&candy_wrap_get_instruc(&self->ins)[self->ins.size - 1] = ins;
 }

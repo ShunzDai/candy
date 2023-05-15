@@ -15,7 +15,6 @@
   */
 #include "src/candy_vm.h"
 #include "src/candy_io.h"
-#include "src/candy_wrap.h"
 #include "src/candy_table.h"
 #include "src/candy_block.h"
 #include "src/candy_lib.h"
@@ -26,28 +25,22 @@
 #define vm_assert(_condition, _format, ...) candy_assert(_condition, vm, _format, ##__VA_ARGS__)
 
 void _push(candy_vm_t *self, const candy_wrap_t *wrap) {
-  candy_wrap_t *dst = (candy_wrap_t *)expand(self->base, sizeof(candy_wrap_t), self->size, self->size + 1);
-  if (self->base != dst) {
-    free(self->base);
-    self->base = dst;
-  }
-  self->base[self->size++] = *wrap;
+  candy_wrap_append_wrap(&self->base, wrap, 1);
 }
 
 const candy_wrap_t *_pop(candy_vm_t *self) {
-  return self->size ? &self->base[--self->size] : &null;
+  return self->base.size ? &candy_wrap_get_wrap(&self->base)[--self->base.size] : &null;
 }
 
 int candy_vm_init(candy_vm_t *self, candy_state_t *sta) {
   self->sta = sta;
-  self->base = calloc(CANDY_DEFAULT_STACK_SIZE, sizeof(candy_wrap_t));
+  self->base.type = CANDY_WRAP;
   self->glb = candy_table_create();
   return 0;
 }
 
 int candy_vm_deinit(candy_vm_t *self) {
-  free(self->base);
-  self->base = NULL;
+  candy_wrap_deinit(&self->base);
   candy_table_delete(&self->glb);
   return 0;
 }
@@ -58,9 +51,7 @@ int candy_vm_dump_global(candy_vm_t *self) {
 
 int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
   for (size_t idx = 0; idx < size; ++idx) {
-    candy_wrap_t key, val;
-    candy_wrap_init(&key);
-    candy_wrap_init(&val);
+    candy_wrap_t key = {0}, val = {0};
     candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name));
     candy_wrap_set_builtin(&val, &list[idx].func, 1);
     candy_table_set(self->glb, &key, &val);
