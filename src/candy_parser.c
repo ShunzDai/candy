@@ -40,17 +40,15 @@ void _add_iabc(candy_parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b,
 }
 
 static void _expr(candy_parser_t *self) {
-  candy_wrap_t wrap;
-  candy_lexer_next(&self->lex, &wrap);
+  candy_lexer_next(&self->lex);
   switch (candy_lexer_lookahead(&self->lex)) {
     case ')':
-      candy_lexer_next(&self->lex, &wrap);
+      candy_lexer_next(&self->lex);
       break;
     case TK_INTEGER:
     case TK_FLOAT:
     case TK_STRING:
-      candy_lexer_next(&self->lex, &wrap);
-      candy_block_add_const(self->head, &wrap);
+      candy_block_add_const(self->head, candy_lexer_next(&self->lex));
       break;
     default:
       par_assert(false, "unknown token");
@@ -59,10 +57,8 @@ static void _expr(candy_parser_t *self) {
 }
 
 static void _expr_stat(candy_parser_t *self) {
-  candy_wrap_t wrap;
   /* get ident */
-  candy_lexer_next(&self->lex, &wrap);
-  candy_block_add_const(self->head, &wrap);
+  candy_block_add_const(self->head, candy_lexer_next(&self->lex));
   _add_iabc(self, CANDY_OP_GETTABUP, 0, 0, self->head->pool.size - 1);
   switch (candy_lexer_lookahead(&self->lex)) {
     case '=':
@@ -83,7 +79,7 @@ static void _expr_stat(candy_parser_t *self) {
   */
 static void _cond_block(candy_parser_t *self) {
   /* skip if or elif */
-  candy_lexer_next(&self->lex, NULL);
+  candy_lexer_next(&self->lex);
   /** @todo read condition */
   if (candy_lexer_lookahead(&self->lex) == TK_break) {
 
