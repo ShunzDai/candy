@@ -36,9 +36,42 @@ candy_block_t *candy_block_create(void);
 int candy_block_delete(candy_block_t **self);
 
 int candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap);
-int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins);
 
-int candy_block_enter(candy_block_t *self);
+static inline void candy_block_add_iax(candy_block_t *self, candy_opcodes_t op, uint32_t a) {
+  int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins);
+  candy_instruc_t ins = {
+    .iax = {
+      .op = (uint32_t)op,
+      .a = a,
+    },
+  };
+  candy_block_add_instruc(self, &ins);
+}
+
+static inline void candy_block_add_iabx(candy_block_t *self, candy_opcodes_t op, uint32_t a, uint32_t b) {
+  int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins);
+  candy_instruc_t ins = {
+    .iabx = {
+      .op = (uint32_t)op,
+      .a = a,
+      .b = b,
+    },
+  };
+  candy_block_add_instruc(self, &ins);
+}
+
+static inline void candy_block_add_iabc(candy_block_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
+  int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins);
+  candy_instruc_t ins = {
+    .iabc = {
+      .op = (uint32_t)op,
+      .a = a,
+      .b = b,
+      .c = c,
+    },
+  };
+  candy_block_add_instruc(self, &ins);
+}
 
 #ifdef __cplusplus
 }
