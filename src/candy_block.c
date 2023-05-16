@@ -16,9 +16,8 @@
 #include "src/candy_block.h"
 #include <stdlib.h>
 
-candy_block_t *candy_block_create(candy_block_t *prev) {
+candy_block_t *candy_block_create(void) {
   candy_block_t *self = (candy_block_t *)calloc(1, sizeof(struct candy_block));
-  self->prev = prev;
   self->pool.type = CANDY_WRAP;
   self->ins.type = CANDY_INSTRUC;
   return self;
@@ -32,12 +31,12 @@ int candy_block_delete(candy_block_t **self) {
   return 0;
 }
 
-void candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap) {
-  candy_wrap_append_wrap(&self->pool, NULL, 1);
-  *(candy_wrap_t *)&candy_wrap_get_wrap(&self->pool)[self->pool.size - 1] = *wrap;
+int candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap) {
+  candy_wrap_append_wrap(&self->pool, wrap, 1);
+  return self->pool.size - 1;
 }
 
-void candy_block_add_instruc(candy_block_t *self, candy_instruc_t ins) {
-  candy_wrap_append_instruc(&self->ins, NULL, 1);
-  *(candy_instruc_t *)&candy_wrap_get_instruc(&self->ins)[self->ins.size - 1] = ins;
+int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins) {
+  candy_wrap_append_instruc(&self->ins, ins, 1);
+  return self->ins.size - 1;
 }

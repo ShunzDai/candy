@@ -36,7 +36,7 @@ void _add_iabc(candy_parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b,
       .c = c,
     },
   };
-  candy_block_add_instruc(self->head, ins);
+  candy_block_add_instruc(self->head, &ins);
 }
 
 static void _expr(candy_parser_t *self) {
@@ -121,7 +121,7 @@ static void _statement(candy_parser_t *self, void *ud) {
 candy_block_t *candy_parse(candy_io_t *io, candy_reader_t reader, void *ud) {
   candy_parser_t parser;
   candy_lexer_init(&parser.lex, io, reader, ud);
-  parser.head = candy_block_create(NULL);
+  parser.head = candy_block_create();
   if (candy_io_try_catch(io, (candy_try_catch_cb_t)_statement, &parser, NULL) != 0)
     goto exit;
   return parser.head;

@@ -28,16 +28,17 @@ typedef enum candy_opcodes {
 } candy_opcodes_t;
 
 struct candy_block {
-  candy_block_t *prev;
   candy_wrap_t pool;
   candy_wrap_t ins;
 };
 
-candy_block_t *candy_block_create(candy_block_t *prev);
+candy_block_t *candy_block_create(void);
 int candy_block_delete(candy_block_t **self);
 
-void candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap);
-void candy_block_add_instruc(candy_block_t *self, candy_instruc_t ins);
+int candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap);
+int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins);
+
+int candy_block_enter(candy_block_t *self);
 
 #ifdef __cplusplus
 }
