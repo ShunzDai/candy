@@ -41,12 +41,12 @@ typedef union candy_instruc {
     uint32_t  a : 8;
     uint32_t  b : 9;
     uint32_t  c : 9;
-  } iABC;
+  } iabc;
   struct {
     uint32_t op : CANDY_OPCODE_SIZE;
     uint32_t  a :  8;
     uint32_t  b : 18;
-  } iABx;
+  } iabx;
 } candy_instruc_t;
 
 typedef int64_t candy_integer_t;

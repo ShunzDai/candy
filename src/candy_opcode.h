@@ -23,12 +23,12 @@
 
 #if defined(CANDY_OP_ENUM)
 #undef CANDY_OP_ENUM
-#define CANDY_OP(_opcode, ...) CANDY_OP_##_opcode,
+#define CANDY_OP(_opcode, ...) OP_##_opcode,
 #endif /* CANDY_OP_ENUM */
 
 #if defined(CANDY_OP_CASE)
 #undef CANDY_OP_CASE
-#define CANDY_OP(_opcode, ...) case CANDY_OP_##_opcode: { \
+#define CANDY_OP(_opcode, ...) case OP_##_opcode: { \
   __VA_ARGS__ \
 }
 #endif /* CANDY_OP_CASE */
