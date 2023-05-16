@@ -19,8 +19,6 @@
 
 #ifdef CANDY_TYPE
 CANDY_TYPE(NULL,    UINT_MAX)
-CANDY_TYPE(DEL,     UINT_MAX)
-CANDY_TYPE(NONE,    UINT_MAX)
 CANDY_TYPE(INSTRUC, sizeof(candy_instruc_t))
 CANDY_TYPE(WRAP,    sizeof(candy_wrap_t))
 CANDY_TYPE(INTEGER, sizeof(candy_integer_t))
