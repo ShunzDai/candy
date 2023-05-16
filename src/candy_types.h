@@ -33,20 +33,24 @@ extern "C"{
 
 typedef union candy_instruc {
   struct {
-    uint32_t op : CANDY_OPCODE_SIZE;
-    uint32_t    : 24;
+    uint32_t op :  6;
+    uint32_t    : 26;
   };
   struct {
-    uint32_t op : CANDY_OPCODE_SIZE;
-    uint32_t  a : 8;
-    uint32_t  b : 9;
-    uint32_t  c : 9;
-  } iabc;
+    uint32_t op :  6;
+    uint32_t  a : 26;
+  } iax;
   struct {
-    uint32_t op : CANDY_OPCODE_SIZE;
+    uint32_t op :  6;
     uint32_t  a :  8;
     uint32_t  b : 18;
   } iabx;
+  struct {
+    uint32_t op :  6;
+    uint32_t  a :  8;
+    uint32_t  b :  9;
+    uint32_t  c :  9;
+  } iabc;
 } candy_instruc_t;
 
 typedef int64_t candy_integer_t;

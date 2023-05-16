@@ -51,8 +51,6 @@ extern "C"{
 
 #define CANDY_DEFAULT_STACK_SIZE 8
 
-#define CANDY_OPCODE_SIZE 6
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
