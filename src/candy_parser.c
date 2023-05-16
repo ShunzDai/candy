@@ -29,7 +29,7 @@ typedef struct candy_parser {
 
 void _add_iabc(candy_parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
   candy_instruc_t ins = {
-    .iABC = {
+    .iabc = {
       .op = (uint32_t)op,
       .a = a,
       .b = b,
@@ -59,13 +59,13 @@ static void _expr(candy_parser_t *self) {
 static void _expr_stat(candy_parser_t *self) {
   /* get ident */
   candy_block_add_const(self->head, candy_lexer_next(&self->lex));
-  _add_iabc(self, CANDY_OP_GETTABUP, 0, 0, self->head->pool.size - 1);
+  _add_iabc(self, OP_GETTABUP, 0, 0, self->head->pool.size - 1);
   switch (candy_lexer_lookahead(&self->lex)) {
     case '=':
       break;
     case '(':
       _expr(self);
-      _add_iabc(self, CANDY_OP_CALL, 0, 0, 0);
+      _add_iabc(self, OP_CALL, 0, 0, 0);
       break;
     default:
       par_assert(false, "identifiers can only be used for assignment or invocation");
