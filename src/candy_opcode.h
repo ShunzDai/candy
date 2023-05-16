@@ -32,3 +32,8 @@
   __VA_ARGS__ \
 }
 #endif /* CANDY_OP_CASE */
+
+#ifdef CANDY_OP_STR
+#undef CANDY_OP_STR
+#define CANDY_OP(_opcode, ...) #_opcode,
+#endif /* CANDY_OP_STR */

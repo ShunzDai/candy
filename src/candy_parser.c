@@ -21,38 +21,46 @@
 
 #define par_assert(_condition, _format, ...) candy_assert(_condition, syntax, _format, ##__VA_ARGS__)
 
-typedef struct candy_parser {
+typedef struct candy_parser candy_parser_t;
+
+struct candy_parser {
   /* lexical state */
   candy_lexer_t lex;
   candy_block_t *head;
-} candy_parser_t;
+};
 
 static void _expr(candy_parser_t *self) {
-  candy_lexer_next(&self->lex);
-  switch (candy_lexer_lookahead(&self->lex)) {
-    case ')':
-      candy_lexer_next(&self->lex);
-      break;
-    case TK_INTEGER:
-    case TK_FLOAT:
-    case TK_STRING:
-      candy_block_add_const(self->head, candy_lexer_next(&self->lex));
-      break;
-    default:
-      par_assert(false, "unknown token");
-      break;
+  while (1) {
+    switch (candy_lexer_lookahead(&self->lex)) {
+      case ')':
+        return;
+      case TK_STRING:
+        candy_block_add_const(self->head, candy_lexer_next(&self->lex));
+        if (candy_lexer_lookahead(&self->lex) == ',')
+          candy_lexer_next(&self->lex);
+        break;
+      default:
+        par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->lex));
+        break;
+    }
   }
 }
 
-static void _expr_stat(candy_parser_t *self) {
+static void _stat_ident(candy_parser_t *self) {
   /* get ident */
-  candy_block_add_const(self->head, candy_lexer_next(&self->lex));
-  candy_block_add_iabc(self->head, OP_GETTABUP, 0, 0, self->head->pool.size - 1);
+  int id = candy_block_add_const(self->head, candy_lexer_next(&self->lex));
   switch (candy_lexer_lookahead(&self->lex)) {
     case '=':
       break;
     case '(':
+      /* skip '(' */
+      candy_lexer_next(&self->lex);
       _expr(self);
+      /* skip ')' */
+      candy_lexer_next(&self->lex);
+      for (size_t i = self->head->pool.size - 1 - id; i > (size_t)id; --i)
+        candy_block_add_iabx(self->head, OP_LOADCST, 0, i);
+      candy_block_add_iabc(self->head, OP_GETTABUP, 0, 0, id);
       candy_block_add_iabc(self->head, OP_CALL, 0, 0, 0);
       break;
     default:
@@ -62,25 +70,13 @@ static void _expr_stat(candy_parser_t *self) {
 }
 
 /**
-  * @brief  if cond : block { elif cond : block } [ else : block ] end
+  * @brief  if '(' expr ')' block { elif '(' expr ')' block } [ else block ] end
   * @param  self  parser handle.
   */
-static void _cond_block(candy_parser_t *self) {
-  /* skip if or elif */
-  candy_lexer_next(&self->lex);
-  /** @todo read condition */
-  if (candy_lexer_lookahead(&self->lex) == TK_break) {
-
-  }
-}
-
-static void _if_stat(candy_parser_t *self) {
-  /* if cond : block */
-  _cond_block(self);
-  /* elif cond : block */
-  while (candy_lexer_lookahead(&self->lex) == TK_elif)
-    _cond_block(self);
-  /* else : block */
+static void _stat_if(candy_parser_t *self) {
+  /* if '(' expr ')' block */
+  /* { elif '(' expr ')' block } */
+  /* [ else block ] end */
 }
 
 /** @ref https://blog.csdn.net/initphp/article/details/105247775 */
@@ -88,10 +84,10 @@ static void _statement(candy_parser_t *self, void *ud) {
   while (candy_lexer_lookahead(&self->lex) != TK_EOS) {
     switch (candy_lexer_lookahead(&self->lex)) {
       case TK_IDENT:
-        _expr_stat(self);
+        _stat_ident(self);
         break;
       case TK_if:
-        _if_stat(self);
+        _stat_if(self);
         break;
       case TK_while:
         break;

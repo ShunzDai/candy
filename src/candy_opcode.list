@@ -18,6 +18,11 @@
 #undef CANDY_OPCODE_LIST
 
 #ifdef CANDY_OP
+CANDY_OP(LOADCST,
+  _push(self, &candy_wrap_get_wrap(&block->pool)[ins->iabx.b]);
+  break;
+)
+
 CANDY_OP(GETTABUP,
   _push(self, candy_table_get(self->glb, &candy_wrap_get_wrap(&block->pool)[ins->iabc.c]));
   break;
