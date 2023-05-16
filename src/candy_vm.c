@@ -34,7 +34,7 @@ const candy_wrap_t *_pop(candy_vm_t *self) {
 
 int candy_vm_init(candy_vm_t *self, candy_state_t *sta) {
   self->sta = sta;
-  self->base.type = CANDY_WRAP;
+  self->base.type = TYPE_WRAP;
   self->glb = candy_table_create();
   return 0;
 }

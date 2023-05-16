@@ -18,8 +18,8 @@
 
 candy_block_t *candy_block_create(void) {
   candy_block_t *self = (candy_block_t *)calloc(1, sizeof(struct candy_block));
-  self->pool.type = CANDY_WRAP;
-  self->ins.type = CANDY_INSTRUC;
+  self->pool.type = TYPE_WRAP;
+  self->ins.type = TYPE_INSTRUC;
   return self;
 }
 
