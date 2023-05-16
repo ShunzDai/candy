@@ -23,7 +23,7 @@
 
 #ifdef CANDY_TYPE_ENUM
 #undef CANDY_TYPE_ENUM
-#define CANDY_TYPE(_type, ...) CANDY_##_type,
+#define CANDY_TYPE(_type, ...) TYPE_##_type,
 #endif /* CANDY_TYPE_ENUM */
 
 
