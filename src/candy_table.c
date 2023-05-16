@@ -53,7 +53,7 @@ static inline int32_t _get_next(int32_t now) {
 
 static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buff[], int(*print)(candy_table_t *self, int depth), int depth) {
   switch (wrap->type) {
-    case TYPE_NULL: case TYPE_DEL: case TYPE_NONE:
+    case TYPE_NULL:
       sprintf(buff, "%16s", "NA");
       break;
     case TYPE_INTEGER:
@@ -157,7 +157,7 @@ int candy_table_set(candy_table_t *self, const candy_wrap_t *key, const candy_wr
   candy_node_t *node = main_position(self, key);
   for (int32_t next = 0; _boundary_check(self, node + next); next += _get_next(next)) {
     switch ((node + next)->key.type) {
-      case TYPE_NULL: case TYPE_DEL:
+      case TYPE_NULL:
         (node + next)->key = *key;
         (node + next)->val = *val;
         return 0;
