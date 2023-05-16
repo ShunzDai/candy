@@ -22,9 +22,16 @@ int candy_builtin_exit(candy_state_t *self) {
   exit(0);
 }
 
+int candy_builtin_print(candy_state_t *self) {
+  size_t size = 0;
+  const char *str = candy_pull_string(self, &size);
+  printf("%*s\n", (int)size, str);
+  return 0;
+}
+
 candy_regist_t candy_builtin_list[] = {
   {"exit", candy_builtin_exit},
-  {"global", candy_dump_global},
+  {"print", candy_builtin_print},
 };
 
 size_t candy_builtin_size = candy_lengthof(candy_builtin_list);
