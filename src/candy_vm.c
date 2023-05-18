@@ -26,7 +26,7 @@
 
 int candy_vm_init(candy_vm_t *self, candy_state_t *sta) {
   self->sta = sta;
-  self->base.type = TYPE_WRAP;
+  candy_wrap_set_wrap(&self->base, NULL, CANDY_DEFAULT_STACK_SIZE);
   self->glb = candy_table_create();
   return 0;
 }
@@ -42,7 +42,10 @@ int candy_vm_dump_global(candy_vm_t *self) {
 }
 
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
-  candy_wrap_append_wrap(&self->base, wrap, 1);
+  if (self->top < next_power2(self->base.size))
+    ((candy_wrap_t *)candy_wrap_get_wrap(&self->base))[self->top] = *wrap;
+  else
+    candy_wrap_append_wrap(&self->base, wrap, 1);
   ++self->top;
 }
 
