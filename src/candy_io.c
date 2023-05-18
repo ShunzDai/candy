@@ -46,9 +46,7 @@ void candy_io_throw(candy_io_t *self, const char format[], ...) {
 }
 
 void candy_io_expand(candy_io_t *self) {
-  char *dst = (char *)expand(self->buff, sizeof(char), self->size, next_power2(self->size + 1));
-  free(self->buff);
-  self->buff = dst;
+  self->buff = (char *)expand(self->buff, sizeof(char), self->size, next_power2(self->size + 1), true);
   self->size = next_power2(self->size + 1);
 }
 

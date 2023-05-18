@@ -21,13 +21,8 @@ void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *dat
 void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size) {
   void *dst = candy_wrap_get_data(self);
   if ((self->size + size) * candy_wrap_sizeof(self) > sizeof(self->data)) {
-    void *new = expand(dst, candy_wrap_sizeof(self), self->size, self->size + size);
-    if (dst != new) {
-      dst = new;
-      if (candy_wrap_check_ldata(self) && *(void **)&self->data)
-        free(*(void **)&self->data);
-      *(void **)&self->data = new;
-    }
+    *(void **)&self->data = expand(dst, candy_wrap_sizeof(self), self->size, self->size + size, candy_wrap_check_ldata(self));
+    dst = *(void **)&self->data;
   }
   if (data && size)
     memcpy(dst + self->size * candy_wrap_sizeof(self), data, size * candy_wrap_sizeof(self));
