@@ -30,7 +30,7 @@ struct candy_state {
 };
 
 candy_state_t *candy_state_create(int argc, const char *argv[], void *ud) {
-  candy_state_t *self = (candy_state_t *)malloc(sizeof(struct candy_state));
+  candy_state_t *self = (candy_state_t *)calloc(1, sizeof(struct candy_state));
   candy_io_init(&self->io);
   candy_vm_init(&self->vm, self);
   self->ud = ud;
