@@ -19,17 +19,17 @@
 
 #ifdef CANDY_OP
 CANDY_OP(LOADCST,
-  _push(self, &candy_wrap_get_wrap(&block->pool)[ins->iabx.b]);
+  candy_vm_push(self, &candy_wrap_get_wrap(&block->pool)[ins->iabx.b]);
   break;
 )
 
 CANDY_OP(GETTABUP,
-  _push(self, candy_table_get(self->glb, &candy_wrap_get_wrap(&block->pool)[ins->iabc.c]));
+  candy_vm_push(self, candy_table_get(self->glb, &candy_wrap_get_wrap(&block->pool)[ins->iabc.c]));
   break;
 )
 
 CANDY_OP(CALL,
-  (*candy_wrap_get_builtin(_pop(self)))(self->sta);
+  (*candy_wrap_get_builtin(candy_vm_pop(self)))(self->sta);
   break;
 )
 #endif /* CANDY_OP */
