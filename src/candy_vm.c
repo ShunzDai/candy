@@ -43,10 +43,11 @@ int candy_vm_dump_global(candy_vm_t *self) {
 
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
   candy_wrap_append_wrap(&self->base, wrap, 1);
+  ++self->top;
 }
 
 const candy_wrap_t *candy_vm_pop(candy_vm_t *self) {
-  return self->base.size ? &candy_wrap_get_wrap(&self->base)[--self->base.size] : &null;
+  return self->top ? &candy_wrap_get_wrap(&self->base)[--self->top] : &null;
 }
 
 
