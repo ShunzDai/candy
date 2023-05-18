@@ -41,13 +41,15 @@ static inline size_t next_power2(size_t n) {
   return ++n;
 }
 
-static inline void *expand(void *src, size_t n, size_t before, size_t after) {
+static inline void *expand(void *src, size_t n, size_t before, size_t after, bool is_heap) {
   size_t limit = next_power2(after);
   if (next_power2(before) >= limit)
     return src;
-  void *exp = calloc(limit, n);
-  memcpy(exp, src, before * n);
-  return exp;
+  void *dst = calloc(limit, n);
+  memcpy(dst, src, before * n);
+  if (is_heap)
+    free(src);
+  return dst;
 }
 
 static inline bool is_upper(char ch) {
