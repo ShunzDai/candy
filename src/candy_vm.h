@@ -27,6 +27,7 @@ typedef struct candy_vm candy_vm_t;
 struct candy_vm {
   candy_state_t *sta;
   candy_wrap_t base;
+  size_t top;
   candy_table_t *glb;
 };
 
