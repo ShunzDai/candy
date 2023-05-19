@@ -317,6 +317,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
   static const struct {
     candy_tokens_t token;
     const char * const keyword;
+    const size_t len;
   } _keywords[] = {
     #define CANDY_KW_MATCH
     #include "src/candy_keyword.list"
@@ -328,7 +329,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
     _save(self);
   /* check keyword */
   for (size_t i = 0; i < candy_lengthof(_keywords); i++) {
-    if (strncmp(_buff(self), _keywords[i].keyword, self->w) == 0)
+    if (strncmp(_buff(self), _keywords[i].keyword, self->w > _keywords[i].len ? self->w : _keywords[i].len) == 0)
       return _keywords[i].token;
   }
   candy_wrap_set_string(wrap, _buff(self), self->w);
