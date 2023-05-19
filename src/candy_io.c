@@ -20,6 +20,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+static int _vsnprint(candy_io_t *self, const char format[], va_list ap) {
+  va_list head = ap;
+  size_t len = vsnprintf(NULL, 0, format, ap) + 1;
+  if (self->size < len) {
+    free(self->buff);
+    self->buff = calloc(len, sizeof(char));
+  }
+  return vsnprintf(self->buff, len, format, head);
+}
+
 int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
   if (setjmp(self->env))
     goto catch;
@@ -33,14 +43,7 @@ int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, 
 void candy_io_throw(candy_io_t *self, const char format[], ...) {
   va_list ap;
   va_start(ap, format);
-  size_t len = vsnprintf(NULL, 0, format, ap) + 1;
-  va_end(ap);
-  if (self->size < len) {
-    free(self->buff);
-    self->buff = calloc(len, sizeof(char));
-  }
-  va_start(ap, format);
-  vsprintf(self->buff, format, ap);
+  _vsnprint(self, format, ap);
   va_end(ap);
   longjmp(self->env, 1);
 }
