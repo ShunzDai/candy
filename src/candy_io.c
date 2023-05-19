@@ -23,11 +23,9 @@
 static int _vsnprint(candy_io_t *self, const char format[], va_list ap) {
   va_list head = ap;
   size_t len = vsnprintf(NULL, 0, format, ap) + 1;
-  if (self->size < len) {
-    free(self->buff);
-    self->buff = calloc(len, sizeof(char));
-  }
-  return vsnprintf(self->buff, len, format, head);
+  if (self->buff.size < len)
+    candy_wrap_append(&self->buff, NULL, len - self->buff.size);
+  return vsnprintf((char *)candy_wrap_get_string(&self->buff), len, format, head);
 }
 
 int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
@@ -36,7 +34,7 @@ int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, 
   cb(handle, ud);
   return 0;
   catch:
-  printf("%s\n", self->buff);
+  printf("%s\n", candy_wrap_get_string(&self->buff));
   return -1;
 }
 
@@ -48,20 +46,12 @@ void candy_io_throw(candy_io_t *self, const char format[], ...) {
   longjmp(self->env, 1);
 }
 
-void candy_io_expand(candy_io_t *self) {
-  self->buff = (char *)expand(self->buff, sizeof(char), self->size, next_power2(self->size + 1), true);
-  self->size = next_power2(self->size + 1);
-}
-
 int candy_io_init(candy_io_t *self) {
-  self->buff = calloc(CANDY_DEFAULT_IO_SIZE, sizeof(char));
-  self->size = CANDY_DEFAULT_IO_SIZE;
+  candy_wrap_set_string(&self->buff, NULL, CANDY_DEFAULT_IO_SIZE);
   return 0;
 }
 
 int candy_io_deinit(candy_io_t *self) {
-  free(self->buff);
-  self->buff = NULL;
-  self->size = 0;
+  candy_wrap_deinit(&self->buff);
   return 0;
 }
