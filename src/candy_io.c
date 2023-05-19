@@ -23,8 +23,7 @@
 static int _vsnprint(candy_io_t *self, const char format[], va_list ap) {
   va_list head = ap;
   size_t len = vsnprintf(NULL, 0, format, ap) + 1;
-  if (self->buff.size < len)
-    candy_wrap_append(&self->buff, NULL, len - self->buff.size);
+  candy_wrap_append(&self->buff, NULL, len - self->buff.size);
   return vsnprintf((char *)candy_wrap_get_string(&self->buff), len, format, head);
 }
 
