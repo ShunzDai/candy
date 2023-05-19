@@ -28,7 +28,7 @@
 
 #ifdef CANDY_KW_MATCH
 #undef CANDY_KW_MATCH
-#define CANDY_KW(_keyword) {TK_##_keyword, #_keyword},
+#define CANDY_KW(_keyword) {TK_##_keyword, #_keyword, sizeof(#_keyword) - 1},
 #endif /* CANDY_KW_MATCH */
 
 #ifdef CANDY_KW_TEST
