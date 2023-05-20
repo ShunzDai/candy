@@ -13,11 +13,5 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test_common.h"
-
-/* valgrind --tool=memcheck --leak-check=full ./test/test */
-int main(int argc, char *argv[]) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-
+#include "gtest/gtest.h"
+#define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)

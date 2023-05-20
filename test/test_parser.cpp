@@ -13,7 +13,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "gtest/gtest.h"
+#include "test_common.h"
 #include "src/candy_io.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
