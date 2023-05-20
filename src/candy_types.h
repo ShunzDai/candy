@@ -23,7 +23,7 @@ extern "C"{
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h> /** @todo remove it */
+#include <stdio.h>
 
 #ifdef __GNUC__
 #define CANDY_NORETURN __attribute__((noreturn))

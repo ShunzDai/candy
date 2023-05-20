@@ -31,7 +31,7 @@ class state {
 
   int dofile(const char path[]);
 
-  void dump_global(void);
+  void dump_global(FILE *out = stdout);
 
   template <typename ... func_t>
   int add(const std::tuple<const char *, func_t> & ... list);
