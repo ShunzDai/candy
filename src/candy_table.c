@@ -26,15 +26,15 @@ struct candy_node {
   candy_wrap_t val;
 };
 
-static inline size_t _size(candy_wrap_t *self) {
+static inline size_t _size(const candy_wrap_t *self) {
   return self->size;
 }
 
-static inline candy_node_t *_head(candy_wrap_t *self) {
+static inline candy_node_t *_head(const candy_wrap_t *self) {
   return (candy_node_t *)candy_wrap_get_table(self);
 }
 
-static inline candy_node_t *_tail(candy_wrap_t *self) {
+static inline candy_node_t *_tail(const candy_wrap_t *self) {
   return _head(self) + _size(self) - 1;
 }
 
@@ -46,48 +46,51 @@ static inline int32_t _get_next(int32_t now) {
   return ((now <= 0) - now) << 1;
 }
 
-static void _wrap_sprint(candy_wrap_t *self, const candy_wrap_t *wrap, char buff[], int(*print)(candy_wrap_t *self, int depth), int depth) {
+static void _wrap_sprint(const candy_wrap_t *wrap, FILE *out, int(*print)(const candy_wrap_t *, FILE *, int), int depth) {
   switch (wrap->type) {
     case TYPE_NULL:
-      sprintf(buff, "%16s", "NA");
+      fprintf(out, "%10s", "NA");
       break;
     case TYPE_INTEGER:
-      sprintf(buff, "%16lld", *candy_wrap_get_integer(wrap));
+      fprintf(out, "%10lld", *candy_wrap_get_integer(wrap));
       break;
     case TYPE_FLOAT:
-      sprintf(buff, "%16f", *candy_wrap_get_float(wrap));
+      fprintf(out, "%10f", *candy_wrap_get_float(wrap));
       break;
     case TYPE_STRING:
-      sprintf(buff, "%16s", candy_wrap_get_string(wrap));
+      fprintf(out, "%10.*s", wrap->size, candy_wrap_get_string(wrap));
       break;
     case TYPE_USERDEF:
-      sprintf(buff, "%16p", *candy_wrap_get_ud(wrap));
+      fprintf(out, "%10p", *candy_wrap_get_ud(wrap));
       break;
     case TYPE_BUILTIN:
-      sprintf(buff, "%16p", *candy_wrap_get_builtin(wrap));
+      fprintf(out, "%10p", *candy_wrap_get_builtin(wrap));
       break;
     case TYPE_TABLE:
-      print(self, depth);
+      fprintf(out, "%10p\n", wrap);
+      print(wrap, out, depth + 1);
       break;
     default:
       break;
   }
 }
 
-static int _dump(candy_wrap_t *self, int depth) {
+static int _dump(const candy_wrap_t *self, FILE *out, int depth) {
   static const char *type[] = {
 #define CANDY_TYPE_STR
 #include "src/candy_type.list"
   };
-  printf("%.*s\033[1;35m>>> table head\033[0m\n", depth * 2, "");
-  printf("%.*sdepth  pos  key-type         key-val  val-type         val-val\n", depth * 2, "");
+  fprintf(out, "%*s\033[1;35m>>> depth %d, table %p head\033[0m\n", depth * 2, "", depth, self);
+  fprintf(out, "%*spos  key-type   key-val  val-type   val-val\n", depth * 2, "");
   for (candy_node_t *node = _head(self); node <= _tail(self); ++node) {
-    char key[17], val[17];
-    _wrap_sprint(self, &node->key, key, _dump, depth);
-    _wrap_sprint(self, &node->val, val, _dump, depth);
-    printf("%.*s%5d%5ld%10s%s%10s%s\n", depth * 2, "", depth, node - _head(self), type[node->key.type], key, type[node->val.type], val);
+    fprintf(out, "%*s%3ld", depth * 2, "", node - _head(self));
+    fprintf(out, "%10s", type[node->key.type]);
+    _wrap_sprint(&node->key, out, _dump, depth);
+    fprintf(out, "%10s", type[node->val.type]);
+    _wrap_sprint(&node->val, out, _dump, depth);
+    fprintf(out, "\n");
   }
-  printf("%.*s\033[1;35m<<< table tail\033[0m\n", depth * 2, "");
+  fprintf(out, "%*s\033[1;35m<<< depth %d, table %p tail\033[0m%s", depth * 2, "", depth, self, depth ? "" : "\n");
   return 0;
 }
 
@@ -118,8 +121,8 @@ static bool equal(const candy_wrap_t *keyl, const candy_wrap_t *keyr) {
   return memcmp(candy_wrap_get_data(keyl), candy_wrap_get_data(keyr), keyl->size * candy_wrap_sizeof(keyl)) == 0;
 }
 
-int candy_table_dump(candy_wrap_t *self) {
-  return _dump(self, 0);
+int candy_table_dump(const candy_wrap_t *self, FILE *out) {
+  return _dump(self, out, 0);
 }
 
 const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key) {
