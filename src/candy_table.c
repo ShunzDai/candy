@@ -57,7 +57,7 @@ static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buf
       sprintf(buff, "%16s", "NA");
       break;
     case TYPE_INTEGER:
-      sprintf(buff, "%16lld", *candy_wrap_get_integer(wrap));
+      sprintf(buff, "%16zu", *candy_wrap_get_integer(wrap));
       break;
     case TYPE_FLOAT:
       sprintf(buff, "%16f", *candy_wrap_get_float(wrap));
@@ -84,15 +84,15 @@ static int _dump(candy_table_t *self, int depth) {
 #define CANDY_TYPE_STR
 #include "src/candy_type.list"
   };
-  printf("%*s\033[1;35m>>> table head\033[0m\n", depth * 2, "");
-  printf("%*sdepth  pos  key-type         key-val  val-type         val-val\n", depth * 2, "");
+  printf("%.*s\033[1;35m>>> table head\033[0m\n", depth * 2, "");
+  printf("%.*sdepth  pos  key-type         key-val  val-type         val-val\n", depth * 2, "");
   for (candy_node_t *node = _head(self); node <= _tail(self); ++node) {
     char key[17], val[17];
     _wrap_sprint(self, &node->key, key, _dump, depth);
     _wrap_sprint(self, &node->val, val, _dump, depth);
-    printf("%*s%5d%5ld%10s%s%10s%s\n", depth * 2, "", depth, node - _head(self), type[node->key.type], key, type[node->val.type], val);
+    printf("%.*s%5d%5ld%10s%s%10s%s\n", depth * 2, "", depth, node - _head(self), type[node->key.type], key, type[node->val.type], val);
   }
-  printf("%*s\033[1;35m<<< table tail\033[0m\n", depth * 2, "");
+  printf("%.*s\033[1;35m<<< table tail\033[0m\n", depth * 2, "");
   return 0;
 }
 
@@ -158,6 +158,7 @@ int candy_table_set(candy_table_t *self, const candy_wrap_t *key, const candy_wr
   for (int32_t next = 0; _boundary_check(self, node + next); next += _get_next(next)) {
     switch ((node + next)->key.type) {
       case TYPE_NULL:
+        
         (node + next)->key = *key;
         (node + next)->val = *val;
         return 0;
