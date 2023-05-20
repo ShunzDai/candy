@@ -55,7 +55,7 @@ static inline char _read(candy_lexer_t *self) {
     /** if the number of bytes that can be filled is less than
         @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
     if (size - offset < CANDY_DEFAULT_IO_SIZE) {
-      candy_wrap_append(&self->io->buff, NULL, _size(self) + 1);
+      candy_wrap_append(&self->io->buff, NULL, CANDY_DEFAULT_IO_SIZE);
       self->reader(_buff(self) + size, _size(self) - size, self->ud);
     }
     /* otherwise buffer will be filled directly */

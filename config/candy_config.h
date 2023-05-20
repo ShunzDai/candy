@@ -45,10 +45,6 @@ extern "C"{
   */
 #define CANDY_DEFAULT_IO_SIZE 64
 
-#if CANDY_DEFAULT_IO_SIZE < CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE
-#error "io buffer size is too small"
-#endif /* CANDY_DEFAULT_IO_SIZE */
-
 #define CANDY_DEFAULT_STACK_SIZE 8
 
 #ifdef __cplusplus
