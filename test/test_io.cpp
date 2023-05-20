@@ -14,10 +14,24 @@
   * limitations under the License.
   */
 #include "test_common.h"
+#include "src/candy_io.h"
 
-/* valgrind --tool=memcheck --leak-check=full ./test/test */
-int main(int argc, char *argv[]) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST(io, exception_ok) {
+  candy_io_t io;
+  candy_io_init(&io);
+  EXPECT_EQ(candy_io_try_catch(&io, +[](void *handle, void *ud) {
+    EXPECT_EQ((uint64_t)handle, 1);
+    EXPECT_EQ((uint64_t)ud, 2);
+  }, (void *)1, (void *)2), 0);
+  candy_io_deinit(&io);
 }
 
+TEST(io, exception_err) {
+  candy_io_t io;
+  candy_io_init(&io);
+  EXPECT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_io_t *io, void *ud) {
+    candy_io_throw(io, "assert string");
+  }, &io, nullptr), -1);
+  EXPECT_MEMEQ(candy_wrap_get_string(&io.buff), "assert string", sizeof("assert string"));
+  candy_io_deinit(&io);
+}
