@@ -144,42 +144,6 @@ static inline void candy_wrap_set_table(candy_wrap_t *self, const candy_table_t 
   candy_wrap_set_data(self, TYPE_TABLE, val, size);
 }
 
-static inline void candy_wrap_append_instruc(candy_wrap_t *self, const candy_instruc_t val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
-static inline void candy_wrap_append_wrap(candy_wrap_t *self, const candy_wrap_t val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
-static inline void candy_wrap_append_integer(candy_wrap_t *self, const candy_integer_t val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
-static inline void candy_wrap_append_float(candy_wrap_t *self, const candy_float_t val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
-static inline void candy_wrap_append_boolean(candy_wrap_t *self, const candy_boolean_t val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
-static inline void candy_wrap_append_string(candy_wrap_t *self, const char val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
-static inline void candy_wrap_append_ud(candy_wrap_t *self, const void *val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
-static inline void candy_wrap_append_builtin(candy_wrap_t *self, const candy_builtin_t val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
-static inline void candy_wrap_append_table(candy_wrap_t *self, const candy_table_t *val[], size_t size) {
-  candy_wrap_append(self, val, size);
-}
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

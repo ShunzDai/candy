@@ -45,7 +45,7 @@ void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
   if (self->top < next_power2(self->base.size))
     ((candy_wrap_t *)candy_wrap_get_wrap(&self->base))[self->top] = *wrap;
   else
-    candy_wrap_append_wrap(&self->base, wrap, 1);
+    candy_wrap_append(&self->base, wrap, 1);
   ++self->top;
 }
 
