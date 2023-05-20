@@ -23,6 +23,10 @@ extern "C"{
 #include "src/candy_types.h"
 #include <setjmp.h>
 
+#if CANDY_DEFAULT_IO_SIZE < CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE
+#error "default io buffer size is too small"
+#endif /* CANDY_DEFAULT_IO_SIZE */
+
 #define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_io_throw(*(candy_io_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
 
 struct candy_io {
