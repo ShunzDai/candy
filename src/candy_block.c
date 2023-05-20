@@ -32,11 +32,11 @@ int candy_block_delete(candy_block_t **self) {
 }
 
 int candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap) {
-  candy_wrap_append_wrap(&self->pool, wrap, 1);
+  candy_wrap_append(&self->pool, wrap, 1);
   return self->pool.size - 1;
 }
 
 int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins) {
-  candy_wrap_append_instruc(&self->ins, ins, 1);
+  candy_wrap_append(&self->ins, ins, 1);
   return self->ins.size - 1;
 }
