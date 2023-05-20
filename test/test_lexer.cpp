@@ -149,6 +149,9 @@ TEST_LEXER(vararg, TK_VARARG, "...")
 #define CANDY_KW_TEST
 #include "src/candy_keyword.list"
 
+TEST_LEXER(ident_0, TK_IDENT, "i")
+TEST_LEXER(ident_1, TK_IDENT, "ifif")
+
 TEST_LEXER(TK_LPAREN , TK_LPAREN ,  "(")
 TEST_LEXER(TK_RPAREN , TK_RPAREN ,  ")")
 TEST_LEXER(TK_COMMA  , TK_COMMA  ,  ",")
