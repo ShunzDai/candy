@@ -66,11 +66,6 @@ static inline const candy_instruc_t *candy_wrap_get_instruc(const candy_wrap_t *
   return (const candy_instruc_t *)candy_wrap_get_data(self);
 }
 
-static inline const candy_wrap_t *candy_wrap_get_wrap(const candy_wrap_t *self) {
-  assert(self->type == TYPE_WRAP);
-  return (const candy_wrap_t *)candy_wrap_get_data(self);
-}
-
 static inline const candy_integer_t *candy_wrap_get_integer(const candy_wrap_t *self) {
   assert(self->type == TYPE_INTEGER);
   return (const candy_integer_t *)candy_wrap_get_data(self);
@@ -101,9 +96,14 @@ static inline const candy_builtin_t *candy_wrap_get_builtin(const candy_wrap_t *
   return (const candy_builtin_t *)candy_wrap_get_data(self);
 }
 
-static inline const candy_table_t **candy_wrap_get_table(const candy_wrap_t *self) {
+static inline const candy_wrap_t *candy_wrap_get_wrap(const candy_wrap_t *self) {
+  assert(self->type == TYPE_WRAP);
+  return (const candy_wrap_t *)candy_wrap_get_data(self);
+}
+
+static inline const candy_wrap_t *candy_wrap_get_table(const candy_wrap_t *self) {
   assert(self->type == TYPE_TABLE);
-  return (const candy_table_t **)candy_wrap_get_data(self);
+  return (const candy_wrap_t *)candy_wrap_get_data(self);
 }
 
 static inline void candy_wrap_copy(candy_wrap_t *self, candy_wrap_t *src) {
@@ -112,10 +112,6 @@ static inline void candy_wrap_copy(candy_wrap_t *self, candy_wrap_t *src) {
 
 static inline void candy_wrap_set_instruc(candy_wrap_t *self, const uint32_t val[], size_t size) {
   candy_wrap_set_data(self, TYPE_INSTRUC, val, size);
-}
-
-static inline void candy_wrap_set_wrap(candy_wrap_t *self, const candy_wrap_t val[], size_t size) {
-  candy_wrap_set_data(self, TYPE_WRAP, val, size);
 }
 
 static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t val[], size_t size) {
@@ -142,7 +138,11 @@ static inline void candy_wrap_set_builtin(candy_wrap_t *self, const candy_builti
   candy_wrap_set_data(self, TYPE_BUILTIN, val, size);
 }
 
-static inline void candy_wrap_set_table(candy_wrap_t *self, const candy_table_t *val[], size_t size) {
+static inline void candy_wrap_set_wrap(candy_wrap_t *self, const candy_wrap_t val[], size_t size) {
+  candy_wrap_set_data(self, TYPE_WRAP, val, size);
+}
+
+static inline void candy_wrap_set_table(candy_wrap_t *self, const candy_wrap_t val[], size_t size) {
   candy_wrap_set_data(self, TYPE_TABLE, val, size);
 }
 
