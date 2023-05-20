@@ -26,24 +26,19 @@ struct candy_node {
   candy_wrap_t val;
 };
 
-struct candy_table {
-  candy_node_t *head;
-  size_t size;
-};
-
-static inline size_t _size(candy_table_t *self) {
+static inline size_t _size(candy_wrap_t *self) {
   return self->size;
 }
 
-static inline candy_node_t *_head(candy_table_t *self) {
-  return self->head;
+static inline candy_node_t *_head(candy_wrap_t *self) {
+  return (candy_node_t *)candy_wrap_get_table(self);
 }
 
-static inline candy_node_t *_tail(candy_table_t *self) {
+static inline candy_node_t *_tail(candy_wrap_t *self) {
   return _head(self) + _size(self) - 1;
 }
 
-static inline bool _boundary_check(candy_table_t *self, candy_node_t *node) {
+static inline bool _boundary_check(candy_wrap_t *self, candy_node_t *node) {
   return (size_t)(node - _head(self)) <= (_size(self) - 1);
 }
 
@@ -51,13 +46,13 @@ static inline int32_t _get_next(int32_t now) {
   return ((now <= 0) - now) << 1;
 }
 
-static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buff[], int(*print)(candy_table_t *self, int depth), int depth) {
+static void _wrap_sprint(candy_wrap_t *self, const candy_wrap_t *wrap, char buff[], int(*print)(candy_wrap_t *self, int depth), int depth) {
   switch (wrap->type) {
     case TYPE_NULL:
       sprintf(buff, "%16s", "NA");
       break;
     case TYPE_INTEGER:
-      sprintf(buff, "%16zu", *candy_wrap_get_integer(wrap));
+      sprintf(buff, "%16lld", *candy_wrap_get_integer(wrap));
       break;
     case TYPE_FLOAT:
       sprintf(buff, "%16f", *candy_wrap_get_float(wrap));
@@ -79,7 +74,7 @@ static void _wrap_sprint(candy_table_t *self, const candy_wrap_t *wrap, char buf
   }
 }
 
-static int _dump(candy_table_t *self, int depth) {
+static int _dump(candy_wrap_t *self, int depth) {
   static const char *type[] = {
 #define CANDY_TYPE_STR
 #include "src/candy_type.list"
@@ -113,7 +108,7 @@ static size_t hash(const candy_wrap_t *key) {
   }
 }
 
-static inline candy_node_t *main_position(candy_table_t *self, const candy_wrap_t *key) {
+static inline candy_node_t *main_position(candy_wrap_t *self, const candy_wrap_t *key) {
   return _head(self) + hash(key) % _size(self);
 }
 
@@ -123,26 +118,11 @@ static bool equal(const candy_wrap_t *keyl, const candy_wrap_t *keyr) {
   return memcmp(candy_wrap_get_data(keyl), candy_wrap_get_data(keyr), keyl->size * candy_wrap_sizeof(keyl)) == 0;
 }
 
-candy_table_t *candy_table_create() {
-  candy_table_t *self = calloc(1, sizeof(struct candy_table));
-  self->head = calloc(16, sizeof(struct candy_node));
-  self->size = 16;
-  return self;
-}
-
-int candy_table_delete(candy_table_t **self) {
-  free((*self)->head);
-  (*self)->head = NULL;
-  free(*self);
-  *self = NULL;
-  return 0;
-}
-
-int candy_table_dump(candy_table_t *self) {
+int candy_table_dump(candy_wrap_t *self) {
   return _dump(self, 0);
 }
 
-const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key) {
+const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key) {
   candy_node_t *node = main_position(self, key);
   for (int32_t next = 0; _boundary_check(self, node + next); next += _get_next(next)) {
     if (equal(&(node + next)->key, key))
@@ -153,12 +133,11 @@ const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key
   return &null;
 }
 
-int candy_table_set(candy_table_t *self, const candy_wrap_t *key, const candy_wrap_t *val) {
+int candy_table_set(candy_wrap_t *self, const candy_wrap_t *key, const candy_wrap_t *val) {
   candy_node_t *node = main_position(self, key);
   for (int32_t next = 0; _boundary_check(self, node + next); next += _get_next(next)) {
     switch ((node + next)->key.type) {
       case TYPE_NULL:
-        
         (node + next)->key = *key;
         (node + next)->val = *val;
         return 0;

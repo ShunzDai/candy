@@ -21,12 +21,9 @@ extern "C"{
 
 #include "src/candy_types.h"
 
-candy_table_t *candy_table_create();
-int candy_table_delete(candy_table_t **self);
-
-int candy_table_dump(candy_table_t *self);
-const candy_wrap_t *candy_table_get(candy_table_t *self, const candy_wrap_t *key);
-int candy_table_set(candy_table_t *self, const candy_wrap_t *key, const candy_wrap_t *val);
+int candy_table_dump(candy_wrap_t *self);
+const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key);
+int candy_table_set(candy_wrap_t *self, const candy_wrap_t *key, const candy_wrap_t *val);
 
 #ifdef __cplusplus
 }
