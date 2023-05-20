@@ -58,7 +58,6 @@ typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
 
 typedef struct candy_io candy_io_t;
-typedef CANDY_MASK_TYPE candy_mask_t;
 typedef struct candy_wrap candy_wrap_t;
 typedef struct candy_table candy_table_t;
 typedef struct candy_block candy_block_t;
