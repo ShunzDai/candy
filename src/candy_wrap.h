@@ -27,6 +27,8 @@ typedef enum candy_wraps {
 #include "src/candy_type.list"
 } candy_wraps_t;
 
+typedef CANDY_MASK_TYPE candy_mask_t;
+
 struct candy_wrap {
   union {
     candy_mask_t mask;
