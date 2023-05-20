@@ -24,7 +24,7 @@ CANDY_OP(LOADCST,
 )
 
 CANDY_OP(GETTABUP,
-  candy_vm_push(self, candy_table_get(self->glb, &candy_wrap_get_wrap(&block->pool)[ins->iabc.c]));
+  candy_vm_push(self, candy_table_get(&self->glb, &candy_wrap_get_wrap(&block->pool)[ins->iabc.c]));
   break;
 )
 

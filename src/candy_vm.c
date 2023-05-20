@@ -26,19 +26,19 @@
 
 int candy_vm_init(candy_vm_t *self, candy_state_t *sta) {
   self->sta = sta;
+  candy_wrap_set_table(&self->glb, NULL, 16);
   candy_wrap_set_wrap(&self->base, NULL, CANDY_DEFAULT_STACK_SIZE);
-  self->glb = candy_table_create();
   return 0;
 }
 
 int candy_vm_deinit(candy_vm_t *self) {
   candy_wrap_deinit(&self->base);
-  candy_table_delete(&self->glb);
+  candy_wrap_deinit(&self->glb);
   return 0;
 }
 
 int candy_vm_dump_global(candy_vm_t *self) {
-  return candy_table_dump(self->glb);
+  return candy_table_dump(&self->glb);
 }
 
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
@@ -59,7 +59,7 @@ int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
     candy_wrap_t key = {0}, val = {0};
     candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name));
     candy_wrap_set_builtin(&val, &list[idx].func, 1);
-    candy_table_set(self->glb, &key, &val);
+    candy_table_set(&self->glb, &key, &val);
   }
   return 0;
 }
@@ -67,7 +67,7 @@ int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
 int candy_vm_set_global(candy_vm_t *self, const char name[]) {
   candy_wrap_t key;
   candy_wrap_set_string(&key, name, strlen(name));
-  candy_table_set(self->glb, &key, candy_vm_pop(self));
+  candy_table_set(&self->glb, &key, candy_vm_pop(self));
   candy_wrap_deinit(&key);
   return 0;
 }
@@ -75,7 +75,7 @@ int candy_vm_set_global(candy_vm_t *self, const char name[]) {
 int candy_vm_get_global(candy_vm_t *self, const char name[]) {
   candy_wrap_t key;
   candy_wrap_set_string(&key, name, strlen(name));
-  candy_vm_push(self, candy_table_get(self->glb, &key));
+  candy_vm_push(self, candy_table_get(&self->glb, &key));
   candy_wrap_deinit(&key);
   return 0;
 }
