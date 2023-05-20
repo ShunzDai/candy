@@ -13,10 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "gtest/gtest.h"
+#include "test_common.h"
 #include "src/candy_wrap.h"
-
-#define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
 
 TEST(wrap, scopy) {
   candy_wrap_t src{}, dst{};
