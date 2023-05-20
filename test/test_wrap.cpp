@@ -61,7 +61,7 @@ TEST(wrap, append_string_s2s) {
   candy_wrap_set_string(&wrap, (char *)"he", 2);
   EXPECT_EQ(wrap.size, 2);
   EXPECT_MEMEQ(candy_wrap_get_string(&wrap), (char *)"he", wrap.size);
-  candy_wrap_append_string(&wrap, (char *)"llo", 3);
+  candy_wrap_append(&wrap, (char *)"llo", 3);
   EXPECT_EQ(wrap.size, 5);
   EXPECT_MEMEQ(candy_wrap_get_string(&wrap), (char *)"hello", wrap.size);
   candy_wrap_deinit(&wrap);
@@ -72,7 +72,7 @@ TEST(wrap, append_string_s2l) {
   candy_wrap_set_string(&wrap, (char *)"hello", 5);
   EXPECT_EQ(wrap.size, 5);
   EXPECT_MEMEQ(candy_wrap_get_string(&wrap), (char *)"hello", wrap.size);
-  candy_wrap_append_string(&wrap, (char *)" world", 6);
+  candy_wrap_append(&wrap, (char *)" world", 6);
   EXPECT_EQ(wrap.size, 11);
   EXPECT_MEMEQ(candy_wrap_get_string(&wrap), (char *)"hello world", wrap.size);
   candy_wrap_deinit(&wrap);
@@ -83,7 +83,7 @@ TEST(wrap, append_string_l2l_with_expand) {
   candy_wrap_set_string(&wrap, (char *)"wubba lubba dub", 15);
   EXPECT_EQ(wrap.size, 15);
   EXPECT_MEMEQ(candy_wrap_get_string(&wrap), (char *)"wubba lubba dub", wrap.size);
-  candy_wrap_append_string(&wrap, (char *)" dub", 4);
+  candy_wrap_append(&wrap, (char *)" dub", 4);
   EXPECT_EQ(wrap.size, 19);
   EXPECT_MEMEQ(candy_wrap_get_string(&wrap), (char *)"wubba lubba dub dub", wrap.size);
   candy_wrap_deinit(&wrap);
@@ -94,7 +94,7 @@ TEST(wrap, append_string_l2l_without_expand) {
   candy_wrap_set_string(&wrap, (char *)"wubba lubba", 11);
   EXPECT_EQ(wrap.size, 11);
   EXPECT_MEMEQ(candy_wrap_get_string(&wrap), (char *)"wubba lubba", wrap.size);
-  candy_wrap_append_string(&wrap, (char *)" dub", 4);
+  candy_wrap_append(&wrap, (char *)" dub", 4);
   EXPECT_EQ(wrap.size, 15);
   EXPECT_MEMEQ(candy_wrap_get_string(&wrap), (char *)"wubba lubba dub", wrap.size);
   candy_wrap_deinit(&wrap);
