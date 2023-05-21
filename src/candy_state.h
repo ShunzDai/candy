@@ -38,7 +38,8 @@ int candy_dofile(candy_state_t *self, const char name[]);
   */
 int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size);
 
-int candy_dump_global(candy_state_t *self, FILE *out);
+int candy_fprint_top(candy_state_t *self, FILE *out);
+int candy_fprint_global(candy_state_t *self, FILE *out);
 int candy_set_global(candy_state_t *self, const char name[]);
 int candy_get_global(candy_state_t *self, const char name[]);
 int candy_call(candy_state_t *self, int nargs, int nresults);
