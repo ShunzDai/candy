@@ -14,7 +14,6 @@
   * limitations under the License.
   */
 #include "src/candy_vm.h"
-#include "src/candy_io.h"
 #include "src/candy_table.h"
 #include "src/candy_block.h"
 #include "src/candy_lib.h"
@@ -24,8 +23,8 @@
 
 #define vm_assert(_condition, _format, ...) candy_assert(_condition, vm, _format, ##__VA_ARGS__)
 
-int candy_vm_init(candy_vm_t *self, candy_state_t *sta) {
-  self->sta = sta;
+int candy_vm_init(candy_vm_t *self) {
+  candy_io_init(&self->io);
   candy_wrap_set_table(&self->glb, NULL, 16);
   candy_wrap_set_wrap(&self->base, NULL, CANDY_DEFAULT_STACK_SIZE);
   return 0;
@@ -34,6 +33,7 @@ int candy_vm_init(candy_vm_t *self, candy_state_t *sta) {
 int candy_vm_deinit(candy_vm_t *self) {
   candy_wrap_deinit(&self->base);
   candy_wrap_deinit(&self->glb);
+  candy_io_deinit(&self->io);
   return 0;
 }
 
@@ -81,7 +81,7 @@ int candy_vm_get_global(candy_vm_t *self, const char name[]) {
 }
 
 int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
-  (*candy_wrap_get_builtin(candy_vm_pop(self)))(self->sta);
+  (*candy_wrap_get_builtin(candy_vm_pop(self)))((candy_state_t *)self);
   return 0;
 }
 

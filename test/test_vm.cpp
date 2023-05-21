@@ -14,11 +14,10 @@
   * limitations under the License.
   */
 #include "test_common.h"
-#include "src/candy_table.h"
-#include "src/candy_wrap.h"
+#include "src/candy_vm.h"
 
-TEST(table, init) {
-  candy_wrap_t wrap;
-  candy_wrap_set_table(&wrap, NULL, 16);
-  candy_wrap_deinit(&wrap);
+TEST(vm, call) {
+  candy_vm_t vm;
+  candy_vm_init(&vm);
+  candy_vm_deinit(&vm);
 }
