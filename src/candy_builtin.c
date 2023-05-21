@@ -24,9 +24,8 @@ int candy_builtin_exit(candy_state_t *self) {
 }
 
 int candy_builtin_print(candy_state_t *self) {
-  size_t size = 0;
-  const char *str = candy_pull_string(self, &size);
-  printf("%.*s\n", (int)size, str);
+  candy_fprint_top(self, stdout);
+  fprintf(stdout, "\n");
   return 0;
 }
 

@@ -35,6 +35,8 @@ static void _expr(candy_parser_t *self) {
       case ')':
         return;
       case TK_STRING:
+      case TK_INTEGER:
+      case TK_FLOAT:
         candy_block_add_const(self->head, candy_lexer_next(&self->lex));
         if (candy_lexer_lookahead(&self->lex) == ',')
           candy_lexer_next(&self->lex);

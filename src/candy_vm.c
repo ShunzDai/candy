@@ -37,8 +37,8 @@ int candy_vm_deinit(candy_vm_t *self) {
   return 0;
 }
 
-int candy_vm_dump_global(candy_vm_t *self, FILE *out) {
-  return candy_table_dump(&self->glb, out);
+int candy_vm_fprint_global(candy_vm_t *self, FILE *out) {
+  return candy_table_fprint(&self->glb, out);
 }
 
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
