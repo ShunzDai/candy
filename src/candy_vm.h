@@ -20,18 +20,20 @@ extern "C"{
 #endif /* __cplusplus */
 
 #include "src/candy_wrap.h"
+#include "src/candy_io.h"
 #include "src/candy_types.h"
 
 typedef struct candy_vm candy_vm_t;
 
 struct candy_vm {
-  candy_state_t *sta;
+  /* global input-output buffer */
+  candy_io_t io;
   candy_wrap_t glb;
   candy_wrap_t base;
   size_t top;
 };
 
-int candy_vm_init(candy_vm_t *self, candy_state_t *sta);
+int candy_vm_init(candy_vm_t *self);
 int candy_vm_deinit(candy_vm_t *self);
 
 int candy_vm_fprint_global(candy_vm_t *self, FILE *out);

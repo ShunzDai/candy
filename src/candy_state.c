@@ -14,7 +14,6 @@
   * limitations under the License.
   */
 #include "src/candy_state.h"
-#include "src/candy_io.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
 #include "src/candy_block.h"
@@ -23,23 +22,19 @@
 #include <string.h>
 
 struct candy_state {
-  /* global input-output buffer */
-  candy_io_t io;
   candy_vm_t vm;
   void *ud;
 };
 
 candy_state_t *candy_state_create(int argc, const char *argv[], void *ud) {
   candy_state_t *self = (candy_state_t *)calloc(1, sizeof(struct candy_state));
-  candy_io_init(&self->io);
-  candy_vm_init(&self->vm, self);
+  candy_vm_init(&self->vm);
   self->ud = ud;
   return self;
 }
 
 int candy_state_delete(candy_state_t **self) {
   candy_vm_deinit(&(*self)->vm);
-  candy_io_deinit(&(*self)->io);
   free(*self);
   *self = NULL;
   return 0;
@@ -47,7 +42,7 @@ int candy_state_delete(candy_state_t **self) {
 
 int candy_dostring(candy_state_t *self, const char exp[]) {
   struct str_info info = {exp, strlen(exp), 0};
-  candy_block_t *block = candy_parse(&self->io, string_reader, &info);
+  candy_block_t *block = candy_parse(&self->vm.io, string_reader, &info);
   if (block == NULL)
     return -1;
   candy_vm_execute(&self->vm, block);
@@ -63,7 +58,7 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
   struct file_info info = {f, size};
-  candy_block_t *block = candy_parse(&self->io, file_reader, &info);
+  candy_block_t *block = candy_parse(&self->vm.io, file_reader, &info);
   fclose(f);
   if (block == NULL)
     return -1;
