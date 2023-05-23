@@ -10,17 +10,17 @@ int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
   switch (self->type) {
     case TYPE_NULL:
       return fprintf(out, "%*s", align, "NA");
-    case TYPE_INTEGER:
+    case TYPE_integer:
       return fprintf(out, "%*" PRId64, align, *candy_wrap_get_integer(self));
-    case TYPE_FLOAT:
+    case TYPE_float:
       return fprintf(out, "%*f", align, *candy_wrap_get_float(self));
-    case TYPE_STRING:
+    case TYPE_string:
       return fprintf(out, "%*.*s", align, self->size, candy_wrap_get_string(self));
-    case TYPE_USERDEF:
-      return fprintf(out, "%*p", align, *candy_wrap_get_ud(self));
-    case TYPE_BUILTIN:
+    case TYPE_userdef:
+      return fprintf(out, "%*p", align, *candy_wrap_get_userdef(self));
+    case TYPE_builtin:
       return fprintf(out, "%*p", align, *candy_wrap_get_builtin(self));
-    case TYPE_TABLE:
+    case TYPE_table:
       return fprintf(out, "%*p", align, self);
     default:
       assert(0);
