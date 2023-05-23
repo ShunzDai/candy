@@ -8,7 +8,7 @@ const candy_wrap_t null = {{0}, {0, 0}};
 
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
   switch (self->type) {
-    case TYPE_NULL:
+    case TYPE_null:
       return fprintf(out, "%*s", align, "NA");
     case TYPE_integer:
       return fprintf(out, "%*" PRId64, align, *candy_wrap_get_integer(self));
