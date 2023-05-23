@@ -46,16 +46,16 @@ void state::global_fprint(FILE *out) {
 
 int state::add(const char name[], void *func, int (*wrap)(void *)) {
   const void *val[] = {func, (void *)wrap};
-  candy_push_ud((candy_state *)_csta, val, 2);
+  candy_push_userdef((candy_state *)_csta, val, 2);
   candy_set_global((candy_state *)_csta, name);
   return 0;
 }
 
 int state::ccall(const char name[], int nargs, int nresults) {
   candy_get_global((candy_state *)_csta, name);
-  const void **val = candy_pull_ud((candy_state_t *)_csta, nullptr);
+  const void **val = candy_pull_userdef((candy_state_t *)_csta, nullptr);
   const void *func = val[0], *wrap = val[1];
-  candy_push_ud((candy_state *)_csta, &func, 1);
+  candy_push_userdef((candy_state *)_csta, &func, 1);
   candy_push_builtin((candy_state *)_csta, (candy_builtin_t *)&wrap, 1);
   return candy_call((candy_state *)_csta, nargs, nresults);
 }
@@ -103,7 +103,7 @@ std::string state::pull_string(void) {
 
 const void *state::pull_ud(void) {
   printf("into %s\n", __FUNCTION__);
-  return *candy_pull_ud((candy_state_t *)_csta, nullptr);
+  return *candy_pull_userdef((candy_state_t *)_csta, nullptr);
 }
 
 }

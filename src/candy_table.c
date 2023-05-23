@@ -19,11 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct candy_pair {
-  candy_wrap_t key;
-  candy_wrap_t val;
-};
-
 static inline size_t _size(const candy_wrap_t *self) {
   return self->size;
 }
@@ -54,7 +49,7 @@ static inline size_t hash_string(const char str[], size_t size) {
 
 static size_t hash(const candy_wrap_t *key) {
   switch (key->type) {
-    case TYPE_STRING:
+    case TYPE_string:
       return hash_string(candy_wrap_get_string(key), key->size);
     default:
       return 0;
