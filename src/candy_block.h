@@ -27,6 +27,28 @@ typedef enum candy_opcodes {
   #include "src/candy_opcode.list"
 } candy_opcodes_t;
 
+typedef union candy_instruc {
+  struct {
+    uint32_t op :  6;
+    uint32_t    : 26;
+  };
+  struct {
+    uint32_t op :  6;
+    uint32_t  a : 26;
+  } iax;
+  struct {
+    uint32_t op :  6;
+    uint32_t  a :  8;
+    uint32_t  b : 18;
+  } iabx;
+  struct {
+    uint32_t op :  6;
+    uint32_t  a :  8;
+    uint32_t  b :  9;
+    uint32_t  c :  9;
+  } iabc;
+} candy_instruc_t;
+
 struct candy_block {
   candy_wrap_t pool;
   candy_wrap_t ins;

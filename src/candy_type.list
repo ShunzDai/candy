@@ -19,11 +19,11 @@
 
 #ifdef CANDY_TYPE
 CANDY_TYPE(NULL,    UINT_MAX)
-CANDY_TYPE(INSTRUC, sizeof(candy_instruc_t))
-CANDY_TYPE(INTEGER, sizeof(candy_integer_t))
-CANDY_TYPE(FLOAT,   sizeof(candy_float_t))
-CANDY_TYPE(BOOLEAN, sizeof(candy_boolean_t))
 CANDY_TYPE(STRING,  sizeof(char))
+CANDY_TYPE(UINT32,  sizeof(uint32_t))
+CANDY_TYPE(INTEGER, sizeof(candy_integer_t))
+CANDY_TYPE(BOOLEAN, sizeof(candy_boolean_t))
+CANDY_TYPE(FLOAT,   sizeof(candy_float_t))
 CANDY_TYPE(USERDEF, sizeof(void *))
 CANDY_TYPE(BUILTIN, sizeof(candy_builtin_t))
 CANDY_TYPE(WRAP,    sizeof(candy_wrap_t[1]))

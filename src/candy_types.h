@@ -31,34 +31,13 @@ extern "C"{
 #define CANDY_NORETURN
 #endif
 
-typedef union candy_instruc {
-  struct {
-    uint32_t op :  6;
-    uint32_t    : 26;
-  };
-  struct {
-    uint32_t op :  6;
-    uint32_t  a : 26;
-  } iax;
-  struct {
-    uint32_t op :  6;
-    uint32_t  a :  8;
-    uint32_t  b : 18;
-  } iabx;
-  struct {
-    uint32_t op :  6;
-    uint32_t  a :  8;
-    uint32_t  b :  9;
-    uint32_t  c :  9;
-  } iabc;
-} candy_instruc_t;
-
 typedef int64_t candy_integer_t;
 typedef double candy_float_t;
 typedef uint8_t candy_boolean_t;
 
 typedef struct candy_io candy_io_t;
 typedef struct candy_wrap candy_wrap_t;
+typedef struct candy_pair candy_pair_t;
 typedef struct candy_block candy_block_t;
 typedef struct candy_state candy_state_t;
 

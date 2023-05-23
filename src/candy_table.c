@@ -19,9 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct candy_node candy_node_t;
-
-struct candy_node {
+struct candy_pair {
   candy_wrap_t key;
   candy_wrap_t val;
 };
@@ -30,16 +28,16 @@ static inline size_t _size(const candy_wrap_t *self) {
   return self->size;
 }
 
-static inline candy_node_t *_head(const candy_wrap_t *self) {
-  return (candy_node_t *)candy_wrap_get_table(self);
+static inline candy_pair_t *_head(const candy_wrap_t *self) {
+  return (candy_pair_t *)candy_wrap_get_table(self);
 }
 
-static inline candy_node_t *_tail(const candy_wrap_t *self) {
+static inline candy_pair_t *_tail(const candy_wrap_t *self) {
   return _head(self) + _size(self) - 1;
 }
 
-static inline bool _boundary_check(candy_wrap_t *self, candy_node_t *node) {
-  return (size_t)(node - _head(self)) <= (_size(self) - 1);
+static inline bool _boundary_check(candy_wrap_t *self, candy_pair_t *pair) {
+  return (size_t)(pair - _head(self)) <= (_size(self) - 1);
 }
 
 static inline int32_t _get_next(int32_t now) {
@@ -63,7 +61,7 @@ static size_t hash(const candy_wrap_t *key) {
   }
 }
 
-static inline candy_node_t *main_position(candy_wrap_t *self, const candy_wrap_t *key) {
+static inline candy_pair_t *main_position(candy_wrap_t *self, const candy_wrap_t *key) {
   return _head(self) + hash(key) % _size(self);
 }
 
@@ -80,12 +78,12 @@ int candy_table_fprint(const candy_wrap_t *self, FILE *out) {
   };
   fprintf(out, "033[1;35m>>> table %p head\033[0m\n", self);
   fprintf(out, "pos  key-type         key-val  val-type         val-val\n");
-  for (candy_node_t *node = _head(self); node <= _tail(self); ++node) {
-    fprintf(out, "%3ld", node - _head(self));
-    fprintf(out, "%10s", type[node->key.type]);
-    candy_wrap_fprint(&node->key, out, 16);
-    fprintf(out, "%10s", type[node->val.type]);
-    candy_wrap_fprint(&node->val, out, 16);
+  for (candy_pair_t *pair = _head(self); pair <= _tail(self); ++pair) {
+    fprintf(out, "%3ld", pair - _head(self));
+    fprintf(out, "%10s", type[pair->key.type]);
+    candy_wrap_fprint(&pair->key, out, 16);
+    fprintf(out, "%10s", type[pair->val.type]);
+    candy_wrap_fprint(&pair->val, out, 16);
     fprintf(out, "\n");
   }
   fprintf(out, "\033[1;35m<<< table %p tail\033[0m\n", self);
@@ -93,27 +91,27 @@ int candy_table_fprint(const candy_wrap_t *self, FILE *out) {
 }
 
 const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key) {
-  candy_node_t *node = main_position(self, key);
-  for (int32_t next = 0; _boundary_check(self, node + next); next += _get_next(next)) {
-    if (equal(&(node + next)->key, key))
-      return &(node + next)->val;
-    else if ((node + next)->key.type == TYPE_NULL)
+  candy_pair_t *pair = main_position(self, key);
+  for (int32_t next = 0; _boundary_check(self, pair + next); next += _get_next(next)) {
+    if (equal(&(pair + next)->key, key))
+      return &(pair + next)->val;
+    else if ((pair + next)->key.type == TYPE_NULL)
       break;
   }
   return &null;
 }
 
 int candy_table_set(candy_wrap_t *self, const candy_wrap_t *key, const candy_wrap_t *val) {
-  candy_node_t *node = main_position(self, key);
-  for (int32_t next = 0; _boundary_check(self, node + next); next += _get_next(next)) {
-    switch ((node + next)->key.type) {
+  candy_pair_t *pair = main_position(self, key);
+  for (int32_t next = 0; _boundary_check(self, pair + next); next += _get_next(next)) {
+    switch ((pair + next)->key.type) {
       case TYPE_NULL:
-        (node + next)->key = *key;
-        (node + next)->val = *val;
+        (pair + next)->key = *key;
+        (pair + next)->val = *val;
         return 0;
       default:
-        if (equal(&(node + next)->key, key)) {
-          (node + next)->val = *val;
+        if (equal(&(pair + next)->key, key)) {
+          (pair + next)->val = *val;
           return 0;
         }
         break;
