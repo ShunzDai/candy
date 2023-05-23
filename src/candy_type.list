@@ -18,6 +18,7 @@
 #undef CANDY_TYPE_LIST
 
 #ifdef CANDY_TYPE
+CANDY_TYPE(null,    uint8_t)
 CANDY_TYPE(string,  char)
 CANDY_TYPE(integer, candy_integer_t)
 CANDY_TYPE(boolean, candy_boolean_t)

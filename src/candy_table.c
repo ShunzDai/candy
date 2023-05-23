@@ -90,7 +90,7 @@ const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key)
   for (int32_t next = 0; _boundary_check(self, pair + next); next += _get_next(next)) {
     if (equal(&(pair + next)->key, key))
       return &(pair + next)->val;
-    else if ((pair + next)->key.type == TYPE_NULL)
+    else if ((pair + next)->key.type == TYPE_null)
       break;
   }
   return &null;
@@ -100,7 +100,7 @@ int candy_table_set(candy_wrap_t *self, const candy_wrap_t *key, const candy_wra
   candy_pair_t *pair = main_position(self, key);
   for (int32_t next = 0; _boundary_check(self, pair + next); next += _get_next(next)) {
     switch ((pair + next)->key.type) {
-      case TYPE_NULL:
+      case TYPE_null:
         (pair + next)->key = *key;
         (pair + next)->val = *val;
         return 0;

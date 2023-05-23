@@ -24,7 +24,7 @@ int candy_builtin_exit(candy_state_t *self) {
 }
 
 int candy_builtin_print(candy_state_t *self) {
-  candy_fprint_top(self, stdout);
+  candy_fprint(self, candy_pull_wrap(self, NULL), stdout);
   fprintf(stdout, "\n");
   return 0;
 }
