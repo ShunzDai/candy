@@ -23,7 +23,6 @@ extern "C"{
 #include <assert.h>
 
 typedef enum candy_wraps {
-  TYPE_NULL,
 #define CANDY_TYPE_ENUM
 #include "src/candy_type.list"
 } candy_wraps_t;
@@ -59,7 +58,6 @@ int candy_wrap_deinit(candy_wrap_t *self);
 
 static inline size_t candy_wrap_sizeof(const candy_wrap_t *self) {
   static const size_t list[] = {
-    0,
   #define CANDY_TYPE_SIZE
   #include "src/candy_type.list"
   };
