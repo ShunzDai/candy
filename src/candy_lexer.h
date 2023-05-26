@@ -26,38 +26,40 @@ extern "C"{
 
 typedef enum candy_tokens {
   TK_EOS,
-  TK_LPAREN   =                  '(', /* (  */
-  TK_RPAREN   =                  ')', /* )  */
-  TK_COMMA    =                  ',', /* ,  */
-  TK_DOT      =                  '.', /* .  */
-  TK_COLON    =                  ':', /* :  */
-  TK_LBRACE   =                  '[', /* [  */
-  TK_RBRACE   =                  ']', /* ]  */
-  TK_BITAND   =                  '&', /* &  */
-  TK_BITOR    =                  '|', /* |  */
-  TK_BITNOT   =                  '~', /* ~  */
-  TK_BITXOR   =                  '^', /* ^  */
-  TK_MOD      =                  '%', /* %  */
-  TK_ADD      =                  '+', /* +  */
-  TK_SUB      =                  '-', /* -  */
-  TK_MUL      =                  '*', /* *  */
-  TK_DIV      =                  '/', /* /  */
-  TK_ASSIGN   =                  '=', /* =  */
-  TK_GREATER  =                  '>', /* >  */
-  TK_LESS     =                  '<', /* <  */
-  TK_EXP      = binary_ope('*', '*'), /* ** */
-  TK_FLRDIV   = binary_ope('/', '/'), /* // */
-  TK_MODASS   = binary_ope('%', '='), /* %= */
-  TK_NEQUAL   = binary_ope('!', '='), /* != */
-  TK_ADDASS   = binary_ope('+', '='), /* += */
-  TK_SUBASS   = binary_ope('-', '='), /* -= */
-  TK_MULASS   = binary_ope('*', '='), /* *= */
-  TK_DIVASS   = binary_ope('/', '='), /* /= */
-  TK_EQUAL    = binary_ope('=', '='), /* == */
-  TK_GEQUAL   = binary_ope('>', '='), /* >= */
-  TK_LEQUAL   = binary_ope('<', '='), /* <= */
-  TK_RSHIFT   = binary_ope('>', '>'), /* >> */
-  TK_LSHIFT   = binary_ope('<', '<'), /* << */
+  TK_PERCENT =                  '%', /* %  */
+  TK_AMPER   =                  '&', /* &  */
+  TK_LPAREN  =                  '(', /* (  */
+  TK_RPAREN  =                  ')', /* )  */
+  TK_ASTE    =                  '*', /* *  */
+  TK_PLUS    =                  '+', /* +  */
+  TK_COMMA   =                  ',', /* ,  */
+  TK_MINUS   =                  '-', /* -  */
+  TK_DOT     =                  '.', /* .  */
+  TK_SLASH   =                  '/', /* /  */
+  TK_COLON   =                  ':', /* :  */
+  TK_LESS    =                  '<', /* <  */
+  TK_ASSIGN  =                  '=', /* =  */
+  TK_GREATER =                  '>', /* >  */
+  TK_LSQUARE =                  '[', /* [  */
+  TK_RSQUARE =                  ']', /* ]  */
+  TK_CARET   =                  '^', /* ^  */
+  TK_LBRACE  =                  '{', /* {  */
+  TK_VERT    =                  '|', /* |  */
+  TK_RBRACE  =                  '}', /* }  */
+  TK_TILDE   =                  '~', /* ~  */
+  TK_NEQUAL  = binary_ope('!', '='), /* != */
+  TK_MODASS  = binary_ope('%', '='), /* %= */
+  TK_EXP     = binary_ope('*', '*'), /* ** */
+  TK_MULASS  = binary_ope('*', '='), /* *= */
+  TK_ADDASS  = binary_ope('+', '='), /* += */
+  TK_SUBASS  = binary_ope('-', '='), /* -= */
+  TK_FLRDIV  = binary_ope('/', '/'), /* // */
+  TK_DIVASS  = binary_ope('/', '='), /* /= */
+  TK_LSHIFT  = binary_ope('<', '<'), /* << */
+  TK_LEQUAL  = binary_ope('<', '='), /* <= */
+  TK_EQUAL   = binary_ope('=', '='), /* == */
+  TK_GEQUAL  = binary_ope('>', '='), /* >= */
+  TK_RSHIFT  = binary_ope('>', '>'), /* >> */
   TK_INTEGER,
   TK_FLOAT,
   TK_STRING,
@@ -76,9 +78,6 @@ struct candy_lexer {
     uint16_t column;
   } dbg;
 #endif /* CANDY_DEBUG_MODE */
-  struct {
-    uint8_t type;
-  } indent;
   struct {
     candy_tokens_t token;
     candy_wrap_t wrap;

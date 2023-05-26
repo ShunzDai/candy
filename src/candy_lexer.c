@@ -363,7 +363,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
           goto binary;
       /* 'o' */
       case '&': case '|': case '~': case '^':
-      case '(': case ')': case '[': case ']':
+      case '(': case ')': case '[': case ']': case '{': case '}':
       case ',': case ':':
         return _read(self);
       case '.':
