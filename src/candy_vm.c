@@ -21,7 +21,18 @@
 #include <string.h>
 #include <assert.h>
 
-#define vm_assert(_condition, _format, ...) candy_assert(_condition, vm, _format, ##__VA_ARGS__)
+#define vm_assert(_condition, _format, ...) candy_assert((candy_io_t *)(self), _condition, vm, _format, ##__VA_ARGS__)
+
+static void execute(candy_vm_t *self, candy_block_t *block) {
+  for (const candy_instruc_t *ins = (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins); (size_t)(ins - (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins)) < (size_t)block->ins.size; ++ins) {
+    switch (ins->op) {
+      #define CANDY_OP_CASE
+      #include "src/candy_opcode.list"
+      default:
+      break;
+    }
+  }
+}
 
 int candy_vm_init(candy_vm_t *self) {
   candy_io_init(&self->io);
@@ -86,13 +97,5 @@ int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
 }
 
 int candy_vm_execute(candy_vm_t *self, candy_block_t *block) {
-  for (const candy_instruc_t *ins = (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins); (size_t)(ins - (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins)) < (size_t)block->ins.size; ++ins) {
-    switch (ins->op) {
-      #define CANDY_OP_CASE
-      #include "src/candy_opcode.list"
-      default:
-      break;
-    }
-  }
-  return 0;
+  return candy_io_try_catch(&self->io, (candy_try_catch_cb_t)execute, self, block);
 }

@@ -29,6 +29,7 @@ CANDY_OP(GETTABUP,
 )
 
 CANDY_OP(CALL,
+  vm_assert(candy_wrap_get_wrap(&self->base)[self->top - 1].type == TYPE_builtin, "type '%s' is not callable", candy_wrap_typestr(&candy_wrap_get_wrap(&self->base)[self->top - 1]));
   (*candy_wrap_get_builtin(candy_vm_pop(self)))((candy_state_t *)self);
   break;
 )
