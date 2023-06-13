@@ -20,7 +20,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define lex_assert(_condition, _format, ...) candy_assert(_condition, lexical, _format, ##__VA_ARGS__)
+#define lex_assert(_condition, _format, ...) candy_assert(*(candy_io_t **)(self), _condition, lexical, _format, ##__VA_ARGS__)
 
 static inline char *_buff(candy_lexer_t *self) {
   return (char *)candy_wrap_get_string(&self->io->buff);
