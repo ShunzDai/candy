@@ -56,6 +56,14 @@ void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size);
 void candy_wrap_init(candy_wrap_t *self);
 int candy_wrap_deinit(candy_wrap_t *self);
 
+static inline const char *candy_wrap_typestr(const candy_wrap_t *self) {
+  static const char *list[] = {
+  #define CANDY_TYPE_STR
+  #include "src/candy_type.list"
+  };
+  return list[self->type];
+}
+
 static inline size_t candy_wrap_sizeof(const candy_wrap_t *self) {
   static const size_t list[] = {
   #define CANDY_TYPE_SIZE
