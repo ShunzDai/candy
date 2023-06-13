@@ -27,7 +27,7 @@ extern "C"{
 #error "default io buffer size is too small"
 #endif /* CANDY_DEFAULT_IO_SIZE */
 
-#define candy_assert(_condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_io_throw(*(candy_io_t **)(self), #_type " error: " _format, ##__VA_ARGS__))
+#define candy_assert(_self, _condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_io_throw((_self), #_type " error: " _format, ##__VA_ARGS__))
 
 struct candy_io {
   candy_wrap_t buff;
