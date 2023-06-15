@@ -65,6 +65,10 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   return 0;
 }
 
+const char *candy_error(candy_state_t *self) {
+  return candy_wrap_get_string(&self->vm.io.buff);
+}
+
 int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size) {
   return candy_vm_builtin(&self->vm, list, size);
 }
