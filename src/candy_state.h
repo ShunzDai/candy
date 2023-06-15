@@ -28,6 +28,8 @@ int candy_dostring(candy_state_t *self, const char exp[]);
 
 int candy_dofile(candy_state_t *self, const char name[]);
 
+const char *candy_error(candy_state_t *self);
+
 /**
   * @brief  register builtin-function into a object.
   * @param  self  candy state handle.
