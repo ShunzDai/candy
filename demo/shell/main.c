@@ -13,21 +13,23 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy.h"
-#include "mid_os.h"
-#include <iostream>
-#include <string.h>
+#include "src/candy_state.h"
+#include "src/candy_builtin.h"
+#include "readline/readline.h"
+#include <stdlib.h>
 
 int main(int argc, const char *argv[]) {
-  candy::state state(argc, argv);
+  candy_state_t *state = candy_state_create(argc, argv, NULL);
+  candy_add_builtin(state, candy_builtin_list, candy_builtin_size);
   if (argc > 1)
-    return state.dofile(argv[1]);
+    return candy_dofile(state, argv[1]);
   printf("candy (%s, %s)\ntype 'exit()' to quit\n", __DATE__, __TIME__);
   while (1) {
-    std::string line;
-    printf(">>> ");
-    std::getline(std::cin, line);
-    state.dostring(line.c_str());
+    char *line = readline(">>> ");
+    if (candy_dostring(state, line) != 0)
+      printf("%s\n", candy_error(state));
+    free(line);
+    line = NULL;
   }
   /* it will never get here */
   abort();
