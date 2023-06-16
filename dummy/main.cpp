@@ -1,4 +1,3 @@
-#include "mid_os.h"
 #include "candy.h"
 #include "src/candy_lib.h"
 #include <stdint.h>

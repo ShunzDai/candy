@@ -1,6 +1,3 @@
 [submodule "components/googletest"]
   path = components/googletest
   url = https://github.com/google/googletest.git
-[submodule "components/middleware/mid_os"]
-  path = components/middleware/mid_os
-  url = git@gitee.com:ShunzDai/mid_os.git

@@ -17,7 +17,6 @@
 #include "src/candy_io.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
-#include "mid_os.h"
 
 #define PARSER_TEST(_name, _exp) TEST(parser, _name) {test_body(_exp);}
 
