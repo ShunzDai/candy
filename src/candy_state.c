@@ -97,5 +97,80 @@ void *candy_ud(candy_state_t *self) {
   return self->ud;
 }
 
-#define CANDY_TYPE_STATE_IMPL
-#include "src/candy_type.list"
+void candy_push_integer(candy_state_t *self, const candy_integer_t val[], size_t size) {
+  candy_wrap_t wrap;
+  candy_wrap_set_integer(&wrap, val, size);
+  candy_vm_push(&self->vm, &wrap);
+}
+
+void candy_push_float(candy_state_t *self, const candy_float_t val[], size_t size) {
+  candy_wrap_t wrap;
+  candy_wrap_set_float(&wrap, val, size);
+  candy_vm_push(&self->vm, &wrap);
+}
+
+void candy_push_boolean(candy_state_t *self, const candy_boolean_t val[], size_t size) {
+  candy_wrap_t wrap;
+  candy_wrap_set_boolean(&wrap, val, size);
+  candy_vm_push(&self->vm, &wrap);
+}
+
+void candy_push_string(candy_state_t *self, const char val[], size_t size) {
+  candy_wrap_t wrap;
+  candy_wrap_set_string(&wrap, val, size);
+  candy_vm_push(&self->vm, &wrap);
+}
+
+void candy_push_ud(candy_state_t *self, const void *val[], size_t size) {
+  candy_wrap_t wrap;
+  candy_wrap_set_ud(&wrap, val, size);
+  candy_vm_push(&self->vm, &wrap);
+}
+
+void candy_push_builtin(candy_state_t *self, const candy_builtin_t val[], size_t size) {
+  candy_wrap_t wrap;
+  candy_wrap_set_builtin(&wrap, val, size);
+  candy_vm_push(&self->vm, &wrap);
+}
+
+const candy_integer_t *candy_pull_integer(candy_state_t *self, size_t *size) {
+  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
+  if (size)
+    *size = wrap->size;
+  return candy_wrap_get_integer(wrap);
+}
+
+const candy_float_t *candy_pull_float(candy_state_t *self, size_t *size) {
+  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
+  if (size)
+    *size = wrap->size;
+  return candy_wrap_get_float(wrap);
+}
+
+const candy_boolean_t *candy_pull_boolean(candy_state_t *self, size_t *size) {
+  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
+  if (size)
+    *size = wrap->size;
+  return candy_wrap_get_boolean(wrap);
+}
+
+const char *candy_pull_string(candy_state_t *self, size_t *size) {
+  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
+  if (size)
+    *size = wrap->size;
+  return candy_wrap_get_string(wrap);
+}
+
+const void **candy_pull_ud(candy_state_t *self, size_t *size) {
+  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
+  if (size)
+    *size = wrap->size;
+  return candy_wrap_get_ud(wrap);
+}
+
+const candy_builtin_t *candy_pull_builtin(candy_state_t *self, size_t *size) {
+  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
+  if (size)
+    *size = wrap->size;
+  return candy_wrap_get_builtin(wrap);
+}
