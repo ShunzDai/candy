@@ -48,10 +48,22 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
       EXPECT_EQ(ud.wrap.size, val.size());
       EXPECT_EQ(memcmp(str, val.data(), val.size()), 0);
     }
-    else if constexpr (std::is_integral<decltype(val)>::value) {
+    else if constexpr (
+      std::is_same<decltype(val),   int8_t>::value ||
+      std::is_same<decltype(val),  int16_t>::value ||
+      std::is_same<decltype(val),  int32_t>::value ||
+      std::is_same<decltype(val),  int64_t>::value ||
+      std::is_same<decltype(val),  uint8_t>::value ||
+      std::is_same<decltype(val), uint16_t>::value ||
+      std::is_same<decltype(val), uint32_t>::value ||
+      std::is_same<decltype(val), uint64_t>::value
+    ) {
       EXPECT_EQ(*candy_wrap_get_integer(&ud.wrap), val);
     }
-    else if constexpr (std::is_floating_point<decltype(val)>::value) {
+    else if constexpr (
+      std::is_same<decltype(val),  float>::value ||
+      std::is_same<decltype(val), double>::value
+    ) {
       EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&ud.wrap), val);
     }
     else {
