@@ -17,7 +17,6 @@
 #include "src/candy_io.h"
 #include "src/candy_lexer.h"
 #include "src/candy_reader.h"
-#include "mid_os.h"
 #include <string>
 
 #define TEST_LEXER(_name, _token, _exp, ...) TEST(lexer, _name) {tast_body(_token, _exp __VA_OPT__(,) __VA_ARGS__);}
