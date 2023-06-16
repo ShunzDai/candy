@@ -19,6 +19,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct candy_pair {
+  candy_wrap_t key;
+  candy_wrap_t val;
+};
+
 static inline size_t _size(const candy_wrap_t *self) {
   return self->size;
 }
@@ -49,7 +54,7 @@ static inline size_t hash_string(const char str[], size_t size) {
 
 static size_t hash(const candy_wrap_t *key) {
   switch (key->type) {
-    case TYPE_string:
+    case TYPE_STRING:
       return hash_string(candy_wrap_get_string(key), key->size);
     default:
       return 0;
@@ -86,7 +91,7 @@ const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key)
   for (int32_t next = 0; _boundary_check(self, pair + next); next += _get_next(next)) {
     if (equal(&(pair + next)->key, key))
       return &(pair + next)->val;
-    else if ((pair + next)->key.type == TYPE_null)
+    else if ((pair + next)->key.type == TYPE_NULL)
       break;
   }
   return &null;
@@ -96,7 +101,7 @@ int candy_table_set(candy_wrap_t *self, const candy_wrap_t *key, const candy_wra
   candy_pair_t *pair = main_position(self, key);
   for (int32_t next = 0; _boundary_check(self, pair + next); next += _get_next(next)) {
     switch ((pair + next)->key.type) {
-      case TYPE_null:
+      case TYPE_NULL:
         (pair + next)->key = *key;
         (pair + next)->val = *val;
         return 0;
