@@ -101,9 +101,9 @@ static inline const void **candy_wrap_get_ud(const candy_wrap_t *self) {
   return (const void **)candy_wrap_get_data(self);
 }
 
-static inline const candy_builtin_t *candy_wrap_get_builtin(const candy_wrap_t *self) {
-  assert(self->type == TYPE_BUILTIN);
-  return (const candy_builtin_t *)candy_wrap_get_data(self);
+static inline const candy_cfunc_t *candy_wrap_get_cfunc(const candy_wrap_t *self) {
+  assert(self->type == TYPE_CFUNC);
+  return (const candy_cfunc_t *)candy_wrap_get_data(self);
 }
 
 static inline const candy_wrap_t *candy_wrap_get_wrap(const candy_wrap_t *self) {
@@ -144,8 +144,8 @@ static inline void candy_wrap_set_ud(candy_wrap_t *self, const void **val, size_
   candy_wrap_set_data(self, TYPE_USERDEF, val, size);
 }
 
-static inline void candy_wrap_set_builtin(candy_wrap_t *self, const candy_builtin_t *val, size_t size) {
-  candy_wrap_set_data(self, TYPE_BUILTIN, val, size);
+static inline void candy_wrap_set_cfunc(candy_wrap_t *self, const candy_cfunc_t *val, size_t size) {
+  candy_wrap_set_data(self, TYPE_CFUNC, val, size);
 }
 
 static inline void candy_wrap_set_wrap(candy_wrap_t *self, const candy_wrap_t *val, size_t size) {

@@ -82,7 +82,7 @@ int candy_table_fprint(const candy_wrap_t *self, FILE *out) {
     candy_wrap_fprint(&pair->val, out, 16, candy_table_fprint);
     fprintf(out, "\n");
   }
-  fprintf(out, "\033[1;35m<<< table %p tail\033[0m\n", self);
+  fprintf(out, "\033[1;35m<<< table %p tail\033[0m", self);
   return 0;
 }
 

@@ -18,8 +18,8 @@ int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align, int (table
       return fprintf(out, "%*.*s", align, self->size, candy_wrap_get_string(self));
     case TYPE_USERDEF:
       return fprintf(out, "%*p", align, *candy_wrap_get_ud(self));
-    case TYPE_BUILTIN:
-      return fprintf(out, "%*p", align, *candy_wrap_get_builtin(self));
+    case TYPE_CFUNC:
+      return fprintf(out, "%*p", align, *candy_wrap_get_cfunc(self));
     case TYPE_TABLE:
       return table_fprint ? table_fprint(self, out) : fprintf(out, "%*p", align, self);
     default:

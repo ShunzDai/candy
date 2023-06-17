@@ -42,7 +42,10 @@ int candy_state_delete(candy_state_t **self) {
 
 int candy_dostring(candy_state_t *self, const char exp[]) {
   struct str_info info = {exp, strlen(exp), 0};
-  return candy_vm_execute(&self->vm, candy_parse(&self->vm.io, string_reader, &info));
+  candy_block_t *block = candy_parse(&self->vm.io, string_reader, &info);
+  if (block == NULL)
+    return -1;
+  return candy_vm_execute(&self->vm, block);
 }
 
 int candy_dofile(candy_state_t *self, const char name[]) {
@@ -57,15 +60,15 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   fclose(f);
   if (block == NULL)
     return -1;
-  return 0;
+  return candy_vm_execute(&self->vm, block);
 }
 
 const char *candy_error(candy_state_t *self) {
   return candy_wrap_get_string(&self->vm.io.buff);
 }
 
-int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size) {
-  return candy_vm_builtin(&self->vm, list, size);
+int candy_add_cfunc(candy_state_t *self, const candy_regist_t list[], size_t size) {
+  return candy_vm_cfunc(&self->vm, list, size);
 }
 
 int candy_fprint(candy_state_t *self, FILE *out) {
@@ -118,9 +121,9 @@ void candy_push_ud(candy_state_t *self, const void *val[], size_t size) {
   candy_vm_push(&self->vm, &wrap);
 }
 
-void candy_push_builtin(candy_state_t *self, const candy_builtin_t val[], size_t size) {
+void candy_push_cfunc(candy_state_t *self, const candy_cfunc_t val[], size_t size) {
   candy_wrap_t wrap;
-  candy_wrap_set_builtin(&wrap, val, size);
+  candy_wrap_set_cfunc(&wrap, val, size);
   candy_vm_push(&self->vm, &wrap);
 }
 
@@ -159,9 +162,9 @@ const void **candy_pull_ud(candy_state_t *self, size_t *size) {
   return candy_wrap_get_ud(wrap);
 }
 
-const candy_builtin_t *candy_pull_builtin(candy_state_t *self, size_t *size) {
+const candy_cfunc_t *candy_pull_cfunc(candy_state_t *self, size_t *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
     *size = wrap->size;
-  return candy_wrap_get_builtin(wrap);
+  return candy_wrap_get_cfunc(wrap);
 }
