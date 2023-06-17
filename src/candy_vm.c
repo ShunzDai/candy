@@ -65,11 +65,11 @@ const candy_wrap_t *candy_vm_pop(candy_vm_t *self) {
 }
 
 
-int candy_vm_builtin(candy_vm_t *self, candy_regist_t list[], size_t size) {
+int candy_vm_cfunc(candy_vm_t *self, const candy_regist_t list[], size_t size) {
   for (size_t idx = 0; idx < size; ++idx) {
     candy_wrap_t key = {0}, val = {0};
     candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name));
-    candy_wrap_set_builtin(&val, &list[idx].func, 1);
+    candy_wrap_set_cfunc(&val, &list[idx].func, 1);
     candy_table_set(&self->glb, &key, &val);
   }
   return 0;
@@ -92,7 +92,7 @@ int candy_vm_get_global(candy_vm_t *self, const char name[]) {
 }
 
 int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
-  (*candy_wrap_get_builtin(candy_vm_pop(self)))((candy_state_t *)self);
+  (*candy_wrap_get_cfunc(candy_vm_pop(self)))((candy_state_t *)self);
   return 0;
 }
 

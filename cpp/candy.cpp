@@ -21,7 +21,7 @@ namespace candy {
 
 state::state(int argc, const char *argv[]) :
 _csta((void *)candy_state_create(argc, argv, this)) {
-  candy_add_builtin((candy_state *)_csta, candy_builtin_list, candy_builtin_size);
+  candy_add_cfunc((candy_state *)_csta, candy_builtin_list, candy_builtin_size);
 }
 
 state::~state() {
@@ -52,7 +52,7 @@ int state::ccall(const char name[], int nargs, int nresults) {
   const void **val = candy_pull_ud((candy_state_t *)_csta, nullptr);
   const void *func = val[0], *wrap = val[1];
   candy_push_ud((candy_state *)_csta, &func, 1);
-  candy_push_builtin((candy_state *)_csta, (candy_builtin_t *)&wrap, 1);
+  candy_push_cfunc((candy_state *)_csta, (candy_cfunc_t *)&wrap, 1);
   return candy_call((candy_state *)_csta, nargs, nresults);
 }
 

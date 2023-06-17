@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "src/candy_builtin.h"
-#include "src/candy_state.h"
+#include "src/candy_vm.h"
 #include "src/candy_lib.h"
 #include <stdlib.h>
 
@@ -24,14 +24,15 @@ int candy_builtin_exit(candy_state_t *self) {
 }
 
 int candy_builtin_print(candy_state_t *self) {
-  candy_fprint(self, stdout);
+  candy_vm_t *vm = (candy_vm_t *)self;
+  candy_vm_fprint(vm, stdout);
   fprintf(stdout, "\n");
   return 0;
 }
 
-candy_regist_t candy_builtin_list[] = {
-  {"exit", candy_builtin_exit},
+const candy_regist_t candy_builtin_list[] = {
+  {"exit" , candy_builtin_exit },
   {"print", candy_builtin_print},
 };
 
-size_t candy_builtin_size = candy_lengthof(candy_builtin_list);
+const size_t candy_builtin_size = candy_lengthof(candy_builtin_list);

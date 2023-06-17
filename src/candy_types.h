@@ -44,13 +44,13 @@ typedef struct candy_state candy_state_t;
 typedef int (*candy_reader_t)(char *, const size_t, void *);
 
 /**
-  * @brief builtin-function
+  * @brief c-type function
   */
-typedef int (*candy_builtin_t)(candy_state_t *);
+typedef int (*candy_cfunc_t)(candy_state_t *);
 
 struct candy_regist {
   const char *name;
-  candy_builtin_t func;
+  const candy_cfunc_t func;
 };
 
 typedef struct candy_regist candy_regist_t;

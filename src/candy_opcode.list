@@ -29,8 +29,8 @@ CANDY_OP(GETTABUP,
 )
 
 CANDY_OP(CALL,
-  vm_assert(candy_wrap_get_wrap(&self->base)[self->top - 1].type == TYPE_BUILTIN, "type '%s' is not callable", candy_wrap_typestr(&candy_wrap_get_wrap(&self->base)[self->top - 1]));
-  (*candy_wrap_get_builtin(candy_vm_pop(self)))((candy_state_t *)self);
+  vm_assert(candy_wrap_get_wrap(&self->base)[self->top - 1].type == TYPE_CFUNC, "type '%s' is not callable", candy_wrap_typestr(&candy_wrap_get_wrap(&self->base)[self->top - 1]));
+  (*candy_wrap_get_cfunc(candy_vm_pop(self)))((candy_state_t *)self);
   break;
 )
 #endif /* CANDY_OP */
