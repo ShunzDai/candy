@@ -72,14 +72,14 @@ static bool equal(const candy_wrap_t *keyl, const candy_wrap_t *keyr) {
 }
 
 int candy_table_fprint(const candy_wrap_t *self, FILE *out) {
-  fprintf(out, "033[1;35m>>> table %p head\033[0m\n", self);
+  fprintf(out, "\033[1;35m>>> table %p head\033[0m\n", self);
   fprintf(out, "pos  key-type         key-val  val-type         val-val\n");
   for (candy_pair_t *pair = _head(self); pair <= _tail(self); ++pair) {
     fprintf(out, "%3ld", pair - _head(self));
     fprintf(out, "%10s", candy_wrap_typestr(&pair->key));
-    candy_wrap_fprint(&pair->key, out, 16);
+    candy_wrap_fprint(&pair->key, out, 16, candy_table_fprint);
     fprintf(out, "%10s", candy_wrap_typestr(&pair->val));
-    candy_wrap_fprint(&pair->val, out, 16);
+    candy_wrap_fprint(&pair->val, out, 16, candy_table_fprint);
     fprintf(out, "\n");
   }
   fprintf(out, "\033[1;35m<<< table %p tail\033[0m\n", self);
