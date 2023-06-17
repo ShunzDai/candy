@@ -6,7 +6,7 @@
 
 const candy_wrap_t null = {{0}, {0, 0}};
 
-int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
+int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align, int (table_fprint)(const candy_wrap_t *, FILE *)) {
   switch (self->type) {
     case TYPE_NULL:
       return fprintf(out, "%*s", align, "NA");
@@ -21,7 +21,7 @@ int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
     case TYPE_BUILTIN:
       return fprintf(out, "%*p", align, *candy_wrap_get_builtin(self));
     case TYPE_TABLE:
-      return fprintf(out, "%*p", align, self);
+      return table_fprint ? table_fprint(self, out) : fprintf(out, "%*p", align, self);
     default:
       assert(0);
       return 0;

@@ -42,7 +42,7 @@ struct candy_wrap {
 
 extern const candy_wrap_t null;
 
-int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align);
+int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align, int (table_fprint)(const candy_wrap_t *, FILE *));
 
 void *candy_wrap_get_data(const candy_wrap_t *self);
 void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, size_t size);

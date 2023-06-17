@@ -48,8 +48,8 @@ int candy_vm_deinit(candy_vm_t *self) {
   return 0;
 }
 
-int candy_vm_fprint_global(candy_vm_t *self, FILE *out) {
-  return candy_table_fprint(&self->glb, out);
+int candy_vm_fprint(candy_vm_t *self, FILE *out) {
+  return candy_wrap_fprint(candy_vm_pop(self), out, 0, candy_table_fprint);
 }
 
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
@@ -97,5 +97,7 @@ int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
 }
 
 int candy_vm_execute(candy_vm_t *self, candy_block_t *block) {
-  return candy_io_try_catch(&self->io, (candy_try_catch_cb_t)execute, self, block);
+  vm_assert(block, "code is not executable");
+  candy_io_try_catch(&self->io, (candy_try_catch_cb_t)execute, self, block);
+  return 0;
 }

@@ -40,10 +40,6 @@ int state::dofile(const char path[]) {
   return candy_dofile((candy_state *)_csta, path);
 }
 
-void state::global_fprint(FILE *out) {
-  candy_fprint_global((candy_state *)_csta, out);
-}
-
 int state::add(const char name[], void *func, int (*wrap)(void *)) {
   const void *val[] = {func, (void *)wrap};
   candy_push_ud((candy_state *)_csta, val, 2);
