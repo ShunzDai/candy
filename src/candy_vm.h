@@ -36,7 +36,7 @@ struct candy_vm {
 int candy_vm_init(candy_vm_t *self);
 int candy_vm_deinit(candy_vm_t *self);
 
-int candy_vm_fprint_global(candy_vm_t *self, FILE *out);
+int candy_vm_fprint(candy_vm_t *self, FILE *out);
 
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap);
 const candy_wrap_t *candy_vm_pop(candy_vm_t *self);

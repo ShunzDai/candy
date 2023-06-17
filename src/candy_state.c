@@ -42,12 +42,7 @@ int candy_state_delete(candy_state_t **self) {
 
 int candy_dostring(candy_state_t *self, const char exp[]) {
   struct str_info info = {exp, strlen(exp), 0};
-  candy_block_t *block = candy_parse(&self->vm.io, string_reader, &info);
-  if (block == NULL)
-    return -1;
-  candy_vm_execute(&self->vm, block);
-  candy_block_delete(&block);
-  return 0;
+  return candy_vm_execute(&self->vm, candy_parse(&self->vm.io, string_reader, &info));
 }
 
 int candy_dofile(candy_state_t *self, const char name[]) {
@@ -73,12 +68,8 @@ int candy_add_builtin(candy_state_t *self, candy_regist_t list[], size_t size) {
   return candy_vm_builtin(&self->vm, list, size);
 }
 
-int candy_fprint(candy_state_t *self, const candy_wrap_t *wrap, FILE *out) {
-  return candy_wrap_fprint(wrap, out, -1);
-}
-
-int candy_fprint_global(candy_state_t *self, FILE *out) {
-  return candy_vm_fprint_global(&self->vm, out);
+int candy_fprint(candy_state_t *self, FILE *out) {
+  return candy_vm_fprint(&self->vm, out);
 }
 
 int candy_set_global(candy_state_t *self, const char name[]) {
