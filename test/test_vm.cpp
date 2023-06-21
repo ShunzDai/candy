@@ -17,7 +17,7 @@
 #include "src/candy_vm.h"
 
 TEST(vm, call) {
-  candy_vm_t vm;
+  candy_vm_t vm{};
   candy_vm_init(&vm);
   candy_vm_deinit(&vm);
 }
