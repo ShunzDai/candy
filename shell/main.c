@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 int main(int argc, const char *argv[]) {
-  candy_state_t *state = candy_state_create(argc, argv, NULL);
+  candy_state_t *state = candy_state_create(argc, argv);
   candy_add_cfunc(state, candy_builtin_list, candy_builtin_size);
   if (argc > 1)
     return candy_dofile(state, argv[1]);
