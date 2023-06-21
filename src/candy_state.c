@@ -23,13 +23,11 @@
 
 struct candy_state {
   candy_vm_t vm;
-  void *ud;
 };
 
-candy_state_t *candy_state_create(int argc, const char *argv[], void *ud) {
+candy_state_t *candy_state_create(int argc, const char *argv[]) {
   candy_state_t *self = (candy_state_t *)calloc(1, sizeof(struct candy_state));
   candy_vm_init(&self->vm);
-  self->ud = ud;
   return self;
 }
 
@@ -85,10 +83,6 @@ int candy_get_global(candy_state_t *self, const char name[]) {
 
 int candy_call(candy_state_t *self, int nargs, int nresults) {
   return candy_vm_call(&self->vm, nargs, nresults);
-}
-
-void *candy_ud(candy_state_t *self) {
-  return self->ud;
 }
 
 void candy_push_integer(candy_state_t *self, const candy_integer_t val[], size_t size) {
