@@ -17,7 +17,6 @@
 #include "src/candy_lib.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include <stdlib.h>
 #include <string.h>
 
 static int _vsnprint(candy_io_t *self, const char format[], va_list ap) {
