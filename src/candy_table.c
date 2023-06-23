@@ -24,7 +24,7 @@ struct candy_pair {
 };
 
 static inline int _size(const candy_wrap_t *self) {
-  return self->size;
+  return candy_wrap_size(self);
 }
 
 static inline candy_pair_t *_head(const candy_wrap_t *self) {
@@ -52,9 +52,9 @@ static inline int hash_string(const char str[], int size) {
 }
 
 static int hash(const candy_wrap_t *key) {
-  switch (key->type) {
+  switch (candy_wrap_type(key)) {
     case TYPE_STRING:
-      return hash_string(candy_wrap_get_string(key), key->size);
+      return hash_string(candy_wrap_get_string(key), candy_wrap_size(key));
     default:
       return 0;
   }
@@ -67,7 +67,7 @@ static inline candy_pair_t *main_position(candy_wrap_t *self, const candy_wrap_t
 static bool equal(const candy_wrap_t *keyl, const candy_wrap_t *keyr) {
   if (keyl->mask != keyr->mask)
     return false;
-  return memcmp(candy_wrap_get_data(keyl), candy_wrap_get_data(keyr), keyl->size * candy_wrap_sizeof(keyl)) == 0;
+  return memcmp(candy_wrap_get_data(keyl), candy_wrap_get_data(keyr), candy_wrap_size(keyl) * candy_wrap_sizeof(keyl)) == 0;
 }
 
 int candy_table_fprint(const candy_wrap_t *self, FILE *out) {
@@ -90,7 +90,7 @@ const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key)
   for (int32_t next = 0; _boundary_check(self, pair + next); next += _get_next(next)) {
     if (equal(&(pair + next)->key, key))
       return &(pair + next)->val;
-    else if ((pair + next)->key.type == TYPE_NULL)
+    else if (candy_wrap_type(&(pair + next)->key) == TYPE_NULL)
       break;
   }
   return &null;
@@ -99,7 +99,7 @@ const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key)
 int candy_table_set(candy_wrap_t *self, const candy_wrap_t *key, const candy_wrap_t *val) {
   candy_pair_t *pair = main_position(self, key);
   for (int32_t next = 0; _boundary_check(self, pair + next); next += _get_next(next)) {
-    switch ((pair + next)->key.type) {
+    switch (candy_wrap_type(&(pair + next)->key)) {
       case TYPE_NULL:
         (pair + next)->key = *key;
         (pair + next)->val = *val;

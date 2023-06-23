@@ -124,41 +124,41 @@ void candy_push_cfunc(candy_state_t *self, const candy_cfunc_t val[], int size) 
 const candy_integer_t *candy_pull_integer(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
-    *size = wrap->size;
+    *size = candy_wrap_size(wrap);
   return candy_wrap_get_integer(wrap);
 }
 
 const candy_float_t *candy_pull_float(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
-    *size = wrap->size;
+    *size = candy_wrap_size(wrap);
   return candy_wrap_get_float(wrap);
 }
 
 const candy_boolean_t *candy_pull_boolean(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
-    *size = wrap->size;
+    *size = candy_wrap_size(wrap);
   return candy_wrap_get_boolean(wrap);
 }
 
 const char *candy_pull_string(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
-    *size = wrap->size;
+    *size = candy_wrap_size(wrap);
   return candy_wrap_get_string(wrap);
 }
 
 const void **candy_pull_ud(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
-    *size = wrap->size;
+    *size = candy_wrap_size(wrap);
   return candy_wrap_get_ud(wrap);
 }
 
 const candy_cfunc_t *candy_pull_cfunc(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
-    *size = wrap->size;
+    *size = candy_wrap_size(wrap);
   return candy_wrap_get_cfunc(wrap);
 }
