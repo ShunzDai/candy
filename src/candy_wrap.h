@@ -111,8 +111,8 @@ static inline const candy_wrap_t *candy_wrap_get_wrap(const candy_wrap_t *self) 
   return (const candy_wrap_t *)candy_wrap_get_data(self);
 }
 
-static inline const candy_pair_t *candy_wrap_get_table(const candy_wrap_t *self) {
-  assert(self->type == TYPE_TABLE);
+static inline const candy_pair_t *candy_wrap_get_pair(const candy_wrap_t *self) {
+  assert(self->type == TYPE_PAIR);
   return (const candy_pair_t *)candy_wrap_get_data(self);
 }
 
@@ -152,8 +152,8 @@ static inline void candy_wrap_set_wrap(candy_wrap_t *self, const candy_wrap_t *v
   candy_wrap_set_data(self, TYPE_WRAP, val, size);
 }
 
-static inline void candy_wrap_set_table(candy_wrap_t *self, const candy_pair_t *val, size_t size) {
-  candy_wrap_set_data(self, TYPE_TABLE, val, size);
+static inline void candy_wrap_set_pair(candy_wrap_t *self, const candy_pair_t *val, size_t size) {
+  candy_wrap_set_data(self, TYPE_PAIR, val, size);
 }
 
 #ifdef __cplusplus

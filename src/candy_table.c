@@ -28,7 +28,7 @@ static inline size_t _size(const candy_wrap_t *self) {
 }
 
 static inline candy_pair_t *_head(const candy_wrap_t *self) {
-  return (candy_pair_t *)candy_wrap_get_table(self);
+  return (candy_pair_t *)candy_wrap_get_pair(self);
 }
 
 static inline candy_pair_t *_tail(const candy_wrap_t *self) {
