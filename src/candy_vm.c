@@ -35,7 +35,7 @@ static void execute(candy_vm_t *self, candy_block_t *block) {
 
 int candy_vm_init(candy_vm_t *self) {
   candy_io_init(&self->io);
-  candy_wrap_set_table(&self->glb, NULL, 16);
+  candy_wrap_set_pair(&self->glb, NULL, 16);
   candy_wrap_set_wrap(&self->base, NULL, CANDY_DEFAULT_STACK_SIZE);
   return 0;
 }

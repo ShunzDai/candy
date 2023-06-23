@@ -27,6 +27,6 @@ CANDY_TYPE(FLOAT,   sizeof(candy_float_t))
 CANDY_TYPE(USERDEF, sizeof(void *))
 CANDY_TYPE(CFUNC,   sizeof(candy_cfunc_t))
 CANDY_TYPE(WRAP,    sizeof(candy_wrap_t[1]))
-CANDY_TYPE(TABLE,   sizeof(candy_wrap_t[2]))
+CANDY_TYPE(PAIR,    sizeof(candy_wrap_t[2]))
 CANDY_TYPE(MAX,     UINT_MAX)
 #endif /* CANDY_TYPE */
