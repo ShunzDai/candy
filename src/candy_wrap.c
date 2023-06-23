@@ -6,6 +6,10 @@
 
 const candy_wrap_t null = {{0}, {0, 0}};
 
+static inline bool candy_wrap_check_ldata(const candy_wrap_t *self) {
+  return self->size * candy_wrap_sizeof(self) > (int)sizeof(self->data);
+}
+
 void candy_wrap_init(candy_wrap_t *self) {
   memset(self, 0, sizeof(struct candy_wrap));
 }
@@ -26,7 +30,7 @@ int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align, int (table
     case TYPE_FLOAT:
       return fprintf(out, "%*f", align, *candy_wrap_get_float(self));
     case TYPE_STRING:
-      return fprintf(out, "%*.*s", align, self->size, candy_wrap_get_string(self));
+      return fprintf(out, "%*.*s", align, candy_wrap_size(self), candy_wrap_get_string(self));
     case TYPE_USERDEF:
       return fprintf(out, "%*p", align, *candy_wrap_get_ud(self));
     case TYPE_CFUNC:

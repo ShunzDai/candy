@@ -42,14 +42,22 @@ struct candy_wrap {
 
 extern const candy_wrap_t null;
 
+void candy_wrap_init(candy_wrap_t *self);
+int candy_wrap_deinit(candy_wrap_t *self);
+
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align, int (table_fprint)(const candy_wrap_t *, FILE *));
 
 void *candy_wrap_get_data(const candy_wrap_t *self);
 void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, int size);
 void candy_wrap_append(candy_wrap_t *self, const void *data, int size);
 
-void candy_wrap_init(candy_wrap_t *self);
-int candy_wrap_deinit(candy_wrap_t *self);
+static inline candy_wraps_t candy_wrap_type(const candy_wrap_t *self) {
+  return (candy_wraps_t)self->type;
+}
+
+static inline int candy_wrap_size(const candy_wrap_t *self) {
+  return self->size;
+}
 
 static inline const char *candy_wrap_typestr(const candy_wrap_t *self) {
   static const char *list[] = {
@@ -65,10 +73,6 @@ static inline int candy_wrap_sizeof(const candy_wrap_t *self) {
   #include "src/candy_type.list"
   };
   return list[self->type];
-}
-
-static inline bool candy_wrap_check_ldata(const candy_wrap_t *self) {
-  return self->size * candy_wrap_sizeof(self) > (int)sizeof(self->data);
 }
 
 static inline const uint32_t *candy_wrap_get_uint32(const candy_wrap_t *self) {

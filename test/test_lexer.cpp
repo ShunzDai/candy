@@ -45,7 +45,7 @@ static void tast_body(const char exp[], supposed ... value) {
     auto val = std::get<0>(std::make_tuple(value ...));
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
       auto *str = candy_wrap_get_string(&wrap);
-      EXPECT_EQ(wrap.size, val.size());
+      EXPECT_EQ(candy_wrap_size(&wrap), val.size());
       EXPECT_EQ(memcmp(str, val.data(), val.size()), 0);
     }
     else if constexpr (
