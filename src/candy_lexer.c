@@ -16,7 +16,6 @@
 #include "src/candy_lexer.h"
 #include "src/candy_io.h"
 #include "src/candy_lib.h"
-#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 

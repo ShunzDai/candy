@@ -16,7 +16,6 @@
 #include "src/candy_builtin.h"
 #include "src/candy_vm.h"
 #include "src/candy_lib.h"
-#include <stdlib.h>
 
 int candy_builtin_exit(candy_state_t *self) {
   exit(0);

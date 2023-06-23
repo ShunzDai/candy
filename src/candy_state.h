@@ -21,7 +21,7 @@ extern "C"{
 
 #include "src/candy_types.h"
 
-candy_state_t *candy_state_create(int argc, const char *argv[]);
+candy_state_t *candy_state_create(void);
 int candy_state_delete(candy_state_t **self);
 
 int candy_dostring(candy_state_t *self, const char exp[]);
@@ -38,7 +38,7 @@ const char *candy_error(candy_state_t *self);
   * @param  size  size of the list.
   * @return none.
   */
-int candy_add_cfunc(candy_state_t *self, const candy_regist_t list[], size_t size);
+int candy_regist(candy_state_t *self, const candy_regist_t list[], size_t size);
 
 int candy_fprint(candy_state_t *self, FILE *out);
 int candy_set_global(candy_state_t *self, const char name[]);
