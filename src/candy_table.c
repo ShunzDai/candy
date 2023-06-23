@@ -23,7 +23,7 @@ struct candy_pair {
   candy_wrap_t val;
 };
 
-static inline size_t _size(const candy_wrap_t *self) {
+static inline int _size(const candy_wrap_t *self) {
   return self->size;
 }
 
@@ -36,22 +36,22 @@ static inline candy_pair_t *_tail(const candy_wrap_t *self) {
 }
 
 static inline bool _boundary_check(candy_wrap_t *self, candy_pair_t *pair) {
-  return (size_t)(pair - _head(self)) <= (_size(self) - 1);
+  return (int)(pair - _head(self)) <= (_size(self) - 1);
 }
 
 static inline int32_t _get_next(int32_t now) {
   return ((now <= 0) - now) << 1;
 }
 
-static inline size_t hash_string(const char str[], size_t size) {
-  size_t hash = size;
-  size_t step = (size >> 5) + 1;
-  for (size_t i = size; i >= step; i -= step)
-    hash = hash ^ ((hash << 5) + (hash >> 2) + (size_t)str[i - 1]);
+static inline int hash_string(const char str[], int size) {
+  int hash = size;
+  int step = (size >> 5) + 1;
+  for (int i = size; i >= step; i -= step)
+    hash = hash ^ ((hash << 5) + (hash >> 2) + (int)str[i - 1]);
   return hash;
 }
 
-static size_t hash(const candy_wrap_t *key) {
+static int hash(const candy_wrap_t *key) {
   switch (key->type) {
     case TYPE_STRING:
       return hash_string(candy_wrap_get_string(key), key->size);

@@ -30,7 +30,7 @@ struct candy_vm {
   candy_io_t io;
   candy_wrap_t glb;
   candy_wrap_t base;
-  size_t top;
+  int top;
 };
 
 int candy_vm_init(candy_vm_t *self);
@@ -41,7 +41,7 @@ int candy_vm_fprint(candy_vm_t *self, FILE *out);
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap);
 const candy_wrap_t *candy_vm_pop(candy_vm_t *self);
 
-int candy_vm_regist(candy_vm_t *self, const candy_regist_t list[], size_t size);
+int candy_vm_regist(candy_vm_t *self, const candy_regist_t list[], int size);
 int candy_vm_set_global(candy_vm_t *self, const char name[]);
 int candy_vm_get_global(candy_vm_t *self, const char name[]);
 int candy_vm_call(candy_vm_t *self, int nargs, int nresults);

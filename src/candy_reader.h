@@ -23,18 +23,18 @@ extern "C"{
 
 struct str_info {
   const char *exp;
-  const size_t size;
-  size_t offset;
+  const int size;
+  int offset;
 };
 
 struct file_info {
   FILE *f;
-  const size_t size;
+  const int size;
 };
 
-int string_reader(char *buff, const size_t max_len, void *ud);
+int string_reader(char *buff, const int max_len, void *ud);
 
-int file_reader(char *buff, const size_t max_len, void *ud);
+int file_reader(char *buff, const int max_len, void *ud);
 
 #ifdef __cplusplus
 }

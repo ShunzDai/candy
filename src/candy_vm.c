@@ -23,7 +23,7 @@
 #define vm_assert(_condition, _format, ...) candy_assert((candy_io_t *)(self), _condition, vm, _format, ##__VA_ARGS__)
 
 static void execute(candy_vm_t *self, candy_block_t *block) {
-  for (const candy_instruc_t *ins = (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins); (size_t)(ins - (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins)) < (size_t)block->ins.size; ++ins) {
+  for (const candy_instruc_t *ins = (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins); (int)(ins - (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins)) < (int)block->ins.size; ++ins) {
     switch (ins->op) {
       #define CANDY_OP_CASE
       #include "src/candy_opcode.list"
@@ -63,8 +63,8 @@ const candy_wrap_t *candy_vm_pop(candy_vm_t *self) {
   return self->top ? &candy_wrap_get_wrap(&self->base)[--self->top] : &null;
 }
 
-int candy_vm_regist(candy_vm_t *self, const candy_regist_t list[], size_t size) {
-  for (size_t idx = 0; idx < size; ++idx) {
+int candy_vm_regist(candy_vm_t *self, const candy_regist_t list[], int size) {
+  for (int idx = 0; idx < size; ++idx) {
     candy_wrap_t key = {0}, val = {0};
     candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name));
     candy_wrap_set_cfunc(&val, &list[idx].func, 1);
