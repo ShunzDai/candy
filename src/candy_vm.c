@@ -17,7 +17,6 @@
 #include "src/candy_table.h"
 #include "src/candy_block.h"
 #include "src/candy_lib.h"
-#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -64,8 +63,7 @@ const candy_wrap_t *candy_vm_pop(candy_vm_t *self) {
   return self->top ? &candy_wrap_get_wrap(&self->base)[--self->top] : &null;
 }
 
-
-int candy_vm_cfunc(candy_vm_t *self, const candy_regist_t list[], size_t size) {
+int candy_vm_regist(candy_vm_t *self, const candy_regist_t list[], size_t size) {
   for (size_t idx = 0; idx < size; ++idx) {
     candy_wrap_t key = {0}, val = {0};
     candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name));
@@ -97,7 +95,5 @@ int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
 }
 
 int candy_vm_execute(candy_vm_t *self, candy_block_t *block) {
-  vm_assert(block, "code is not executable");
-  candy_io_try_catch(&self->io, (candy_try_catch_cb_t)execute, self, block);
-  return 0;
+  return candy_io_try_catch(&self->io, (candy_try_catch_cb_t)execute, self, block);
 }

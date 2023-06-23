@@ -25,7 +25,7 @@ struct candy_state {
   candy_vm_t vm;
 };
 
-candy_state_t *candy_state_create(int argc, const char *argv[]) {
+candy_state_t *candy_state_create(void) {
   candy_state_t *self = (candy_state_t *)calloc(1, sizeof(struct candy_state));
   candy_vm_init(&self->vm);
   return self;
@@ -65,8 +65,8 @@ const char *candy_error(candy_state_t *self) {
   return candy_wrap_get_string(&self->vm.io.buff);
 }
 
-int candy_add_cfunc(candy_state_t *self, const candy_regist_t list[], size_t size) {
-  return candy_vm_cfunc(&self->vm, list, size);
+int candy_regist(candy_state_t *self, const candy_regist_t list[], size_t size) {
+  return candy_vm_regist(&self->vm, list, size);
 }
 
 int candy_fprint(candy_state_t *self, FILE *out) {
