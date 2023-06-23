@@ -35,3 +35,13 @@ TEST(io, exception_err) {
   EXPECT_MEMEQ(candy_wrap_get_string(&io.buff), "assert string", sizeof("assert string"));
   candy_io_deinit(&io);
 }
+
+TEST(io, format) {
+  candy_io_t io;
+  candy_io_init(&io);
+  EXPECT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_io_t *io, void *ud) {
+    candy_io_throw(io, "%010d", 114514);
+  }, &io, nullptr), -1);
+  EXPECT_MEMEQ(candy_wrap_get_string(&io.buff), "0000114514", sizeof("0000114514"));
+  candy_io_deinit(&io);
+}

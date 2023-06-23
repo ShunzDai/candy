@@ -15,18 +15,8 @@
   */
 #include "src/candy_io.h"
 #include "src/candy_lib.h"
-#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-
-static int _vsnprint(candy_io_t *self, const char format[], va_list ap) {
-  va_list head;
-  memcpy(&head, &ap, sizeof(va_list));
-  int len = vsnprintf(NULL, 0, format, ap) + 1;
-  if (candy_wrap_size(&self->buff) < len)
-    candy_wrap_append(&self->buff, NULL, candy_wrap_size(&self->buff));
-  return vsnprintf((char *)candy_wrap_get_string(&self->buff), len, format, head);
-}
 
 int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
   if (setjmp(self->env))
@@ -40,7 +30,12 @@ int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, 
 void candy_io_throw(candy_io_t *self, const char format[], ...) {
   va_list ap;
   va_start(ap, format);
-  _vsnprint(self, format, ap);
+  int len = vsnprintf(NULL, 0, format, ap) + 1;
+  va_end(ap);
+  if (candy_wrap_size(&self->buff) < len)
+    candy_wrap_append(&self->buff, NULL, candy_wrap_size(&self->buff));
+  va_start(ap, format);
+  vsnprintf((char *)candy_wrap_get_string(&self->buff), len, format, ap);
   va_end(ap);
   longjmp(self->env, 1);
 }
