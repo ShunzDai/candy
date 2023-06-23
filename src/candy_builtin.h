@@ -22,7 +22,7 @@ extern "C"{
 #include "src/candy_types.h"
 
 extern const candy_regist_t candy_builtin_list[];
-extern const size_t candy_builtin_size;
+extern const int candy_builtin_size;
 
 #ifdef __cplusplus
 }

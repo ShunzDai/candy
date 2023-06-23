@@ -25,7 +25,7 @@ static inline char *_buff(candy_lexer_t *self) {
   return (char *)candy_wrap_get_string(&self->io->buff);
 }
 
-static inline size_t _size(candy_lexer_t *self) {
+static inline int _size(candy_lexer_t *self) {
   return self->io->buff.size;
 }
 
@@ -35,7 +35,7 @@ static inline size_t _size(candy_lexer_t *self) {
   * @param  idx  lookahead to the idx byte, idx value between 0 and @ref CANDY_LEXER_LOOKAHEAD_SIZE - 1
   * @retval target byte
   */
-static inline char _view(candy_lexer_t *self, size_t idx) {
+static inline char _view(candy_lexer_t *self, int idx) {
   assert(self->r + idx < _size(self));
   return _buff(self)[self->r + idx];
 }
@@ -46,11 +46,11 @@ static inline char _view(candy_lexer_t *self, size_t idx) {
   * @retval target byte
   */
 static inline char _read(candy_lexer_t *self) {
-  size_t size = _size(self);
+  int size = _size(self);
   /** only @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes left to read */
   if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE == size) {
     /* calculates the start position of the read buffer */
-    size_t offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
+    int offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
     /** if the number of bytes that can be filled is less than
         @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
     if (size - offset < CANDY_DEFAULT_IO_SIZE) {
@@ -316,7 +316,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
   static const struct {
     candy_tokens_t token;
     const char * const keyword;
-    const size_t len;
+    const int len;
   } _keywords[] = {
     #define CANDY_KW_MATCH
     #include "src/candy_keyword.list"
@@ -327,7 +327,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
   while (is_dec(_view(self, 0)) || is_alpha(_view(self, 0)) || _view(self, 0) == '_')
     _save(self);
   /* check keyword */
-  for (size_t i = 0; i < candy_lengthof(_keywords); i++) {
+  for (int i = 0; i < candy_lengthof(_keywords); i++) {
     if (strncmp(_buff(self), _keywords[i].keyword, self->w > _keywords[i].len ? self->w : _keywords[i].len) == 0)
       return _keywords[i].token;
   }
