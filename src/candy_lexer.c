@@ -26,7 +26,7 @@ static inline char *_buff(candy_lexer_t *self) {
 }
 
 static inline int _size(candy_lexer_t *self) {
-  return self->io->buff.size;
+  return candy_wrap_size(&self->io->buff);
 }
 
 /**

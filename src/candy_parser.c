@@ -59,7 +59,7 @@ static void _stat_ident(candy_parser_t *self) {
       _expr(self);
       /* skip ')' */
       candy_lexer_next(&self->lex);
-      for (int i = self->head->pool.size - 1 - id; i > (int)id; --i)
+      for (int i = candy_wrap_size(&self->head->pool) - 1 - id; i > (int)id; --i)
         candy_block_add_iabx(self->head, OP_LOADCST, 0, i);
       candy_block_add_iabc(self->head, OP_GETTABUP, 0, 0, id);
       candy_block_add_iabc(self->head, OP_CALL, 0, 0, 0);

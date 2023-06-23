@@ -18,8 +18,8 @@
 
 candy_block_t *candy_block_create(void) {
   candy_block_t *self = (candy_block_t *)calloc(1, sizeof(struct candy_block));
-  self->pool.type = TYPE_WRAP;
-  self->ins.type = TYPE_UINT32;
+  candy_wrap_set_wrap(&self->pool, NULL, 0);
+  candy_wrap_set_uint32(&self->ins, NULL, 0);
   return self;
 }
 
@@ -33,10 +33,10 @@ int candy_block_delete(candy_block_t **self) {
 
 int candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap) {
   candy_wrap_append(&self->pool, wrap, 1);
-  return self->pool.size - 1;
+  return candy_wrap_size(&self->pool) - 1;
 }
 
 int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins) {
   candy_wrap_append(&self->ins, ins, 1);
-  return self->ins.size - 1;
+  return candy_wrap_size(&self->ins) - 1;
 }
