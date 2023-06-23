@@ -51,7 +51,7 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   if (f == NULL)
     return perror(NULL), -1;
   fseek(f, 0, SEEK_END);
-  size_t size = ftell(f);
+  int size = ftell(f);
   fseek(f, 0, SEEK_SET);
   struct file_info info = {f, size};
   candy_block_t *block = candy_parse(&self->vm.io, file_reader, &info);
@@ -65,7 +65,7 @@ const char *candy_error(candy_state_t *self) {
   return candy_wrap_get_string(&self->vm.io.buff);
 }
 
-int candy_regist(candy_state_t *self, const candy_regist_t list[], size_t size) {
+int candy_regist(candy_state_t *self, const candy_regist_t list[], int size) {
   return candy_vm_regist(&self->vm, list, size);
 }
 
@@ -85,78 +85,78 @@ int candy_call(candy_state_t *self, int nargs, int nresults) {
   return candy_vm_call(&self->vm, nargs, nresults);
 }
 
-void candy_push_integer(candy_state_t *self, const candy_integer_t val[], size_t size) {
+void candy_push_integer(candy_state_t *self, const candy_integer_t val[], int size) {
   candy_wrap_t wrap;
   candy_wrap_set_integer(&wrap, val, size);
   candy_vm_push(&self->vm, &wrap);
 }
 
-void candy_push_float(candy_state_t *self, const candy_float_t val[], size_t size) {
+void candy_push_float(candy_state_t *self, const candy_float_t val[], int size) {
   candy_wrap_t wrap;
   candy_wrap_set_float(&wrap, val, size);
   candy_vm_push(&self->vm, &wrap);
 }
 
-void candy_push_boolean(candy_state_t *self, const candy_boolean_t val[], size_t size) {
+void candy_push_boolean(candy_state_t *self, const candy_boolean_t val[], int size) {
   candy_wrap_t wrap;
   candy_wrap_set_boolean(&wrap, val, size);
   candy_vm_push(&self->vm, &wrap);
 }
 
-void candy_push_string(candy_state_t *self, const char val[], size_t size) {
+void candy_push_string(candy_state_t *self, const char val[], int size) {
   candy_wrap_t wrap;
   candy_wrap_set_string(&wrap, val, size);
   candy_vm_push(&self->vm, &wrap);
 }
 
-void candy_push_ud(candy_state_t *self, const void *val[], size_t size) {
+void candy_push_ud(candy_state_t *self, const void *val[], int size) {
   candy_wrap_t wrap;
   candy_wrap_set_ud(&wrap, val, size);
   candy_vm_push(&self->vm, &wrap);
 }
 
-void candy_push_cfunc(candy_state_t *self, const candy_cfunc_t val[], size_t size) {
+void candy_push_cfunc(candy_state_t *self, const candy_cfunc_t val[], int size) {
   candy_wrap_t wrap;
   candy_wrap_set_cfunc(&wrap, val, size);
   candy_vm_push(&self->vm, &wrap);
 }
 
-const candy_integer_t *candy_pull_integer(candy_state_t *self, size_t *size) {
+const candy_integer_t *candy_pull_integer(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
     *size = wrap->size;
   return candy_wrap_get_integer(wrap);
 }
 
-const candy_float_t *candy_pull_float(candy_state_t *self, size_t *size) {
+const candy_float_t *candy_pull_float(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
     *size = wrap->size;
   return candy_wrap_get_float(wrap);
 }
 
-const candy_boolean_t *candy_pull_boolean(candy_state_t *self, size_t *size) {
+const candy_boolean_t *candy_pull_boolean(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
     *size = wrap->size;
   return candy_wrap_get_boolean(wrap);
 }
 
-const char *candy_pull_string(candy_state_t *self, size_t *size) {
+const char *candy_pull_string(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
     *size = wrap->size;
   return candy_wrap_get_string(wrap);
 }
 
-const void **candy_pull_ud(candy_state_t *self, size_t *size) {
+const void **candy_pull_ud(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
     *size = wrap->size;
   return candy_wrap_get_ud(wrap);
 }
 
-const candy_cfunc_t *candy_pull_cfunc(candy_state_t *self, size_t *size) {
+const candy_cfunc_t *candy_pull_cfunc(candy_state_t *self, int *size) {
   const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
   if (size)
     *size = wrap->size;

@@ -34,4 +34,4 @@ const candy_regist_t candy_builtin_list[] = {
   {"print", candy_builtin_print},
 };
 
-const size_t candy_builtin_size = candy_lengthof(candy_builtin_list);
+const int candy_builtin_size = candy_lengthof(candy_builtin_list);

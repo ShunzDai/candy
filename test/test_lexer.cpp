@@ -19,7 +19,7 @@
 #include "src/candy_reader.h"
 #include <string>
 
-#define TEST_LEXER(_name, _token, _exp, ...) TEST(lexer, _name) {tast_body(_token, _exp __VA_OPT__(,) __VA_ARGS__);}
+#define TEST_LEXER(_name, _token, _exp, ...) TEST(lexer, _name) {tast_body<_token>(_exp __VA_OPT__(,) __VA_ARGS__);}
 
 using namespace std;
 
@@ -28,24 +28,24 @@ struct arg {
   candy_wrap_t wrap;
 };
 
-template <typename ... supposed>
-static void tast_body(candy_tokens_t token, const char exp[], supposed ... value) {
+template <candy_tokens_t token, typename ... supposed>
+static void tast_body(const char exp[], supposed ... value) {
   candy_io_t io;
   candy_lexer_t lex;
-  str_info info = {exp, strlen(exp), 0};
+  str_info info = {exp, (int)strlen(exp), 0};
   candy_io_init(&io);
   candy_lexer_init(&lex, &io, string_reader, &info);
-  arg ud = {token, {}};
-  ASSERT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, arg *ud) {
-    EXPECT_EQ(candy_lexer_lookahead(self), ud->token);
-    ud->wrap = *candy_lexer_next(self);
+  candy_wrap_t wrap = {};
+  ASSERT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, candy_wrap_t *wrap) {
+    EXPECT_EQ(candy_lexer_lookahead(self), token);
+    *wrap = *candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_EOS);
-  }, &lex, &ud), 0);
+  }, &lex, &wrap), 0);
   if constexpr(sizeof...(value)) {
     auto val = std::get<0>(std::make_tuple(value ...));
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
-      auto *str = candy_wrap_get_string(&ud.wrap);
-      EXPECT_EQ(ud.wrap.size, val.size());
+      auto *str = candy_wrap_get_string(&wrap);
+      EXPECT_EQ(wrap.size, val.size());
       EXPECT_EQ(memcmp(str, val.data(), val.size()), 0);
     }
     else if constexpr (
@@ -58,19 +58,19 @@ static void tast_body(candy_tokens_t token, const char exp[], supposed ... value
       std::is_same<decltype(val), uint32_t>::value ||
       std::is_same<decltype(val), uint64_t>::value
     ) {
-      EXPECT_EQ(*candy_wrap_get_integer(&ud.wrap), val);
+      EXPECT_EQ(*candy_wrap_get_integer(&wrap), val);
     }
     else if constexpr (
       std::is_same<decltype(val),  float>::value ||
       std::is_same<decltype(val), double>::value
     ) {
-      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&ud.wrap), val);
+      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&wrap), val);
     }
     else {
       static_assert(!std::is_same<decltype(val), decltype(val)>::value);
     }
   }
-  candy_wrap_deinit(&ud.wrap);
+  candy_wrap_deinit(&wrap);
   candy_lexer_deinit(&lex);
   candy_io_deinit(&io);
 }
@@ -189,7 +189,7 @@ TEST_LEXER(TK_LSHIFT , TK_LSHIFT , "<<")
 TEST(lexer, file_system) {
   FILE *f = fopen("../test/test_lexer.cdy", "r");
   fseek(f, 0, SEEK_END);
-  size_t size = ftell(f);
+  int size = ftell(f);
   fseek(f, 0, SEEK_SET);
   candy_io_t io;
   candy_lexer_t lex;

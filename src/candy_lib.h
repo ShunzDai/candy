@@ -25,13 +25,13 @@ extern "C"{
 #include <stdbool.h>
 #include <ctype.h>
 
-#define candy_lengthof(array) (sizeof(array) / sizeof(array[0]))
+#define candy_lengthof(array) ((int)(sizeof(array) / sizeof(array[0])))
 
-static inline bool is_power2(size_t n) {
+static inline bool is_power2(int n) {
   return (n & (n - 1)) == 0;
 }
 
-static inline size_t next_power2(size_t n) {
+static inline int next_power2(int n) {
   --n;
   n |= n >> 1;
   n |= n >> 2;

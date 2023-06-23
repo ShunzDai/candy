@@ -45,8 +45,8 @@ extern const candy_wrap_t null;
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align, int (table_fprint)(const candy_wrap_t *, FILE *));
 
 void *candy_wrap_get_data(const candy_wrap_t *self);
-void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, size_t size);
-void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size);
+void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, int size);
+void candy_wrap_append(candy_wrap_t *self, const void *data, int size);
 
 void candy_wrap_init(candy_wrap_t *self);
 int candy_wrap_deinit(candy_wrap_t *self);
@@ -59,8 +59,8 @@ static inline const char *candy_wrap_typestr(const candy_wrap_t *self) {
   return list[self->type];
 }
 
-static inline size_t candy_wrap_sizeof(const candy_wrap_t *self) {
-  static const size_t list[] = {
+static inline int candy_wrap_sizeof(const candy_wrap_t *self) {
+  static const int list[] = {
   #define CANDY_TYPE_SIZE
   #include "src/candy_type.list"
   };
@@ -68,7 +68,7 @@ static inline size_t candy_wrap_sizeof(const candy_wrap_t *self) {
 }
 
 static inline bool candy_wrap_check_ldata(const candy_wrap_t *self) {
-  return self->size * candy_wrap_sizeof(self) > sizeof(self->data);
+  return self->size * candy_wrap_sizeof(self) > (int)sizeof(self->data);
 }
 
 static inline const uint32_t *candy_wrap_get_uint32(const candy_wrap_t *self) {
@@ -120,39 +120,39 @@ static inline void candy_wrap_copy(candy_wrap_t *self, candy_wrap_t *src) {
   candy_wrap_set_data(self, (candy_wraps_t)src->type, candy_wrap_get_data(src), src->size);
 }
 
-static inline void candy_wrap_set_uint32(candy_wrap_t *self, const uint32_t *val, size_t size) {
+static inline void candy_wrap_set_uint32(candy_wrap_t *self, const uint32_t *val, int size) {
   candy_wrap_set_data(self, TYPE_UINT32, val, size);
 }
 
-static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t *val, size_t size) {
+static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t *val, int size) {
   candy_wrap_set_data(self, TYPE_INTEGER, val, size);
 }
 
-static inline void candy_wrap_set_float(candy_wrap_t *self, const candy_float_t *val, size_t size) {
+static inline void candy_wrap_set_float(candy_wrap_t *self, const candy_float_t *val, int size) {
   candy_wrap_set_data(self, TYPE_FLOAT, val, size);
 }
 
-static inline void candy_wrap_set_boolean(candy_wrap_t *self, const candy_boolean_t *val, size_t size) {
+static inline void candy_wrap_set_boolean(candy_wrap_t *self, const candy_boolean_t *val, int size) {
   candy_wrap_set_data(self, TYPE_BOOLEAN, val, size);
 }
 
-static inline void candy_wrap_set_string(candy_wrap_t *self, const char *val, size_t size) {
+static inline void candy_wrap_set_string(candy_wrap_t *self, const char *val, int size) {
   candy_wrap_set_data(self, TYPE_STRING, val, size);
 }
 
-static inline void candy_wrap_set_ud(candy_wrap_t *self, const void **val, size_t size) {
+static inline void candy_wrap_set_ud(candy_wrap_t *self, const void **val, int size) {
   candy_wrap_set_data(self, TYPE_USERDEF, val, size);
 }
 
-static inline void candy_wrap_set_cfunc(candy_wrap_t *self, const candy_cfunc_t *val, size_t size) {
+static inline void candy_wrap_set_cfunc(candy_wrap_t *self, const candy_cfunc_t *val, int size) {
   candy_wrap_set_data(self, TYPE_CFUNC, val, size);
 }
 
-static inline void candy_wrap_set_wrap(candy_wrap_t *self, const candy_wrap_t *val, size_t size) {
+static inline void candy_wrap_set_wrap(candy_wrap_t *self, const candy_wrap_t *val, int size) {
   candy_wrap_set_data(self, TYPE_WRAP, val, size);
 }
 
-static inline void candy_wrap_set_pair(candy_wrap_t *self, const candy_pair_t *val, size_t size) {
+static inline void candy_wrap_set_pair(candy_wrap_t *self, const candy_pair_t *val, int size) {
   candy_wrap_set_data(self, TYPE_PAIR, val, size);
 }
 

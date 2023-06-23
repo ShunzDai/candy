@@ -38,7 +38,7 @@ const char *candy_error(candy_state_t *self);
   * @param  size  size of the list.
   * @return none.
   */
-int candy_regist(candy_state_t *self, const candy_regist_t list[], size_t size);
+int candy_regist(candy_state_t *self, const candy_regist_t list[], int size);
 
 int candy_fprint(candy_state_t *self, FILE *out);
 int candy_set_global(candy_state_t *self, const char name[]);
@@ -52,19 +52,19 @@ int candy_call(candy_state_t *self, int nargs, int nresults);
   */
 void *candy_ud(candy_state_t *self);
 
-void candy_push_integer(candy_state_t *self, const candy_integer_t val[], size_t size);
-void candy_push_float(candy_state_t *self, const candy_float_t val[], size_t size);
-void candy_push_boolean(candy_state_t *self, const candy_boolean_t val[], size_t size);
-void candy_push_string(candy_state_t *self, const char val[], size_t size);
-void candy_push_ud(candy_state_t *self, const void *val[], size_t size);
-void candy_push_cfunc(candy_state_t *self, const candy_cfunc_t val[], size_t size);
+void candy_push_integer(candy_state_t *self, const candy_integer_t val[], int size);
+void candy_push_float(candy_state_t *self, const candy_float_t val[], int size);
+void candy_push_boolean(candy_state_t *self, const candy_boolean_t val[], int size);
+void candy_push_string(candy_state_t *self, const char val[], int size);
+void candy_push_ud(candy_state_t *self, const void *val[], int size);
+void candy_push_cfunc(candy_state_t *self, const candy_cfunc_t val[], int size);
 
-const candy_integer_t *candy_pull_integer(candy_state_t *self, size_t *size);
-const candy_float_t *candy_pull_float(candy_state_t *self, size_t *size);
-const candy_boolean_t *candy_pull_boolean(candy_state_t *self, size_t *size);
-const char *candy_pull_string(candy_state_t *self, size_t *size);
-const void **candy_pull_ud(candy_state_t *self, size_t *size);
-const candy_cfunc_t *candy_pull_cfunc(candy_state_t *self, size_t *size);
+const candy_integer_t *candy_pull_integer(candy_state_t *self, int *size);
+const candy_float_t *candy_pull_float(candy_state_t *self, int *size);
+const candy_boolean_t *candy_pull_boolean(candy_state_t *self, int *size);
+const char *candy_pull_string(candy_state_t *self, int *size);
+const void **candy_pull_ud(candy_state_t *self, int *size);
+const candy_cfunc_t *candy_pull_cfunc(candy_state_t *self, int *size);
 
 #ifdef __cplusplus
 }

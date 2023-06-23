@@ -43,7 +43,7 @@ void *candy_wrap_get_data(const candy_wrap_t *self) {
   return candy_wrap_check_ldata(self) ? *(void **)&self->data : (void *)&self->data;
 }
 
-void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, size_t size) {
+void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *data, int size) {
   self->type = (uint32_t)type;
   self->size = (uint32_t)size;
   if (candy_wrap_check_ldata(self))
@@ -52,10 +52,10 @@ void candy_wrap_set_data(candy_wrap_t *self, candy_wraps_t type, const void *dat
     memcpy(candy_wrap_get_data(self), data, size * candy_wrap_sizeof(self));
 }
 
-void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size) {
+void candy_wrap_append(candy_wrap_t *self, const void *data, int size) {
   void *dst = candy_wrap_get_data(self);
-  if ((self->size + size) * candy_wrap_sizeof(self) > sizeof(self->data)) {
-    size_t limit = next_power2(self->size + size);
+  if ((self->size + size) * candy_wrap_sizeof(self) > (int)sizeof(self->data)) {
+    int limit = next_power2(self->size + size);
     if (next_power2(self->size) < limit) {
       /* dst comes from either the stack space described by wrap::data or
          the heap space pointed to by wrap::data. if wrap::data is used to

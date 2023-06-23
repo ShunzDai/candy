@@ -82,8 +82,8 @@ struct candy_lexer {
     candy_tokens_t token;
     candy_wrap_t wrap;
   } lookahead;
-  size_t w;
-  size_t r;
+  int w;
+  int r;
   candy_reader_t reader;
   void *ud;
 };
