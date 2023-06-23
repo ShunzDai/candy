@@ -17,7 +17,6 @@
 #include "src/candy_io.h"
 #include "src/candy_lexer.h"
 #include "src/candy_block.h"
-#include <stdlib.h>
 
 #define par_assert(_condition, _format, ...) candy_assert(*(candy_io_t **)(self), _condition, syntax, _format, ##__VA_ARGS__)
 
