@@ -6,6 +6,17 @@
 
 const candy_wrap_t null = {{0}, {0, 0}};
 
+void candy_wrap_init(candy_wrap_t *self) {
+  memset(self, 0, sizeof(struct candy_wrap));
+}
+
+int candy_wrap_deinit(candy_wrap_t *self) {
+  if (candy_wrap_check_ldata(self))
+    free(*(void **)&self->data);
+  memset(self, 0, sizeof(struct candy_wrap));
+  return 0;
+}
+
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align, int (table_fprint)(const candy_wrap_t *, FILE *)) {
   switch (self->type) {
     case TYPE_NULL:
@@ -20,7 +31,7 @@ int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align, int (table
       return fprintf(out, "%*p", align, *candy_wrap_get_ud(self));
     case TYPE_CFUNC:
       return fprintf(out, "%*p", align, *candy_wrap_get_cfunc(self));
-    case TYPE_TABLE:
+    case TYPE_PAIR:
       return table_fprint ? table_fprint(self, out) : fprintf(out, "%*p", align, self);
     default:
       assert(0);
@@ -60,15 +71,4 @@ void candy_wrap_append(candy_wrap_t *self, const void *data, size_t size) {
   if (data && size)
     memcpy(dst + self->size * candy_wrap_sizeof(self), data, size * candy_wrap_sizeof(self));
   self->size += size;
-}
-
-void candy_wrap_init(candy_wrap_t *self) {
-  memset(self, 0, sizeof(struct candy_wrap));
-}
-
-int candy_wrap_deinit(candy_wrap_t *self) {
-  if (candy_wrap_check_ldata(self))
-    free(*(void **)&self->data);
-  memset(self, 0, sizeof(struct candy_wrap));
-  return 0;
 }
