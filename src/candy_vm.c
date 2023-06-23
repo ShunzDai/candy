@@ -22,8 +22,12 @@
 
 #define vm_assert(_condition, _format, ...) candy_assert((candy_io_t *)(self), _condition, vm, _format, ##__VA_ARGS__)
 
+static const candy_instruc_t *_get_ins(candy_block_t *block) {
+  return (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins);
+}
+
 static void execute(candy_vm_t *self, candy_block_t *block) {
-  for (const candy_instruc_t *ins = (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins); (int)(ins - (const candy_instruc_t *)candy_wrap_get_uint32(&block->ins)) < (int)block->ins.size; ++ins) {
+  for (const candy_instruc_t *ins = _get_ins(block); (int)(ins - _get_ins(block)) < (int)candy_wrap_size(&block->ins); ++ins) {
     switch (ins->op) {
       #define CANDY_OP_CASE
       #include "src/candy_opcode.list"
@@ -52,7 +56,7 @@ int candy_vm_fprint(candy_vm_t *self, FILE *out) {
 }
 
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
-  if (self->top < self->base.size)
+  if (self->top < candy_wrap_size(&self->base))
     ((candy_wrap_t *)candy_wrap_get_wrap(&self->base))[self->top] = *wrap;
   else
     candy_wrap_append(&self->base, wrap, 1);
