@@ -16,6 +16,7 @@
 #include "src/candy_lexer.h"
 #include "src/candy_io.h"
 #include "src/candy_lib.h"
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -313,26 +314,19 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
 }
 
 static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *wrap) {
-  static const struct {
-    candy_tokens_t token;
-    const char * const keyword;
-    const int len;
-  } _keywords[] = {
-    #define CANDY_KW_MATCH
-    #include "src/candy_keyword.list"
-  };
   /* save alpha, or '_' */
   _save(self);
   /* save number, alpha, or '_' */
   while (is_dec(_view(self, 0)) || is_alpha(_view(self, 0)) || _view(self, 0) == '_')
     _save(self);
   /* check keyword */
-  for (int i = 0; i < candy_lengthof(_keywords); i++) {
-    if (strncmp(_buff(self), _keywords[i].keyword, self->w > _keywords[i].len ? self->w : _keywords[i].len) == 0)
-      return _keywords[i].token;
+  switch (djb_hash(_buff(self), self->w)) {
+    #define CANDY_KW_MATCH
+    #include "src/candy_keyword.list"
+    default:
+      candy_wrap_set_string(wrap, _buff(self), self->w);
+      return TK_IDENT;
   }
-  candy_wrap_set_string(wrap, _buff(self), self->w);
-  return TK_IDENT;
 }
 
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {

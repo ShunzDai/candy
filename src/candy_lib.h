@@ -19,13 +19,18 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include <stdlib.h>
-#include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <ctype.h>
 
 #define candy_lengthof(array) ((int)(sizeof(array) / sizeof(array[0])))
+
+static inline uint32_t djb_hash(char str[], int size) {
+  uint32_t hash = 5381;
+  for (int idx = 0; idx < size; ++idx)
+    hash += (hash << 5) + str[idx];
+  return hash & 0x7FFFFFFF;
+}
 
 static inline bool is_power2(int n) {
   return (n & (n - 1)) == 0;
