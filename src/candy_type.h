@@ -26,13 +26,6 @@
 #define CANDY_TYPE(_type, ...) TYPE_##_type,
 #endif /* CANDY_TYPE_ENUM */
 
-
-#ifdef CANDY_TYPE_SIZE
-#undef CANDY_TYPE_SIZE
-#include <limits.h>
-#define CANDY_TYPE(_type, _n) _n,
-#endif /* CANDY_TYPE_SIZE */
-
 #ifdef CANDY_TYPE_STR
 #undef CANDY_TYPE_STR
 #define CANDY_TYPE(_type, ...) #_type,

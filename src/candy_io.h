@@ -34,7 +34,7 @@ struct candy_io {
   jmp_buf env;
 };
 
-typedef void (*candy_try_catch_cb_t)(void *, void *);
+typedef void (*candy_try_catch_cb_t)(void *self, void *arg);
 
 int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud);
 void candy_io_throw(candy_io_t *self, const char format[], ...) CANDY_NORETURN;

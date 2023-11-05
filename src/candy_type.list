@@ -18,15 +18,13 @@
 #undef CANDY_TYPE_LIST
 
 #ifdef CANDY_TYPE
-CANDY_TYPE(NULL,    INT_MAX)
-CANDY_TYPE(STRING,  sizeof(char))
-CANDY_TYPE(UINT32,  sizeof(uint32_t))
-CANDY_TYPE(INTEGER, sizeof(candy_integer_t))
-CANDY_TYPE(BOOLEAN, sizeof(candy_boolean_t))
-CANDY_TYPE(FLOAT,   sizeof(candy_float_t))
-CANDY_TYPE(USERDEF, sizeof(void *))
-CANDY_TYPE(CFUNC,   sizeof(candy_cfunc_t))
-CANDY_TYPE(WRAP,    sizeof(candy_wrap_t[1]))
-CANDY_TYPE(PAIR,    sizeof(candy_wrap_t[2]))
-CANDY_TYPE(MAX,     INT_MAX)
+CANDY_TYPE(NULL)
+CANDY_TYPE(INTEGER)
+CANDY_TYPE(BOOLEAN)
+CANDY_TYPE(FLOAT)
+CANDY_TYPE(USERDEF)
+CANDY_TYPE(CFUNC)
+CANDY_TYPE(STRING)
+CANDY_TYPE(TUPLE)
+CANDY_TYPE(TABLE)
 #endif /* CANDY_TYPE */

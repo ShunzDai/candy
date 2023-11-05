@@ -13,8 +13,8 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_COMMON_TYPES_H
-#define CANDY_SRC_COMMON_TYPES_H
+#ifndef CANDY_SRC_TYPES_H
+#define CANDY_SRC_TYPES_H
 #ifdef __cplusplus
 extern "C"{
 #endif /* __cplusplus */
@@ -30,13 +30,20 @@ extern "C"{
 #define CANDY_NORETURN
 #endif
 
+typedef enum candy_wraps {
+#define CANDY_TYPE_ENUM
+#include "src/candy_type.list"
+} candy_wraps_t;
+
 typedef int64_t candy_integer_t;
 typedef double candy_float_t;
-typedef uint8_t candy_boolean_t;
+typedef bool candy_boolean_t;
 
+typedef struct candy_gc candy_gc_t;
 typedef struct candy_io candy_io_t;
 typedef struct candy_wrap candy_wrap_t;
 typedef struct candy_pair candy_pair_t;
+typedef struct candy_table candy_table_t;
 typedef struct candy_block candy_block_t;
 typedef struct candy_state candy_state_t;
 
@@ -57,4 +64,4 @@ typedef struct candy_regist candy_regist_t;
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_COMMON_TYPES_H */
+#endif /* CANDY_SRC_TYPES_H */
