@@ -23,15 +23,15 @@
 
 #ifdef CANDY_KW_ENUM
 #undef CANDY_KW_ENUM
-#define CANDY_KW(_keyword) TK_##_keyword,
+#define CANDY_KW(_keyword, ...) TK_##_keyword,
 #endif /* CANDY_KW_ENUM */
 
 #ifdef CANDY_KW_MATCH
 #undef CANDY_KW_MATCH
-#define CANDY_KW(_keyword) {TK_##_keyword, #_keyword, sizeof(#_keyword) - 1},
+#define CANDY_KW(_keyword, _hash) case _hash: return TK_##_keyword;
 #endif /* CANDY_KW_MATCH */
 
 #ifdef CANDY_KW_TEST
 #undef CANDY_KW_TEST
-#define CANDY_KW(_keyword) TEST_LEXER(_keyword, TK_##_keyword, #_keyword);
+#define CANDY_KW(_keyword, ...) TEST_LEXER(_keyword, TK_##_keyword, #_keyword);
 #endif /* CANDY_KW_TEST */
