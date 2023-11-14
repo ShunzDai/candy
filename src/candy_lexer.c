@@ -22,11 +22,11 @@
 
 #define lex_assert(_condition, _format, ...) candy_assert(*(candy_io_t **)(self), _condition, lexical, _format, ##__VA_ARGS__)
 
-static inline char *_buff(candy_lexer_t *self) {
+static char *_buff(candy_lexer_t *self) {
   return (char *)candy_wrap_get_string(&self->io->buff);
 }
 
-static inline int _size(candy_lexer_t *self) {
+static int _size(candy_lexer_t *self) {
   return candy_wrap_size(&self->io->buff);
 }
 
@@ -36,43 +36,41 @@ static inline int _size(candy_lexer_t *self) {
   * @param  idx  lookahead to the idx byte, idx value between 0 and @ref CANDY_LEXER_LOOKAHEAD_SIZE - 1
   * @retval target byte
   */
-static inline char _view(candy_lexer_t *self, int idx) {
+static char _view(candy_lexer_t *self, int idx) {
   assert(self->r + idx < _size(self));
   return _buff(self)[self->r + idx];
 }
+
+static void _fill(candy_lexer_t *self) {
+  size_t size = _size(self);
+  /* calculates the start position of the read buffer */
+  int offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
+  /** if the number of bytes that can be filled is less than
+      @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
+  if (size - offset < CANDY_DEFAULT_IO_SIZE) {
+    candy_wrap_append(&self->io->buff, NULL, _size(self));
+    self->reader(_buff(self) + size, _size(self) - size, self->ud);
+  }
+  /* otherwise buffer will be filled directly */
+  else {
+    /** restore the unread @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes to the buffer */
+    memmove(_buff(self) + self->w + CANDY_LEXER_EXTRA_SIZE, _buff(self) + self->r, CANDY_LEXER_LOOKAHEAD_SIZE);
+    /* fill buffer */
+    self->reader(_buff(self) + offset, size - offset, self->ud);
+    self->r = self->w + CANDY_LEXER_EXTRA_SIZE;
+  }
+} 
 
 /**
   * @brief  read out the next byte of the stream
   * @param  self lexer
   * @retval target byte
   */
-static inline char _read(candy_lexer_t *self) {
-  int size = _size(self);
+static char _read(candy_lexer_t *self) {
   /** only @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes left to read */
-  if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE == size) {
-    /* calculates the start position of the read buffer */
-    int offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
-    /** if the number of bytes that can be filled is less than
-        @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
-    if (size - offset < CANDY_DEFAULT_IO_SIZE) {
-      candy_wrap_append(&self->io->buff, NULL, _size(self));
-      self->reader(_buff(self) + size, _size(self) - size, self->ud);
-    }
-    /* otherwise buffer will be filled directly */
-    else {
-      /** temporarily stores @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes that have not been read */
-      char ahead[CANDY_LEXER_LOOKAHEAD_SIZE];
-      memcpy(ahead, _buff(self) + self->r, CANDY_LEXER_LOOKAHEAD_SIZE);
-      /* fill buffer */
-      self->reader(_buff(self) + offset, size - offset, self->ud);
-      /** restore the unread @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes to the buffer */
-      memcpy(_buff(self) + self->w + CANDY_LEXER_EXTRA_SIZE, ahead, CANDY_LEXER_LOOKAHEAD_SIZE);
-      self->r = self->w + CANDY_LEXER_EXTRA_SIZE;
-    }
-  }
-  #ifdef CANDY_DEBUG_MODE
+  if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE == _size(self))
+    _fill(self);
   ++self->dbg.column;
-  #endif /* CANDY_DEBUG_MODE */
   return _buff(self)[self->r++];
 }
 
@@ -81,7 +79,7 @@ static inline char _read(candy_lexer_t *self) {
   * @param  self lexer
   * @retval none
   */
-static inline void _skip(candy_lexer_t *self) {
+static void _skip(candy_lexer_t *self) {
   _read(self);
 }
 
@@ -91,7 +89,7 @@ static inline void _skip(candy_lexer_t *self) {
   * @param  n    count of bytes
   * @retval none
   */
-static inline void _skipn(candy_lexer_t *self, int n) {
+static void _skipn(candy_lexer_t *self, int n) {
   while (n--)
     _skip(self);
 }
@@ -102,7 +100,7 @@ static inline void _skipn(candy_lexer_t *self, int n) {
   * @param  ch   byte to be stored
   * @retval none
   */
-static inline void _save_char(candy_lexer_t *self, char ch) {
+static void _save_char(candy_lexer_t *self, char ch) {
   assert(self->r - self->w >= CANDY_LEXER_EXTRA_SIZE);
   _buff(self)[self->w++] = ch;
 }
@@ -112,7 +110,7 @@ static inline void _save_char(candy_lexer_t *self, char ch) {
   * @param  self lexer
   * @retval none
   */
-static inline void _save(candy_lexer_t *self) {
+static void _save(candy_lexer_t *self) {
   _save_char(self, _read(self));
 }
 
@@ -154,10 +152,8 @@ static inline bool _check_dual(candy_lexer_t *self, const char str[], void (*pre
 static void _handle_newline(candy_lexer_t *self, void (*pred)(candy_lexer_t *)) {
   pred(self);
   _check_dual(self, "\r\n", pred);
-#ifdef CANDY_DEBUG_MODE
   self->dbg.line++;
   self->dbg.column = 0;
-#endif /* CANDY_DEBUG_MODE */
 }
 
 /**
@@ -189,7 +185,7 @@ static void _skip_comment(candy_lexer_t *self) {
   * @param  self lexer
   * @retval none
   */
-static inline void _save_oct(candy_lexer_t *self) {
+static void _save_oct(candy_lexer_t *self) {
   char buff[] = {_view(self, 0), _view(self, 1), _view(self, 2), '\0'};
   char *end = NULL;
   char value = strtoul(buff, &end, 8);
@@ -203,7 +199,7 @@ static inline void _save_oct(candy_lexer_t *self) {
   * @param  self lexer
   * @retval none
   */
-static inline void _save_hex(candy_lexer_t *self) {
+static void _save_hex(candy_lexer_t *self) {
   lex_assert(is_hex(_view(self, 0)) && is_hex(_view(self, 1)), "invalid hexadecimal escape");
   _save_char(self, ch2hex(_read(self)) << 4 | ch2hex(_read(self)));
 }
@@ -384,10 +380,8 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
 
 int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud) {
   memset(self, 0, sizeof(struct candy_lexer));
-#ifdef CANDY_DEBUG_MODE
   self->dbg.line = 1;
   self->dbg.column = 0;
-#endif /* CANDY_DEBUG_MODE */
   self->lookahead.token = TK_EOS;
   self->io = io;
   self->reader = reader;
