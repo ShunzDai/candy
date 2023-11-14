@@ -72,12 +72,10 @@ typedef enum candy_tokens {
 /** @ref doc/io_memory_model.drawio.png */
 struct candy_lexer {
   candy_io_t *io;
-#ifdef CANDY_DEBUG_MODE
   struct {
     uint16_t line;
     uint16_t column;
   } dbg;
-#endif /* CANDY_DEBUG_MODE */
   struct {
     candy_tokens_t token;
     candy_wrap_t wrap;
