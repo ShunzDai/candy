@@ -40,7 +40,7 @@ typedef struct candy_pair candy_pair_t;
 typedef struct candy_block candy_block_t;
 typedef struct candy_state candy_state_t;
 
-typedef int (*candy_reader_t)(char *, const int, void *);
+typedef int (*candy_reader_t)(char *, const size_t, void *);
 
 /**
   * @brief c-type function

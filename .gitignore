@@ -1,2 +1,5 @@
+.DS_Store
+.$framework.drawio.bkp
+.$framework.drawio.dtmp
 .vscode
 build
