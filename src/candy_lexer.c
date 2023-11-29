@@ -26,29 +26,20 @@ static char *_buff(candy_lexer_t *self) {
   return (char *)candy_wrap_get_string(&self->io->buff);
 }
 
-static int _size(candy_lexer_t *self) {
+static size_t _size(candy_lexer_t *self) {
   return candy_wrap_size(&self->io->buff);
-}
-
-/**
-  * @brief  observer mode of the stream
-  * @param  self lexer
-  * @param  idx  lookahead to the idx byte, idx value between 0 and @ref CANDY_LEXER_LOOKAHEAD_SIZE - 1
-  * @retval target byte
-  */
-static char _view(candy_lexer_t *self, int idx) {
-  assert(self->r + idx < _size(self));
-  return _buff(self)[self->r + idx];
 }
 
 static void _fill(candy_lexer_t *self) {
   size_t size = _size(self);
+  if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE < size)
+    return;
   /* calculates the start position of the read buffer */
-  int offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
+  size_t offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
   /** if the number of bytes that can be filled is less than
       @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
-  if (size - offset < CANDY_DEFAULT_IO_SIZE) {
-    candy_wrap_append(&self->io->buff, NULL, _size(self));
+  if (size < CANDY_DEFAULT_IO_SIZE + offset) {
+    candy_wrap_append(&self->io->buff, NULL, CANDY_DEFAULT_IO_SIZE);
     self->reader(_buff(self) + size, _size(self) - size, self->ud);
   }
   /* otherwise buffer will be filled directly */
@@ -59,7 +50,19 @@ static void _fill(candy_lexer_t *self) {
     self->reader(_buff(self) + offset, size - offset, self->ud);
     self->r = self->w + CANDY_LEXER_EXTRA_SIZE;
   }
-} 
+}
+
+/**
+  * @brief  observer mode of the stream
+  * @param  self lexer
+  * @param  idx  lookahead to the idx byte, idx value between 0 and @ref CANDY_LEXER_LOOKAHEAD_SIZE - 1
+  * @retval target byte
+  */
+static char _view(candy_lexer_t *self, int idx) {
+  _fill(self);
+  assert(self->r + idx < _size(self));
+  return _buff(self)[self->r + idx];
+}
 
 /**
   * @brief  read out the next byte of the stream
@@ -67,9 +70,7 @@ static void _fill(candy_lexer_t *self) {
   * @retval target byte
   */
 static char _read(candy_lexer_t *self) {
-  /** only @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes left to read */
-  if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE == _size(self))
-    _fill(self);
+  _fill(self);
   ++self->dbg.column;
   return _buff(self)[self->r++];
 }

@@ -27,7 +27,7 @@ template <candy_tokens_t token, typename ... supposed>
 static void tast_body(const char exp[], supposed ... value) {
   candy_io_t io;
   candy_lexer_t lex;
-  str_info info = {exp, (int)strlen(exp), 0};
+  str_info info = {exp, strlen(exp), 0};
   candy_io_init(&io);
   candy_lexer_init(&lex, &io, string_reader, &info);
   candy_wrap_t wrap = {};
@@ -172,7 +172,7 @@ TEST_LEXER(TK_LSHIFT , TK_LSHIFT , "<<")
 TEST(lexer, file_system) {
   FILE *f = fopen("../test/test_lexer.cdy", "r");
   fseek(f, 0, SEEK_END);
-  int size = ftell(f);
+  size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
   candy_io_t io;
   candy_lexer_t lex;
