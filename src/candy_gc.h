@@ -13,6 +13,26 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "gtest/gtest.h"
+#ifndef CANDY_SRC_GC_H
+#define CANDY_SRC_GC_H
+#ifdef __cplusplus
+extern "C"{
+#endif /* __cplusplus */
 
-#define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
+#include "src/candy_types.h"
+
+struct candy_gc {
+  candy_object_t *pool;
+  candy_object_t *root;
+};
+
+int candy_gc_init(candy_gc_t *self);
+int candy_gc_deinit(candy_gc_t *self);
+
+candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_wraps_t type, int size);
+candy_object_t *candy_gc_add_root(candy_gc_t *self, candy_wraps_t type, int size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* CANDY_SRC_GC_H */

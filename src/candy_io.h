@@ -19,28 +19,22 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy_wrap.h"
 #include "src/candy_types.h"
 #include <setjmp.h>
-
-#if CANDY_DEFAULT_IO_SIZE < CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE
-#error "default io buffer size is too small"
-#endif /* CANDY_DEFAULT_IO_SIZE */
 
 #define candy_assert(_self, _condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_io_throw((_self), #_type " error: " _format, ##__VA_ARGS__))
 
 struct candy_io {
-  candy_wrap_t buff;
+  candy_array_t *buff;
   jmp_buf env;
 };
 
-typedef void (*candy_try_catch_cb_t)(void *, void *);
+typedef void (*candy_try_catch_cb_t)(void *self, void *arg);
 
 int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud);
 void candy_io_throw(candy_io_t *self, const char format[], ...) CANDY_NORETURN;
 
-int candy_io_init(candy_io_t *self);
-int candy_io_deinit(candy_io_t *self);
+int candy_io_init(candy_io_t *self, candy_gc_t *gc);
 
 #ifdef __cplusplus
 }

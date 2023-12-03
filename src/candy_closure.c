@@ -13,6 +13,10 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "gtest/gtest.h"
+#include "src/candy_io.h"
+#include "src/candy_object.h"
+#include "src/candy_gc.h"
 
-#define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
+candy_sclosure_t *candy_sclosure_new(candy_gc_t *gc) {
+  return (candy_sclosure_t *)candy_gc_add_pool(gc, TYPE_FUNC, sizeof(struct candy_sclosure));
+}

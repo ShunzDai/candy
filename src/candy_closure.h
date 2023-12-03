@@ -13,6 +13,17 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "gtest/gtest.h"
+#ifndef CANDY_SRC_CLOSURE_H
+#define CANDY_SRC_CLOSURE_H
+#ifdef __cplusplus
+extern "C"{
+#endif /* __cplusplus */
 
-#define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
+#include "src/candy_types.h"
+
+candy_sclosure_t *candy_sclosure_new(candy_gc_t *gc);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* CANDY_SRC_CLOSURE_H */

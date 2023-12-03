@@ -13,6 +13,19 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "gtest/gtest.h"
+#include "test_common.h"
+#include "src/candy_wrap.h"
+#include "src/candy_gc.h"
 
-#define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
+struct object {
+  candy_wrap_t obj;
+  int data;
+};
+
+TEST(gc, root) {
+  candy_gc_t gc{};
+  candy_gc_init(&gc);
+  candy_gc_add_root(&gc, TYPE_NONE, sizeof(object));
+  candy_gc_add_root(&gc, TYPE_NONE, sizeof(object));
+  candy_gc_deinit(&gc);
+}

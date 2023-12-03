@@ -15,6 +15,7 @@
   */
 #include "src/candy_lexer.h"
 #include "src/candy_io.h"
+#include "src/candy_array.h"
 #include "src/candy_lib.h"
 #include <stdlib.h>
 #include <string.h>
@@ -23,33 +24,33 @@
 #define lex_assert(_condition, _format, ...) candy_assert(*(candy_io_t **)(self), _condition, lexical, _format, ##__VA_ARGS__)
 
 static char *_buff(candy_lexer_t *self) {
-  return (char *)candy_wrap_get_string(&self->io->buff);
+  return (char *)candy_array_data(self->io->buff);
 }
 
 static size_t _size(candy_lexer_t *self) {
-  return candy_wrap_size(&self->io->buff);
+  return candy_array_size(self->io->buff);
 }
 
 static void _fill(candy_lexer_t *self) {
   size_t size = _size(self);
   if (self->r + CANDY_LEXER_LOOKAHEAD_SIZE < size)
     return;
-  /* calculates the start position of the read buffer */
+  /* calculate the start position of the read buffer */
   size_t offset = self->w + CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE;
   /** if the number of bytes that can be filled is less than
-      @ref CANDY_DEFAULT_IO_SIZE bytes, the buffer will be enlarged */
-  if (size < CANDY_DEFAULT_IO_SIZE + offset) {
-    candy_wrap_append(&self->io->buff, NULL, CANDY_DEFAULT_IO_SIZE);
-    self->reader(_buff(self) + size, _size(self) - size, self->ud);
+      @ref CANDY_LEXER_EXPAND_SIZE bytes, the buffer will be enlarged */
+  if (size < CANDY_LEXER_EXPAND_SIZE + offset) {
+    candy_array_append(self->io->buff, NULL, CANDY_LEXER_EXPAND_SIZE);
+    offset = size ? size : CANDY_LEXER_EXTRA_SIZE;
   }
   /* otherwise buffer will be filled directly */
   else {
     /** restore the unread @ref CANDY_LEXER_LOOKAHEAD_SIZE bytes to the buffer */
     memmove(_buff(self) + self->w + CANDY_LEXER_EXTRA_SIZE, _buff(self) + self->r, CANDY_LEXER_LOOKAHEAD_SIZE);
-    /* fill buffer */
-    self->reader(_buff(self) + offset, size - offset, self->ud);
     self->r = self->w + CANDY_LEXER_EXTRA_SIZE;
   }
+  /* fill buffer */
+  self->reader(_buff(self) + offset, _size(self) - offset, self->ud);
 }
 
 /**
@@ -210,8 +211,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
   if (((_view(self, 0) == '0') ? _save(self), true : false) && _check_dual(self, "xX", _save)) {
     while (_check_next(self, is_hex, _save));
     _save_char(self, '\0');
-    candy_integer_t i = (candy_integer_t)strtol(_buff(self), NULL, 16);
-    candy_wrap_set_integer(wrap, &i, 1);
+    candy_wrap_set_integer(wrap, (candy_integer_t)strtol(_buff(self), NULL, 16));
     return TK_INTEGER;
   }
   _save(self);
@@ -234,13 +234,11 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
           break;
         _save_char(self, '\0');
         if (is_float) {
-          candy_float_t f = (candy_float_t)strtod(_buff(self), NULL);
-          candy_wrap_set_float(wrap, &f, 1);
+          candy_wrap_set_float(wrap, (candy_float_t)strtod(_buff(self), NULL));
           return TK_FLOAT;
         }
         else {
-          candy_integer_t i = (candy_integer_t)strtol(_buff(self), NULL, 10);
-          candy_wrap_set_integer(wrap, &i, 1);
+          candy_wrap_set_integer(wrap, (candy_integer_t)strtol(_buff(self), NULL, 10));
           return TK_INTEGER;
         }
     }
@@ -306,7 +304,7 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
   /* skip last " or ' */
   lex_assert(multiline ? (_view(self, 1) == del && _view(self, 2) == del) : true, "unexpected end of string");
   _skipn(self, multiline ? 3 : 1);
-  candy_wrap_set_string(wrap, _buff(self), self->w);
+  candy_wrap_set_object(wrap, (candy_object_t *)candy_array_new(self->gc, TYPE_CHAR, _buff(self), self->w));
   return TK_STRING;
 }
 
@@ -321,7 +319,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
     #define CANDY_KW_MATCH
     #include "src/candy_keyword.list"
     default:
-      candy_wrap_set_string(wrap, _buff(self), self->w);
+      candy_wrap_set_object(wrap, (candy_object_t *)candy_array_new(self->gc, TYPE_CHAR, _buff(self), self->w));
       return TK_IDENT;
   }
 }
@@ -379,21 +377,17 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   return binary_ope(_read(self), _read(self));
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud) {
+int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_gc_t *gc, candy_reader_t reader, void *ud) {
   memset(self, 0, sizeof(struct candy_lexer));
+  self->io = io;
+  self->gc = gc;
   self->dbg.line = 1;
   self->dbg.column = 0;
   self->lookahead.token = TK_EOS;
-  self->io = io;
   self->reader = reader;
   self->ud = ud;
   self->r = CANDY_LEXER_EXTRA_SIZE;
   self->w = 0;
-  self->reader(_buff(self) + CANDY_LEXER_EXTRA_SIZE, _size(self) - CANDY_LEXER_EXTRA_SIZE, self->ud);
-  return 0;
-}
-
-int candy_lexer_deinit(candy_lexer_t *self) {
   return 0;
 }
 
@@ -410,5 +404,5 @@ const candy_wrap_t *candy_lexer_next(candy_lexer_t *self) {
     self->lookahead.token = TK_EOS;
     return &self->lookahead.wrap;
   }
-  return &null;
+  return &null_wrap;
 }

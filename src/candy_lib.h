@@ -19,8 +19,7 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "src/candy_types.h"
 #include <ctype.h>
 
 #define candy_lengthof(array) ((int)(sizeof(array) / sizeof(array[0])))
@@ -32,17 +31,18 @@ static inline uint32_t djb_hash(char str[], int size) {
   return hash & 0x7FFFFFFF;
 }
 
-static inline bool is_power2(int n) {
+static inline bool is_power2(size_t n) {
   return (n & (n - 1)) == 0;
 }
 
-static inline int next_power2(int n) {
+static inline size_t next_power2(size_t n) {
   --n;
   n |= n >> 1;
   n |= n >> 2;
   n |= n >> 4;
   n |= n >> 8;
   n |= n >> 16;
+  n |= n >> 32;
   return ++n;
 }
 

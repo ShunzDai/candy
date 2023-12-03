@@ -14,12 +14,13 @@
   * limitations under the License.
   */
 #include "src/candy_block.h"
+#include "src/candy_object.h"
+#include "src/candy_gc.h"
 #include <stdlib.h>
 
-candy_block_t *candy_block_create(void) {
-  candy_block_t *self = (candy_block_t *)calloc(1, sizeof(struct candy_block));
-  candy_wrap_set_wrap(&self->pool, NULL, 0);
-  candy_wrap_set_uint32(&self->ins, NULL, 0);
+candy_block_t *candy_block_new(candy_gc_t *gc) {
+  candy_block_t *self = (candy_block_t *)candy_gc_add_pool(gc, type, sizeof(struct candy_block));
+
   return self;
 }
 

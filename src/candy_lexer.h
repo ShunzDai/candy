@@ -72,6 +72,7 @@ typedef enum candy_tokens {
 /** @ref doc/io_memory_model.drawio.png */
 struct candy_lexer {
   candy_io_t *io;
+  candy_gc_t *gc;
   struct {
     uint16_t line;
     uint16_t column;
@@ -88,8 +89,7 @@ struct candy_lexer {
 
 typedef struct candy_lexer candy_lexer_t;
 
-int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud);
-int candy_lexer_deinit(candy_lexer_t *self);
+int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_gc_t *gc, candy_reader_t reader, void *ud);
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);
 const candy_wrap_t *candy_lexer_next(candy_lexer_t *self);

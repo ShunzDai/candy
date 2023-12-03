@@ -14,9 +14,13 @@
   * limitations under the License.
   */
 #include "src/candy_io.h"
-#include "src/candy_lib.h"
+#include "src/candy_array.h"
 #include <stdarg.h>
 #include <string.h>
+
+#if CANDY_LEXER_EXPAND_SIZE < CANDY_LEXER_EXTRA_SIZE + CANDY_LEXER_LOOKAHEAD_SIZE
+#error "default io buffer size is too small"
+#endif /* CANDY_DEFAULT_IO_SIZE */
 
 int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud) {
   if (setjmp(self->env))
@@ -32,20 +36,14 @@ void candy_io_throw(candy_io_t *self, const char format[], ...) {
   va_start(ap, format);
   int len = vsnprintf(NULL, 0, format, ap) + 1;
   va_end(ap);
-  if (candy_wrap_size(&self->buff) < len)
-    candy_wrap_append(&self->buff, NULL, candy_wrap_size(&self->buff));
+  candy_array_resize(self->buff, len);
   va_start(ap, format);
-  vsnprintf((char *)candy_wrap_get_string(&self->buff), len, format, ap);
+  vsnprintf((char *)candy_array_data(self->buff), len, format, ap);
   va_end(ap);
   longjmp(self->env, 1);
 }
 
-int candy_io_init(candy_io_t *self) {
-  candy_wrap_set_string(&self->buff, NULL, CANDY_DEFAULT_IO_SIZE);
-  return 0;
-}
-
-int candy_io_deinit(candy_io_t *self) {
-  candy_wrap_deinit(&self->buff);
+int candy_io_init(candy_io_t *self, candy_gc_t *gc) {
+  self->buff = candy_array_new(gc, TYPE_CHAR, NULL, 0);
   return 0;
 }

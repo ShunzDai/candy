@@ -22,6 +22,7 @@
 #include <string.h>
 
 struct candy_state {
+  
   candy_vm_t vm;
 };
 

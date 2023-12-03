@@ -14,9 +14,10 @@
   * limitations under the License.
   */
 #include "src/candy_parser.h"
-#include "src/candy_io.h"
 #include "src/candy_lexer.h"
+#include "src/candy_io.h"
 #include "src/candy_block.h"
+#include "src/candy_closure.h"
 
 #define par_assert(_condition, _format, ...) candy_assert(*(candy_io_t **)(self), _condition, syntax, _format, ##__VA_ARGS__)
 
@@ -25,70 +26,70 @@ typedef struct candy_parser candy_parser_t;
 struct candy_parser {
   /* lexical state */
   candy_lexer_t lex;
-  candy_block_t *head;
+  candy_sclosure_t *closure;
 };
 
-static void _expr(candy_parser_t *self) {
-  while (1) {
-    switch (candy_lexer_lookahead(&self->lex)) {
-      case ')':
-        return;
-      case TK_STRING:
-      case TK_INTEGER:
-      case TK_FLOAT:
-        candy_block_add_const(self->head, candy_lexer_next(&self->lex));
-        if (candy_lexer_lookahead(&self->lex) == ',')
-          candy_lexer_next(&self->lex);
-        break;
-      default:
-        par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->lex));
-        break;
-    }
-  }
-}
+// static void _expr(candy_parser_t *self) {
+//   while (1) {
+//     switch (candy_lexer_lookahead(&self->lex)) {
+//       case ')':
+//         return;
+//       case TK_STRING:
+//       case TK_INTEGER:
+//       case TK_FLOAT:
+//         candy_block_add_const(self->head, candy_lexer_next(&self->lex));
+//         if (candy_lexer_lookahead(&self->lex) == ',')
+//           candy_lexer_next(&self->lex);
+//         break;
+//       default:
+//         par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->lex));
+//         break;
+//     }
+//   }
+// }
 
-static void _stat_ident(candy_parser_t *self) {
-  /* get ident */
-  int id = candy_block_add_const(self->head, candy_lexer_next(&self->lex));
-  switch (candy_lexer_lookahead(&self->lex)) {
-    case '=':
-      break;
-    case '(':
-      /* skip '(' */
-      candy_lexer_next(&self->lex);
-      _expr(self);
-      /* skip ')' */
-      candy_lexer_next(&self->lex);
-      for (int i = candy_wrap_size(&self->head->pool) - 1 - id; i > (int)id; --i)
-        candy_block_add_iabx(self->head, OP_LOADCST, 0, i);
-      candy_block_add_iabc(self->head, OP_GETTABUP, 0, 0, id);
-      candy_block_add_iabc(self->head, OP_CALL, 0, 0, 0);
-      break;
-    default:
-      par_assert(false, "identifiers can only be used for assignment or invocation");
-      break;
-  }
-}
+// static void _stat_ident(candy_parser_t *self) {
+//   /* get ident */
+//   int id = candy_block_add_const(self->head, candy_lexer_next(&self->lex));
+//   switch (candy_lexer_lookahead(&self->lex)) {
+//     case '=':
+//       break;
+//     case '(':
+//       /* skip '(' */
+//       candy_lexer_next(&self->lex);
+//       _expr(self);
+//       /* skip ')' */
+//       candy_lexer_next(&self->lex);
+//       for (int i = candy_wrap_size(&self->head->pool) - 1 - id; i > (int)id; --i)
+//         candy_block_add_iabx(self->head, OP_LOADCST, 0, i);
+//       candy_block_add_iabc(self->head, OP_GETTABUP, 0, 0, id);
+//       candy_block_add_iabc(self->head, OP_CALL, 0, 0, 0);
+//       break;
+//     default:
+//       par_assert(false, "identifiers can only be used for assignment or invocation");
+//       break;
+//   }
+// }
 
-/**
-  * @brief  if '(' expr ')' block { elif '(' expr ')' block } [ else block ] end
-  * @param  self  parser handle.
-  */
-static void _stat_if(candy_parser_t *self) {
-  /* if '(' expr ')' block */
-  /* { elif '(' expr ')' block } */
-  /* [ else block ] end */
-}
+// /**
+//   * @brief  if '(' expr ')' block { elif '(' expr ')' block } [ else block ] end
+//   * @param  self  parser handle.
+//   */
+// static void _stat_if(candy_parser_t *self) {
+//   /* if '(' expr ')' block */
+//   /* { elif '(' expr ')' block } */
+//   /* [ else block ] end */
+// }
 
 /** @ref https://blog.csdn.net/initphp/article/details/105247775 */
 static void _statement(candy_parser_t *self, void *ud) {
   while (candy_lexer_lookahead(&self->lex) != TK_EOS) {
     switch (candy_lexer_lookahead(&self->lex)) {
       case TK_IDENT:
-        _stat_ident(self);
+        // _stat_ident(self);
         break;
       case TK_if:
-        _stat_if(self);
+        // _stat_if(self);
         break;
       case TK_while:
         break;
@@ -103,15 +104,11 @@ static void _statement(candy_parser_t *self, void *ud) {
   }
 }
 
-candy_block_t *candy_parse(candy_io_t *io, candy_reader_t reader, void *ud) {
+candy_sclosure_t *candy_parse(candy_io_t *io, candy_gc_t *gc, candy_reader_t reader, void *ud) {
   candy_parser_t parser;
-  candy_lexer_init(&parser.lex, io, reader, ud);
-  parser.head = candy_block_create();
+  candy_lexer_init(&parser.lex, io, gc, reader, ud);
+  parser.closure = candy_sclosure_new(gc);
   if (candy_io_try_catch(io, (candy_try_catch_cb_t)_statement, &parser, NULL) != 0)
-    goto exit;
-  return parser.head;
-  exit:
-  candy_block_delete(&parser.head);
-  candy_lexer_deinit(&parser.lex);
+    (void)0;
   return NULL;
 }

@@ -19,7 +19,6 @@
 extern "C"{
 #endif /* __cplusplus */
 
-#include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
 typedef enum candy_opcodes {
@@ -49,13 +48,7 @@ typedef union candy_instruc {
   } iabc;
 } candy_instruc_t;
 
-struct candy_block {
-  candy_wrap_t pool;
-  candy_wrap_t ins;
-};
-
-candy_block_t *candy_block_create(void);
-int candy_block_delete(candy_block_t **self);
+candy_block_t *candy_block_new(candy_gc_t *gc);
 
 int candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap);
 

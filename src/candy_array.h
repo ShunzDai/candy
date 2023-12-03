@@ -13,6 +13,24 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "gtest/gtest.h"
+#ifndef CANDY_SRC_ARRAY_H
+#define CANDY_SRC_ARRAY_H
+#ifdef __cplusplus
+extern "C"{
+#endif /* __cplusplus */
 
-#define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
+#include "src/candy_types.h"
+
+candy_array_t *candy_array_new(candy_gc_t *gc, candy_wraps_t type, void *data, size_t size);
+
+size_t candy_array_size(candy_array_t *self);
+void *candy_array_data(candy_array_t *self);
+
+void candy_array_resize(candy_array_t *self, size_t size);
+
+int candy_array_append(candy_array_t *self, void *data, size_t size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* CANDY_SRC_ARRAY_H */

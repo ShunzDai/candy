@@ -21,7 +21,7 @@ extern "C"{
 
 #include "src/candy_types.h"
 
-candy_block_t *candy_parse(candy_io_t *io, candy_reader_t reader, void *ud);
+candy_sclosure_t *candy_parse(candy_io_t *io, candy_gc_t *gc, candy_reader_t reader, void *ud);
 
 #ifdef __cplusplus
 }

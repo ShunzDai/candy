@@ -18,7 +18,5 @@
 #include "src/candy_wrap.h"
 
 TEST(table, init) {
-  candy_wrap_t wrap;
-  candy_wrap_set_pair(&wrap, NULL, 16);
-  candy_wrap_deinit(&wrap);
+  
 }

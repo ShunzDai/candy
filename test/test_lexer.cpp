@@ -14,7 +14,9 @@
   * limitations under the License.
   */
 #include "test_common.h"
+#include "src/candy_gc.h"
 #include "src/candy_io.h"
+#include "src/candy_array.h"
 #include "src/candy_lexer.h"
 #include "src/candy_reader.h"
 #include <string>
@@ -25,11 +27,13 @@ using namespace std;
 
 template <candy_tokens_t token, typename ... supposed>
 static void tast_body(const char exp[], supposed ... value) {
+  candy_gc_t gc;
   candy_io_t io;
   candy_lexer_t lex;
   str_info info = {exp, strlen(exp), 0};
-  candy_io_init(&io);
-  candy_lexer_init(&lex, &io, string_reader, &info);
+  candy_gc_init(&gc);
+  candy_io_init(&io, &gc);
+  candy_lexer_init(&lex, &io, &gc, string_reader, &info);
   candy_wrap_t wrap = {};
   ASSERT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, candy_wrap_t *wrap) {
     EXPECT_EQ(candy_lexer_lookahead(self), token);
@@ -37,25 +41,24 @@ static void tast_body(const char exp[], supposed ... value) {
     EXPECT_EQ(candy_lexer_lookahead(self), TK_EOS);
   }, &lex, &wrap), 0);
   if constexpr(sizeof...(value)) {
-    auto val = std::get<0>(std::make_tuple(value ...));
+    auto val = std::get<0>(std::tuple{value ...});
     if constexpr (std::is_same<decltype(val), std::string_view>::value) {
-      auto *str = candy_wrap_get_string(&wrap);
-      EXPECT_EQ(candy_wrap_size(&wrap), val.size());
+      auto obj = candy_wrap_get_object(&wrap);
+      char *str = (char *)candy_array_data((candy_array_t *)obj);
+      EXPECT_EQ(candy_array_size((candy_array_t *)obj), val.size());
       EXPECT_EQ(memcmp(str, val.data(), val.size()), 0);
     }
     else if constexpr (std::is_integral<decltype(val)>::value) {
-      EXPECT_EQ(*candy_wrap_get_integer(&wrap), val);
+      EXPECT_EQ(candy_wrap_get_integer(&wrap), val);
     }
     else if constexpr (std::is_floating_point<decltype(val)>::value) {
-      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&wrap), val);
+      EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, candy_wrap_get_float(&wrap), val);
     }
     else {
       static_assert(!std::is_same<decltype(val), decltype(val)>::value);
     }
   }
-  candy_wrap_deinit(&wrap);
-  candy_lexer_deinit(&lex);
-  candy_io_deinit(&io);
+  candy_gc_deinit(&gc);
 }
 
 TEST_LEXER(comment_0, TK_EOS, "#")
@@ -174,61 +177,64 @@ TEST(lexer, file_system) {
   fseek(f, 0, SEEK_END);
   size_t size = ftell(f);
   fseek(f, 0, SEEK_SET);
+  candy_gc_t gc;
   candy_io_t io;
   candy_lexer_t lex;
   file_info info = {f, size};
-  candy_io_init(&io);
-  candy_lexer_init(&lex, &io, file_reader, &info);
+  candy_gc_init(&gc);
+  candy_io_init(&io, &gc);
+  candy_lexer_init(&lex, &io, &gc, file_reader, &info);
   ASSERT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, void *ud) {
     EXPECT_EQ(candy_lexer_lookahead(self), TK_def);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), '(');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), ')');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), ':');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), '(');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), '+');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_STRING);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), ')');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_return);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_INTEGER);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_if);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), binary_ope('=', '='));
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_STRING);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), ':');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), '(');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_STRING);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), ')');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
+    candy_lexer_next(self);
+    EXPECT_EQ(candy_lexer_lookahead(self), TK_EOS);
+    candy_lexer_next(self);
     EXPECT_EQ(candy_lexer_lookahead(self), TK_EOS);
   }, &lex, nullptr), 0);
-  candy_lexer_deinit(&lex);
-  candy_io_deinit(&io);
+  candy_gc_deinit(&gc);
   fclose(info.f);
 }
