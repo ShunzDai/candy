@@ -41,7 +41,7 @@ void candy_io_throw(candy_io_t *self, const char format[], ...) {
 }
 
 int candy_io_init(candy_io_t *self) {
-  candy_wrap_set_string(&self->buff, NULL, CANDY_DEFAULT_IO_SIZE);
+  candy_wrap_set_string(&self->buff, NULL, 0);
   return 0;
 }
 
