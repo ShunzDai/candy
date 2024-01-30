@@ -16,7 +16,7 @@
 #ifndef CANDY_CONFIG_H
 #define CANDY_CONFIG_H
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 
 /**
@@ -30,20 +30,15 @@ extern "C"{
 #define CANDY_BASIC_TYPE_SIZE 4
 
 /**
-  * @brief  the maximum number of bytes for the lexer to lookahead to.
-  */
-#define CANDY_LEXER_LOOKAHEAD_SIZE 3
-
-/**
   * @brief  the maximum number of extra bytes that the user can write.
   */
 #define CANDY_LEXER_EXTRA_SIZE 1
 
 /**
-  * @brief  smaller buffers mean less space utilization and more load times,
+  * @brief  smaller expand size mean less space utilization and more load times,
   *         which can be decided by the user depending on the usage scenario.
   */
-#define CANDY_DEFAULT_IO_SIZE 64
+#define CANDY_LEXER_EXPAND_SIZE 64
 
 #define CANDY_DEFAULT_STACK_SIZE 8
 
