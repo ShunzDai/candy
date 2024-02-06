@@ -33,5 +33,5 @@
 
 #ifdef CANDY_KW_TEST
 #undef CANDY_KW_TEST
-#define CANDY_KW(_keyword, ...) TEST_LEXER(_keyword, TK_##_keyword, #_keyword);
+#define CANDY_KW(_keyword, ...) TEST_NORMAL(_keyword, TK_##_keyword, #_keyword);
 #endif /* CANDY_KW_TEST */

@@ -154,7 +154,7 @@ static void _handle_newline(candy_lexer_t *self, void (*pred)(candy_lexer_t *)) 
   pred(self);
   _check_dual(self, "\r\n", pred);
   self->dbg.line++;
-  self->dbg.column = 0;
+  self->dbg.column = 1;
 }
 
 /**
@@ -169,7 +169,7 @@ static void _skip_comment(candy_lexer_t *self) {
     switch (_view(self, 0)) {
       case '\r': case '\n':
         _handle_newline(self, _skip);
-      case (char)EOF:
+      case '\0':
         return;
       default:
         _skip(self);
@@ -202,49 +202,55 @@ static void _save_oct(candy_lexer_t *self) {
   */
 static void _save_hex(candy_lexer_t *self) {
   lex_assert(is_hex(_view(self, 0)) && is_hex(_view(self, 1)), "invalid hexadecimal escape");
-  _save_char(self, ch2hex(_read(self)) << 4 | ch2hex(_read(self)));
+  _save_char(self, chtonum(_read(self)) << 4 | chtonum(_read(self)));
 }
 
 static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
-  bool is_float = false;
-  if (((_view(self, 0) == '0') ? _save(self), true : false) && _check_dual(self, "xX", _save)) {
-    while (_check_next(self, is_hex, _save));
-    _save_char(self, '\0');
-    candy_integer_t i = (candy_integer_t)strtol(_buff(self), NULL, 16);
-    candy_wrap_set_integer(wrap, &i, 1);
-    return TK_INTEGER;
-  }
-  _save(self);
-  while (1) {
-    switch (_view(self, 0)) {
-      case '.':
-        lex_assert(!is_float, "multiple dots appear");
-        _save(self);
-        lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
-        is_float = true;
-        break;
-      case 'e': case 'E':
-        _save(self);
-        _check_dual(self, "+-", _save);
-        lex_assert(is_dec(_view(self, 0)), "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
-        is_float = true;
-        break;
-      default:
-        if (_check_next(self, is_dec, _save))
-          break;
-        _save_char(self, '\0');
-        if (is_float) {
-          candy_float_t f = (candy_float_t)strtod(_buff(self), NULL);
-          candy_wrap_set_float(wrap, &f, 1);
-          return TK_FLOAT;
-        }
-        else {
-          candy_integer_t i = (candy_integer_t)strtol(_buff(self), NULL, 10);
-          candy_wrap_set_integer(wrap, &i, 1);
-          return TK_INTEGER;
-        }
+  candy_tokens_t token = TK_INTEGER;
+  bool(*check)(char) = is_dec;
+  char first = _read(self);
+  _save_char(self, first);
+  if (first == '0') {
+    if (_check_dual(self, "Xx", _skip)) {
+      lex_assert(is_hex(_view(self, 0)), "invalid hexadecimal number");
+      check = is_hex;
+    }
+    else if (_check_dual(self, "Bb", _skip)) {
+      lex_assert(is_bin(_view(self, 0)), "invalid binary number");
+      check = is_bin;
     }
   }
+  while (1) {
+    if (check(_view(self, 0)))
+      _save(self);
+    else if (_check_dual(self, "Ee", _save)) {
+      lex_assert(check == is_dec, "invalid number");
+      _check_dual(self, "+-", _save);
+      token = TK_FLOAT;
+    }
+    else if (_view(self, 0) == '.') {
+      lex_assert(check == is_dec, "invalid number");
+      _save(self);
+      token = TK_FLOAT;
+    }
+    else {
+      lex_assert(!is_alpha(_view(self, 0)), "extra text after expected end of number");
+      break;
+    }
+  }
+  char *end = NULL;
+  _save_char(self, '\0');
+  if (token == TK_INTEGER) {
+    int base = check == is_dec ? first == '0' ? 8 : 10 : check == is_hex ? 16 : 2;
+    candy_integer_t i = (candy_integer_t)strtol(_buff(self), &end, base);
+    candy_wrap_set_integer(wrap, &i, 1);
+  }
+  else {
+    candy_float_t f = (candy_float_t)strtod(_buff(self), &end);
+    candy_wrap_set_float(wrap, &f, 1);
+  }
+  lex_assert(_buff(self) + self->w == end + 1, "invalid number");
+  return token;
 }
 
 /**
@@ -267,11 +273,10 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
         lex_assert(false, "unexpected end of string");
         return -1;
       case '\r': case '\n':
-        if (multiline == false) {
+        if (multiline)
+          _handle_newline(self, _save);
+        else
           lex_assert(false, "single line string can not contain line break");
-          return -1;
-        }
-        _handle_newline(self, _save);
         break;
       case '\\':
         _skip(self);
@@ -311,10 +316,10 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
 }
 
 static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *wrap) {
-  /* save alpha, or '_' */
+  /* save alpha */
   _save(self);
-  /* save number, alpha, or '_' */
-  while (is_dec(_view(self, 0)) || is_alpha(_view(self, 0)) || _view(self, 0) == '_')
+  /* save alpha or number */
+  while (is_alnum(_view(self, 0)))
     _save(self);
   /* check keyword */
   switch (djb_hash(_buff(self), self->w)) {
@@ -330,7 +335,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   self->w = 0;
   while (1) {
     switch (_view(self, 0)) {
-      case (char)EOF:
+      case '\0':
         return TK_EOS;
       case '\r': case '\n':
         _handle_newline(self, _skip);
@@ -368,7 +373,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
       default:
         if (is_dec(_view(self, 0)))
           return _get_number(self, wrap);
-        else if (is_alpha(_view(self, 0)) || _view(self, 0) == '_')
+        else if (is_alpha(_view(self, 0)))
           return _get_ident_or_keyword(self, wrap);
         lex_assert(false, "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
         return -1;
@@ -382,7 +387,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
 int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud) {
   memset(self, 0, sizeof(struct candy_lexer));
   self->dbg.line = 1;
-  self->dbg.column = 0;
+  self->dbg.column = 1;
   self->lookahead.token = TK_EOS;
   self->io = io;
   self->reader = reader;
