@@ -55,7 +55,15 @@ static inline bool is_lower(char ch) {
 }
 
 static inline bool is_alpha(char ch) {
-  return isalpha(ch);
+  return isalpha(ch) || ch == '_';
+}
+
+static inline bool is_alnum(char ch) {
+  return isalnum(ch) || ch == '_';
+}
+
+static inline bool is_bin(char ch) {
+  return (unsigned)(ch - '0') <= (unsigned)('1' - '0');
 }
 
 static inline bool is_oct(char ch) {
@@ -70,8 +78,8 @@ static inline bool is_hex(char ch) {
   return isxdigit(ch);
 }
 
-static inline uint8_t ch2hex(char ch) {
-  return is_dec(ch) ? (ch - '0') : (toupper(ch) - 'A' + 10);
+static inline uint8_t chtonum(char ch) {
+  return isdigit(ch) ? (ch - '0') : isalpha(ch) ? (toupper(ch) - 'A' + 10) : -1;
 }
 
 #ifdef __cplusplus

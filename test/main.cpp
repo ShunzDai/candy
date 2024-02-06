@@ -13,7 +13,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test_common.h"
+#include "test.h"
 
 /* valgrind --tool=memcheck --leak-check=full ./test/test */
 int main(int argc, char *argv[]) {

@@ -13,7 +13,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test_common.h"
+#include "test.h"
 #include "src/candy_vm.h"
 
 TEST(vm, call) {

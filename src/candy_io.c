@@ -33,7 +33,7 @@ void candy_io_throw(candy_io_t *self, const char format[], ...) {
   int len = vsnprintf(NULL, 0, format, ap) + 1;
   va_end(ap);
   if (candy_wrap_size(&self->buff) < len)
-    candy_wrap_append(&self->buff, NULL, candy_wrap_size(&self->buff));
+    candy_wrap_append(&self->buff, NULL, len - candy_wrap_size(&self->buff));
   va_start(ap, format);
   vsnprintf((char *)candy_wrap_get_string(&self->buff), len, format, ap);
   va_end(ap);
