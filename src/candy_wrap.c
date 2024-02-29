@@ -60,7 +60,7 @@ void candy_wrap_append(candy_wrap_t *self, const void *data, int size) {
   void *dst = candy_wrap_get_data(self);
   if ((self->size + size) * candy_wrap_sizeof(self) > (int)sizeof(self->data)) {
     int limit = next_power2(self->size + size);
-    if (next_power2(self->size) < limit) {
+    if ((int)next_power2(self->size) < limit) {
       /* dst comes from either the stack space described by wrap::data or
          the heap space pointed to by wrap::data. if wrap::data is used to
          store the new heap space pointer directly, short data may be lost */

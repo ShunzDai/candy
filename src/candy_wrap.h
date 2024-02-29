@@ -16,11 +16,13 @@
 #ifndef CANDY_SRC_WRAP_H
 #define CANDY_SRC_WRAP_H
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 
 #include "src/candy_types.h"
 #include <assert.h>
+
+#define CANDY_WRAP_NULL (candy_wrap_t){0}
 
 typedef enum candy_wraps {
 #define CANDY_TYPE_ENUM

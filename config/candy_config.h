@@ -30,11 +30,6 @@ extern "C" {
 #define CANDY_BASIC_TYPE_SIZE 4
 
 /**
-  * @brief  the maximum number of extra bytes that the user can write.
-  */
-#define CANDY_LEXER_EXTRA_SIZE 1
-
-/**
   * @brief  smaller expand size mean less space utilization and more load times,
   *         which can be decided by the user depending on the usage scenario.
   */

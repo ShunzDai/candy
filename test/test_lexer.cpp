@@ -47,7 +47,7 @@ template <typename ... supposed>
 static void test_assert(const candy_io_t& io, const supposed & ... value) {
   auto val = std::get<0>(std::make_tuple(value ...));
   static_assert(std::is_same<decltype(val), std::string_view>::value);
-  EXPECT_EQ(candy_wrap_size(&io.buff), val.size() + 1);
+  EXPECT_EQ(strlen(candy_wrap_get_string(&io.buff)), val.size());
   EXPECT_MEMEQ(candy_wrap_get_string(&io.buff), val.data(), val.size() + 1);
 }
 
@@ -78,7 +78,7 @@ static void tast_body(const char exp[], const supposed & ... value) {
 
 TEST_ASSERT(invalid_0, "0x", "lexical error: invalid hexadecimal number"sv)
 TEST_ASSERT(invalid_1, "0b", "lexical error: invalid binary number"sv)
-TEST_ASSERT(invalid_2, "0b1e", "lexical error: invalid number"sv)
+TEST_ASSERT(invalid_2, "0b1e", "lexical error: invalid float number"sv)
 
 TEST_NORMAL(empty, TK_EOS, "")
 
@@ -198,12 +198,9 @@ TEST_NORMAL(TK_LSHIFT , TK_LSHIFT , "<<")
 
 TEST(lexer, file_system) {
   FILE *f = fopen("../test/test_lexer.cdy", "r");
-  fseek(f, 0, SEEK_END);
-  size_t size = ftell(f);
-  fseek(f, 0, SEEK_SET);
   candy_io_t io{};
   candy_lexer_t lex{};
-  file_info info{f, size};
+  file_info info{f};
   candy_io_init(&io);
   candy_lexer_init(&lex, &io, file_reader, &info);
   ASSERT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, void *ud) {

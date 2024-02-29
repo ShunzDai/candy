@@ -50,10 +50,7 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   FILE *f = fopen(name, "r");
   if (f == NULL)
     return perror(NULL), -1;
-  fseek(f, 0, SEEK_END);
-  int size = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  struct file_info info = {f, size};
+  struct file_info info = {f};
   candy_block_t *block = candy_parse(&self->vm.io, file_reader, &info);
   fclose(f);
   if (block == NULL)
