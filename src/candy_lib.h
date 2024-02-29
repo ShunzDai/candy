@@ -16,14 +16,16 @@
 #ifndef CANDY_SRC_LIB_H
 #define CANDY_SRC_LIB_H
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "src/candy_types.h"
 #include <ctype.h>
 
 #define candy_lengthof(array) ((int)(sizeof(array) / sizeof(array[0])))
+
+long strntol(const char nptr[], size_t size, char *endptr[], int base);
+double strntod(const char nptr[], size_t size, char *endptr[]);
 
 static inline uint32_t djb_hash(char str[], int size) {
   uint32_t hash = 5381;
@@ -32,18 +34,30 @@ static inline uint32_t djb_hash(char str[], int size) {
   return hash & 0x7FFFFFFF;
 }
 
-static inline bool is_power2(int n) {
+static inline bool is_power2(size_t n) {
   return (n & (n - 1)) == 0;
 }
 
-static inline int next_power2(int n) {
+static inline size_t next_power2(size_t n) {
   --n;
   n |= n >> 1;
   n |= n >> 2;
   n |= n >> 4;
   n |= n >> 8;
   n |= n >> 16;
+  n |= n >> 32;
   return ++n;
+}
+
+static inline size_t ceillog2(size_t n) {
+  size_t result = 0;
+  if (n & 0xFFFFFFFF00000000LU) { result += 32; n >>= 32; }
+  if (n & 0x00000000FFFF0000LU) { result += 16; n >>= 16; }
+  if (n & 0x000000000000FF00LU) { result +=  8; n >>=  8; }
+  if (n & 0x00000000000000F0LU) { result +=  4; n >>=  4; }
+  if (n & 0x000000000000000CLU) { result +=  2; n >>=  2; }
+  if (n & 0x0000000000000002LU) { result +=  1; n >>=  1; }
+  return result;
 }
 
 static inline bool is_upper(char ch) {

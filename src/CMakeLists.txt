@@ -1,4 +1,5 @@
 file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
+  candy_lib.c
   candy_io.c
   candy_wrap.c
   candy_table.c
@@ -10,8 +11,6 @@ file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   candy_state.c
   candy_builtin.c
 )
-
-add_compile_options(-Wno-implicit-fallthrough)
 
 add_library(candy_core STATIC ${SOURCES_CANDY})
 

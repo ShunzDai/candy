@@ -16,7 +16,7 @@
 #ifndef CANDY_SRC_VM_H
 #define CANDY_SRC_VM_H
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 
 #include "src/candy_wrap.h"

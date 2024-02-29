@@ -16,7 +16,7 @@
 #ifndef CANDY_SRC_READER_H
 #define CANDY_SRC_READER_H
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 
 #include <stdio.h>
@@ -29,12 +29,11 @@ struct str_info {
 
 struct file_info {
   FILE *f;
-  const size_t size;
 };
 
-int string_reader(char *buff, const size_t max_len, void *ud);
+int string_reader(char buffer[], const size_t max_len, void *ud);
 
-int file_reader(char *buff, const size_t max_len, void *ud);
+int file_reader(char buffer[], const size_t max_len, void *ud);
 
 #ifdef __cplusplus
 }

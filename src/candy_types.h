@@ -16,7 +16,7 @@
 #ifndef CANDY_SRC_COMMON_TYPES_H
 #define CANDY_SRC_COMMON_TYPES_H
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 
 #include "candy_config.h"
@@ -40,12 +40,12 @@ typedef struct candy_pair candy_pair_t;
 typedef struct candy_block candy_block_t;
 typedef struct candy_state candy_state_t;
 
-typedef int (*candy_reader_t)(char *, const size_t, void *);
+typedef int (*candy_reader_t)(char buffer[], const size_t max_len, void *ud);
 
 /**
   * @brief c-type function
   */
-typedef int (*candy_cfunc_t)(candy_state_t *);
+typedef int (*candy_cfunc_t)(candy_state_t *self);
 
 struct candy_regist {
   const char *name;

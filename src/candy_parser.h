@@ -16,7 +16,7 @@
 #ifndef CANDY_SRC_LEXER_H
 #define CANDY_SRC_LEXER_H
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 
 #include "src/candy_types.h"

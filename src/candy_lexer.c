@@ -30,26 +30,28 @@ static size_t _size(candy_lexer_t *self) {
   return candy_wrap_size(&self->io->buff);
 }
 
-static void _fill(candy_lexer_t *self, size_t remain) {
+static int _fill(candy_lexer_t *self, size_t ahead) {
   size_t size = _size(self);
-  if (self->r + remain < size)
-    return;
+  if (self->r + ahead < size)
+    return 0;
   /* calculate the start position of the read buffer */
-  size_t offset = self->w + CANDY_LEXER_EXTRA_SIZE + remain;
+  size_t offset = self->w + ahead;
   /** if the number of bytes that can be filled is less than
       @ref CANDY_LEXER_EXPAND_SIZE bytes, the buffer will be enlarged */
   if (size < CANDY_LEXER_EXPAND_SIZE + offset) {
     candy_wrap_append(&self->io->buff, NULL, CANDY_LEXER_EXPAND_SIZE);
-    offset = size ? size : CANDY_LEXER_EXTRA_SIZE;
+    offset = size;
   }
   /* otherwise buffer will be filled directly */
   else {
-    /** restore the unread remain bytes to the buffer */
-    memmove(_buff(self) + self->w + CANDY_LEXER_EXTRA_SIZE, _buff(self) + self->r, remain);
-    self->r = self->w + CANDY_LEXER_EXTRA_SIZE;
+    /* restore the unread remain bytes to the buffer */
+    memmove(_buff(self) + self->w, _buff(self) + self->r, ahead);
+    self->r = self->w;
   }
   /* fill buffer */
-  self->reader(_buff(self) + offset, _size(self) - offset, self->ud);
+  int res = self->reader(_buff(self) + offset, _size(self) - offset, self->ud);
+  lex_assert(res > 0, "stream error");
+  return res;
 }
 
 /**
@@ -102,7 +104,7 @@ static void _skipn(candy_lexer_t *self, int n) {
   * @retval none
   */
 static void _save_char(candy_lexer_t *self, char ch) {
-  assert(self->r >= self->w + CANDY_LEXER_EXTRA_SIZE);
+  assert(self->r > self->w);
   _buff(self)[self->w++] = ch;
 }
 
@@ -151,8 +153,10 @@ static inline bool _check_dual(candy_lexer_t *self, const char str[], void (*pre
   * @return none
   */
 static void _handle_newline(candy_lexer_t *self, void (*pred)(candy_lexer_t *)) {
+  char old = _view(self, 0);
   pred(self);
-  _check_dual(self, "\r\n", pred);
+  if (_view(self, 0) == "\r\n"[old == '\r'])
+    pred(self);
   self->dbg.line++;
   self->dbg.column = 1;
 }
@@ -224,12 +228,12 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
     if (check(_view(self, 0)))
       _save(self);
     else if (_check_dual(self, "Ee", _save)) {
-      lex_assert(check == is_dec, "invalid number");
+      lex_assert(check == is_dec, "invalid float number");
       _check_dual(self, "+-", _save);
       token = TK_FLOAT;
     }
     else if (_view(self, 0) == '.') {
-      lex_assert(check == is_dec, "invalid number");
+      lex_assert(check == is_dec, "invalid float number");
       _save(self);
       token = TK_FLOAT;
     }
@@ -239,17 +243,16 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_wrap_t *wrap) {
     }
   }
   char *end = NULL;
-  _save_char(self, '\0');
   if (token == TK_INTEGER) {
     int base = check == is_dec ? first == '0' ? 8 : 10 : check == is_hex ? 16 : 2;
-    candy_integer_t i = (candy_integer_t)strtol(_buff(self), &end, base);
+    candy_integer_t i = (candy_integer_t)strntol(_buff(self), self->w, &end, base);
     candy_wrap_set_integer(wrap, &i, 1);
   }
   else {
-    candy_float_t f = (candy_float_t)strtod(_buff(self), &end);
+    candy_float_t f = (candy_float_t)strntod(_buff(self), self->w, &end);
     candy_wrap_set_float(wrap, &f, 1);
   }
-  lex_assert(_buff(self) + self->w == end + 1, "invalid number");
+  lex_assert(_buff(self) + self->w == end, "malformed number");
   return token;
 }
 
@@ -267,16 +270,14 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
   const char del = _view(self, 0);
   /* skip first " or ' */
   _skipn(self, multiline ? 3 : 1);
-  while (_view(self, 0) != del) {
+  while (1) {
     switch (_view(self, 0)) {
       case '\0':
         lex_assert(false, "unexpected end of string");
         return -1;
       case '\r': case '\n':
-        if (multiline)
-          _handle_newline(self, _save);
-        else
-          lex_assert(false, "single line string can not contain line break");
+        lex_assert(multiline, "unexpected end of string");
+        _handle_newline(self, _save);
         break;
       case '\\':
         _skip(self);
@@ -304,12 +305,13 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_wrap_t *wrap, const
         break;
       /* normal character */
       default:
+        if (_view(self, 0) == del && (!multiline || (_view(self, 1) == del && _view(self, 2) == del)))
+          goto exit;
         _save(self);
         break;
     }
   }
-  /* skip last " or ' */
-  lex_assert(multiline ? (_view(self, 1) == del && _view(self, 2) == del) : true, "unexpected end of string");
+  exit:
   _skipn(self, multiline ? 3 : 1);
   candy_wrap_set_string(wrap, _buff(self), self->w);
   return TK_STRING;
@@ -333,6 +335,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_wrap_t *w
 
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
   self->w = 0;
+  self->lookahead.wrap = CANDY_WRAP_NULL;
   while (1) {
     switch (_view(self, 0)) {
       case '\0':
@@ -351,15 +354,17 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
         /* 'oo' */
         if (_view(self, 1) == _view(self, 0))
           goto binary;
+        /* fall through */
       /* 'o', 'o=' */
       case '%': case '=': case '+': case '-':
         /* 'o=' */
         if (_view(self, 1) == '=')
           goto binary;
+        /* fall through */
       /* 'o' */
-      case '&': case '|': case '~': case '^':
+      case '&': case '|': case '~': case '^': case ',': case ':':
       case '(': case ')': case '[': case ']': case '{': case '}':
-      case ',': case ':':
+      case ';': case '@':
         return _read(self);
       case '.':
         return (_view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0)) ? _skipn(self, 3), TK_VARARG : _read(self);
@@ -375,8 +380,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_wrap_t *wrap) {
           return _get_number(self, wrap);
         else if (is_alpha(_view(self, 0)))
           return _get_ident_or_keyword(self, wrap);
-        lex_assert(false, "unknown character '%c'(0x%02X)", _view(self, 0), _view(self, 0));
-        return -1;
+        lex_assert(false, "unrecognized token");
     }
   }
   /* double-byte operator */
@@ -393,7 +397,7 @@ int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader,
   self->reader = reader;
   self->ud = ud;
   self->w = 0;
-  self->r = self->w + CANDY_LEXER_EXTRA_SIZE;
+  self->r = self->w;
   return 0;
 }
 
@@ -408,11 +412,6 @@ candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
 }
 
 const candy_wrap_t *candy_lexer_next(candy_lexer_t *self) {
-  /* is there a look-ahead token? */
-  if (candy_lexer_lookahead(self) != TK_EOS) {
-    /* use this one and discharge it */
-    self->lookahead.token = TK_EOS;
-    return &self->lookahead.wrap;
-  }
-  return &null;
+  self->lookahead.token = TK_EOS;
+  return &self->lookahead.wrap;
 }
