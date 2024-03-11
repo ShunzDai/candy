@@ -31,19 +31,23 @@ candy_state_t *candy_state_create(void) {
   return self;
 }
 
-int candy_state_delete(candy_state_t **self) {
-  candy_vm_deinit(&(*self)->vm);
-  free(*self);
-  *self = NULL;
+int candy_state_delete(candy_state_t *self) {
+  candy_vm_deinit(&self->vm);
+  free(self);
   return 0;
+}
+
+int candy_dostream(candy_state_t *self, candy_reader_t reader, void *ud) {
+  candy_block_t *block = candy_parse(&self->vm.io, string_reader, ud);
+  if (block == NULL)
+    return -1;
+  return candy_vm_execute(&self->vm, block);
 }
 
 int candy_dostring(candy_state_t *self, const char exp[]) {
   struct str_info info = {exp, strlen(exp), 0};
-  candy_block_t *block = candy_parse(&self->vm.io, string_reader, &info);
-  if (block == NULL)
-    return -1;
-  return candy_vm_execute(&self->vm, block);
+  int res = candy_dostream(self, string_reader, &info);
+  return res;
 }
 
 int candy_dofile(candy_state_t *self, const char name[]) {
@@ -51,11 +55,9 @@ int candy_dofile(candy_state_t *self, const char name[]) {
   if (f == NULL)
     return perror(NULL), -1;
   struct file_info info = {f};
-  candy_block_t *block = candy_parse(&self->vm.io, file_reader, &info);
+  int res = candy_dostream(self, file_reader, &info);
   fclose(f);
-  if (block == NULL)
-    return -1;
-  return candy_vm_execute(&self->vm, block);
+  return res;
 }
 
 const char *candy_error(candy_state_t *self) {

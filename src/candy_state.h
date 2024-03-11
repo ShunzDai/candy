@@ -22,10 +22,10 @@ extern "C" {
 #include "src/candy_types.h"
 
 candy_state_t *candy_state_create(void);
-int candy_state_delete(candy_state_t **self);
+int candy_state_delete(candy_state_t *self);
 
+int candy_dostream(candy_state_t *self, candy_reader_t reader, void *ud);
 int candy_dostring(candy_state_t *self, const char exp[]);
-
 int candy_dofile(candy_state_t *self, const char name[]);
 
 const char *candy_error(candy_state_t *self);
