@@ -13,6 +13,7 @@ keywords = [
   ["for", 0],
   ["break", 0],
   ["continue", 0],
+  ["var", 0]
 ]
 
 def djb_hash(str):

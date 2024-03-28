@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2023 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -14,9 +14,11 @@
   * limitations under the License.
   */
 #include "test.h"
+#include <stdlib.h>
 
 /* valgrind --tool=memcheck --leak-check=full ./test/test */
 int main(int argc, char *argv[]) {
+  srand(time(nullptr));
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

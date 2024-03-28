@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2023 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ CANDY_COMPILER_ID "-" CANDY_COMPILER_VERSION " on " CANDY_SYSTEM_NAME "-" CANDY_
 
 static _Atomic(bool) _quit = false;
 
-static int stream_reader(char buffer[], const size_t max_len, void *ud) {
-  int *ch = (int *)ud;
+static int stream_reader(char buffer[], const size_t max_len, void *arg) {
+  int *ch = (int *)arg;
   if (*ch == '\n')
     fwrite("> ", 1, 2, stdout);
   *ch = getchar();

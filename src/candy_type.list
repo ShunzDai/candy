@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2023 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -18,15 +18,15 @@
 #undef CANDY_TYPE_LIST
 
 #ifdef CANDY_TYPE
-CANDY_TYPE(NULL,    INT_MAX)
-CANDY_TYPE(STRING,  sizeof(char))
-CANDY_TYPE(UINT32,  sizeof(uint32_t))
-CANDY_TYPE(INTEGER, sizeof(candy_integer_t))
-CANDY_TYPE(BOOLEAN, sizeof(candy_boolean_t))
-CANDY_TYPE(FLOAT,   sizeof(candy_float_t))
-CANDY_TYPE(USERDEF, sizeof(void *))
-CANDY_TYPE(CFUNC,   sizeof(candy_cfunc_t))
-CANDY_TYPE(WRAP,    sizeof(candy_wrap_t[1]))
-CANDY_TYPE(PAIR,    sizeof(candy_wrap_t[2]))
-CANDY_TYPE(MAX,     INT_MAX)
+CANDY_TYPE(   NULL, NULL)
+CANDY_TYPE(   NONE, candy_array_delete)
+CANDY_TYPE(BOOLEAN, candy_array_delete)
+CANDY_TYPE(INTEGER, candy_array_delete)
+CANDY_TYPE(  FLOAT, candy_array_delete)
+CANDY_TYPE(   FUNC, candy_closure_delete)
+CANDY_TYPE(   CHAR, candy_array_delete)
+CANDY_TYPE(   WRAP, candy_array_delete)
+CANDY_TYPE(  TABLE, candy_table_delete)
+CANDY_TYPE(  BLOCK, candy_proto_delete)
+CANDY_TYPE(USERDEF, NULL)
 #endif /* CANDY_TYPE */

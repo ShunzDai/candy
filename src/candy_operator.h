@@ -13,15 +13,20 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_H
-#define CANDY_H
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#ifndef CANDY_OPERATOR_LIST
+#error "can only be include by candy_operator.list"
+#endif /* CANDY_OPERATOR_LIST */
 
-#include "src/candy_state.h"
+#ifdef CANDY_OPR
+#undef CANDY_OPR
+#endif /* CANDY_OPR */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif /* CANDY_H */
+#ifdef CANDY_OPR_ENUM
+#undef CANDY_OPR_ENUM
+#define CANDY_OPR(_name, ...) TK_##_name = gen_operator(__VA_ARGS__),
+#endif /* CANDY_OPR_ENUM */
+
+#ifdef CANDY_OPR_TEST
+#undef CANDY_OPR_TEST
+#define CANDY_OPR(_name, ...) TEST_NORMAL(_name, TK_##_name, std::string{__VA_ARGS__}.data());
+#endif /* CANDY_OPR_TEST */

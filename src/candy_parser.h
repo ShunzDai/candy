@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2023 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ extern "C" {
 
 #include "src/candy_types.h"
 
-candy_block_t *candy_parse(candy_io_t *io, candy_reader_t reader, void *ud);
+candy_object_t *candy_parse(candy_gc_t *gc, candy_reader_t reader, void *arg);
 
 #ifdef __cplusplus
 }

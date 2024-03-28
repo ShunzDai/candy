@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2023 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -32,4 +32,5 @@ CANDY_KW(   while, 0x10A3387EU)
 CANDY_KW(     for, 0x0B88738CU)
 CANDY_KW(   break, 0x0F2C9F4AU)
 CANDY_KW(continue, 0x42AEFB8AU)
+CANDY_KW(     var, 0x0B88B5CEU)
 #endif /* CANDY_KW */

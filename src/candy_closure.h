@@ -13,24 +13,29 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_RELEASE_H
-#define CANDY_RELEASE_H
+#ifndef CANDY_SRC_CLOSURE_H
+#define CANDY_SRC_CLOSURE_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#define CANDY_VERSION_MAJOR     @CANDY_VERSION_MAJOR@
-#define CANDY_VERSION_MINOR     @CANDY_VERSION_MINOR@
-#define CANDY_VERSION_PATCH     @CANDY_VERSION_PATCH@
-#define CANDY_VERSION_STR       "${CANDY_VERSION_MAJOR}.${CANDY_VERSION_MINOR}.${CANDY_VERSION_PATCH}"
-#define CANDY_ENV               "${CANDY_ENV}"
-#define CANDY_GIT_DESCRIBE      "${CANDY_GIT_DESCRIBE}"
-#define CANDY_SYSTEM_NAME       "${CMAKE_SYSTEM_NAME}"
-#define CANDY_SYSTEM_VERSION    "${CMAKE_SYSTEM_VERSION}"
-#define CANDY_COMPILER_ID       "${CMAKE_CXX_COMPILER_ID}"
-#define CANDY_COMPILER_VERSION  "${CMAKE_CXX_COMPILER_VERSION}"
+#include "src/candy_types.h"
+
+/**
+  * @brief  create a new c-closure
+  */
+candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_cfunc_t cfunc);
+
+/**
+  * @brief  create a new script-closure
+  */
+candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_proto_t *block);
+
+void candy_closure_delete(candy_sclosure_t *self, candy_gc_t *gc);
+
+const candy_proto_t *candy_sclosure_get_block(candy_sclosure_t *self);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_RELEASE_H */
+#endif /* CANDY_SRC_CLOSURE_H */

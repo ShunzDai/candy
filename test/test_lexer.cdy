@@ -1,6 +1,0 @@
-def func(str):
-  print(str + "\n")
-  return 0
-
-if __name__ == "__main__":
-  func("hello")

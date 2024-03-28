@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2023 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -21,9 +21,12 @@ extern "C" {
 
 #include "src/candy_types.h"
 
-int candy_table_fprint(const candy_wrap_t *self, FILE *out);
-const candy_wrap_t *candy_table_get(candy_wrap_t *self, const candy_wrap_t *key);
-int candy_table_set(candy_wrap_t *self, const candy_wrap_t *key, const candy_wrap_t *val);
+candy_table_t *candy_table_create(candy_gc_t *gc);
+void candy_table_delete(candy_table_t *self, candy_gc_t *gc);
+
+int candy_table_fprint(const candy_table_t *self, FILE *out);
+const candy_wrap_t *candy_table_get(const candy_table_t *self, const candy_wrap_t *key);
+int candy_table_set(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, const candy_wrap_t *val);
 
 #ifdef __cplusplus
 }

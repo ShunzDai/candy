@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2023 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "src/candy_io.h"
+#include "src/candy_exce.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
 
@@ -22,12 +22,12 @@
 
 // static void test_body(const char exp[]) {
 //   str_info info = {exp, strlen(exp), 0};
-//   candy_io_t io;
-//   candy_io_init(&io);
+//   candy_exce_t io;
+//   candy_exce_init(&io);
 //   auto tick = os::tick_ns();
 //   EXPECT_EQ(candy_parse(&io, string_reader, &info) != 0, false);
 //   printf("delta time = %ld ns\n", os::tick_ns() - tick);
-//   candy_io_deinit(&io);
+//   candy_exce_deinit(&io);
 // }
 
 // PARSER_TEST(exp_add_0, "a = 1 + 2")

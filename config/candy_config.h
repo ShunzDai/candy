@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2023 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -20,22 +20,10 @@ extern "C" {
 #endif /* __cplusplus */
 
 /**
-  * @brief  larger mask means project can support more basic types and array size
-  */
-#define CANDY_MASK_TYPE uint16_t
-
-/**
-  * @brief  the logarithm base 2 of the number of basic types
-  */
-#define CANDY_BASIC_TYPE_SIZE 4
-
-/**
   * @brief  smaller expand size mean less space utilization and more load times,
   *         which can be decided by the user depending on the usage scenario.
   */
-#define CANDY_LEXER_EXPAND_SIZE 64
-
-#define CANDY_DEFAULT_STACK_SIZE 8
+#define CANDY_LEXER_EXPAND_SIZE 4
 
 #ifdef __cplusplus
 }
