@@ -26,6 +26,11 @@
 #define CANDY_KW(_keyword, ...) TK_##_keyword,
 #endif /* CANDY_KW_ENUM */
 
+#ifdef CANDY_KW_STR
+#undef CANDY_KW_STR
+#define CANDY_KW(_keyword, ...) case TK_##_keyword: return #_keyword;
+#endif /* CANDY_KW_STR */
+
 #ifdef CANDY_KW_MATCH
 #undef CANDY_KW_MATCH
 #define CANDY_KW(_keyword, _hash) case _hash: return TK_##_keyword;

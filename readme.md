@@ -21,3 +21,5 @@
 [8]frog-game. [Lua5.4.4源码].指令集[DB/OL]. [link](https://zhuanlan.zhihu.com/p/610168640), 2023-02-28, 2023-05-01
 
 [9]科研者. 语法格式描述规范BNF、EBNF、ABNF[DB/OL]. [link](https://www.jianshu.com/p/15efcb0c06c8), 2017-09-22, 2023-05-04
+
+[10]阿文. lua源码分析之语法分析 (干货)[DB/OL]. [link](https://zhuanlan.zhihu.com/p/581491614), 2022-11-11, 2024-02-13

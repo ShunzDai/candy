@@ -13,17 +13,19 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_PARSER_H
-#define CANDY_SRC_PARSER_H
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include "test.h"
+#include "src/candy_wrap.h"
+#include "src/candy_gc.h"
 
-#include "src/candy_types.h"
+struct object {
+  candy_wrap_t obj;
+  int data;
+};
 
-candy_object_t *candy_parse(candy_gc_t *gc, candy_reader_t reader, void *arg);
-
-#ifdef __cplusplus
+TEST(gc, root) {
+  // candy_gc_t gc{};
+  // candy_gc_init(&gc);
+  // candy_gc_add(&gc, TYPE_NONE, sizeof(object));
+  // candy_gc_add(&gc, TYPE_NONE, sizeof(object));
+  // candy_gc_deinit(&gc);
 }
-#endif /* __cplusplus */
-#endif /* CANDY_SRC_PARSER_H */

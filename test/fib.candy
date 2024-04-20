@@ -1,0 +1,15 @@
+def fibonacci(n)
+  if (n < 2)
+    return n
+  end
+  return fibonacci(n - 2) + fibonacci(n - 1)
+end
+
+# fibonacci = def (n)
+#   if (n < 2)
+#     return n
+#   end
+#   return self(n - 2) + self(n - 1)
+# end
+
+fibonacci(40)

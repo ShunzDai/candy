@@ -31,9 +31,9 @@ struct file_info {
   FILE *f;
 };
 
-int string_reader(char buffer[], const size_t max_len, void *ud);
+int string_reader(char buffer[], const size_t max_len, void *arg);
 
-int file_reader(char buffer[], const size_t max_len, void *ud);
+int file_reader(char buffer[], const size_t max_len, void *arg);
 
 #ifdef __cplusplus
 }

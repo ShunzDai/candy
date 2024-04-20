@@ -13,32 +13,29 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_IO_H
-#define CANDY_SRC_IO_H
+#ifndef CANDY_SRC_CLOSURE_H
+#define CANDY_SRC_CLOSURE_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_wrap.h"
 #include "src/candy_types.h"
-#include <setjmp.h>
 
-#define candy_assert(_self, _condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_io_throw((_self), #_type " error: " _format, ##__VA_ARGS__))
+/**
+  * @brief  create a new c-closure
+  */
+candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_cfunc_t cfunc);
 
-struct candy_io {
-  candy_wrap_t buff;
-  jmp_buf env;
-};
+/**
+  * @brief  create a new script-closure
+  */
+candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_proto_t *proto);
 
-typedef void (*candy_try_catch_cb_t)(void *, void *);
+void candy_closure_delete(candy_sclosure_t *self, candy_gc_t *gc);
 
-int candy_io_try_catch(candy_io_t *self, candy_try_catch_cb_t cb, void *handle, void *ud);
-void candy_io_throw(candy_io_t *self, const char format[], ...) CANDY_NORETURN;
-
-int candy_io_init(candy_io_t *self);
-int candy_io_deinit(candy_io_t *self);
+const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_IO_H */
+#endif /* CANDY_SRC_CLOSURE_H */

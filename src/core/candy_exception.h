@@ -13,17 +13,28 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_PARSER_H
-#define CANDY_SRC_PARSER_H
+#ifndef CANDY_CORE_EXCEPTION_H
+#define CANDY_CORE_EXCEPTION_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include "core/candy_priv.h"
 
-candy_object_t *candy_parse(candy_gc_t *gc, candy_reader_t reader, void *arg);
+typedef void (*candy_exce_cb_t)(void *arg);
+
+struct candy_exce {
+  candy_exce_t *prev;
+};
+
+int candy_exce_init(candy_exce_t *self);
+int candy_exce_deinit(candy_exce_t *self);
+
+candy_object_t *candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg);
+void candy_exce_throw(candy_exce_t *self, candy_object_t *err) CANDY_NORETURN;
+size_t candy_exce_depth(const candy_exce_t *self);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_PARSER_H */
+#endif /* CANDY_CORE_EXCEPTION_H */
