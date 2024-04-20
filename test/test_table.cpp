@@ -14,11 +14,24 @@
   * limitations under the License.
   */
 #include "test.h"
+#include "src/candy_array.h"
 #include "src/candy_table.h"
+#include "src/candy_gc.h"
 #include "src/candy_wrap.h"
 
 TEST(table, init) {
-  candy_wrap_t wrap;
-  candy_wrap_set_pair(&wrap, NULL, 16);
-  candy_wrap_deinit(&wrap);
+  candy_gc_t gc{};
+  candy_gc_init(&gc, test_allocator, nullptr);
+  candy_table_t *self = candy_table_create(&gc);
+  for (size_t count = 0; count < 0xF; ++count) {
+    candy_wrap_t key{}, val{};
+    candy_wrap_set_integer(&key, rand());
+    candy_wrap_set_integer(&val, rand());
+    candy_table_set(self, &gc, &key, &val);
+    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &key)), candy_wrap_get_integer(&val));
+  }
+  // candy_table_fprint(self, stdout);
+  candy_handler_t list[TYPE_NUM];
+  list[TYPE_TABLE] = (candy_handler_t)candy_table_delete;
+  candy_gc_deinit(&gc, list);
 }

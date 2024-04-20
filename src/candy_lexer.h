@@ -19,80 +19,78 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_wrap.h"
+#include "src/candy_exception.h"
+#include "src/candy_vector.h"
 #include "src/candy_types.h"
 
-#define binary_ope(_l, _r) ((_l) << 8 | (_r))
+#define gen_opr1(_byte1)                    (_byte1)
+#define gen_opr2(_byte1, _byte2)            ((gen_opr1(_byte1)         << 8) | gen_opr1(_byte2))
+#define gen_opr3(_byte1, _byte2, _byte3)    ((gen_opr2(_byte1, _byte2) << 8) | gen_opr1(_byte3))
+#define gen_opr_select(_1, _2, _3, _n, ...) gen_opr##_n
+#define gen_operator(...)                   gen_opr_select(__VA_ARGS__, 3, 2, 1)(__VA_ARGS__)
 
 typedef enum candy_tokens {
   TK_EOS,
-  TK_PERCENT =                  '%', /* %  */
-  TK_AMPER   =                  '&', /* &  */
-  TK_LPAREN  =                  '(', /* (  */
-  TK_RPAREN  =                  ')', /* )  */
-  TK_ASTE    =                  '*', /* *  */
-  TK_PLUS    =                  '+', /* +  */
-  TK_COMMA   =                  ',', /* ,  */
-  TK_MINUS   =                  '-', /* -  */
-  TK_DOT     =                  '.', /* .  */
-  TK_SLASH   =                  '/', /* /  */
-  TK_COLON   =                  ':', /* :  */
-  TK_LESS    =                  '<', /* <  */
-  TK_ASSIGN  =                  '=', /* =  */
-  TK_GREATER =                  '>', /* >  */
-  TK_LSQUARE =                  '[', /* [  */
-  TK_RSQUARE =                  ']', /* ]  */
-  TK_CARET   =                  '^', /* ^  */
-  TK_LBRACE  =                  '{', /* {  */
-  TK_VERT    =                  '|', /* |  */
-  TK_RBRACE  =                  '}', /* }  */
-  TK_TILDE   =                  '~', /* ~  */
-  TK_NEQUAL  = binary_ope('!', '='), /* != */
-  TK_MODASS  = binary_ope('%', '='), /* %= */
-  TK_EXP     = binary_ope('*', '*'), /* ** */
-  TK_MULASS  = binary_ope('*', '='), /* *= */
-  TK_ADDASS  = binary_ope('+', '='), /* += */
-  TK_SUBASS  = binary_ope('-', '='), /* -= */
-  TK_FLRDIV  = binary_ope('/', '/'), /* // */
-  TK_DIVASS  = binary_ope('/', '='), /* /= */
-  TK_LSHIFT  = binary_ope('<', '<'), /* << */
-  TK_LEQUAL  = binary_ope('<', '='), /* <= */
-  TK_EQUAL   = binary_ope('=', '='), /* == */
-  TK_GEQUAL  = binary_ope('>', '='), /* >= */
-  TK_RSHIFT  = binary_ope('>', '>'), /* >> */
+  TK_IDENT,
   TK_INTEGER,
   TK_FLOAT,
   TK_STRING,
-  TK_IDENT,
-  TK_VARARG,
+  #define CANDY_OPR_ENUM
+  #include "src/candy_operator.list"
   #define CANDY_KW_ENUM
   #include "src/candy_keyword.list"
 } candy_tokens_t;
 
-/** @ref doc/io_memory_model.drawio.png */
+typedef union candy_meta candy_meta_t;
+
+union candy_meta {
+  candy_integer_t i;
+  candy_float_t f;
+  candy_array_t *s;
+};
+
 struct candy_lexer {
-  candy_io_t *io;
+  candy_exce_t ctx;
+  candy_gc_t *gc;
   struct {
-    uint16_t line;
-    uint16_t column;
+    candy_vector_t vec;
+    size_t w;
+    size_t r;
+    candy_reader_t reader;
+    void *arg;
+  } buff;
+  struct {
+    size_t line;
+    size_t column;
   } dbg;
   struct {
     candy_tokens_t token;
-    candy_wrap_t wrap;
+    candy_meta_t meta;
   } lookahead;
-  size_t w;
-  size_t r;
-  candy_reader_t reader;
-  void *ud;
 };
 
 typedef struct candy_lexer candy_lexer_t;
 
-int candy_lexer_init(candy_lexer_t *self, candy_io_t *io, candy_reader_t reader, void *ud);
+static inline const char *candy_token_str(candy_tokens_t token) {
+  switch (token) {
+    case TK_EOS:     return "EOS";
+    case TK_IDENT:   return "ident";
+    case TK_INTEGER: return "integer";
+    case TK_FLOAT:   return "float";
+    case TK_STRING:  return "string";
+    #define CANDY_OPR_STR
+    #include "core/candy_operator.list"
+    #define CANDY_KW_STR
+    #include "core/candy_keyword.list"
+    default:         return "unknown";
+  }
+}
+
+int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_reader_t reader, void *arg);
 int candy_lexer_deinit(candy_lexer_t *self);
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);
-const candy_wrap_t *candy_lexer_next(candy_lexer_t *self);
+const candy_meta_t *candy_lexer_next(candy_lexer_t *self);
 
 #ifdef __cplusplus
 }

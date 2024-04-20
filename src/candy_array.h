@@ -13,29 +13,27 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_READER_H
-#define CANDY_SRC_READER_H
+#ifndef CANDY_SRC_ARRAY_H
+#define CANDY_SRC_ARRAY_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdio.h>
+#include "src/candy_types.h"
 
-struct str_info {
-  const char *exp;
-  const size_t size;
-  size_t offset;
-};
+candy_array_t *candy_array_create(candy_gc_t *self, candy_types_t type, size_t cell);
+int candy_array_delete(candy_array_t *self, candy_gc_t *gc);
 
-struct file_info {
-  FILE *f;
-};
+size_t candy_array_capacity(const candy_array_t *self);
+size_t candy_array_size(const candy_array_t *self);
+void *candy_array_data(const candy_array_t *self);
+candy_vector_t *candy_array_vector(candy_array_t *self);
 
-int string_reader(char buffer[], const size_t max_len, void *arg);
+void candy_array_resize(candy_array_t *self, candy_gc_t *gc, size_t size);
 
-int file_reader(char buffer[], const size_t max_len, void *arg);
+int candy_array_append(candy_array_t *self, candy_gc_t *gc, const void *data, size_t size);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_READER_H */
+#endif /* CANDY_SRC_ARRAY_H */

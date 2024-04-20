@@ -13,29 +13,38 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_READER_H
-#define CANDY_SRC_READER_H
+#ifndef CANDY_SRC_OBJECT_H
+#define CANDY_SRC_OBJECT_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdio.h>
+#include "src/candy_types.h"
 
-struct str_info {
-  const char *exp;
-  const size_t size;
-  size_t offset;
+struct candy_object {
+  uint8_t next[8];
+  uint8_t type : 4;
+  uint8_t mask : 4;
+  uint8_t mark : 4;
 };
 
-struct file_info {
-  FILE *f;
-};
+static inline candy_types_t candy_object_get_type(const candy_object_t *self) {
+  return (candy_types_t)self->type;
+}
 
-int string_reader(char buffer[], const size_t max_len, void *arg);
+static inline void candy_object_set_type(candy_object_t *self, candy_types_t type) {
+  self->type = type;
+}
 
-int file_reader(char buffer[], const size_t max_len, void *arg);
+static inline candy_object_t *candy_object_get_next(candy_object_t *self) {
+  return *(candy_object_t **)&self->next;
+}
+
+static inline void candy_object_set_next(candy_object_t *self, const candy_object_t *next) {
+  *(const candy_object_t **)&self->next = next;
+}
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_READER_H */
+#endif /* CANDY_SRC_OBJECT_H */

@@ -13,13 +13,12 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_BLOCK_H
-#define CANDY_SRC_BLOCK_H
+#ifndef CANDY_SRC_PROTO_H
+#define CANDY_SRC_PROTO_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_wrap.h"
 #include "src/candy_types.h"
 
 typedef enum candy_opcodes {
@@ -27,7 +26,7 @@ typedef enum candy_opcodes {
   #include "src/candy_opcode.list"
 } candy_opcodes_t;
 
-typedef union candy_instruc {
+typedef union candy_inst {
   struct {
     uint32_t op :  6;
     uint32_t    : 26;
@@ -47,55 +46,53 @@ typedef union candy_instruc {
     uint32_t  b :  9;
     uint32_t  c :  9;
   } iabc;
-} candy_instruc_t;
+} candy_inst_t;
 
-struct candy_block {
-  candy_wrap_t pool;
-  candy_wrap_t ins;
+typedef struct candy_proto_config candy_proto_config_t;
+
+struct candy_proto_config {
+  const candy_vector_t *inst;
 };
 
-candy_block_t *candy_block_create(void);
-int candy_block_delete(candy_block_t **self);
+candy_proto_t *candy_proto_create(candy_gc_t *gc);
+int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
 
-int candy_block_add_const(candy_block_t *self, const candy_wrap_t *wrap);
-
-static inline void candy_block_add_iax(candy_block_t *self, candy_opcodes_t op, uint32_t a) {
-  int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins);
-  candy_instruc_t ins = {
+static inline void candy_proto_add_iax(candy_proto_t *self, candy_opcodes_t op, uint32_t a) {
+  int candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
+  candy_proto_add_inst(self, (candy_inst_t) {
     .iax = {
       .op = (uint32_t)op,
       .a = a,
     },
-  };
-  candy_block_add_instruc(self, &ins);
+  });
 }
 
-static inline void candy_block_add_iabx(candy_block_t *self, candy_opcodes_t op, uint32_t a, uint32_t b) {
-  int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins);
-  candy_instruc_t ins = {
+static inline void candy_proto_add_iabx(candy_proto_t *self, candy_opcodes_t op, uint32_t a, uint32_t b) {
+  int candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
+  candy_proto_add_inst(self, (candy_inst_t) {
     .iabx = {
       .op = (uint32_t)op,
       .a = a,
       .b = b,
     },
-  };
-  candy_block_add_instruc(self, &ins);
+  });
 }
 
-static inline void candy_block_add_iabc(candy_block_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
-  int candy_block_add_instruc(candy_block_t *self, candy_instruc_t *ins);
-  candy_instruc_t ins = {
+static inline void candy_proto_add_iabc(candy_proto_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
+  int candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
+  candy_proto_add_inst(self, (candy_inst_t) {
     .iabc = {
       .op = (uint32_t)op,
       .a = a,
       .b = b,
       .c = c,
     },
-  };
-  candy_block_add_instruc(self, &ins);
+  });
 }
+
+candy_inst_t *candy_proto_get_inst(candy_proto_t *self);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_BLOCK_H */
+#endif /* CANDY_SRC_PROTO_H */

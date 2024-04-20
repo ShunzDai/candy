@@ -14,150 +14,116 @@
   * limitations under the License.
   */
 #include "src/candy_state.h"
+#include "src/candy_object.h"
 #include "src/candy_parser.h"
 #include "src/candy_reader.h"
-#include "src/candy_block.h"
+#include "src/candy_array.h"
+#include "src/candy_table.h"
+#include "src/candy_proto.h"
+#include "src/candy_closure.h"
 #include "src/candy_vm.h"
+#include "src/candy_gc.h"
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct candy_context candy_context_t;
+
 struct candy_state {
+  candy_object_t header;
   candy_vm_t vm;
+  candy_context_t *ctx;
 };
 
-candy_state_t *candy_state_create(void) {
-  candy_state_t *self = (candy_state_t *)calloc(1, sizeof(struct candy_state));
-  candy_vm_init(&self->vm);
-  return self;
+struct candy_context {
+  candy_state_t state;
+  candy_gc_t gc;
+};
+
+static void *default_allocator(void *ptr, size_t old_size, size_t new_size, void *arg) {
+  if (new_size)
+    return realloc(ptr, new_size);
+  free(ptr);
+  return NULL;
 }
 
-int candy_state_delete(candy_state_t *self) {
-  candy_vm_deinit(&self->vm);
-  free(self);
+static size_t candy_state_size(candy_state_t *self) {
+  return candy_state_is_main(self) ? sizeof(struct candy_context) : sizeof(struct candy_state);
+}
+
+static int candy_coroutine_init(candy_state_t *self, candy_context_t *ctx) {
+  candy_vm_init(&self->vm);
+  self->ctx = ctx;
   return 0;
 }
 
-int candy_dostream(candy_state_t *self, candy_reader_t reader, void *ud) {
-  candy_block_t *block = candy_parse(&self->vm.io, string_reader, ud);
-  if (block == NULL)
-    return -1;
-  return candy_vm_execute(&self->vm, block);
+static int candy_coroutine_delete(candy_state_t *self, candy_gc_t *gc) {
+  candy_vm_deinit(&self->vm, gc);
+  candy_gc_alloc(gc, self, candy_state_size(self), 0);
+  return 0;
 }
 
-int candy_dostring(candy_state_t *self, const char exp[]) {
+candy_state_t *candy_state_create(candy_allocator_t alloc, void *arg) {
+  candy_context_t *ctx = (candy_context_t *)alloc(NULL, 0, sizeof(struct candy_context), arg);
+  candy_gc_init(&ctx->gc, alloc, arg);
+  candy_state_t *self = &ctx->state;
+  candy_object_set_next((candy_object_t *)self, NULL);
+  candy_object_set_type((candy_object_t *)self, TYPE_STATE);
+  candy_coroutine_init(self, ctx);
+  return self;
+}
+
+candy_state_t *candy_state_create_default(void) {
+  return candy_state_create(default_allocator, NULL);
+}
+
+candy_state_t *candy_state_create_coroutine(candy_state_t *self) {
+  candy_context_t *ctx = self->ctx;
+  candy_state_t *co = (candy_state_t *)candy_gc_add(&ctx->gc, TYPE_STATE, sizeof(struct candy_state));
+  candy_coroutine_init(co, ctx);
+  return co;
+}
+
+int candy_state_delete(candy_state_t *self) {
+  candy_context_t *ctx = self->ctx;
+  if (candy_state_is_main(self)) {
+    candy_gc_deinit(&ctx->gc, (candy_handler_t[]) {
+      #define CANDY_TYPE_HANDLER
+      #include "src/candy_type.list"
+    });
+  }
+  candy_coroutine_delete(self, &ctx->gc);
+  return 0;
+}
+
+int candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg) {
+  candy_context_t *ctx = self->ctx;
+  candy_object_t *out = candy_parse(&ctx->gc, reader, arg);
+  if (candy_object_get_type(out) == TYPE_CHAR)
+    printf("%.*s\n",
+      (int)candy_array_size((candy_array_t *)out),
+      (char *)candy_array_data((candy_array_t *)out)
+    );
+  // return candy_vm_execute(&self->vm, out);
+  return 0;
+}
+
+int candy_state_dostring(candy_state_t *self, const char exp[]) {
   struct str_info info = {exp, strlen(exp), 0};
-  int res = candy_dostream(self, string_reader, &info);
+  int res = candy_state_dostream(self, string_reader, &info);
   return res;
 }
 
-int candy_dofile(candy_state_t *self, const char name[]) {
+int candy_state_dofile(candy_state_t *self, const char name[]) {
   FILE *f = fopen(name, "r");
   if (f == NULL)
     return perror(NULL), -1;
   struct file_info info = {f};
-  int res = candy_dostream(self, file_reader, &info);
+  int res = candy_state_dostream(self, file_reader, &info);
   fclose(f);
   return res;
 }
 
-const char *candy_error(candy_state_t *self) {
-  return candy_wrap_get_string(&self->vm.io.buff);
-}
-
-int candy_regist(candy_state_t *self, const candy_regist_t list[], int size) {
-  return candy_vm_regist(&self->vm, list, size);
-}
-
-int candy_fprint(candy_state_t *self, FILE *out) {
-  return candy_vm_fprint(&self->vm, out);
-}
-
-int candy_set_global(candy_state_t *self, const char name[]) {
-  return candy_vm_set_global(&self->vm, name);
-}
-
-int candy_get_global(candy_state_t *self, const char name[]) {
-  return candy_vm_get_global(&self->vm, name);
-}
-
-int candy_call(candy_state_t *self, int nargs, int nresults) {
-  return candy_vm_call(&self->vm, nargs, nresults);
-}
-
-void candy_push_integer(candy_state_t *self, const candy_integer_t val[], int size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_integer(&wrap, val, size);
-  candy_vm_push(&self->vm, &wrap);
-}
-
-void candy_push_float(candy_state_t *self, const candy_float_t val[], int size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_float(&wrap, val, size);
-  candy_vm_push(&self->vm, &wrap);
-}
-
-void candy_push_boolean(candy_state_t *self, const candy_boolean_t val[], int size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_boolean(&wrap, val, size);
-  candy_vm_push(&self->vm, &wrap);
-}
-
-void candy_push_string(candy_state_t *self, const char val[], int size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_string(&wrap, val, size);
-  candy_vm_push(&self->vm, &wrap);
-}
-
-void candy_push_ud(candy_state_t *self, const void *val[], int size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_ud(&wrap, val, size);
-  candy_vm_push(&self->vm, &wrap);
-}
-
-void candy_push_cfunc(candy_state_t *self, const candy_cfunc_t val[], int size) {
-  candy_wrap_t wrap;
-  candy_wrap_set_cfunc(&wrap, val, size);
-  candy_vm_push(&self->vm, &wrap);
-}
-
-const candy_integer_t *candy_pull_integer(candy_state_t *self, int *size) {
-  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
-  if (size)
-    *size = candy_wrap_size(wrap);
-  return candy_wrap_get_integer(wrap);
-}
-
-const candy_float_t *candy_pull_float(candy_state_t *self, int *size) {
-  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
-  if (size)
-    *size = candy_wrap_size(wrap);
-  return candy_wrap_get_float(wrap);
-}
-
-const candy_boolean_t *candy_pull_boolean(candy_state_t *self, int *size) {
-  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
-  if (size)
-    *size = candy_wrap_size(wrap);
-  return candy_wrap_get_boolean(wrap);
-}
-
-const char *candy_pull_string(candy_state_t *self, int *size) {
-  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
-  if (size)
-    *size = candy_wrap_size(wrap);
-  return candy_wrap_get_string(wrap);
-}
-
-const void **candy_pull_ud(candy_state_t *self, int *size) {
-  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
-  if (size)
-    *size = candy_wrap_size(wrap);
-  return candy_wrap_get_ud(wrap);
-}
-
-const candy_cfunc_t *candy_pull_cfunc(candy_state_t *self, int *size) {
-  const candy_wrap_t *wrap = candy_vm_pop(&self->vm);
-  if (size)
-    *size = candy_wrap_size(wrap);
-  return candy_wrap_get_cfunc(wrap);
+bool candy_state_is_main(candy_state_t *self) {
+  candy_context_t *ctx = self->ctx;
+  return self == &ctx->state;
 }

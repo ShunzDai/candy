@@ -13,21 +13,19 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#define CANDY_TYPE_LIST
-#include "src/candy_type.h"
-#undef CANDY_TYPE_LIST
+#include "test.h"
+#include "src/candy_wrap.h"
+#include "src/candy_gc.h"
 
-#ifdef CANDY_TYPE
-CANDY_TYPE(   NULL, NULL)
-CANDY_TYPE(   NONE, candy_array_delete)
-CANDY_TYPE(BOOLEAN, candy_array_delete)
-CANDY_TYPE(INTEGER, candy_array_delete)
-CANDY_TYPE(  FLOAT, candy_array_delete)
-CANDY_TYPE(   FUNC, candy_closure_delete)
-CANDY_TYPE(   CHAR, candy_array_delete)
-CANDY_TYPE(   WRAP, candy_array_delete)
-CANDY_TYPE(  TABLE, candy_table_delete)
-CANDY_TYPE(  BLOCK, candy_proto_delete)
-CANDY_TYPE(  STATE, candy_coroutine_delete)
-CANDY_TYPE(USERDEF, NULL)
-#endif /* CANDY_TYPE */
+struct object {
+  candy_wrap_t obj;
+  int data;
+};
+
+TEST(gc, root) {
+  // candy_gc_t gc{};
+  // candy_gc_init(&gc);
+  // candy_gc_add(&gc, TYPE_NONE, sizeof(object));
+  // candy_gc_add(&gc, TYPE_NONE, sizeof(object));
+  // candy_gc_deinit(&gc);
+}

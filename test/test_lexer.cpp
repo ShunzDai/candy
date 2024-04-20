@@ -14,71 +14,83 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "src/candy_io.h"
+#include "src/candy_gc.h"
+#include "src/candy_array.h"
 #include "src/candy_lexer.h"
 #include "src/candy_reader.h"
 #include <string>
 
-#define TEST_NORMAL(_name, _token, _exp, ...) TEST(lexer, _name) { tast_body<_token,  0>(_exp __VA_OPT__(,) __VA_ARGS__); }
-#define TEST_ASSERT(_name, _exp, ...) TEST(lexer, _name) { tast_body<TK_EOS, -1>(_exp __VA_OPT__(,) __VA_ARGS__); }
+#define TEST_BODY(_name, _token, _exp, ...) TEST(lexer, _name) { tast_body<_token>(_exp __VA_OPT__(,) __VA_ARGS__); }
+#define TEST_ASSERT(_name, _exp, ...) TEST_BODY(_name, TK_EOS, _exp __VA_OPT__(,) __VA_ARGS__)
+#define TEST_NORMAL(_name, _token, _exp, ...) TEST_BODY(_name, _token, _exp __VA_OPT__(,) __VA_ARGS__)
 
 using namespace std;
 
-template <typename ... supposed>
-static void test_normal(const candy_wrap_t& wrap, const supposed & ... value) {
-  auto val = std::get<0>(std::make_tuple(value ...));
-  if constexpr (std::is_same<decltype(val), std::string_view>::value) {
-    auto *str = candy_wrap_get_string(&wrap);
-    EXPECT_EQ(candy_wrap_size(&wrap), val.size());
-    EXPECT_MEMEQ(str, val.data(), val.size());
-  }
-  else if constexpr (std::is_integral<decltype(val)>::value) {
-    EXPECT_EQ(*candy_wrap_get_integer(&wrap), val);
-  }
-  else if constexpr (std::is_floating_point<decltype(val)>::value) {
-    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, *candy_wrap_get_float(&wrap), val);
+template <typename supposed>
+static void test_assert(const candy_array_t *err, const supposed &val) {
+  (void)err;
+  if constexpr (std::is_same<supposed, std::string_view>::value) {
+    EXPECT_EQ(candy_array_size(err), val.size() + 1);
+    EXPECT_MEMEQ(candy_array_data(err), val.data(), val.size() + 1);
   }
   else {
-    static_assert(!std::is_same<decltype(val), decltype(val)>::value);
+    assert(0);
   }
 }
 
-template <typename ... supposed>
-static void test_assert(const candy_io_t& io, const supposed & ... value) {
-  auto val = std::get<0>(std::make_tuple(value ...));
-  static_assert(std::is_same<decltype(val), std::string_view>::value);
-  EXPECT_EQ(strlen(candy_wrap_get_string(&io.buff)), val.size());
-  EXPECT_MEMEQ(candy_wrap_get_string(&io.buff), val.data(), val.size() + 1);
+template <typename supposed>
+static void test_normal(const candy_meta_t &meta, const supposed &val) {
+  if constexpr (std::is_same<supposed, std::string_view>::value) {
+    EXPECT_EQ(candy_array_size(meta.s), val.size());
+    EXPECT_MEMEQ(candy_array_data(meta.s), val.data(), val.size());
+  }
+  else if constexpr (std::is_integral<supposed>::value) {
+    EXPECT_EQ(meta.i, val);
+  }
+  else if constexpr (std::is_floating_point<supposed>::value) {
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<candy_float_t>, meta.f, val);
+  }
+  else {
+    static_assert(!std::is_same<supposed, supposed>::value);
+  }
 }
 
-template <candy_tokens_t token, int assert, typename ... supposed>
+template <candy_tokens_t token, typename ... supposed>
 static void tast_body(const char exp[], const supposed & ... value) {
-  candy_io_t io{};
-  candy_lexer_t lex{};
+  struct catch_info {
+    candy_lexer ls{};
+    candy_meta_t next{};
+  };
+  catch_info cinfo{};
+  candy_gc_t gc{};
   str_info info{exp, strlen(exp), 0};
-  candy_io_init(&io);
-  candy_lexer_init(&lex, &io, string_reader, &info);
-  candy_wrap_t wrap{};
-
-  ASSERT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, candy_wrap_t *wrap) {
-    EXPECT_EQ(candy_lexer_lookahead(self), token);
-    *wrap = *candy_lexer_next(self);
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_EOS);
-  }, &lex, &wrap), assert);
-
-  if constexpr(assert == 0 && sizeof...(value))
-    test_normal(wrap, value ...);
-  else if constexpr (assert == -1 && sizeof...(value))
-    test_assert(io, value ...);
-
-  candy_wrap_deinit(&wrap);
-  candy_lexer_deinit(&lex);
-  candy_io_deinit(&io);
+  candy_gc_init(&gc, test_allocator, nullptr);
+  candy_lexer_init(&cinfo.ls, &gc, string_reader, &info);
+  candy_array_t *err = candy_exce_try(&cinfo.ls.ctx, (candy_exce_cb_t)+[](catch_info *self) {
+    EXPECT_EQ(candy_lexer_lookahead(&self->ls), token);
+    if (token != TK_EOS)
+      self->next = *candy_lexer_next(&self->ls);
+    EXPECT_EQ(candy_lexer_lookahead(&self->ls), TK_EOS);
+  }, &cinfo);
+  candy_lexer_deinit(&cinfo.ls);
+  if constexpr(sizeof...(value)) {
+    if (err)
+      test_assert(err, value ...);
+    else
+      test_normal(cinfo.next, value ...);
+  }
+  candy_handler_t list[TYPE_NUM];
+  list[TYPE_CHAR] = (candy_handler_t)candy_array_delete;
+  candy_gc_deinit(&gc, list);
 }
 
-TEST_ASSERT(invalid_0, "0x", "lexical error: invalid hexadecimal number"sv)
-TEST_ASSERT(invalid_1, "0b", "lexical error: invalid binary number"sv)
-TEST_ASSERT(invalid_2, "0b1e", "lexical error: invalid float number"sv)
+TEST_ASSERT(invalid_0, "0x",    "lexical error: invalid hexadecimal number"sv)
+TEST_ASSERT(invalid_1, "0b",    "lexical error: invalid binary number"sv)
+TEST_ASSERT(invalid_2, "0b1e",  "lexical error: invalid float number"sv)
+TEST_ASSERT(invalid_3, "0b1.2", "lexical error: invalid float number"sv)
+TEST_ASSERT(invalid_4, "0x1x",  "lexical error: extra text after expected end of number"sv)
+TEST_ASSERT(invalid_5, "0x1.4", "lexical error: invalid float number"sv)
+TEST_ASSERT(invalid_6, "1..2",  "lexical error: malformed number"sv)
 
 TEST_NORMAL(empty, TK_EOS, "")
 
@@ -112,7 +124,7 @@ TEST_NORMAL(string_3, TK_STRING,
 )
 
 TEST_NORMAL(string_4, TK_STRING,
-  "\"\\hello world\"",/* "\hello world" */
+  "\"\\\\hello world\"",/* "\\hello world" */
   "\\hello world"sv
 )
 
@@ -153,108 +165,11 @@ TEST_NORMAL(sci_0, TK_FLOAT, "0.31415926e1", 0.31415926e1)
 TEST_NORMAL(sci_1, TK_FLOAT, "314.15926e-2", 314.15926e-2)
 TEST_NORMAL(sci_2, TK_FLOAT, "314.15926e+2", 314.15926e+2)
 
-TEST_NORMAL(vararg, TK_VARARG, "...")
-
-#define CANDY_KW_TEST
-#include "src/candy_keyword.list"
-
 TEST_NORMAL(ident_0, TK_IDENT, "i")
 TEST_NORMAL(ident_1, TK_IDENT, "ifif")
 
-TEST_NORMAL(TK_LPAREN , TK_LPAREN ,  "(")
-TEST_NORMAL(TK_RPAREN , TK_RPAREN ,  ")")
-TEST_NORMAL(TK_COMMA  , TK_COMMA  ,  ",")
-TEST_NORMAL(TK_DOT    , TK_DOT    ,  ".")
-TEST_NORMAL(TK_COLON  , TK_COLON  ,  ":")
-TEST_NORMAL(TK_LBRACE , TK_LBRACE ,  "{")
-TEST_NORMAL(TK_RBRACE , TK_RBRACE ,  "}")
-TEST_NORMAL(TK_LSQUARE, TK_LSQUARE,  "[")
-TEST_NORMAL(TK_RSQUARE, TK_RSQUARE,  "]")
-TEST_NORMAL(TK_AMPER  , TK_AMPER  ,  "&")
-TEST_NORMAL(TK_VERT   , TK_VERT   ,  "|")
-TEST_NORMAL(TK_TILDE  , TK_TILDE  ,  "~")
-TEST_NORMAL(TK_CARET  , TK_CARET  ,  "^")
-TEST_NORMAL(TK_PERCENT, TK_PERCENT,  "%")
-TEST_NORMAL(TK_PLUS   , TK_PLUS   ,  "+")
-TEST_NORMAL(TK_MINUS  , TK_MINUS  ,  "-")
-TEST_NORMAL(TK_ASTE   , TK_ASTE   ,  "*")
-TEST_NORMAL(TK_SLASH  , TK_SLASH  ,  "/")
-TEST_NORMAL(TK_ASSIGN , TK_ASSIGN ,  "=")
-TEST_NORMAL(TK_GREATER, TK_GREATER,  ">")
-TEST_NORMAL(TK_LESS   , TK_LESS   ,  "<")
-TEST_NORMAL(TK_EXP    , TK_EXP    , "**")
-TEST_NORMAL(TK_FLRDIV , TK_FLRDIV , "//")
-TEST_NORMAL(TK_MODASS , TK_MODASS , "%=")
-TEST_NORMAL(TK_NEQUAL , TK_NEQUAL , "!=")
-TEST_NORMAL(TK_ADDASS , TK_ADDASS , "+=")
-TEST_NORMAL(TK_SUBASS , TK_SUBASS , "-=")
-TEST_NORMAL(TK_MULASS , TK_MULASS , "*=")
-TEST_NORMAL(TK_DIVASS , TK_DIVASS , "/=")
-TEST_NORMAL(TK_EQUAL  , TK_EQUAL  , "==")
-TEST_NORMAL(TK_GEQUAL , TK_GEQUAL , ">=")
-TEST_NORMAL(TK_LEQUAL , TK_LEQUAL , "<=")
-TEST_NORMAL(TK_RSHIFT , TK_RSHIFT , ">>")
-TEST_NORMAL(TK_LSHIFT , TK_LSHIFT , "<<")
+#define CANDY_OPR_TEST
+#include "src/candy_operator.list"
 
-TEST(lexer, file_system) {
-  FILE *f = fopen("../test/test_lexer.cdy", "r");
-  candy_io_t io{};
-  candy_lexer_t lex{};
-  file_info info{f};
-  candy_io_init(&io);
-  candy_lexer_init(&lex, &io, file_reader, &info);
-  ASSERT_EQ(candy_io_try_catch(&io, (candy_try_catch_cb_t)+[](candy_lexer_t *self, void *ud) {
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_def);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), '(');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), ')');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), ':');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), '(');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), '+');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_STRING);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), ')');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_return);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_INTEGER);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_if);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), binary_ope('=', '='));
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_STRING);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), ':');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_IDENT);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), '(');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_STRING);
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), ')');
-    candy_wrap_deinit((candy_wrap_t *)candy_lexer_next(self));
-    EXPECT_EQ(candy_lexer_lookahead(self), TK_EOS);
-  }, &lex, nullptr), 0);
-  candy_lexer_deinit(&lex);
-  candy_io_deinit(&io);
-  fclose(info.f);
-}
-
-
+#define CANDY_KW_TEST
+#include "src/candy_keyword.list"

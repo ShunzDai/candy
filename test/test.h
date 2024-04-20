@@ -14,5 +14,13 @@
   * limitations under the License.
   */
 #include "gtest/gtest.h"
+#include <stdlib.h>
 
 #define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
+
+static inline void *test_allocator(void *ptr, size_t old_size, size_t new_size, void *arg) {
+  if (new_size)
+    return realloc(ptr, new_size);
+  free(ptr);
+  return NULL;
+}

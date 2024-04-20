@@ -13,13 +13,25 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test.h"
-#include <stdlib.h>
+#ifndef CANDY_OPERATOR_LIST
+#error "can only be include by candy_operator.list"
+#endif /* CANDY_OPERATOR_LIST */
 
-/* valgrind --tool=memcheck --leak-check=full ./test/test */
-int main(int argc, char *argv[]) {
-  srand(time(nullptr));
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+#ifdef CANDY_OPR
+#undef CANDY_OPR
+#endif /* CANDY_OPR */
 
+#ifdef CANDY_OPR_ENUM
+#undef CANDY_OPR_ENUM
+#define CANDY_OPR(_name, ...) TK_##_name = gen_operator(__VA_ARGS__),
+#endif /* CANDY_OPR_ENUM */
+
+#ifdef CANDY_OPR_STR
+#undef CANDY_OPR_STR
+#define CANDY_OPR(_name, ...) case TK_##_name: return #_name;
+#endif /* CANDY_OPR_STR */
+
+#ifdef CANDY_OPR_TEST
+#undef CANDY_OPR_TEST
+#define CANDY_OPR(_name, ...) TEST_NORMAL(_name, TK_##_name, std::string{__VA_ARGS__}.data());
+#endif /* CANDY_OPR_TEST */

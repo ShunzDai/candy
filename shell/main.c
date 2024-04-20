@@ -26,8 +26,8 @@ CANDY_COMPILER_ID "-" CANDY_COMPILER_VERSION " on " CANDY_SYSTEM_NAME "-" CANDY_
 
 static _Atomic(bool) _quit = false;
 
-static int stream_reader(char buffer[], const size_t max_len, void *ud) {
-  int *ch = (int *)ud;
+static int stream_reader(char buffer[], const size_t max_len, void *arg) {
+  int *ch = (int *)arg;
   if (*ch == '\n')
     fwrite("> ", 1, 2, stdout);
   *ch = getchar();
@@ -40,9 +40,9 @@ static void handle_sig(int sig) {
 }
 
 int main(int argc, const char *argv[]) {
-  candy_state_t *state = candy_state_create();
+  candy_state_t *state = candy_state_create_default();
   if (argc > 1) {
-    candy_dofile(state, argv[1]);
+    candy_state_dofile(state, argv[1]);
     candy_state_delete(state);
     return 0;
   }
@@ -50,7 +50,7 @@ int main(int argc, const char *argv[]) {
   printf(head);
   int ch = '\n';
   while (!_quit) {
-    if (candy_dostream(state, stream_reader, &ch) != 0)
+    if (candy_state_dostream(state, stream_reader, &ch) != 0)
       (void)0;
   }
   candy_state_delete(state);

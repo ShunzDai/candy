@@ -13,29 +13,28 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_SRC_READER_H
-#define CANDY_SRC_READER_H
+#ifndef CANDY_CORE_EXCEPTION_H
+#define CANDY_CORE_EXCEPTION_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdio.h>
+#include "core/candy_priv.h"
 
-struct str_info {
-  const char *exp;
-  const size_t size;
-  size_t offset;
+typedef void (*candy_exce_cb_t)(void *arg);
+
+struct candy_exce {
+  candy_exce_t *prev;
 };
 
-struct file_info {
-  FILE *f;
-};
+int candy_exce_init(candy_exce_t *self);
+int candy_exce_deinit(candy_exce_t *self);
 
-int string_reader(char buffer[], const size_t max_len, void *arg);
-
-int file_reader(char buffer[], const size_t max_len, void *arg);
+candy_object_t *candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg);
+void candy_exce_throw(candy_exce_t *self, candy_object_t *err) CANDY_NORETURN;
+size_t candy_exce_depth(const candy_exce_t *self);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_SRC_READER_H */
+#endif /* CANDY_CORE_EXCEPTION_H */

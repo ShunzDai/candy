@@ -1,0 +1,8 @@
+def func(str)
+  def lambda()
+    return str
+  end
+  return str
+end
+
+print(func("hello"), 3-4, 0xe+1)

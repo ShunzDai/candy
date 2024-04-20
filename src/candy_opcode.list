@@ -19,17 +19,16 @@
 
 #ifdef CANDY_OP
 CANDY_OP(LOADCST,
-  candy_vm_push(self, &candy_wrap_get_wrap(&block->pool)[ins->iabx.b]);
+  candy_vm_push(self, &((candy_wrap_t *)candy_array_data(candy_proto_get_cnst(block)))[ins->iabx.b]);
   break;
 )
 
 CANDY_OP(GETTABUP,
-  candy_vm_push(self, candy_table_get(&self->glb, &candy_wrap_get_wrap(&block->pool)[ins->iabc.c]));
+  candy_vm_push(self, candy_table_get(&self->glb, &((candy_wrap_t *)candy_array_data(candy_proto_get_cnst(block)))[ins->iabc.c]));
   break;
 )
 
 CANDY_OP(CALL,
-  vm_assert(candy_wrap_type(&candy_wrap_get_wrap(&self->base)[self->top - 1]) == TYPE_CFUNC, "type '%s' is not callable", candy_wrap_typestr(&candy_wrap_get_wrap(&self->base)[self->top - 1]));
   (*candy_wrap_get_cfunc(candy_vm_pop(self)))((candy_state_t *)self);
   break;
 )

@@ -6,8 +6,7 @@
 
 long strntol(const char nptr[], size_t size, char *endptr[], int base) {
   char buf[size + 1];
-  if (size < sizeof(buf))
-    memcpy(buf, nptr, size);
+  memcpy(buf, nptr, size);
   buf[size] = '\0';
   long res = strtol(buf, endptr, base);
   if (endptr)
@@ -17,8 +16,7 @@ long strntol(const char nptr[], size_t size, char *endptr[], int base) {
 
 double strntod(const char nptr[], size_t size, char *endptr[]) {
   char buf[size + 1];
-  if (size < sizeof(buf))
-    memcpy(buf, nptr, size);
+  memcpy(buf, nptr, size);
   buf[size] = '\0';
   double res = strtod(buf, endptr);
   if (endptr)
