@@ -1,11 +1,9 @@
-set(CANDY_VERSION_MAJOR 1)
-set(CANDY_VERSION_MINOR 0)
-set(CANDY_VERSION_PATCH 0)
-set(CANDY_ENV "dev")
+set(CANDY_VERSION "00.00.01")
+set(CANDY_ENV     "dev")
+set(CANDY_TARGET  "candy_core")
 
 include(${PROJECT_SOURCE_DIR}/cmake/GetGitRevisionDescription.cmake)
-
-git_describe(CANDY_GIT_DESCRIBE "${PROJECT_SOURCE_DIR}")
+include(${PROJECT_SOURCE_DIR}/cmake/candy_release.cmake)
 
 file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   candy_lib.c
@@ -25,9 +23,9 @@ file(GLOB_RECURSE SOURCES_CANDY LIST_DIRECTORIES false
   # candy_builtin.c
 )
 
-add_library(candy_core STATIC ${SOURCES_CANDY})
+add_library(${CANDY_TARGET} STATIC ${SOURCES_CANDY})
 
-target_include_directories(candy_core
+target_include_directories(${CANDY_TARGET}
   PUBLIC
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_BINARY_DIR}
@@ -35,7 +33,17 @@ target_include_directories(candy_core
   ..
 )
 
+get_versions(${CANDY_VERSION} CANDY_VERSION_MAJOR CANDY_VERSION_MINOR CANDY_VERSION_PATCH)
+
+target_compile_definitions(${CANDY_TARGET}
+PRIVATE
+CANDY_VERSION_NUM=0x${CANDY_VERSION_MAJOR}${CANDY_VERSION_MINOR}${CANDY_VERSION_PATCH}U
+)
+
+git_describe(CANDY_GIT_DESCRIBE "${PROJECT_SOURCE_DIR}")
+
+
 configure_file(
-  ${PROJECT_SOURCE_DIR}/cmake/candy_release.in
+  ${PROJECT_SOURCE_DIR}/cmake/candy_release.h.in
   ${PROJECT_BINARY_DIR}/candy_release.h
 )

@@ -20,8 +20,8 @@
 #include <stdatomic.h>
 
 static const char head[] =
-"candy " CANDY_VERSION_STR " " CANDY_ENV " " CANDY_GIT_DESCRIBE " (" __DATE__ ", " __TIME__ ")\n"\
-CANDY_COMPILER_ID "-" CANDY_COMPILER_VERSION " on " CANDY_SYSTEM_NAME "-" CANDY_SYSTEM_VERSION "\n"\
+"candy " CANDY_VERSION_STR ", " CANDY_ENV ", " CANDY_GIT_DESCRIBE "\n"\
+__DATE__ " " __TIME__ ", " CANDY_COMPILER_ID "-" CANDY_COMPILER_VERSION " on " CANDY_SYSTEM_NAME "-" CANDY_SYSTEM_VERSION "\n"\
 "type 'Ctrl+C' to quit\n";
 
 static _Atomic(bool) _quit = false;
