@@ -1,0 +1,8 @@
+function(get_versions versionstr major minor patch)
+    string(REGEX REPLACE "^()([0-9]*)([.][0-9]*[.][0-9]*-?.*)$" "\\2" numbers ${versionstr})
+    set(${major} ${numbers} PARENT_SCOPE)
+    string(REGEX REPLACE "^([0-9]*[.])([0-9]*)([.][0-9]*-?.*)$" "\\2" numbers ${versionstr})
+    set(${minor} ${numbers} PARENT_SCOPE)
+    string(REGEX REPLACE "^([0-9]*[.][0-9]*[.])([0-9]*)(-?.*)$" "\\2" numbers ${versionstr})
+    set(${patch} ${numbers} PARENT_SCOPE)
+endfunction()
