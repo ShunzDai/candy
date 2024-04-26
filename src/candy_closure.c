@@ -37,8 +37,9 @@ candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_proto_t *proto) {
   return closure;
 }
 
-void candy_closure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
+int candy_closure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
   candy_gc_alloc(gc, self, sizeof(struct candy_sclosure), 0);
+  return 0;
 }
 
 const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self) {

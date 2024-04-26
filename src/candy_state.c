@@ -86,10 +86,11 @@ candy_state_t *candy_state_create_coroutine(candy_state_t *self) {
 int candy_state_delete(candy_state_t *self) {
   candy_context_t *ctx = self->ctx;
   if (candy_state_is_main(self)) {
-    candy_gc_deinit(&ctx->gc, (candy_handler_t[]) {
+    candy_handler_t list[] = {
       #define CANDY_TYPE_HANDLER
       #include "src/candy_type.list"
-    });
+    };
+    candy_gc_deinit(&ctx->gc, list);
   }
   candy_coroutine_delete(self, &ctx->gc);
   return 0;
