@@ -21,7 +21,7 @@ extern "C" {
 
 #include "src/candy_exception.h"
 #include "src/candy_vector.h"
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 
 #define gen_opr1(_byte1)                    (_byte1)
 #define gen_opr2(_byte1, _byte2)            ((gen_opr1(_byte1)         << 8) | gen_opr1(_byte2))

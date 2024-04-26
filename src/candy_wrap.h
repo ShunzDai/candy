@@ -20,7 +20,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include "src/candy_object.h"
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 #include <assert.h>
 
 #define CANDY_WRAP_NULL (candy_wrap_t){0}

@@ -19,7 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 
 extern const candy_regist_t candy_builtin_list[];
 extern const int candy_builtin_size;

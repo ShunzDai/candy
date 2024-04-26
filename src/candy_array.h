@@ -19,7 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 
 candy_array_t *candy_array_create(candy_gc_t *self, candy_types_t type, size_t cell);
 int candy_array_delete(candy_array_t *self, candy_gc_t *gc);

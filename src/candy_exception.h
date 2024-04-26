@@ -19,7 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 
 #define candy_assert(_self, _gc, _condition, _type, _format, ...) ((_condition) ? ((void)0U) : candy_exce_throw((_self), (_gc), #_type " error: " _format, ##__VA_ARGS__))
 

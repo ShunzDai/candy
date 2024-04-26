@@ -19,11 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
-
-typedef enum candy_events {
-  EVT_DESTRUCT,
-} candy_events_t;
+#include "src/candy_priv.h"
 
 typedef int (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc);
 

@@ -21,7 +21,7 @@ extern "C" {
 
 #include "src/candy_exception.h"
 #include "src/candy_vector.h"
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 
 typedef struct candy_vm candy_vm_t;
 
