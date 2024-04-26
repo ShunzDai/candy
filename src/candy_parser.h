@@ -19,7 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 
 candy_object_t *candy_parse(candy_gc_t *gc, candy_reader_t reader, void *arg);
 

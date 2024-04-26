@@ -19,39 +19,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "candy_config.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
-
-#ifdef __GNUC__
-#define CANDY_NORETURN __attribute__((noreturn))
-#else
-#define CANDY_NORETURN
-#endif
-
-typedef enum candy_types {
-#define CANDY_TYPE_ENUM
-#include "src/candy_type.list"
-  TYPE_NUM,
-} candy_types_t;
 
 typedef int64_t candy_integer_t;
 typedef double candy_float_t;
 typedef bool candy_boolean_t;
 
-typedef struct candy_gc candy_gc_t;
-typedef struct candy_wrap candy_wrap_t;
-typedef struct candy_object candy_object_t;
-typedef struct candy_vector candy_vector_t;
-typedef struct candy_array candy_array_t;
-typedef struct candy_table candy_table_t;
-typedef struct candy_proto candy_proto_t;
-/* c-closure */
-typedef struct candy_cclosure candy_cclosure_t;
-/* script-closure */
-typedef struct candy_sclosure candy_sclosure_t;
 typedef struct candy_state candy_state_t;
 
 typedef int (*candy_reader_t)(char buffer[], const size_t max_len, void *arg);

@@ -19,7 +19,13 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
+
+typedef enum candy_marks {
+  MARK_WHITE,
+  MARK_GRAY,
+  MARK_DARK,
+} candy_marks_t;
 
 struct candy_object {
   uint8_t next[8];
@@ -27,6 +33,14 @@ struct candy_object {
   uint8_t mask : 4;
   uint8_t mark : 4;
 };
+
+static inline candy_object_t *candy_object_get_next(candy_object_t *self) {
+  return *(candy_object_t **)&self->next;
+}
+
+static inline void candy_object_set_next(candy_object_t *self, const candy_object_t *next) {
+  *(const candy_object_t **)&self->next = next;
+}
 
 static inline candy_types_t candy_object_get_type(const candy_object_t *self) {
   return (candy_types_t)self->type;
@@ -36,12 +50,12 @@ static inline void candy_object_set_type(candy_object_t *self, candy_types_t typ
   self->type = type;
 }
 
-static inline candy_object_t *candy_object_get_next(candy_object_t *self) {
-  return *(candy_object_t **)&self->next;
+static inline candy_marks_t candy_object_get_mark(const candy_object_t *self) {
+  return (candy_marks_t)self->mark;
 }
 
-static inline void candy_object_set_next(candy_object_t *self, const candy_object_t *next) {
-  *(const candy_object_t **)&self->next = next;
+static inline void candy_object_set_mark(candy_object_t *self, candy_marks_t mark) {
+  self->mark = mark;
 }
 
 #ifdef __cplusplus

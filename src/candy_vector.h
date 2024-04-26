@@ -19,7 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 
 struct candy_vector {
   size_t cap;

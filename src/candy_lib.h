@@ -19,7 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "src/candy_types.h"
+#include "src/candy_priv.h"
 #include <ctype.h>
 
 #define candy_lengthof(array) ((int)(sizeof(array) / sizeof(array[0])))
