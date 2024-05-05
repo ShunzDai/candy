@@ -13,19 +13,23 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test.h"
-#include "core/candy_wrap.h"
-#include "core/candy_gc.h"
+#define CANDY_OPCODE_LIST
+#include "core/candy_opcode.h"
+#undef CANDY_OPCODE_LIST
 
-struct object {
-  candy_wrap_t obj;
-  int data;
-};
+#ifdef CANDY_OP
+CANDY_OP(LOADCST,
+  candy_vm_push(self, &((candy_wrap_t *)candy_array_data(candy_proto_get_cnst(block)))[ins->iabx.b]);
+  break;
+)
 
-TEST(gc, root) {
-  // candy_gc_t gc{};
-  // candy_gc_init(&gc);
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_deinit(&gc);
-}
+CANDY_OP(GETTABUP,
+  candy_vm_push(self, candy_table_get(&self->glb, &((candy_wrap_t *)candy_array_data(candy_proto_get_cnst(block)))[ins->iabc.c]));
+  break;
+)
+
+CANDY_OP(CALL,
+  (*candy_wrap_get_cfunc(candy_vm_pop(self)))((candy_state_t *)self);
+  break;
+)
+#endif /* CANDY_OP */

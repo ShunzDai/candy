@@ -14,32 +14,32 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "src/candy_array.h"
-#include "src/candy_gc.h"
+#include "core/candy_array.h"
+#include "core/candy_gc.h"
 
 TEST(array, string) {
   candy_gc_t gc{};
   candy_gc_init(&gc, test_allocator, nullptr);
-  candy_array_t *self = candy_array_create(&gc, TYPE_CHAR, sizeof(char));
+  candy_array_t *self = candy_array_create(&gc, CANDY_TYPE_CHAR, sizeof(char));
   candy_array_append(self, &gc, (char *)"hello world", strlen("hello world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
-  candy_handler_t list[TYPE_NUM];
-  list[TYPE_CHAR] = (candy_handler_t)candy_array_delete;
+  candy_handler_t list[CANDY_TYPE_NUM];
+  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
   candy_gc_deinit(&gc, list);
 }
 
 TEST(array, append) {
   candy_gc_t gc{};
   candy_gc_init(&gc, test_allocator, nullptr);
-  candy_array_t *self = candy_array_create(&gc, TYPE_CHAR, sizeof(char));
+  candy_array_t *self = candy_array_create(&gc, CANDY_TYPE_CHAR, sizeof(char));
   candy_array_append(self, &gc, (char *)"hello", strlen("hello"));
   EXPECT_EQ(candy_array_size(self), strlen("hello"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
   candy_array_append(self, &gc, (char *)" world", strlen(" world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
-  candy_handler_t list[TYPE_NUM];
-  list[TYPE_CHAR] = (candy_handler_t)candy_array_delete;
+  candy_handler_t list[CANDY_TYPE_NUM];
+  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
   candy_gc_deinit(&gc, list);
 }

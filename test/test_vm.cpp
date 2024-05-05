@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "src/candy_vm.h"
+#include "core/candy_vm.h"
 
 TEST(vm, call) {
   candy_vm_t vm{};

@@ -13,19 +13,25 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test.h"
-#include "core/candy_wrap.h"
-#include "core/candy_gc.h"
+#ifndef CANDY_TYPE_LIST
+#error "can only be include by candy_type.list"
+#endif /* CANDY_TYPE_LIST */
 
-struct object {
-  candy_wrap_t obj;
-  int data;
-};
+#ifdef CANDY_TYPE
+#undef CANDY_TYPE
+#endif /* CANDY_TYPE */
 
-TEST(gc, root) {
-  // candy_gc_t gc{};
-  // candy_gc_init(&gc);
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_deinit(&gc);
-}
+#ifdef CANDY_TYPE_ENUM
+#undef CANDY_TYPE_ENUM
+#define CANDY_TYPE(_type, ...) CANDY_TYPE_##_type,
+#endif /* CANDY_TYPE_ENUM */
+
+#ifdef CANDY_TYPE_STR
+#undef CANDY_TYPE_STR
+#define CANDY_TYPE(_type, ...) #_type,
+#endif /* CANDY_TYPE_STR */
+
+#ifdef CANDY_TYPE_HANDLER
+#undef CANDY_TYPE_HANDLER
+#define CANDY_TYPE(_type, _handler) (candy_handler_t)_handler,
+#endif /* CANDY_TYPE_HANDLER */

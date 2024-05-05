@@ -13,19 +13,17 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test.h"
-#include "core/candy_wrap.h"
-#include "core/candy_gc.h"
+#ifndef CANDY_BUILTIN_UTILITY_H
+#define CANDY_BUILTIN_UTILITY_H
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-struct object {
-  candy_wrap_t obj;
-  int data;
-};
+#include "core/candy_types.h"
 
-TEST(gc, root) {
-  // candy_gc_t gc{};
-  // candy_gc_init(&gc);
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_deinit(&gc);
+extern const candy_regist_t candy_builtin_list_utility[];
+
+#ifdef __cplusplus
 }
+#endif /* __cplusplus */
+#endif /* CANDY_BUILTIN_UTILITY_H */
