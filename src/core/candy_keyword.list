@@ -13,19 +13,23 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test.h"
-#include "core/candy_wrap.h"
-#include "core/candy_gc.h"
+#define CANDY_KEYWORD_LIST
+#include "core/candy_keyword.h"
+#undef CANDY_KEYWORD_LIST
 
-struct object {
-  candy_wrap_t obj;
-  int data;
-};
-
-TEST(gc, root) {
-  // candy_gc_t gc{};
-  // candy_gc_init(&gc);
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_deinit(&gc);
-}
+#ifdef CANDY_KW
+CANDY_KW(    true, 0x7C9E9FE5U)
+CANDY_KW(   false, 0x0F6BCEF0U)
+CANDY_KW(    none, 0x7C9B47F5U)
+CANDY_KW(     def, 0x0B8869B4U)
+CANDY_KW(  return, 0x19306425U)
+CANDY_KW(     end, 0x0B886F1CU)
+CANDY_KW(  import, 0x04C06F80U)
+CANDY_KW(      if, 0x00597834U)
+CANDY_KW(    elif, 0x7C964B25U)
+CANDY_KW(    else, 0x7C964C6EU)
+CANDY_KW(   while, 0x10A3387EU)
+CANDY_KW(     for, 0x0B88738CU)
+CANDY_KW(   break, 0x0F2C9F4AU)
+CANDY_KW(continue, 0x42AEFB8AU)
+#endif /* CANDY_KW */

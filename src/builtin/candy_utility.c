@@ -13,19 +13,22 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test.h"
-#include "core/candy_wrap.h"
-#include "core/candy_gc.h"
+#include "candy_utility.h"
+#include "core/candy_vm.h"
+#include <stdlib.h>
 
-struct object {
-  candy_wrap_t obj;
-  int data;
-};
-
-TEST(gc, root) {
-  // candy_gc_t gc{};
-  // candy_gc_init(&gc);
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_deinit(&gc);
+static int _exit(candy_state_t *self) {
+  exit(0);
+  return 0;
 }
+
+static int _print(candy_state_t *self) {
+
+  return 0;
+}
+
+const candy_regist_t candy_builtin_list_utility[] = {
+  {"exit" ,  _exit},
+  {"print", _print},
+  {   NULL,   NULL},
+};

@@ -14,10 +14,10 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "src/candy_gc.h"
-#include "src/candy_array.h"
-#include "src/candy_lexer.h"
-#include "src/candy_reader.h"
+#include "core/candy_gc.h"
+#include "core/candy_array.h"
+#include "core/candy_lexer.h"
+#include "core/candy_reader.h"
 #include <string>
 
 #define TEST_BODY(_name, _token, _exp, ...) TEST(lexer, _name) { tast_body<_token>(_exp __VA_OPT__(,) __VA_ARGS__); }
@@ -79,8 +79,8 @@ static void tast_body(const char exp[], const supposed & ... value) {
     else
       test_normal(cinfo.next, value ...);
   }
-  candy_handler_t list[TYPE_NUM];
-  list[TYPE_CHAR] = (candy_handler_t)candy_array_delete;
+  candy_handler_t list[CANDY_TYPE_NUM];
+  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
   candy_gc_deinit(&gc, list);
 }
 
@@ -169,7 +169,7 @@ TEST_NORMAL(ident_0, TK_IDENT, "i")
 TEST_NORMAL(ident_1, TK_IDENT, "ifif")
 
 #define CANDY_OPR_TEST
-#include "src/candy_operator.list"
+#include "core/candy_operator.list"
 
 #define CANDY_KW_TEST
-#include "src/candy_keyword.list"
+#include "core/candy_keyword.list"

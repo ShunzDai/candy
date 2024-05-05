@@ -13,19 +13,21 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test.h"
 #include "core/candy_wrap.h"
-#include "core/candy_gc.h"
+#include "core/candy_lib.h"
+#include <inttypes.h>
 
-struct object {
-  candy_wrap_t obj;
-  int data;
-};
-
-TEST(gc, root) {
-  // candy_gc_t gc{};
-  // candy_gc_init(&gc);
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_deinit(&gc);
+int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
+  switch (candy_wrap_get_type(self)) {
+    case CANDY_TYPE_NONE:
+      return fprintf(out, "%*s", align, "NONE");
+    case CANDY_TYPE_INTEGER:
+      return fprintf(out, "%*" PRId64, align, candy_wrap_get_integer(self));
+    case CANDY_TYPE_FLOAT:
+      return fprintf(out, "%*f", align, candy_wrap_get_float(self));
+    // case CANDY_TYPE_CFUNC:
+    //   return fprintf(out, "%*p", align, candy_wrap_get_cfunc(self));
+    default:
+      return fprintf(out, "%*s", align, "NA");
+  }
 }

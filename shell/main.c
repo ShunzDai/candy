@@ -14,7 +14,6 @@
   * limitations under the License.
   */
 #include "candy.h"
-#include "candy_release.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>

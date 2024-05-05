@@ -14,10 +14,10 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "src/candy_array.h"
-#include "src/candy_table.h"
-#include "src/candy_gc.h"
-#include "src/candy_wrap.h"
+#include "core/candy_array.h"
+#include "core/candy_table.h"
+#include "core/candy_gc.h"
+#include "core/candy_wrap.h"
 
 TEST(table, init) {
   candy_gc_t gc{};
@@ -31,7 +31,7 @@ TEST(table, init) {
     EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &key)), candy_wrap_get_integer(&val));
   }
   // candy_table_fprint(self, stdout);
-  candy_handler_t list[TYPE_NUM];
-  list[TYPE_TABLE] = (candy_handler_t)candy_table_delete;
+  candy_handler_t list[CANDY_TYPE_NUM];
+  list[CANDY_TYPE_TABLE] = (candy_handler_t)candy_table_delete;
   candy_gc_deinit(&gc, list);
 }

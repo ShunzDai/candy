@@ -13,19 +13,22 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "test.h"
-#include "core/candy_wrap.h"
-#include "core/candy_gc.h"
+#ifndef CANDY_CORE_TABLE_H
+#define CANDY_CORE_TABLE_H
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-struct object {
-  candy_wrap_t obj;
-  int data;
-};
+#include "core/candy_priv.h"
 
-TEST(gc, root) {
-  // candy_gc_t gc{};
-  // candy_gc_init(&gc);
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_add(&gc, CANDY_TYPE_NONE, sizeof(object));
-  // candy_gc_deinit(&gc);
+candy_table_t *candy_table_create(candy_gc_t *gc);
+int candy_table_delete(candy_table_t *self, candy_gc_t *gc);
+
+int candy_table_fprint(const candy_table_t *self, FILE *out);
+const candy_wrap_t *candy_table_get(const candy_table_t *self, const candy_wrap_t *key);
+int candy_table_set(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, const candy_wrap_t *val);
+
+#ifdef __cplusplus
 }
+#endif /* __cplusplus */
+#endif /* CANDY_CORE_TABLE_H */

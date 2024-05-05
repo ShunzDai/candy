@@ -14,9 +14,9 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "src/candy_exception.h"
-#include "src/candy_gc.h"
-#include "src/candy_array.h"
+#include "core/candy_exception.h"
+#include "core/candy_gc.h"
+#include "core/candy_array.h"
 
 TEST(catch, exception_ok) {
   candy_exce_t jmp{};
@@ -38,8 +38,8 @@ TEST(catch, exception_err) {
   }, &info);
   EXPECT_EQ(!err, false);
   EXPECT_MEMEQ(candy_array_data(err), "assert string", sizeof("assert string"));
-  candy_handler_t list[TYPE_NUM];
-  list[TYPE_CHAR] = (candy_handler_t)candy_array_delete;
+  candy_handler_t list[CANDY_TYPE_NUM];
+  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
   candy_gc_deinit(&info.gc, list);
 }
 
@@ -73,7 +73,7 @@ TEST(catch, nest_err) {
   }, &info);
   EXPECT_EQ(!err, false);
   EXPECT_MEMEQ(candy_array_data(err), "depth 1", sizeof("depth 1"));
-  candy_handler_t list[TYPE_NUM];
-  list[TYPE_CHAR] = (candy_handler_t)candy_array_delete;
+  candy_handler_t list[CANDY_TYPE_NUM];
+  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
   candy_gc_deinit(&info.gc, list);
 }
