@@ -23,15 +23,20 @@
 
 #ifdef CANDY_TYPE_ENUM
 #undef CANDY_TYPE_ENUM
-#define CANDY_TYPE(_type, ...) CANDY_TYPE_##_type,
+#define CANDY_TYPE(_name, ...) CANDY_TYPE_##_name,
 #endif /* CANDY_TYPE_ENUM */
 
 #ifdef CANDY_TYPE_STR
 #undef CANDY_TYPE_STR
-#define CANDY_TYPE(_type, ...) #_type,
+#define CANDY_TYPE(_name, ...) #_name,
 #endif /* CANDY_TYPE_STR */
+
+#ifdef CANDY_TYPE_SIZE
+#undef CANDY_TYPE_SIZE
+#define CANDY_TYPE(_name, _type, ...) sizeof(_type),
+#endif /* CANDY_TYPE_SIZE */
 
 #ifdef CANDY_TYPE_HANDLER
 #undef CANDY_TYPE_HANDLER
-#define CANDY_TYPE(_type, _handler) (candy_handler_t)_handler,
+#define CANDY_TYPE(_name, _type, _handler) (candy_handler_t)_handler,
 #endif /* CANDY_TYPE_HANDLER */

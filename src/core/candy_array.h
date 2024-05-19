@@ -21,7 +21,7 @@ extern "C" {
 
 #include "core/candy_priv.h"
 
-candy_array_t *candy_array_create(candy_gc_t *self, candy_types_t type, size_t cell);
+candy_array_t *candy_array_create(candy_gc_t *self, candy_types_t type);
 int candy_array_delete(candy_array_t *self, candy_gc_t *gc);
 
 size_t candy_array_capacity(const candy_array_t *self);

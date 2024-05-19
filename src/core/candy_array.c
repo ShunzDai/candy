@@ -23,9 +23,16 @@ struct candy_array {
   candy_vector_t vec;
 };
 
-candy_array_t *candy_array_create(candy_gc_t *gc, candy_types_t type, size_t cell) {
+static size_t type_to_size(candy_types_t type) {
+  return (size_t[]) {
+    #define CANDY_TYPE_SIZE
+    #include "core/candy_type.list"
+  }[type];
+}
+
+candy_array_t *candy_array_create(candy_gc_t *gc, candy_types_t type) {
   candy_array_t *self = (candy_array_t *)candy_gc_add(gc, type, sizeof(struct candy_array));
-  candy_vector_init(&self->vec, cell);
+  candy_vector_init(&self->vec, type_to_size(type));
   return self;
 }
 
