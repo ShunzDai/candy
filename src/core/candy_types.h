@@ -30,9 +30,9 @@ typedef enum candy_types {
   CANDY_TYPE_NUM,
 } candy_types_t;
 
-typedef int64_t candy_integer_t;
-typedef double candy_float_t;
-typedef bool candy_boolean_t;
+typedef CANDY_INTEGER_TYPE candy_integer_t;
+typedef CANDY_FLOAT_TYPE   candy_float_t;
+typedef CANDY_BOOLEAN_TYPE candy_boolean_t;
 
 typedef struct candy_state candy_state_t;
 

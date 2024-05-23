@@ -33,8 +33,19 @@ typedef enum candy_mask {
   MASK_CFUNCPTR = 1 << 3,
 } candy_mask_t;
 
+union candy_udata {
+  candy_integer_t i;
+  candy_float_t f;
+  candy_boolean_t b;
+  void *p;
+};
+
 struct candy_wrap {
-  uint8_t data[8];
+  #if CANDY_MEMORY_ALIGNMENT
+  union candy_udata data;
+  #else /* CANDY_MEMORY_ALIGNMENT */
+  uint8_t data[sizeof(union candy_udata)];
+  #endif /* CANDY_MEMORY_ALIGNMENT */
   uint8_t type : 4;
   uint8_t mask : 4;
 };
