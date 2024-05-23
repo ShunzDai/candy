@@ -17,18 +17,18 @@
 #include "core/candy_vm.h"
 #include <stdlib.h>
 
-static int _exit(candy_state_t *self) {
+static int _builtin_exit(candy_state_t *self) {
   exit(0);
   return 0;
 }
 
-static int _print(candy_state_t *self) {
+static int _builtin_print(candy_state_t *self) {
 
   return 0;
 }
 
 const candy_regist_t candy_builtin_list_utility[] = {
-  {"exit" ,  _exit},
-  {"print", _print},
+  {"exit" ,  _builtin_exit},
+  {"print", _builtin_print},
   {   NULL,   NULL},
 };

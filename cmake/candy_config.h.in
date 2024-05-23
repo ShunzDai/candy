@@ -32,6 +32,12 @@ extern "C" {
 #define CANDY_VERSION_STR       "${CANDY_VERSION}"
 #define CANDY_VERSION_NUM       0x00${CANDY_VERSION_MAJOR}${CANDY_VERSION_MINOR}${CANDY_VERSION_PATCH}U
 
+#define CANDY_INTEGER_TYPE      ${CANDY_INTEGER_TYPE}
+#define CANDY_FLOAT_TYPE        ${CANDY_FLOAT_TYPE}
+#define CANDY_BOOLEAN_TYPE      ${CANDY_BOOLEAN_TYPE}
+
+#define CANDY_MEMORY_ALIGNMENT  ${CANDY_MEMORY_ALIGNMENT}
+
 /**
   * @brief  smaller expand size mean less space utilization and more load times,
   *         which can be decided by the user depending on the usage scenario.
