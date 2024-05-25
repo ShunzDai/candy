@@ -14,14 +14,17 @@
   * limitations under the License.
   */
 #include "candy.h"
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <stdatomic.h>
 
 static const char head[] =
-"candy " CANDY_VERSION_STR ", " CANDY_ENV ", " CANDY_GIT_DESCRIBE "\n"\
-__DATE__ " " __TIME__ ", " CANDY_COMPILER_ID "-" CANDY_COMPILER_VERSION " on " CANDY_SYSTEM_NAME "-" CANDY_SYSTEM_VERSION "\n"\
+"candy " CANDY_VERSION_STR ", " CANDY_ENV ", " CANDY_GIT_DESCRIBE "\n" \
+__DATE__ " " __TIME__ ", \
+" CANDY_COMPILER_ID "-" CANDY_COMPILER_VERSION " on \
+" CANDY_SYSTEM_NAME "-" CANDY_SYSTEM_VERSION "\n" \
 "type 'Ctrl+C' to quit\n";
 
 static _Atomic(bool) _quit = false;
@@ -30,13 +33,18 @@ static int stream_reader(char buffer[], const size_t max_len, void *arg) {
   int *ch = (int *)arg;
   if (*ch == '\n')
     fwrite("> ", 1, 2, stdout);
-  *ch = getchar();
+  while ((*ch = getchar()) < 0) {
+    bool expected = false;
+    if (!atomic_compare_exchange_strong(&_quit, &expected, false))
+      return -1;
+  }
   buffer[0] = *ch;
-  return *ch > 0 ? 1 : -1;
+  return 1;
 }
 
 static void handle_sig(int sig) {
-  _quit = true;
+  bool expected = false;
+  atomic_compare_exchange_strong(&_quit, &expected, true);
 }
 
 int main(int argc, const char *argv[]) {
@@ -46,12 +54,15 @@ int main(int argc, const char *argv[]) {
     candy_state_delete(state);
     return 0;
   }
+  fcntl(fileno(stdin), F_SETFL, O_NONBLOCK);
   signal(SIGINT, handle_sig);
   printf(head);
-  int ch = '\n';
-  while (!_quit) {
-    if (candy_state_dostream(state, stream_reader, &ch) != 0)
+  bool expected = false;
+  while (atomic_compare_exchange_strong(&_quit, &expected, false)) {
+    int ch = '\n';
+    if (candy_state_dostream(state, stream_reader, &ch) < 0)
       (void)0;
   }
   candy_state_delete(state);
+  return 0;
 }
