@@ -19,29 +19,49 @@
 #include "core/candy_lib.h"
 #include <string.h>
 
-int candy_vector_init(candy_vector_t *self, size_t cell) {
-  self->cap = 0;
+static void _set_capacity(candy_vector_t *self, size_t capacity) {
+  self->cap = capacity;
+}
+
+static void _set_cell(candy_vector_t *self, size_t cell) {
   self->cell = cell;
-  self->size = 0;
-  self->data = NULL;
+}
+
+static void _set_size(candy_vector_t *self, size_t size) {
+  self->size = size;
+}
+
+static void _set_data(candy_vector_t *self, void *data) {
+  self->data = data;
+}
+
+int candy_vector_init(candy_vector_t *self, size_t cell) {
+  _set_capacity(self, 0);
+  _set_cell(self, cell);
+  _set_size(self, 0);
+  _set_data(self, NULL);
   return 0;
 }
 
 void candy_vector_deinit(candy_vector_t *self, candy_gc_t *gc) {
-  candy_gc_alloc(gc, self->data, candy_vector_capacity(self), 0);
-  self->data = NULL;
-  self->size = 0;
-  self->cell = 0;
-  self->cap = 0;
+  _set_data(self, candy_gc_alloc(gc, candy_vector_data(self),
+    candy_vector_cell(self) * candy_vector_capacity(self),
+    0
+  ));
+  _set_size(self, 0);
+  _set_cell(self, 0);
+  _set_capacity(self, 0);
 }
 
 void candy_vector_reserve(candy_vector_t *self, candy_gc_t *gc, size_t capacity) {
   size_t cap = candy_vector_capacity(self);
   if (capacity <= cap)
     return;
-  self->cap = capacity;
-  self->data = candy_gc_alloc(gc, self->data, self->cell * cap, self->cell * self->cap);
-  memset(self->data, 0, self->cell * self->cap);
+  _set_capacity(self, capacity);
+  _set_data(self, candy_gc_alloc(gc, candy_vector_data(self),
+    candy_vector_cell(self) * cap,
+    candy_vector_cell(self) * candy_vector_capacity(self)
+  ));
 }
 
 void candy_vector_resize(candy_vector_t *self, candy_gc_t *gc, size_t size) {
@@ -49,22 +69,25 @@ void candy_vector_resize(candy_vector_t *self, candy_gc_t *gc, size_t size) {
   if (size > sz)
     candy_vector_append(self, gc, NULL, size - sz);
   else
-    self->size = size;
+    _set_size(self, size);
 }
 
 int candy_vector_append(candy_vector_t *self, candy_gc_t *gc, const void *data, size_t size) {
   size_t cap = candy_vector_capacity(self);
   size_t sz = candy_vector_size(self);
   if (cap < size + sz) {
-    self->cap += size;
-    self->data = candy_gc_alloc(gc, self->data, self->cell * cap, self->cell * self->cap);
+    _set_capacity(self, candy_vector_capacity(self) + size);
+    _set_data(self, candy_gc_alloc(gc, candy_vector_data(self),
+      candy_vector_cell(self) * cap,
+      candy_vector_cell(self) * candy_vector_capacity(self)
+    ));
   }
   if (size) {
     if (data)
-      memcpy(self->data + self->cell * sz, data, self->cell * size);
+      memcpy(candy_vector_data(self) + candy_vector_cell(self) * sz, data, candy_vector_cell(self) * size);
     else
-      memset(self->data + self->cell * sz, 0, self->cell * size);
+      memset(candy_vector_data(self) + candy_vector_cell(self) * sz, 0, candy_vector_cell(self) * size);
   }
-  self->size += size;
+  _set_size(self, candy_vector_size(self) + size);
   return 0;
 }
