@@ -41,6 +41,10 @@ static inline size_t candy_vector_capacity(const candy_vector_t *self) {
   return self->cap;
 }
 
+static inline size_t candy_vector_cell(const candy_vector_t *self) {
+  return self->cell;
+}
+
 static inline size_t candy_vector_size(const candy_vector_t *self) {
   return self->size;
 }
