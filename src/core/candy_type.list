@@ -18,16 +18,15 @@
 #undef CANDY_TYPE_LIST
 
 #ifdef CANDY_TYPE
-CANDY_TYPE(   NULL,       size_t[0],                   NULL)
-CANDY_TYPE(   NONE,       size_t[0],     candy_array_delete)
-CANDY_TYPE(BOOLEAN, candy_boolean_t,     candy_array_delete)
-CANDY_TYPE(INTEGER, candy_integer_t,     candy_array_delete)
-CANDY_TYPE(  FLOAT,   candy_float_t,     candy_array_delete)
-CANDY_TYPE(   CHAR,            char,     candy_array_delete)
-CANDY_TYPE(   FUNC,   candy_cfunc_t,   candy_closure_delete)
-CANDY_TYPE(USERDEF,          void *,                   NULL)
-CANDY_TYPE(   WRAP,  candy_wrap_t *,     candy_array_delete)
-CANDY_TYPE(  TABLE, candy_table_t *,     candy_table_delete)
-CANDY_TYPE(  PROTO, candy_proto_t *,     candy_proto_delete)
-CANDY_TYPE(  STATE, candy_state_t *, candy_coroutine_delete)
+CANDY_TYPE(   NULL,       size_t[0])
+CANDY_TYPE(   NONE,       size_t[0])
+CANDY_TYPE(BOOLEAN, candy_boolean_t)
+CANDY_TYPE(INTEGER, candy_integer_t)
+CANDY_TYPE(  FLOAT,   candy_float_t)
+CANDY_TYPE(   CHAR,            char)
+CANDY_TYPE(   FUNC,   candy_cfunc_t)
+CANDY_TYPE(USERDEF,          void *)
+CANDY_TYPE(  TABLE, candy_table_t *)
+CANDY_TYPE(  PROTO, candy_proto_t *)
+CANDY_TYPE(  STATE, candy_state_t *)
 #endif /* CANDY_TYPE */

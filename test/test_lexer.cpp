@@ -26,6 +26,10 @@
 
 using namespace std;
 
+static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
+  return candy_array_delete((candy_array_t *)self, gc);
+}
+
 template <typename supposed>
 static void test_assert(const candy_array_t *err, const supposed &val) {
   (void)err;
@@ -64,7 +68,7 @@ static void tast_body(const char exp[], const supposed & ... value) {
   catch_info cinfo{};
   candy_gc_t gc{};
   str_info info{exp, strlen(exp), 0};
-  candy_gc_init(&gc, test_allocator, nullptr);
+  candy_gc_init(&gc, handler, test_allocator, nullptr);
   candy_lexer_init(&cinfo.ls, &gc, string_reader, &info);
   candy_array_t *err = candy_exce_try(&cinfo.ls.ctx, (candy_exce_cb_t)+[](catch_info *self) {
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), token);
@@ -79,9 +83,7 @@ static void tast_body(const char exp[], const supposed & ... value) {
     else
       test_normal(cinfo.next, value ...);
   }
-  candy_handler_t list[CANDY_TYPE_NUM];
-  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
-  candy_gc_deinit(&gc, list);
+  candy_gc_deinit(&gc);
 }
 
 TEST_ASSERT(invalid_0, "0x",    "lexical error: invalid hexadecimal number"sv)

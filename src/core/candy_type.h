@@ -35,8 +35,3 @@
 #undef CANDY_TYPE_SIZE
 #define CANDY_TYPE(_name, _type, ...) sizeof(_type),
 #endif /* CANDY_TYPE_SIZE */
-
-#ifdef CANDY_TYPE_HANDLER
-#undef CANDY_TYPE_HANDLER
-#define CANDY_TYPE(_name, _type, _handler) (candy_handler_t)_handler,
-#endif /* CANDY_TYPE_HANDLER */

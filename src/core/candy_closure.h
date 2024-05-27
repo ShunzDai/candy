@@ -26,12 +26,14 @@ extern "C" {
   */
 candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_cfunc_t cfunc);
 
+int candy_cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc);
+
 /**
   * @brief  create a new script-closure
   */
 candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_proto_t *proto);
 
-int candy_closure_delete(candy_sclosure_t *self, candy_gc_t *gc);
+int candy_sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc);
 
 const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self);
 
