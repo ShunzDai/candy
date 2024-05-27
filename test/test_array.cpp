@@ -20,7 +20,7 @@
 TEST(array, string) {
   candy_gc_t gc{};
   candy_gc_init(&gc, test_allocator, nullptr);
-  candy_array_t *self = candy_array_create(&gc, CANDY_TYPE_CHAR);
+  candy_array_t *self = candy_array_create(&gc, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(self, &gc, (char *)"hello world", strlen("hello world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
@@ -32,7 +32,7 @@ TEST(array, string) {
 TEST(array, append) {
   candy_gc_t gc{};
   candy_gc_init(&gc, test_allocator, nullptr);
-  candy_array_t *self = candy_array_create(&gc, CANDY_TYPE_CHAR);
+  candy_array_t *self = candy_array_create(&gc, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(self, &gc, (char *)"hello", strlen("hello"));
   EXPECT_EQ(candy_array_size(self), strlen("hello"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));

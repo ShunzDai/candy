@@ -28,10 +28,13 @@ extern "C" {
 #define CANDY_NORETURN
 #endif
 
-typedef enum candy_events {
-  EVT_DESTRUCT,
-  EVT_DIFFUSION,
-} candy_events_t;
+typedef enum candy_masks {
+  MASK_NONE     = 0 << 0,
+  MASK_ARRAY    = 1 << 0,
+  MASK_CCLOSURE = 1 << 1,
+  MASK_SCLOSURE = 1 << 2,
+  MASK_AUTOMGMT = 1 << 1,
+} candy_masks_t;
 
 typedef struct candy_gc candy_gc_t;
 typedef struct candy_wrap candy_wrap_t;
@@ -40,6 +43,7 @@ typedef struct candy_vector candy_vector_t;
 typedef struct candy_array candy_array_t;
 typedef struct candy_table candy_table_t;
 typedef struct candy_proto candy_proto_t;
+typedef struct candy_userdef candy_userdef_t;
 /* c-closure */
 typedef struct candy_cclosure candy_cclosure_t;
 /* script-closure */

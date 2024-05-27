@@ -30,8 +30,9 @@ static size_t type_to_size(candy_types_t type) {
   }[type];
 }
 
-candy_array_t *candy_array_create(candy_gc_t *gc, candy_types_t type) {
+candy_array_t *candy_array_create(candy_gc_t *gc, candy_types_t type, uint8_t mask) {
   candy_array_t *self = (candy_array_t *)candy_gc_add(gc, type, sizeof(struct candy_array));
+  candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | mask);
   candy_vector_init(&self->vec, type_to_size(type));
   return self;
 }
