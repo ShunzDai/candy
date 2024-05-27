@@ -54,7 +54,7 @@ void candy_exce_throw(candy_exce_t *self, candy_gc_t *gc, const char format[], .
   va_start(ap, format);
   int len = vsnprintf(NULL, 0, format, ap) + 1;
   va_end(ap);
-  ctx->err = candy_array_create(gc, CANDY_TYPE_CHAR);
+  ctx->err = candy_array_create(gc, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_resize(ctx->err, gc, len);
   va_start(ap, format);
   vsnprintf((char *)candy_array_data(ctx->err), len, format, ap);

@@ -25,14 +25,6 @@ extern "C" {
 
 #define CANDY_WRAP_NULL (candy_wrap_t){0}
 
-typedef enum candy_mask {
-  MASK_NONE,
-  MASK_OBJECT   = 1 << 0,
-  MASK_CCLOSURE = 1 << 1,
-  MASK_SCLOSURE = 1 << 2,
-  MASK_CFUNCPTR = 1 << 3,
-} candy_mask_t;
-
 union candy_udata {
   candy_integer_t i;
   candy_float_t f;
@@ -81,42 +73,60 @@ static inline void candy_wrap_set_mask(candy_wrap_t *self, uint8_t mask) {
 
 static inline candy_integer_t candy_wrap_get_integer(const candy_wrap_t *self) {
   assert(candy_wrap_get_type(self) == CANDY_TYPE_INTEGER);
+  assert(self->mask == MASK_NONE);
   return *(candy_integer_t *)candy_wrap_data(self);
-}
-
-static inline candy_float_t candy_wrap_get_float(const candy_wrap_t *self) {
-  assert(candy_wrap_get_type(self) == CANDY_TYPE_FLOAT);
-  return *(candy_float_t *)candy_wrap_data(self);
-}
-
-static inline candy_boolean_t candy_wrap_get_boolean(const candy_wrap_t *self) {
-  assert(candy_wrap_get_type(self) == CANDY_TYPE_BOOLEAN);
-  return *(candy_boolean_t *)candy_wrap_data(self);
-}
-
-static inline candy_object_t *candy_wrap_get_object(const candy_wrap_t *self) {
-  assert(self->mask & MASK_OBJECT);
-  return *(candy_object_t **)candy_wrap_data(self);
 }
 
 static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t val) {
   candy_wrap_set_type(self, CANDY_TYPE_INTEGER);
+  candy_wrap_set_mask(self, MASK_NONE);
   *(candy_integer_t *)candy_wrap_data(self) = val;
+}
+
+static inline candy_float_t candy_wrap_get_float(const candy_wrap_t *self) {
+  assert(candy_wrap_get_type(self) == CANDY_TYPE_FLOAT);
+  assert(self->mask == MASK_NONE);
+  return *(candy_float_t *)candy_wrap_data(self);
 }
 
 static inline void candy_wrap_set_float(candy_wrap_t *self, const candy_float_t val) {
   candy_wrap_set_type(self, CANDY_TYPE_FLOAT);
+  candy_wrap_set_mask(self, MASK_NONE);
   *(candy_float_t *)candy_wrap_data(self) = val;
+}
+
+static inline candy_boolean_t candy_wrap_get_boolean(const candy_wrap_t *self) {
+  assert(candy_wrap_get_type(self) == CANDY_TYPE_BOOLEAN);
+  assert(self->mask == MASK_NONE);
+  return *(candy_boolean_t *)candy_wrap_data(self);
 }
 
 static inline void candy_wrap_set_boolean(candy_wrap_t *self, const candy_boolean_t val) {
   candy_wrap_set_type(self, CANDY_TYPE_BOOLEAN);
+  candy_wrap_set_mask(self, MASK_NONE);
   *(candy_boolean_t *)candy_wrap_data(self) = val;
+}
+
+static inline candy_cfunc_t candy_wrap_get_cfunc(const candy_wrap_t *self) {
+  assert(candy_wrap_get_type(self) == CANDY_TYPE_FUNC);
+  assert(self->mask == MASK_NONE);
+  return *(candy_cfunc_t *)candy_wrap_data(self);
+}
+
+static inline void candy_wrap_set_cfunc(candy_wrap_t *self, const candy_cfunc_t val) {
+  candy_wrap_set_type(self, CANDY_TYPE_FUNC);
+  candy_wrap_set_mask(self, MASK_NONE);
+  *(candy_cfunc_t *)candy_wrap_data(self) = val;
+}
+
+static inline candy_object_t *candy_wrap_get_object(const candy_wrap_t *self) {
+  assert(self->mask != MASK_NONE);
+  return *(candy_object_t **)candy_wrap_data(self);
 }
 
 static inline void candy_wrap_set_object(candy_wrap_t *self, const candy_object_t *val) {
   candy_wrap_set_type(self, candy_object_get_type(val));
-  candy_wrap_set_mask(self, MASK_OBJECT);
+  candy_wrap_set_mask(self, candy_object_get_mask(val));
   *(const candy_object_t **)candy_wrap_data(self) = val;
 }
 

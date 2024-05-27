@@ -54,6 +54,14 @@ static inline void candy_object_set_type(candy_object_t *self, candy_types_t typ
   self->type = type;
 }
 
+static inline uint8_t candy_object_get_mask(const candy_object_t *self) {
+  return self->mask;
+}
+
+static inline void candy_object_set_mask(candy_object_t *self, uint8_t mask) {
+  self->mask = mask;
+}
+
 static inline candy_marks_t candy_object_get_mark(const candy_object_t *self) {
   return (candy_marks_t)self->mark;
 }
