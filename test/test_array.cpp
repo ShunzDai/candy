@@ -17,21 +17,23 @@
 #include "core/candy_array.h"
 #include "core/candy_gc.h"
 
+static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
+  return candy_array_delete((candy_array_t *)self, gc);
+}
+
 TEST(array, string) {
   candy_gc_t gc{};
-  candy_gc_init(&gc, test_allocator, nullptr);
+  candy_gc_init(&gc, handler, test_allocator, nullptr);
   candy_array_t *self = candy_array_create(&gc, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(self, &gc, (char *)"hello world", strlen("hello world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
-  candy_handler_t list[CANDY_TYPE_NUM];
-  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
-  candy_gc_deinit(&gc, list);
+  candy_gc_deinit(&gc);
 }
 
 TEST(array, append) {
   candy_gc_t gc{};
-  candy_gc_init(&gc, test_allocator, nullptr);
+  candy_gc_init(&gc, handler, test_allocator, nullptr);
   candy_array_t *self = candy_array_create(&gc, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(self, &gc, (char *)"hello", strlen("hello"));
   EXPECT_EQ(candy_array_size(self), strlen("hello"));
@@ -39,7 +41,5 @@ TEST(array, append) {
   candy_array_append(self, &gc, (char *)" world", strlen(" world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
-  candy_handler_t list[CANDY_TYPE_NUM];
-  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
-  candy_gc_deinit(&gc, list);
+  candy_gc_deinit(&gc);
 }

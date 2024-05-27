@@ -18,6 +18,10 @@
 #include "core/candy_gc.h"
 #include "core/candy_array.h"
 
+static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
+  return candy_array_delete((candy_array_t *)self, gc);
+}
+
 TEST(catch, exception_ok) {
   candy_exce_t jmp{};
   candy_array_t *err = candy_exce_try(&jmp, (candy_exce_cb_t)+[](void *arg) {
@@ -32,15 +36,13 @@ TEST(catch, exception_err) {
     candy_gc_t gc;
   };
   arg info{};
-  candy_gc_init(&info.gc, test_allocator, nullptr);
+  candy_gc_init(&info.gc, handler, test_allocator, nullptr);
   candy_array_t *err = candy_exce_try(&info.jmp, (candy_exce_cb_t)+[](arg *info) {
     candy_exce_throw(&info->jmp, &info->gc, "assert string");
   }, &info);
   EXPECT_EQ(!err, false);
   EXPECT_MEMEQ(candy_array_data(err), "assert string", sizeof("assert string"));
-  candy_handler_t list[CANDY_TYPE_NUM];
-  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
-  candy_gc_deinit(&info.gc, list);
+  candy_gc_deinit(&info.gc);
 }
 
 TEST(catch, nest_ok) {
@@ -61,7 +63,7 @@ TEST(catch, nest_err) {
     size_t depth;
   };
   arg info{};
-  candy_gc_init(&info.gc, test_allocator, nullptr);
+  candy_gc_init(&info.gc, handler, test_allocator, nullptr);
   candy_array_t *err = candy_exce_try(&info.jmp, (candy_exce_cb_t)+[](arg *info) {
     EXPECT_EQ(++info->depth, candy_exce_depth(&info->jmp));
     candy_array_t *err = candy_exce_try(&info->jmp, (candy_exce_cb_t)+[](arg *info) {
@@ -73,7 +75,5 @@ TEST(catch, nest_err) {
   }, &info);
   EXPECT_EQ(!err, false);
   EXPECT_MEMEQ(candy_array_data(err), "depth 1", sizeof("depth 1"));
-  candy_handler_t list[CANDY_TYPE_NUM];
-  list[CANDY_TYPE_CHAR] = (candy_handler_t)candy_array_delete;
-  candy_gc_deinit(&info.gc, list);
+  candy_gc_deinit(&info.gc);
 }

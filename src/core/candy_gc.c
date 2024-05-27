@@ -18,38 +18,52 @@
 #include <assert.h>
 
 static candy_object_t *candy_gc_add_node(candy_gc_t *self, candy_object_t **pos, candy_types_t type, size_t size) {
-  candy_object_t *obj = (candy_object_t *)self->alloc(NULL, 0, size, self->arg);
+  candy_object_t *obj = (candy_object_t *)candy_gc_alloc(self, NULL, 0, size);
   candy_object_set_next(obj, *pos);
   candy_object_set_type(obj, type);
+  candy_object_set_mask(obj, MASK_NONE);
+  candy_object_set_mark(obj, MARK_WHITE);
   *pos = obj;
   return obj;
 }
 
-static void candy_gc_del_node(candy_gc_t *self, candy_object_t **pos, candy_handler_t list[]) {
+static void candy_gc_del_node(candy_gc_t *self, candy_object_t **pos) {
   candy_object_t *obj = *pos;
   *pos = candy_object_get_next(obj);
-  assert(list[candy_object_get_type(obj)]);
-  list[candy_object_get_type(obj)](obj, self);
+  self->handler(obj, self, EVT_DELETE);
 }
 
-int candy_gc_init(candy_gc_t *self, candy_allocator_t alloc, void *arg) {
+int candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg) {
   self->pool = NULL;
-  self->root = NULL;
+  self->handler = handler;
   self->alloc = alloc;
   self->arg = arg;
   return 0;
 }
 
-int candy_gc_deinit(candy_gc_t *self, candy_handler_t list[]) {
+int candy_gc_deinit(candy_gc_t *self) {
   while (self->pool)
-    candy_gc_del_node(self, &self->pool, list);
-  while (self->root)
-    candy_gc_del_node(self, &self->root, list);
+    candy_gc_del_node(self, &self->pool);
+  if (self->main)
+    self->handler((candy_object_t *)self->main, self, EVT_DELETE);
   return 0;
 }
 
 candy_object_t *candy_gc_add(candy_gc_t *self, candy_types_t type, size_t size) {
-  return candy_gc_add_node(self, &self->root, type, size);
+  return candy_gc_add_node(self, &self->pool, type, size);
+}
+
+int candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {
+  candy_object_t *obj = self->pool;
+  self->pool = candy_object_get_next(obj);
+  switch (type) {
+    case GC_MV_MAIN_STATE:
+      self->main = (candy_state_t *)obj;
+      break;
+    default:
+      return -1;
+  }
+  return 0;
 }
 
 int candy_gc_sweep(candy_gc_t *self) {

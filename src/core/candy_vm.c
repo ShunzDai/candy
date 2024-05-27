@@ -15,6 +15,7 @@
   */
 #include "core/candy_vm.h"
 #include "core/candy_gc.h"
+#include "core/candy_wrap.h"
 #include "core/candy_proto.h"
 #include "core/candy_table.h"
 #include <string.h>
@@ -39,10 +40,12 @@
 
 int candy_vm_init(candy_vm_t *self) {
   candy_exce_init(&self->ctx);
+  candy_vector_init(&self->root, sizeof(struct candy_wrap));
   return 0;
 }
 
 int candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc) {
+  candy_vector_deinit(&self->root, gc);
   candy_exce_deinit(&self->ctx);
   return 0;
 }

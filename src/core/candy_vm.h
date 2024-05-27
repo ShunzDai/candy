@@ -41,7 +41,7 @@ const candy_wrap_t *candy_vm_pop(candy_vm_t *self);
 int candy_vm_set_global(candy_vm_t *self, const char name[]);
 int candy_vm_get_global(candy_vm_t *self, const char name[]);
 int candy_vm_call(candy_vm_t *self, int nargs, int nresults);
-int candy_vm_execute(candy_vm_t *self, candy_gc_t *gc, candy_state_t *state);
+int candy_vm_execute(candy_vm_t *self, candy_gc_t *gc);
 
 #ifdef __cplusplus
 }

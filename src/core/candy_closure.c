@@ -28,16 +28,25 @@ struct candy_sclosure {
 };
 
 candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_cfunc_t cfunc) {
-  return NULL;
+  candy_cclosure_t *self = (candy_cclosure_t *)candy_gc_add(gc, CANDY_TYPE_FUNC, sizeof(struct candy_cclosure));
+  candy_object_set_mask((candy_object_t *)self, MASK_CCLOSURE);
+  self->cfunc = cfunc;
+  return self;
+}
+
+int candy_cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc) {
+  candy_gc_alloc(gc, self, sizeof(struct candy_cclosure), 0);
+  return 0;
 }
 
 candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_proto_t *proto) {
-  candy_sclosure_t *closure = (candy_sclosure_t *)candy_gc_add(gc, CANDY_TYPE_FUNC, sizeof(struct candy_sclosure));
-  closure->proto = proto;
-  return closure;
+  candy_sclosure_t *self = (candy_sclosure_t *)candy_gc_add(gc, CANDY_TYPE_FUNC, sizeof(struct candy_sclosure));
+  candy_object_set_mask((candy_object_t *)self, MASK_SCLOSURE);
+  self->proto = proto;
+  return self;
 }
 
-int candy_closure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
+int candy_sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
   candy_gc_alloc(gc, self, sizeof(struct candy_sclosure), 0);
   return 0;
 }
