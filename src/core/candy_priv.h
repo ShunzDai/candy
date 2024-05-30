@@ -19,6 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include "core/candy_macro.h"
 #include "core/candy_types.h"
 #include <stdio.h> /* todo: remove */
 
