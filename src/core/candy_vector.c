@@ -62,6 +62,7 @@ void candy_vector_reserve(candy_vector_t *self, candy_gc_t *gc, size_t capacity)
     candy_vector_cell(self) * cap,
     candy_vector_cell(self) * candy_vector_capacity(self)
   ));
+  memset(candy_vector_data(self), 0, candy_vector_cell(self) * candy_vector_capacity(self));
 }
 
 void candy_vector_resize(candy_vector_t *self, candy_gc_t *gc, size_t size) {
