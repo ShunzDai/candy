@@ -95,14 +95,14 @@ static int _set(const candy_table_t *self, const candy_wrap_t *key, const candy_
     switch (candy_wrap_get_type(&(pair + next)->key)) {
       case CANDY_TYPE_NULL:
         (pair + next)->key = *key;
-        (pair + next)->val = *val;
-        return 0;
+        break;
       default:
         if (!equal(&(pair + next)->key, key))
-          break;
-        (pair + next)->val = *val;
-        return 0;
+          continue;
+        break;
     }
+    (pair + next)->val = *val;
+    return 0;
   }
   return -1;
 }
