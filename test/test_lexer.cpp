@@ -14,10 +14,11 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "core/candy_gc.h"
-#include "core/candy_array.h"
 #include "core/candy_lexer.h"
+#include "core/candy_exception.h"
+#include "core/candy_gc.h"
 #include "core/candy_reader.h"
+#include "core/candy_array.h"
 #include <string>
 
 #define TEST_BODY(_name, _token, _exp, ...) TEST(lexer, _name) { tast_body<_token>(_exp __VA_OPT__(,) __VA_ARGS__); }
@@ -34,8 +35,8 @@ template <typename supposed>
 static void test_assert(const candy_array_t *err, const supposed &val) {
   (void)err;
   if constexpr (std::is_same<supposed, std::string_view>::value) {
-    EXPECT_EQ(candy_array_size(err), val.size() + 1);
-    EXPECT_MEMEQ(candy_array_data(err), val.data(), val.size() + 1);
+    EXPECT_EQ(candy_array_size(err), val.size());
+    EXPECT_MEMEQ(candy_array_data(err), val.data(), val.size());
   }
   else {
     assert(0);
@@ -66,20 +67,23 @@ static void tast_body(const char exp[], const supposed & ... value) {
     candy_meta_t next{};
   };
   catch_info cinfo{};
+  candy_exce_t ctx{};
   candy_gc_t gc{};
   str_info info{exp, strlen(exp), 0};
+  candy_exce_init(&ctx);
   candy_gc_init(&gc, handler, test_allocator, nullptr);
-  candy_lexer_init(&cinfo.ls, &gc, string_reader, &info);
-  candy_array_t *err = candy_exce_try(&cinfo.ls.ctx, (candy_exce_cb_t)+[](catch_info *self) {
+  candy_lexer_init(&cinfo.ls, &ctx, &gc, string_reader, &info);
+  auto err = candy_exce_try(&ctx, (candy_exce_cb_t)+[](catch_info *self) {
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), token);
     if (token != TK_EOS)
       self->next = *candy_lexer_next(&self->ls);
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), TK_EOS);
   }, &cinfo);
   candy_lexer_deinit(&cinfo.ls);
+  candy_exce_deinit(&ctx);
   if constexpr(sizeof...(value)) {
     if (err)
-      test_assert(err, value ...);
+      test_assert((candy_array_t *)err, value ...);
     else
       test_normal(cinfo.next, value ...);
   }

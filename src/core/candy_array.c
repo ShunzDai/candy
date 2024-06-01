@@ -55,8 +55,8 @@ void *candy_array_data(const candy_array_t *self) {
   return candy_vector_data(&self->vec);
 }
 
-candy_vector_t *candy_array_vector(candy_array_t *self) {
-  return &self->vec;
+void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, size_t capacity) {
+  candy_vector_reserve(&self->vec, gc, capacity);
 }
 
 void candy_array_resize(candy_array_t *self, candy_gc_t *gc, size_t size) {

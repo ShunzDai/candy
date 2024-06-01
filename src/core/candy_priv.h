@@ -24,10 +24,17 @@ extern "C" {
 #include <stdio.h> /* todo: remove */
 
 #ifdef __GNUC__
-#define CANDY_NORETURN __attribute__((noreturn))
+#define CANDY_NORETURN                    __attribute__((noreturn))
+#define CANDY_FORMAT(fmtarg, firstvararg) __attribute__((format(printf, fmtarg, firstvararg)))
 #else
 #define CANDY_NORETURN
+#define CANDY_FORMAT(fmtarg, firstvararg)
 #endif
+
+#define candy_assert(_self, _gc, _condition, _type, _format, ...) \
+((_condition) ? ((void)0U) : candy_exce_throw(_self, \
+  (candy_object_t *)candy_print(_gc, #_type " error: " _format, ##__VA_ARGS__) \
+))
 
 typedef enum candy_masks {
   MASK_NONE     = 0 << 0,
@@ -49,6 +56,8 @@ typedef struct candy_userdef candy_userdef_t;
 typedef struct candy_cclosure candy_cclosure_t;
 /* script-closure */
 typedef struct candy_sclosure candy_sclosure_t;
+
+typedef struct candy_exce candy_exce_t;
 
 #ifdef __cplusplus
 }
