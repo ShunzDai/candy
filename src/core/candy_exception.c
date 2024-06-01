@@ -14,16 +14,12 @@
   * limitations under the License.
   */
 #include "core/candy_exception.h"
-#include "core/candy_gc.h"
-#include "core/candy_array.h"
 #include <setjmp.h>
-#include <stdarg.h>
-#include <string.h>
 
 struct context {
-  struct context *prev;
   jmp_buf jmp;
-  candy_array_t *err;
+  struct context *prev;
+  candy_object_t *err;
 };
 
 int candy_exce_init(candy_exce_t *self) {
@@ -35,7 +31,7 @@ int candy_exce_deinit(candy_exce_t *self) {
   return 0;
 }
 
-candy_array_t *candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg) {
+candy_object_t *candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg) {
   struct context new = {
     .prev = (struct context *)self->prev,
   };
@@ -48,17 +44,9 @@ candy_array_t *candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg)
   return new.err;
 }
 
-void candy_exce_throw(candy_exce_t *self, candy_gc_t *gc, const char format[], ...) {
+void candy_exce_throw(candy_exce_t *self, candy_object_t *err) {
   struct context *ctx = (struct context *)self->prev;
-  va_list ap;
-  va_start(ap, format);
-  int len = vsnprintf(NULL, 0, format, ap) + 1;
-  va_end(ap);
-  ctx->err = candy_array_create(gc, CANDY_TYPE_CHAR, MASK_NONE);
-  candy_array_resize(ctx->err, gc, len);
-  va_start(ap, format);
-  vsnprintf((char *)candy_array_data(ctx->err), len, format, ap);
-  va_end(ap);
+  ctx->err = err;
   longjmp(ctx->jmp, 1);
 }
 

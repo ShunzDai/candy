@@ -67,7 +67,7 @@ void candy_vector_reserve(candy_vector_t *self, candy_gc_t *gc, size_t capacity)
 
 void candy_vector_resize(candy_vector_t *self, candy_gc_t *gc, size_t size) {
   size_t sz = candy_vector_size(self);
-  if (size > sz)
+  if (sz < size)
     candy_vector_append(self, gc, NULL, size - sz);
   else
     _set_size(self, size);

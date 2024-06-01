@@ -9,6 +9,7 @@ file(GLOB_RECURSE CANDY_SOURCES_CORE LIST_DIRECTORIES false
   candy_exception.c
   candy_proto.c
   candy_closure.c
+  candy_print.c
   candy_lexer.c
   candy_parser.c
   candy_reader.c

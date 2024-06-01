@@ -14,12 +14,14 @@
   * limitations under the License.
   */
 #include "core/candy_lexer.h"
+#include "core/candy_exception.h"
+#include "core/candy_print.h"
 #include "core/candy_array.h"
 #include "core/candy_lib.h"
 #include <string.h>
 #include <assert.h>
 
-#define lex_assert(_condition, _format, ...) candy_assert(&self->ctx, self->gc, _condition, lexical, _format, ##__VA_ARGS__)
+#define lex_assert(_condition, _format, ...) candy_assert(self->ctx, self->gc, _condition, lexical, _format, ##__VA_ARGS__)
 
 static char *_buff(candy_lexer_t *self) {
   return candy_vector_data(&self->buff.vec);
@@ -346,9 +348,9 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
   return gen_operator(_read(self), _read(self), _read(self));
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_reader_t reader, void *arg) {
+int candy_lexer_init(candy_lexer_t *self, candy_exce_t *ctx, candy_gc_t *gc, candy_reader_t reader, void *arg) {
   memset(self, 0, sizeof(struct candy_lexer));
-  candy_exce_init(&self->ctx);
+  self->ctx = ctx;
   self->gc = gc;
   candy_vector_init(&self->buff.vec, sizeof(char));
   self->buff.w = 0;
@@ -363,7 +365,6 @@ int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_reader_t reader,
 
 int candy_lexer_deinit(candy_lexer_t *self) {
   candy_vector_deinit(&self->buff.vec, self->gc);
-  candy_exce_deinit(&self->ctx);
   return 0;
 }
 

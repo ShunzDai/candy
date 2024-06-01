@@ -13,28 +13,19 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_CORE_ARRAY_H
-#define CANDY_CORE_ARRAY_H
+#ifndef CANDY_CORE_FORMAT_H
+#define CANDY_CORE_FORMAT_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 #include "core/candy_priv.h"
+#include <stdarg.h>
 
-candy_array_t *candy_array_create(candy_gc_t *gc, candy_types_t type, uint8_t mask);
-int candy_array_delete(candy_array_t *self, candy_gc_t *gc);
-
-size_t candy_array_capacity(const candy_array_t *self);
-size_t candy_array_size(const candy_array_t *self);
-void *candy_array_data(const candy_array_t *self);
-
-void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, size_t capacity);
-
-void candy_array_resize(candy_array_t *self, candy_gc_t *gc, size_t size);
-
-int candy_array_append(candy_array_t *self, candy_gc_t *gc, const void *data, size_t size);
+candy_array_t *candy_vprint(candy_gc_t *gc, const char format[], va_list args) CANDY_FORMAT(2, 0);
+candy_array_t *candy_print(candy_gc_t *gc, const char format[], ...) CANDY_FORMAT(2, 3);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_CORE_ARRAY_H */
+#endif /* CANDY_CORE_FORMAT_H */
