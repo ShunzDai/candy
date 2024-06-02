@@ -62,7 +62,7 @@ static char _view(candy_lexer_t *self, int idx) {
 }
 
 static char _read(candy_lexer_t *self) {
-  while (_fill(self, 0));
+  assert(self->buff.r < _size(self));
   ++self->dbg.column;
   return _buff(self)[self->buff.r++];
 }
@@ -129,8 +129,7 @@ static void _handle_newline(candy_lexer_t *self, void (*pred)(candy_lexer_t *)) 
   self->dbg.column = 1;
 }
 
-static void _skip_comment(candy_lexer_t *self) {
-  _skip(self);
+static void _skip_line(candy_lexer_t *self) {
   while (1) {
     switch (_view(self, 0)) {
       case '\r': case '\n':
@@ -248,9 +247,13 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta, const
           case  'x': _skip(self); _save_hex(self);             break;
           case  'u': lex_assert(false, "unsupported unicode"); break;
           default:
+            /* is octal escape */
             if (_check_next(self, is_oct, _save_oct))
               break;
-            /* is not escape */
+            /* is line-continuation */
+            if (_check_dual(self, "\r\n", _skip_line))
+              break;
+            /* neither of them */
             _save_char(self, '\\');
             _save(self);
             break;
@@ -327,11 +330,18 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
         goto opr1;
       /* is comment */
       case '#':
-        _skip_comment(self);
+        _skip(self);
+        _skip_line(self);
         break;
       /* is string */
       case '"': case '\'':
         return _get_string(self, meta, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0));
+      /* is line-continuation */
+      case '\\':
+        _skip(self);
+        if (_check_dual(self, "\r\n", _skip_line))
+          break;
+        lex_assert(false, "unexpected character after line continuation character");
       default:
         if (is_dec(_view(self, 0)))
           return _get_number(self, meta);
