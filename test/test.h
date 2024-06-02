@@ -16,6 +16,10 @@
 #include "gtest/gtest.h"
 #include <stdlib.h>
 
+#define unique_name_body(test_suite_name, counter) test_suite_name##_##counter
+#define unique_name_impl(test_suite_name, counter) unique_name_body(test_suite_name, counter)
+#define unique_name(test_suite_name) unique_name_impl(test_suite_name, __COUNTER__)
+
 #define EXPECT_MEMEQ(m1, m2, n) EXPECT_EQ(memcmp(m1, m2, n), 0)
 
 static inline void *test_allocator(void *ptr, size_t old_size, size_t new_size, void *arg) {
