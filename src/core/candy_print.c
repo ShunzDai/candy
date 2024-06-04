@@ -19,7 +19,7 @@
 #include <stdio.h>
 
 candy_array_t *candy_vprint(candy_gc_t *gc, const char format[], va_list args) {
-  candy_array_t *out = candy_array_create(gc, CANDY_TYPE_CHAR, MASK_NONE);
+  candy_array_t *out = candy_array_create(gc, CANDY_BASE_CHAR, MASK_NONE);
   va_list args_copy;
   va_copy(args_copy, args);
   int len = vsnprintf(NULL, 0, format, args_copy);

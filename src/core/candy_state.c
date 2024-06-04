@@ -67,21 +67,17 @@ static int candy_event_delete(candy_object_t *self, candy_gc_t *gc) {
   if (candy_object_get_mask(self) & MASK_ARRAY)
     return candy_array_delete((candy_array_t *)self, gc);
   switch (candy_object_get_type(self)) {
-    case CANDY_TYPE_FUNC:
-      if (candy_object_get_mask(self) & MASK_CCLOSURE)
-        return candy_cclosure_delete((candy_cclosure_t *)self, gc);
-      if (candy_object_get_mask(self) & MASK_SCLOSURE)
+    case CANDY_EXTD_CCLSR:
+      return candy_cclosure_delete((candy_cclosure_t *)self, gc);
+    case CANDY_EXTD_SCLSR:
         return candy_sclosure_delete((candy_sclosure_t *)self, gc);
-      return -1;
-    case CANDY_TYPE_USERDEF:
-      if (candy_object_get_mask(self) & MASK_AUTOMGMT)
-        return candy_userdef_delete((candy_userdef_t *)self, gc);
-      return -1;
-    case CANDY_TYPE_TABLE:
+    case CANDY_EXTD_HEAVY:
+      return candy_userdef_delete((candy_userdef_t *)self, gc);
+    case CANDY_BASE_TABLE:
       return candy_table_delete((candy_table_t *)self, gc);
-    case CANDY_TYPE_PROTO:
+    case CANDY_BASE_PROTO:
       return candy_proto_delete((candy_proto_t *)self, gc);
-    case CANDY_TYPE_STATE:
+    case CANDY_BASE_STATE:
       return candy_state_deinit((candy_state_t *)self, gc);
     default:
       return -1;
@@ -98,7 +94,7 @@ static int candy_event_handler(candy_object_t *self, candy_gc_t *gc, candy_event
 candy_state_t *candy_state_create(candy_allocator_t alloc, void *arg) {
   candy_gc_t gc;
   candy_gc_init(&gc, candy_event_handler, alloc, arg);
-  candy_context_t *ctx = (candy_context_t *)candy_gc_add(&gc, CANDY_TYPE_STATE, sizeof(struct candy_context));
+  candy_context_t *ctx = (candy_context_t *)candy_gc_add(&gc, CANDY_BASE_STATE, sizeof(struct candy_context));
   memcpy(&ctx->gc, &gc, sizeof(struct candy_gc));
   candy_gc_move(&ctx->gc, GC_MV_MAIN_STATE);
   candy_state_t *co = &ctx->state;
@@ -111,7 +107,7 @@ candy_state_t *candy_state_create_default(void) {
 }
 
 candy_state_t *candy_state_create_coroutine(candy_state_t *self) {
-  candy_state_t *co = (candy_state_t *)candy_gc_add(self->gc, CANDY_TYPE_STATE, sizeof(struct candy_state));
+  candy_state_t *co = (candy_state_t *)candy_gc_add(self->gc, CANDY_BASE_STATE, sizeof(struct candy_state));
   candy_state_init(co, self->gc);
   return co;
 }
@@ -125,7 +121,7 @@ int candy_state_delete(candy_state_t *self) {
 
 int candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg) {
   candy_object_t *out = candy_parse(self->gc, reader, arg);
-  if (candy_object_get_type(out) == CANDY_TYPE_CHAR)
+  if (candy_object_get_type(out) == CANDY_BASE_CHAR)
     printf("%.*s\n",
       (int)candy_array_size((candy_array_t *)out),
       (char *)candy_array_data((candy_array_t *)out)

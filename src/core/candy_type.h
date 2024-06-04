@@ -21,17 +21,21 @@
 #undef CANDY_TYPE
 #endif /* CANDY_TYPE */
 
+#define gen_extended_rule(_extd, _count, _base) CANDY_EXTD_##_extd = (_count << 4) | CANDY_BASE_##_base,
+#define gen_extended_glue(_extd0, _extd1) _extd0 _extd1
+#define gen_extended(_base, ...) CANDY_VA(gen_extended_rule, gen_extended_glue, ##__VA_ARGS__, _base)
+
 #ifdef CANDY_TYPE_ENUM
 #undef CANDY_TYPE_ENUM
-#define CANDY_TYPE(_name, ...) CANDY_TYPE_##_name,
+#define CANDY_TYPE(_type, _base, ...) CANDY_BASE_##_base = __COUNTER__, gen_extended(_base, ##__VA_ARGS__)
 #endif /* CANDY_TYPE_ENUM */
 
 #ifdef CANDY_TYPE_STR
 #undef CANDY_TYPE_STR
-#define CANDY_TYPE(_name, ...) #_name,
+#define CANDY_TYPE(_type, _base, ...) #_base,
 #endif /* CANDY_TYPE_STR */
 
 #ifdef CANDY_TYPE_SIZE
 #undef CANDY_TYPE_SIZE
-#define CANDY_TYPE(_name, _type, ...) sizeof(_type),
+#define CANDY_TYPE(_type, _base, ...) sizeof(_type),
 #endif /* CANDY_TYPE_SIZE */

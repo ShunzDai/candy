@@ -25,9 +25,8 @@ extern "C" {
 #include <stddef.h>
 
 typedef enum candy_types {
-#define CANDY_TYPE_ENUM
-#include "core/candy_type.list"
-  CANDY_TYPE_NUM,
+  #define CANDY_TYPE_ENUM
+  #include "core/candy_type.list"
 } candy_types_t;
 
 typedef CANDY_INTEGER_TYPE candy_integer_t;
