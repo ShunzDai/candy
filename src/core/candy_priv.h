@@ -37,11 +37,8 @@ extern "C" {
 ))
 
 typedef enum candy_masks {
-  MASK_NONE     = 0 << 0,
-  MASK_ARRAY    = 1 << 0,
-  MASK_CCLOSURE = 1 << 1,
-  MASK_SCLOSURE = 1 << 2,
-  MASK_AUTOMGMT = 1 << 1,
+  MASK_NONE  = 0 << 0,
+  MASK_ARRAY = 1 << 0,
 } candy_masks_t;
 
 typedef struct candy_gc candy_gc_t;

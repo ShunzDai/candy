@@ -19,13 +19,13 @@
 
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
   switch (candy_wrap_get_type(self)) {
-    case CANDY_TYPE_NONE:
+    case CANDY_BASE_NONE:
       return fprintf(out, "%*s", align, "NONE");
-    case CANDY_TYPE_INTEGER:
+    case CANDY_BASE_INTEGER:
       return fprintf(out, "%*" PRId64, align, candy_wrap_get_integer(self));
-    case CANDY_TYPE_FLOAT:
+    case CANDY_BASE_FLOAT:
       return fprintf(out, "%*f", align, candy_wrap_get_float(self));
-    // case CANDY_TYPE_CFUNC:
+    // case CANDY_BASE_CFUNC:
     //   return fprintf(out, "%*p", align, candy_wrap_get_cfunc(self));
     default:
       return fprintf(out, "%*s", align, "NA");
