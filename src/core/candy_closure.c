@@ -19,16 +19,19 @@
 
 struct candy_cclosure {
   candy_object_t header;
+  candy_object_t *gray;
   candy_cfunc_t cfunc;
 };
 
 struct candy_sclosure {
   candy_object_t header;
+  candy_object_t *gray;
   candy_proto_t *proto;
 };
 
 candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_cfunc_t cfunc) {
   candy_cclosure_t *self = (candy_cclosure_t *)candy_gc_add(gc, CANDY_EXTD_CCLSR, sizeof(struct candy_cclosure));
+  self->gray = NULL;
   self->cfunc = cfunc;
   return self;
 }
@@ -40,6 +43,7 @@ int candy_cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc) {
 
 candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_proto_t *proto) {
   candy_sclosure_t *self = (candy_sclosure_t *)candy_gc_add(gc, CANDY_EXTD_SCLSR, sizeof(struct candy_sclosure));
+  self->gray = NULL;
   self->proto = proto;
   return self;
 }
@@ -47,6 +51,14 @@ candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_proto_t *proto) {
 int candy_sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
   candy_gc_alloc(gc, self, sizeof(struct candy_sclosure), 0);
   return 0;
+}
+
+int candy_sclosure_colouring(candy_sclosure_t *self, candy_gc_t *gc) {
+  return 0;
+}
+
+int candy_sclosure_diffusion(candy_sclosure_t *self, candy_gc_t *gc) {
+  return -1;
 }
 
 const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self) {

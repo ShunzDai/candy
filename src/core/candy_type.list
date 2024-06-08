@@ -30,4 +30,9 @@ CANDY_TYPE(         void *, USERDEF, LIGHT, HEAVY)
 CANDY_TYPE(candy_table_t *,   TABLE)
 CANDY_TYPE(candy_proto_t *,   PROTO)
 CANDY_TYPE(candy_state_t *,   STATE)
+#if defined(CANDY_TEST)
+CANDY_TYPE(   object_stub0,   STUB0)
+CANDY_TYPE(   object_stub1,   STUB1)
+CANDY_TYPE(   object_stub2,   STUB2)
+#endif /* CANDY_TEST */
 #endif /* CANDY_TYPE */

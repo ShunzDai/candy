@@ -26,7 +26,7 @@ struct candy_proto {
 
 candy_proto_t *candy_proto_create(candy_gc_t *gc) {
   candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, CANDY_BASE_PROTO, sizeof(struct candy_proto));
-  // self->size_inst = candy_vector_size(cfg->inst);
+  self->size_inst = 0;
   // self->inst = (candy_inst_t *)candy_vector_data(cfg->inst);
   self->inst = NULL;
   return self;
@@ -35,6 +35,15 @@ candy_proto_t *candy_proto_create(candy_gc_t *gc) {
 int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc) {
   candy_gc_alloc(gc, self->inst, self->size_inst, 0);
   candy_gc_alloc(gc, self, sizeof(struct candy_proto), 0);
+  return 0;
+}
+
+int candy_proto_colouring(candy_proto_t *self, candy_gc_t *gc) {
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  return 0;
+}
+
+int candy_proto_diffusion(candy_proto_t *self, candy_gc_t *gc) {
   return 0;
 }
 
