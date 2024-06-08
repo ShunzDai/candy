@@ -38,12 +38,12 @@ struct candy_object {
   uint8_t mark : 4;
 };
 
-static inline candy_object_t *candy_object_get_next(candy_object_t *self) {
-  return *(candy_object_t **)&self->next;
+static inline candy_object_t **candy_object_get_next(candy_object_t *self) {
+  return (candy_object_t **)&self->next;
 }
 
-static inline void candy_object_set_next(candy_object_t *self, const candy_object_t *next) {
-  *(const candy_object_t **)&self->next = next;
+static inline void candy_object_set_next(candy_object_t *self, candy_object_t *next) {
+  *candy_object_get_next(self) = next;
 }
 
 static inline candy_types_t candy_object_get_type(const candy_object_t *self) {

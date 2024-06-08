@@ -55,7 +55,12 @@ struct candy_proto_config {
 };
 
 candy_proto_t *candy_proto_create(candy_gc_t *gc);
+
 int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
+
+int candy_proto_colouring(candy_proto_t *self, candy_gc_t *gc);
+
+int candy_proto_diffusion(candy_proto_t *self, candy_gc_t *gc);
 
 static inline void candy_proto_add_iax(candy_proto_t *self, candy_opcodes_t op, uint32_t a) {
   int candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);

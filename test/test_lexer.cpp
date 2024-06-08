@@ -91,6 +91,9 @@ static void tast_body(const char exp[], const supposed & ... value) {
     else
       test_normal(cinfo.next, value ...);
   }
+  else {
+    (void)err;
+  }
   candy_gc_deinit(&gc);
   candy_exce_deinit(&ctx);
 }

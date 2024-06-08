@@ -35,7 +35,11 @@ candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_proto_t *proto);
 
 int candy_sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc);
 
-const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self);
+int candy_sclosure_colouring(candy_sclosure_t *self, candy_gc_t *gc);
+
+int candy_sclosure_diffusion(candy_sclosure_t *self, candy_gc_t *gc);
+
+const candy_proto_t *candy_closure_get_proto(candy_sclosure_t *self);
 
 #ifdef __cplusplus
 }

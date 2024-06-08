@@ -20,6 +20,7 @@
 
 struct candy_array {
   candy_object_t header;
+  candy_object_t *gray;
   candy_vector_t vec;
 };
 
@@ -33,6 +34,7 @@ static size_t type_to_size(candy_types_t type) {
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_types_t type, uint8_t mask) {
   candy_array_t *self = (candy_array_t *)candy_gc_add(gc, type, sizeof(struct candy_array));
   candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | mask);
+  self->gray = NULL;
   candy_vector_init(&self->vec, type_to_size(type));
   return self;
 }
@@ -40,6 +42,18 @@ candy_array_t *candy_array_create(candy_gc_t *gc, candy_types_t type, uint8_t ma
 int candy_array_delete(candy_array_t *self, candy_gc_t *gc) {
   candy_vector_deinit(&self->vec, gc);
   candy_gc_alloc(gc, self, sizeof(struct candy_array), 0);
+  return 0;
+}
+
+int candy_array_colouring(candy_array_t *self, candy_gc_t *gc) {
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  return 0;
+}
+
+int candy_array_diffusion(candy_array_t *self, candy_gc_t *gc) {
+  // candy_object_t *obj = candy_gc_gray_swap(gc, self->gray);
+  // candy_object_set_mark(obj, MARK_DARK);
+  // /* todo: traverse obj */
   return 0;
 }
 
