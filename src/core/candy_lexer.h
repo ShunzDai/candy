@@ -19,7 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "core/candy_vector.h"
+#include "core/candy_buffer.h"
 #include "core/candy_priv.h"
 
 #define gen_operator_rule(_byte, ...) (_byte)
@@ -47,15 +47,7 @@ union candy_meta {
 };
 
 struct candy_lexer {
-  candy_exce_t *ctx;
-  candy_gc_t *gc;
-  struct {
-    candy_vector_t vec;
-    size_t w;
-    size_t r;
-    candy_reader_t reader;
-    void *arg;
-  } buff;
+  candy_buffer_t buff;
   struct {
     size_t line;
     size_t column;
@@ -64,6 +56,8 @@ struct candy_lexer {
     candy_tokens_t token;
     candy_meta_t meta;
   } lookahead;
+  candy_exce_t *ctx;
+  candy_gc_t *gc;
 };
 
 typedef struct candy_lexer candy_lexer_t;
