@@ -118,7 +118,7 @@ static void _statement(candy_parser_t *self) {
       //   break;
       default:
         // par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->lex));
-        printf("%s line %zu col %zu\n", candy_token_str(candy_lexer_lookahead(&self->ls)), self->ls.dbg.line, self->ls.dbg.column);
+        // printf("%s line %zu col %zu\n", candy_token_str(candy_lexer_lookahead(&self->ls)), self->ls.dbg.line, self->ls.dbg.column);
         candy_lexer_next(&self->ls);
         break;
     }

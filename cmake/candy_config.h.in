@@ -42,7 +42,7 @@ extern "C" {
   * @brief  smaller expand size mean less space utilization and more load times,
   *         which can be decided by the user depending on the usage scenario.
   */
-#define CANDY_LEXER_EXPAND_SIZE ${CANDY_LEXER_EXPAND_SIZE}
+#define CANDY_BUFFER_EXPAND_SIZE ${CANDY_BUFFER_EXPAND_SIZE}
 
 #ifdef __cplusplus
 }

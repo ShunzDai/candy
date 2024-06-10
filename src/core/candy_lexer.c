@@ -19,66 +19,50 @@
 #include "core/candy_array.h"
 #include "core/candy_lib.h"
 #include <string.h>
-#include <assert.h>
 
 #define lex_assert(_condition, _format, ...) candy_assert(self->ctx, self->gc, _condition, lexical, _format, ##__VA_ARGS__)
 
-static char *_buff(candy_lexer_t *self) {
-  return candy_vector_data(&self->buff.vec);
+static const char *_head(candy_lexer_t *self) {
+  return candy_buffer_head(&self->buff);
 }
 
 static size_t _size(candy_lexer_t *self) {
-  return candy_vector_size(&self->buff.vec);
+  return candy_buffer_size(&self->buff);
 }
 
-static int _fill(candy_lexer_t *self, size_t ahead) {
-  size_t size = _size(self);
-  if (self->buff.r + ahead < size)
-    return 0;
-  /* calculate the start position of the read buffer */
-  size_t offset = self->buff.w + ahead;
-  /** if the number of bytes that can be filled is less than
-      @ref CANDY_LEXER_EXPAND_SIZE bytes, the buffer will be enlarged */
-  if (size < CANDY_LEXER_EXPAND_SIZE + offset) {
-    candy_vector_append(&self->buff.vec, self->gc, NULL, CANDY_LEXER_EXPAND_SIZE);
-    offset = size;
-  }
-  /* otherwise buffer will be filled directly */
-  else {
-    /* restore the unread remain bytes to the buffer */
-    memmove(_buff(self) + self->buff.w, _buff(self) + self->buff.r, ahead);
-    self->buff.r = self->buff.w;
-  }
-  /* fill buffer */
-  int res = self->buff.reader(_buff(self) + offset, _size(self) - offset, self->buff.arg);
-  lex_assert(res > 0, "stream error");
-  candy_vector_resize(&self->buff.vec, self->gc, offset + res);
-  return res;
+static void _reset(candy_lexer_t *self) {
+  candy_buffer_reset(&self->buff);
 }
 
-static char _view(candy_lexer_t *self, int idx) {
-  while (_fill(self, idx));
-  return _buff(self)[self->buff.r + idx];
+static char _view(candy_lexer_t *self, size_t ahead) {
+  char ch = 0;
+  int res = candy_buffer_view(&self->buff, self->gc, &ch, sizeof(char), ahead);
+  lex_assert(res >= 0, "abnormal input stream");
+  return ch;
+}
+
+static void _readn(candy_lexer_t *self, char str[], size_t size) {
+  int res = candy_buffer_read(&self->buff, self->gc, str, size);
+  lex_assert(res >= 0, "abnormal input stream");
+  self->dbg.column += size;
 }
 
 static char _read(candy_lexer_t *self) {
-  assert(self->buff.r < _size(self));
-  ++self->dbg.column;
-  return _buff(self)[self->buff.r++];
+  char ch = 0;
+  _readn(self, &ch, 1);
+  return ch;
+}
+
+static void _skipn(candy_lexer_t *self, size_t n) {
+  _readn(self, NULL, n);
 }
 
 static void _skip(candy_lexer_t *self) {
-  _read(self);
-}
-
-static void _skipn(candy_lexer_t *self, int n) {
-  while (n--)
-    _skip(self);
+  _skipn(self, 1);
 }
 
 static void _save_char(candy_lexer_t *self, char ch) {
-  assert(self->buff.r > self->buff.w);
-  _buff(self)[self->buff.w++] = ch;
+  candy_buffer_write(&self->buff, &ch, 1);
 }
 
 static void _save(candy_lexer_t *self) {
@@ -202,12 +186,12 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
   char *end = NULL;
   if (token == TK_INTEGER) {
     int base = check == is_dec ? first == '0' ? 8 : 10 : check == is_hex ? 16 : 2;
-    meta->i = (candy_integer_t)strntol(_buff(self), self->buff.w, &end, base);
+    meta->i = (candy_integer_t)strntol(_head(self), _size(self), &end, base);
   }
   else {
-    meta->f = (candy_float_t)strntod(_buff(self), self->buff.w, &end);
+    meta->f = (candy_float_t)strntod(_head(self), _size(self), &end);
   }
-  lex_assert(_buff(self) + self->buff.w == end, "malformed number");
+  lex_assert(_head(self) + _size(self) == end, "malformed number");
   return token;
 }
 
@@ -270,8 +254,8 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta, const
   exit:
   _skipn(self, multiline ? 3 : 1);
   meta->s = candy_array_create(self->gc, CANDY_BASE_CHAR, MASK_NONE);
-  candy_array_append(meta->s, self->gc, _buff(self), self->buff.w);
-  printf("string <%.*s>\n", (int)self->buff.w, _buff(self));
+  candy_array_append(meta->s, self->gc, _head(self), _size(self));
+  printf("string <%.*s>\n", (int)_size(self), _head(self));
   return TK_STRING;
 }
 
@@ -281,19 +265,19 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_meta_t *m
   /* save alpha or number */
   while (_check_next(self, is_alnum, _save));
   /* check keyword */
-  switch (djb_hash(_buff(self), self->buff.w)) {
+  switch (djb_hash(_head(self), _size(self))) {
     #define CANDY_KW_MATCH
     #include "core/candy_keyword.list"
     default:
       meta->s = candy_array_create(self->gc, CANDY_BASE_CHAR, MASK_NONE);
-      candy_array_append(meta->s, self->gc, _buff(self), self->buff.w);
-      printf("ident <%.*s>\n", (int)self->buff.w, _buff(self));
+      candy_array_append(meta->s, self->gc, _head(self), _size(self));
+      printf("ident <%.*s>\n", (int)_size(self), _head(self));
       return TK_IDENT;
   }
 }
 
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
-  self->buff.w = 0;
+  _reset(self);
   while (1) {
     switch (_view(self, 0)) {
       case '\0':
@@ -360,21 +344,17 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
 
 int candy_lexer_init(candy_lexer_t *self, candy_exce_t *ctx, candy_gc_t *gc, candy_reader_t reader, void *arg) {
   memset(self, 0, sizeof(struct candy_lexer));
-  self->ctx = ctx;
-  self->gc = gc;
-  candy_vector_init(&self->buff.vec, sizeof(char));
-  self->buff.w = 0;
-  self->buff.r = self->buff.w;
-  self->buff.reader = reader;
-  self->buff.arg = arg;
+  candy_buffer_init(&self->buff, reader, arg);
   self->dbg.line = 1;
   self->dbg.column = 1;
   self->lookahead.token = TK_EOS;
+  self->ctx = ctx;
+  self->gc = gc;
   return 0;
 }
 
 int candy_lexer_deinit(candy_lexer_t *self) {
-  candy_vector_deinit(&self->buff.vec, self->gc);
+  candy_buffer_deinit(&self->buff, self->gc);
   return 0;
 }
 
