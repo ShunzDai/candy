@@ -22,7 +22,8 @@
 #include "core/candy_proto.h"
 #include "core/candy_closure.h"
 
-#define par_assert(_condition, _format, ...) candy_assert(&self->ctx, self->ls.gc, _condition, syntax, _format, ##__VA_ARGS__)
+#define par_assert(_condition, _format, ...) \
+candy_assert(&self->ctx, self->ls.gc, _condition, EXCE_ERR_SYNTAX, _format, ##__VA_ARGS__)
 
 typedef struct candy_funcstate candy_funcstate_t;
 typedef struct candy_parser candy_parser_t;
@@ -135,10 +136,11 @@ candy_object_t *candy_parse(candy_gc_t *gc, candy_reader_t reader, void *arg) {
   };
   candy_exce_init(&parser.ctx);
   candy_lexer_init(&parser.ls, &parser.ctx, gc, reader, arg);
-  candy_object_t *err = candy_exce_try(&parser.ctx, (candy_exce_cb_t)_statement, &parser);
+  candy_object_t *msg = NULL;
+  candy_err_t err = candy_exce_try(&parser.ctx, (candy_exce_cb_t)_statement, &parser, &msg);
   candy_lexer_deinit(&parser.ls);
   candy_exce_deinit(&parser.ctx);
-  if (err)
-    return err;
+  if (err != EXCE_OK)
+    return msg;
   return (candy_object_t *)candy_sclosure_create(gc, fs.proto);
 }

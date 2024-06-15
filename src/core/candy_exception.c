@@ -31,23 +31,26 @@ int candy_exce_deinit(candy_exce_t *self) {
   return 0;
 }
 
-candy_object_t *candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg) {
-  struct context new = {
+candy_err_t candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg, candy_object_t **err) {
+  candy_err_t code = EXCE_OK;
+  struct context next = {
     .prev = (struct context *)self->prev,
   };
-  self->prev = (candy_exce_t *)&new;
-  if (setjmp(new.jmp))
+  self->prev = (candy_exce_t *)&next;
+  if ((code = (candy_err_t)setjmp(next.jmp)) != EXCE_OK)
     goto catch;
   cb(arg);
   catch:
-  self->prev = (candy_exce_t *)new.prev;
-  return new.err;
+  self->prev = (candy_exce_t *)next.prev;
+  if (err)
+    *err = next.err;
+  return code;
 }
 
-void candy_exce_throw(candy_exce_t *self, candy_object_t *err) {
+void candy_exce_throw(candy_exce_t *self, candy_err_t code, candy_object_t *err) {
   struct context *ctx = (struct context *)self->prev;
   ctx->err = err;
-  longjmp(ctx->jmp, 1);
+  longjmp(ctx->jmp, (int)code);
 }
 
 size_t candy_exce_depth(const candy_exce_t *self) {
