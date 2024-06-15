@@ -32,9 +32,9 @@ extern "C" {
 #define CANDY_FORMAT(fmtarg, firstvararg)
 #endif
 
-#define candy_assert(_self, _gc, _condition, _type, _format, ...) \
-((_condition) ? ((void)0U) : candy_exce_throw(_self, \
-  (candy_object_t *)candy_print(_gc, #_type " error: " _format, ##__VA_ARGS__) \
+#define candy_assert(_self, _gc, _condition, _err, _format, ...) \
+((_condition) ? ((void)0U) : candy_exce_throw(_self, _err, \
+  (candy_object_t *)candy_print(_gc, "%s error: " _format, candy_err_str(_err), ##__VA_ARGS__) \
 ))
 
 typedef enum candy_masks {

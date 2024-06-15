@@ -27,8 +27,8 @@ TEST(catch, exception_ok) {
   candy_exce_t jmp{};
   auto err = candy_exce_try(&jmp, (candy_exce_cb_t)+[](void *arg) {
     EXPECT_EQ((uint64_t)arg, 0x12345678);
-  }, (void *)0x12345678);
-  EXPECT_EQ(err, nullptr);
+  }, (void *)0x12345678, NULL);
+  EXPECT_EQ(err, EXCE_OK);
 }
 
 TEST(catch, exception_err) {
@@ -38,11 +38,12 @@ TEST(catch, exception_err) {
   };
   arg info{};
   candy_gc_init(&info.gc, handler, test_allocator, nullptr);
+  candy_object_t *msg = nullptr;
   auto err = candy_exce_try(&info.jmp, (candy_exce_cb_t)+[](arg *info) {
-    candy_exce_throw(&info->jmp, (candy_object_t *)candy_print(&info->gc, "assert string"));
-  }, &info);
-  EXPECT_EQ(!err, false);
-  EXPECT_MEMEQ(candy_array_data((candy_array_t *)err), "assert string", sizeof("assert string"));
+    candy_exce_throw(&info->jmp, EXCE_ERR_LEXICAL, (candy_object_t *)candy_print(&info->gc, "assert string"));
+  }, &info, &msg);
+  EXPECT_EQ(err, EXCE_ERR_LEXICAL);
+  EXPECT_MEMEQ(candy_array_data((candy_array_t *)msg), "assert string", sizeof("assert string"));
   candy_gc_deinit(&info.gc);
 }
 
@@ -51,10 +52,10 @@ TEST(catch, nest_ok) {
   auto err = candy_exce_try(&jmp, (candy_exce_cb_t)+[](candy_exce_t *jmp) {
     auto err = candy_exce_try(jmp, (candy_exce_cb_t)+[](candy_exce_t *jmp) {
 
-    }, jmp);
-    EXPECT_EQ(err, nullptr);
-  }, &jmp);
-  EXPECT_EQ(err, nullptr);
+    }, jmp, nullptr);
+    EXPECT_EQ(err, EXCE_OK);
+  }, &jmp, nullptr);
+  EXPECT_EQ(err, EXCE_OK);
 }
 
 TEST(catch, nest_err) {
@@ -65,16 +66,22 @@ TEST(catch, nest_err) {
   };
   arg info{};
   candy_gc_init(&info.gc, handler, test_allocator, nullptr);
+  candy_object_t *msg = nullptr;
   auto err = candy_exce_try(&info.jmp, (candy_exce_cb_t)+[](arg *info) {
     EXPECT_EQ(++info->depth, candy_exce_depth(&info->jmp));
+    candy_object_t *msg = nullptr;
     auto err = candy_exce_try(&info->jmp, (candy_exce_cb_t)+[](arg *info) {
-      candy_exce_throw(&info->jmp, (candy_object_t *)candy_print(&info->gc, "depth %zu", candy_exce_depth(&info->jmp)));
-    }, info);
-    EXPECT_EQ(!err, false);
-    EXPECT_MEMEQ(candy_array_data((candy_array_t *)err), "depth 2", sizeof("depth 2"));
-    candy_exce_throw(&info->jmp, (candy_object_t *)candy_print(&info->gc, "depth %zu", candy_exce_depth(&info->jmp)));
-  }, &info);
-  EXPECT_EQ(!err, false);
-  EXPECT_MEMEQ(candy_array_data((candy_array_t *)err), "depth 1", sizeof("depth 1"));
+      candy_exce_throw(&info->jmp, EXCE_ERR_LEXICAL,
+        (candy_object_t *)candy_print(&info->gc, "depth %zu", candy_exce_depth(&info->jmp))
+      );
+    }, info, &msg);
+    EXPECT_EQ(err, EXCE_ERR_LEXICAL);
+    EXPECT_MEMEQ(candy_array_data((candy_array_t *)msg), "depth 2", sizeof("depth 2"));
+    candy_exce_throw(&info->jmp, EXCE_ERR_SYNTAX,
+      (candy_object_t *)candy_print(&info->gc, "depth %zu", candy_exce_depth(&info->jmp))
+    );
+  }, &info, &msg);
+  EXPECT_EQ(err, EXCE_ERR_SYNTAX);
+  EXPECT_MEMEQ(candy_array_data((candy_array_t *)msg), "depth 1", sizeof("depth 1"));
   candy_gc_deinit(&info.gc);
 }

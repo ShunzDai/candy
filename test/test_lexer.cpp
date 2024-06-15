@@ -40,6 +40,7 @@ template <typename supposed>
 static void test_assert(const candy_array_t *err, const supposed &val) {
   (void)err;
   if constexpr (std::is_same<supposed, std::string_view>::value) {
+    printf("exp [%.*s] act [%.*s]\n", (int)val.size(), val.data(), (int)candy_array_size(err), (char*)candy_array_data(err));
     EXPECT_EQ(candy_array_size(err), val.size());
     EXPECT_MEMEQ(candy_array_data(err), val.data(), val.size());
   }
@@ -78,21 +79,23 @@ static void tast_body(const char exp[], const supposed & ... value) {
   candy_exce_init(&ctx);
   candy_gc_init(&gc, handler, test_allocator, nullptr);
   candy_lexer_init(&cinfo.ls, &ctx, &gc, string_reader, &info);
+  candy_object_t *msg = nullptr;
   auto err = candy_exce_try(&ctx, (candy_exce_cb_t)+[](catch_info *self) {
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), token);
     if constexpr (token != TK_EOS)
       self->next = *candy_lexer_next(&self->ls);
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), TK_EOS);
-  }, &cinfo);
+  }, &cinfo, &msg);
   candy_lexer_deinit(&cinfo.ls);
   if constexpr(sizeof...(value)) {
-    if (err)
-      test_assert((candy_array_t *)err, value ...);
+    if (err != EXCE_OK)
+      test_assert((candy_array_t *)msg, value ...);
     else
       test_normal(cinfo.next, value ...);
   }
   else {
     (void)err;
+    (void)msg;
   }
   candy_gc_deinit(&gc);
   candy_exce_deinit(&ctx);

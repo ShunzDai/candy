@@ -20,7 +20,8 @@
 #include "core/candy_lib.h"
 #include <string.h>
 
-#define lex_assert(_condition, _format, ...) candy_assert(self->ctx, self->gc, _condition, lexical, _format, ##__VA_ARGS__)
+#define lex_assert(_condition, _format, ...) \
+candy_assert(self->ctx, self->gc, _condition, EXCE_ERR_LEXICAL, _format, ##__VA_ARGS__)
 
 static const char *_head(candy_lexer_t *self) {
   return candy_buffer_head(&self->buff);

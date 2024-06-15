@@ -21,6 +21,11 @@ extern "C" {
 
 #include "core/candy_priv.h"
 
+typedef enum candy_err {
+  #define CANDY_ERR_ENUM
+  #include "core/candy_error.list"
+} candy_err_t;
+
 typedef void (*candy_exce_cb_t)(void *arg);
 
 struct candy_exce {
@@ -30,9 +35,17 @@ struct candy_exce {
 int candy_exce_init(candy_exce_t *self);
 int candy_exce_deinit(candy_exce_t *self);
 
-candy_object_t *candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg);
-void candy_exce_throw(candy_exce_t *self, candy_object_t *err) CANDY_NORETURN;
+candy_err_t candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg, candy_object_t **err);
+void candy_exce_throw(candy_exce_t *self, candy_err_t code, candy_object_t *err) CANDY_NORETURN;
 size_t candy_exce_depth(const candy_exce_t *self);
+
+static inline const char *candy_err_str(candy_err_t err) {
+  switch (err) {
+    #define CANDY_ERR_STR
+    #include "core/candy_error.list"
+    default: return "unknown";
+  }
+}
 
 #ifdef __cplusplus
 }
