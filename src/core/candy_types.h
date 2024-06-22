@@ -37,7 +37,7 @@ typedef struct candy_state candy_state_t;
 
 typedef int (*candy_reader_t)(char buffer[], const size_t max_len, void *arg);
 
-typedef void *(*candy_allocator_t)(void *ptr, size_t old_size, size_t new_size, void *arg);
+typedef void *(*candy_allocator_t)(void *prev, size_t prev_size, size_t next_size, void *arg);
 
 /**
   * @brief c-type function

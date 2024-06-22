@@ -15,8 +15,8 @@
   */
 #include "core/candy_proto.h"
 #include "core/candy_object.h"
-#include "core/candy_gc.h"
 #include "core/candy_vector.h"
+#include "core/candy_gc.h"
 
 struct candy_proto {
   candy_object_t header;
@@ -24,8 +24,8 @@ struct candy_proto {
   candy_inst_t *inst;
 };
 
-candy_proto_t *candy_proto_create(candy_gc_t *gc) {
-  candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, CANDY_BASE_PROTO, sizeof(struct candy_proto));
+candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_exce_t *ctx) {
+  candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, ctx, CANDY_BASE_PROTO, sizeof(struct candy_proto));
   self->size_inst = 0;
   // self->inst = (candy_inst_t *)candy_vector_data(cfg->inst);
   self->inst = NULL;
@@ -33,8 +33,8 @@ candy_proto_t *candy_proto_create(candy_gc_t *gc) {
 }
 
 int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc) {
-  candy_gc_alloc(gc, self->inst, self->size_inst, 0);
-  candy_gc_alloc(gc, self, sizeof(struct candy_proto), 0);
+  candy_gc_free(gc, self->inst, self->size_inst);
+  candy_gc_free(gc, self, sizeof(struct candy_proto));
   return 0;
 }
 

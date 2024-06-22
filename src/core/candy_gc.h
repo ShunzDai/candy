@@ -19,6 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include "core/candy_memory.h"
 #include "core/candy_priv.h"
 
 typedef enum candy_events {
@@ -40,26 +41,28 @@ typedef enum cnady_gc_fsm {
 typedef int (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt);
 
 struct candy_gc {
-  candy_gc_fsm_t fsm;
+  candy_memory_t mem;
   candy_object_t *pool;
   candy_object_t *gray;
   candy_object_t *main;
   candy_handler_t handler;
-  candy_allocator_t alloc;
-  void *arg;
-  size_t used;
+  candy_gc_fsm_t fsm;
 };
 
 int candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg);
 int candy_gc_deinit(candy_gc_t *self);
 
-candy_object_t *candy_gc_add(candy_gc_t *self, candy_types_t type, size_t size);
+candy_object_t *candy_gc_add(candy_gc_t *self, candy_exce_t *ctx, candy_types_t type, size_t size);
 
 int candy_gc_move(candy_gc_t *self, candy_gc_move_t type);
 
 int candy_gc_step(candy_gc_t *self);
 
 int candy_gc_full(candy_gc_t *self);
+
+static inline candy_memory_t *candy_gc_memory(candy_gc_t *self) {
+  return &self->mem;
+}
 
 static inline candy_gc_fsm_t candy_gc_fsm(candy_gc_t *self) {
   return self->fsm;
@@ -79,13 +82,12 @@ static inline candy_handler_t candy_gc_event_handler(candy_gc_t *self) {
   return self->handler;
 }
 
-static inline void *candy_gc_alloc(candy_gc_t *self, void *ptr, size_t old_size, size_t new_size) {
-  self->used += new_size - old_size;
-  return self->alloc(ptr, old_size, new_size, self->arg);
+static inline void *candy_gc_alloc(candy_gc_t *self, candy_exce_t *ctx, size_t size) {
+  return candy_memory_alloc(candy_gc_memory(self), ctx, size);
 }
 
-static inline size_t candy_gc_used(const candy_gc_t *self) {
-  return self->used;
+static inline void *candy_gc_free(candy_gc_t *self, void *ptr, size_t size) {
+  return candy_memory_free(candy_gc_memory(self), ptr, size);
 }
 
 #ifdef __cplusplus

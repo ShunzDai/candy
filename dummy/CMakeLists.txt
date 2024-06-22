@@ -4,4 +4,8 @@ file(GLOB_RECURSE SOURCES_DUMMY LIST_DIRECTORIES false
 
 add_executable(dummy ${SOURCES_DUMMY})
 
-target_link_libraries(dummy PUBLIC)
+target_link_libraries(dummy
+  PRIVATE
+  ${CANDY_TARGET_CORE}
+  ${CANDY_TARGET_BUILTIN}
+)

@@ -18,23 +18,23 @@
 #include "core/candy_array.h"
 #include <stdio.h>
 
-candy_array_t *candy_vprint(candy_gc_t *gc, const char format[], va_list args) {
-  candy_array_t *out = candy_array_create(gc, CANDY_BASE_CHAR, MASK_NONE);
+candy_array_t *candy_vprint(candy_gc_t *gc, candy_exce_t *ctx, const char format[], va_list args) {
+  candy_array_t *out = candy_array_create(gc, ctx, CANDY_BASE_CHAR, MASK_NONE);
   va_list args_copy;
   va_copy(args_copy, args);
   int len = vsnprintf(NULL, 0, format, args_copy);
   if (len < 0)
     return out;
-	candy_array_resize(out, gc, len + 1);
+	candy_array_resize(out, gc, ctx, len + 1);
   vsnprintf((char*)candy_array_data(out), candy_array_capacity(out), format, args);
-  candy_array_resize(out, gc, len);
+  candy_array_resize(out, gc, ctx, len);
   return out;
 }
 
-candy_array_t *candy_print(candy_gc_t *gc, const char format[], ...) {
+candy_array_t *candy_print(candy_gc_t *gc, candy_exce_t *ctx, const char format[], ...) {
   va_list args;
 	va_start(args, format);
-	candy_array_t *out = candy_vprint(gc, format, args);
+	candy_array_t *out = candy_vprint(gc, ctx, format, args);
 	va_end(args);
   return out;
 }

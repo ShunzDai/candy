@@ -14,10 +14,10 @@
   * limitations under the License.
   */
 #include "core/candy_vm.h"
-#include "core/candy_gc.h"
 #include "core/candy_wrap.h"
-#include "core/candy_proto.h"
+#include "core/candy_gc.h"
 #include "core/candy_table.h"
+#include "core/candy_proto.h"
 #include <string.h>
 #include <assert.h>
 
@@ -45,7 +45,7 @@ int candy_vm_init(candy_vm_t *self) {
 }
 
 int candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc) {
-  candy_vector_deinit(&self->root, gc);
+  candy_vector_deinit(&self->root, candy_gc_memory(gc));
   candy_exce_deinit(&self->ctx);
   return 0;
 }

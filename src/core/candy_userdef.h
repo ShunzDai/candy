@@ -21,7 +21,7 @@ extern "C" {
 
 #include "core/candy_priv.h"
 
-candy_userdef_t *candy_userdef_create(candy_gc_t *gc, const void *data, size_t size);
+candy_userdef_t *candy_userdef_create(candy_gc_t *gc, candy_exce_t *ctx, const void *data, size_t size);
 
 int candy_userdef_delete(candy_userdef_t *self, candy_gc_t *gc);
 

@@ -32,7 +32,7 @@ static size_t _size(candy_buffer_t *self) {
   return candy_vector_size(&self->vec);
 }
 
-static int _fill(candy_buffer_t *self, candy_gc_t *gc, size_t ahead) {
+static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_exce_t *ctx, size_t ahead) {
   size_t size = _size(self);
   /* if the look-ahead step is smaller than the total length will be returned directly */
   if (self->r + ahead < size)
@@ -41,8 +41,8 @@ static int _fill(candy_buffer_t *self, candy_gc_t *gc, size_t ahead) {
   size_t offset = self->w + ahead;
   /** if the number of bytes that can be filled is less than
       @ref CANDY_BUFFER_EXPAND_SIZE bytes, the buffer will be enlarged */
-  if (size < CANDY_BUFFER_EXPAND_SIZE + offset) {
-    candy_vector_append(&self->vec, gc, NULL, CANDY_BUFFER_EXPAND_SIZE);
+  if (size <= offset) {
+    candy_vector_append(&self->vec, mem, ctx, NULL, CANDY_BUFFER_EXPAND_SIZE);
     offset = size;
   }
   /* otherwise buffer will be filled directly */
@@ -54,7 +54,7 @@ static int _fill(candy_buffer_t *self, candy_gc_t *gc, size_t ahead) {
   /* fill buffer */
   int res = self->reader(_data(self) + offset, _size(self) - offset, self->arg);
   if (res > 0)
-    candy_vector_resize(&self->vec, gc, offset + res);
+    candy_vector_resize(&self->vec, mem, ctx, offset + res);
   return res;
 }
 
@@ -67,24 +67,24 @@ int candy_buffer_init(candy_buffer_t *self, candy_reader_t reader, void *arg) {
   return 0;
 }
 
-int candy_buffer_deinit(candy_buffer_t *self, candy_gc_t *gc) {
-  candy_vector_deinit(&self->vec, gc);
+int candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem) {
+  candy_vector_deinit(&self->vec, mem);
   return 0;
 }
 
-int candy_buffer_view(candy_buffer_t *self, candy_gc_t *gc, void *data, size_t cell, size_t ahead) {
+int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_exce_t *ctx, void *data, size_t cell, size_t ahead) {
   size_t size = cell * ahead;
   int res = 0;
-  while ((res = _fill(self, gc, cell * ahead)) > 0);
+  while ((res = _fill(self, mem, ctx, cell * ahead)) > 0);
   if (res < 0)
     return res;
   memcpy(data, _rptr(self) + size, cell);
   return res;
 }
 
-int candy_buffer_read(candy_buffer_t *self, candy_gc_t *gc, void *data, size_t size) {
+int candy_buffer_read(candy_buffer_t *self, candy_memory_t *mem, candy_exce_t *ctx, void *data, size_t size) {
   int res = 0;
-  while ((res = _fill(self, gc, size - 1)) > 0);
+  while ((res = _fill(self, mem, ctx, size)) > 0);
   if (res < 0)
     return res;
   if (data)

@@ -19,7 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "core/candy_state.h"
+#include "core/candy.h"
 
 #ifdef __cplusplus
 }

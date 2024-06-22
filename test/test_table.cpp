@@ -26,12 +26,12 @@ static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
 TEST(table, init) {
   candy_gc_t gc{};
   candy_gc_init(&gc, handler, test_allocator, nullptr);
-  candy_table_t *self = candy_table_create(&gc);
+  candy_table_t *self = candy_table_create(&gc, nullptr);
   for (size_t count = 0; count < 0xF; ++count) {
     candy_wrap_t key{}, val{};
     candy_wrap_set_integer(&key, rand());
     candy_wrap_set_integer(&val, rand());
-    candy_table_set(self, &gc, &key, &val);
+    candy_table_set(self, &gc, nullptr, &key, &val);
     EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &key)), candy_wrap_get_integer(&val));
   }
   // candy_table_fprint(self, stdout);

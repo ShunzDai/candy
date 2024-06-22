@@ -54,7 +54,7 @@ struct candy_proto_config {
   const candy_vector_t *inst;
 };
 
-candy_proto_t *candy_proto_create(candy_gc_t *gc);
+candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_exce_t *ctx);
 
 int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
 
