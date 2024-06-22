@@ -18,8 +18,8 @@
 #undef CANDY_ERROR_LIST
 
 #ifdef CANDY_ERR
-CANDY_ERR(ERR_SYNTAX , -3,    "syntax")
-CANDY_ERR(ERR_LEXICAL, -2,   "lexical")
-CANDY_ERR(ERR_NOMEM  , -1, "no memory")
-CANDY_ERR(OK         ,  0,        "ok")
+CANDY_ERR(ERR_SYNTAX , -3,  "syntax")
+CANDY_ERR(ERR_LEXICAL, -2, "lexical")
+CANDY_ERR(ERR_MEMORY , -1,  "memory")
+CANDY_ERR(OK         ,  0,      "ok")
 #endif /* CANDY_ERR */

@@ -17,8 +17,8 @@
 #include "core/candy_object.h"
 #include <assert.h>
 
-static candy_object_t *_add_node(candy_gc_t *self, candy_object_t **pos, candy_types_t type, size_t size) {
-  candy_object_t *obj = (candy_object_t *)candy_gc_alloc(self, NULL, 0, size);
+static candy_object_t *_add_node(candy_gc_t *self, candy_exce_t *ctx, candy_object_t **pos, candy_types_t type, size_t size) {
+  candy_object_t *obj = (candy_object_t *)candy_memory_alloc(candy_gc_memory(self), ctx, size);
   candy_object_set_next(obj, *pos);
   candy_object_set_type(obj, type);
   candy_object_set_mask(obj, MASK_NONE);
@@ -66,14 +66,12 @@ static int _fsm_end(candy_gc_t *self) {
 }
 
 int candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg) {
+  candy_memory_init(&self->mem, alloc, arg);
   self->fsm = GC_FSM_BEGIN;
   self->pool = NULL;
   self->gray = NULL;
   self->main = NULL;
   self->handler = handler;
-  self->alloc = alloc;
-  self->arg = arg;
-  self->used = 0;
   return 0;
 }
 
@@ -85,8 +83,8 @@ int candy_gc_deinit(candy_gc_t *self) {
   return 0;
 }
 
-candy_object_t *candy_gc_add(candy_gc_t *self, candy_types_t type, size_t size) {
-  return _add_node(self, &self->pool, type, size);
+candy_object_t *candy_gc_add(candy_gc_t *self, candy_exce_t *ctx, candy_types_t type, size_t size) {
+  return _add_node(self, ctx, &self->pool, type, size);
 }
 
 int candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {

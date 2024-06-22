@@ -14,11 +14,11 @@
   * limitations under the License.
   */
 #include "core/candy_table.h"
-#include "core/candy_object.h"
-#include "core/candy_gc.h"
-#include "core/candy_vector.h"
-#include "core/candy_wrap.h"
 #include "core/candy_lib.h"
+#include "core/candy_object.h"
+#include "core/candy_wrap.h"
+#include "core/candy_vector.h"
+#include "core/candy_gc.h"
 #include <string.h>
 
 typedef struct candy_pair candy_pair_t;
@@ -107,30 +107,32 @@ static int _set(const candy_table_t *self, const candy_wrap_t *key, const candy_
   return -1;
 }
 
-candy_table_t *candy_table_create(candy_gc_t *gc) {
-  candy_table_t *self = (candy_table_t *)candy_gc_add(gc, CANDY_BASE_TABLE, sizeof(struct candy_table));
+candy_table_t *candy_table_create(candy_gc_t *gc, candy_exce_t *ctx) {
+  candy_table_t *self = (candy_table_t *)candy_gc_add(gc, ctx, CANDY_BASE_TABLE, sizeof(struct candy_table));
   candy_vector_init(&self->vec, sizeof(struct candy_wrap[2]));
-  candy_vector_reserve(&self->vec, gc, 8);
+  candy_vector_reserve(&self->vec, candy_gc_memory(gc), ctx, 8);
+  memset(_head(self), 0, sizeof(struct candy_wrap[2]) * _capacity(self));
   return self;
 }
 
 int candy_table_delete(candy_table_t *self, candy_gc_t *gc) {
-  candy_vector_deinit(&self->vec, gc);
-  candy_gc_alloc(gc, self, sizeof(struct candy_table), 0);
+  candy_vector_deinit(&self->vec, candy_gc_memory(gc));
+  candy_gc_free(gc, self, sizeof(struct candy_table));
   return 0;
 }
 
-int expand(candy_table_t *self, candy_gc_t *gc) {
+int expand(candy_table_t *self, candy_gc_t *gc, candy_exce_t *ctx) {
   candy_table_t t;
   // candy_table_fprint(self, stdout);
   candy_vector_init(&t.vec, sizeof(struct candy_wrap[2]));
-  candy_vector_reserve(&t.vec, gc, _capacity(self) << 1);
+  candy_vector_reserve(&t.vec, candy_gc_memory(gc), ctx, _capacity(self) << 1);
+  memset(candy_vector_data(&t.vec), 0, sizeof(struct candy_wrap[2]) * candy_vector_capacity(&t.vec));
   for (candy_pair_t *pair = _head(self); pair <= _tail(self); ++pair) {
     if (candy_wrap_get_type(&pair->key) == CANDY_BASE_NULL)
       continue;
-    candy_table_set(&t, gc, &pair->key, &pair->val);
+    candy_table_set(&t, gc, ctx, &pair->key, &pair->val);
   }
-  candy_vector_deinit(&self->vec, gc);
+  candy_vector_deinit(&self->vec, candy_gc_memory(gc));
   self->vec = t.vec;
   // candy_table_fprint(self, stdout);
   return 0;
@@ -162,9 +164,9 @@ const candy_wrap_t *candy_table_get(const candy_table_t *self, const candy_wrap_
   return &CANDY_WRAP_NULL;
 }
 
-int candy_table_set(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, const candy_wrap_t *val) {
+int candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_exce_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
   while (_set(self, key, val) < 0)
-    expand(self, gc);
+    expand(self, gc, ctx);
   ++self->vec.size;
   return 0;
 }

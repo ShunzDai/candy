@@ -14,16 +14,16 @@
   * limitations under the License.
   */
 #include "core/candy_parser.h"
-#include "core/candy_lexer.h"
 #include "core/candy_exception.h"
-#include "core/candy_print.h"
 #include "core/candy_gc.h"
-#include "core/candy_array.h"
 #include "core/candy_proto.h"
 #include "core/candy_closure.h"
+#include "core/candy_array.h"
+#include "core/candy_print.h"
+#include "core/candy_lexer.h"
 
 #define par_assert(_condition, _format, ...) \
-candy_assert(&self->ctx, self->ls.gc, _condition, EXCE_ERR_SYNTAX, _format, ##__VA_ARGS__)
+candy_assert(self->ls.ctx, self->ls.gc, _condition, EXCE_ERR_SYNTAX, _format, ##__VA_ARGS__)
 
 typedef struct candy_funcstate candy_funcstate_t;
 typedef struct candy_parser candy_parser_t;
@@ -41,7 +41,6 @@ struct candy_funcstate {
 struct candy_parser {
   /* lexical state */
   candy_lexer_t ls;
-  candy_exce_t ctx;
   candy_funcstate_t *fs;
 };
 
@@ -126,21 +125,19 @@ static void _statement(candy_parser_t *self) {
   }
 }
 
-candy_object_t *candy_parse(candy_gc_t *gc, candy_reader_t reader, void *arg) {
+candy_object_t *candy_parse(candy_gc_t *gc, candy_exce_t *ctx, candy_reader_t reader, void *arg) {
   candy_funcstate_t fs = {
     .prev = NULL,
-    .proto = candy_proto_create(gc),
+    .proto = candy_proto_create(gc, ctx),
   };
   candy_parser_t parser = {
     .fs = &fs,
   };
-  candy_exce_init(&parser.ctx);
-  candy_lexer_init(&parser.ls, &parser.ctx, gc, reader, arg);
   candy_object_t *msg = NULL;
-  candy_err_t err = candy_exce_try(&parser.ctx, (candy_exce_cb_t)_statement, &parser, &msg);
+  candy_lexer_init(&parser.ls, gc, ctx, reader, arg);
+  candy_err_t err = candy_exce_try(ctx, (candy_exce_cb_t)_statement, &parser, &msg);
   candy_lexer_deinit(&parser.ls);
-  candy_exce_deinit(&parser.ctx);
   if (err != EXCE_OK)
     return msg;
-  return (candy_object_t *)candy_sclosure_create(gc, fs.proto);
+  return (candy_object_t *)candy_sclosure_create(gc, ctx, fs.proto);
 }

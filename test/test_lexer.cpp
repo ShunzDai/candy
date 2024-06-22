@@ -78,7 +78,7 @@ static void tast_body(const char exp[], const supposed & ... value) {
   str_info info{exp, strlen(exp), 0};
   candy_exce_init(&ctx);
   candy_gc_init(&gc, handler, test_allocator, nullptr);
-  candy_lexer_init(&cinfo.ls, &ctx, &gc, string_reader, &info);
+  candy_lexer_init(&cinfo.ls, &gc, &ctx, string_reader, &info);
   candy_object_t *msg = nullptr;
   auto err = candy_exce_try(&ctx, (candy_exce_cb_t)+[](catch_info *self) {
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), token);

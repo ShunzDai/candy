@@ -77,7 +77,7 @@ static inline const char *candy_token_str(candy_tokens_t token) {
   }
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_exce_t *ctx, candy_gc_t *gc, candy_reader_t reader, void *arg);
+int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_exce_t *ctx, candy_reader_t reader, void *arg);
 int candy_lexer_deinit(candy_lexer_t *self);
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);

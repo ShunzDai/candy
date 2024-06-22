@@ -28,12 +28,12 @@ struct object_stub1 {
 };
 
 static object_stub0 *_object_stub0_create(candy_gc_t *gc) {
-  auto self = (object_stub0 *)candy_gc_add(gc, CANDY_BASE_STUB0, sizeof(object_stub0));
+  auto self = (object_stub0 *)candy_gc_add(gc, nullptr, CANDY_BASE_STUB0, sizeof(object_stub0));
   return self;
 }
 
 static int _object_stub0_delete(object_stub0 *self, candy_gc_t *gc) {
-  candy_gc_alloc(gc, self, sizeof(object_stub0), 0);
+  candy_gc_free(gc, self, sizeof(object_stub0));
   return 0;
 }
 
@@ -47,14 +47,14 @@ static int _object_stub0_diffusion(object_stub0 *self, candy_gc_t *gc) {
 }
 
 static object_stub1 *_object_stub1_create(candy_gc_t *gc) {
-  auto self = (object_stub1 *)candy_gc_add(gc, CANDY_BASE_STUB1, sizeof(object_stub1));
+  auto self = (object_stub1 *)candy_gc_add(gc, nullptr, CANDY_BASE_STUB1, sizeof(object_stub1));
   self->gray = nullptr;
   self->stub = nullptr;
   return self;
 }
 
 static int _object_stub1_delete(object_stub1 *self, candy_gc_t *gc) {
-  candy_gc_alloc(gc, self, sizeof(object_stub1), 0);
+  candy_gc_free(gc, self, sizeof(object_stub1));
   return 0;
 }
 

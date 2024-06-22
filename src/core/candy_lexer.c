@@ -14,10 +14,11 @@
   * limitations under the License.
   */
 #include "core/candy_lexer.h"
-#include "core/candy_exception.h"
-#include "core/candy_print.h"
-#include "core/candy_array.h"
 #include "core/candy_lib.h"
+#include "core/candy_exception.h"
+#include "core/candy_gc.h"
+#include "core/candy_array.h"
+#include "core/candy_print.h"
 #include <string.h>
 
 #define lex_assert(_condition, _format, ...) \
@@ -37,13 +38,13 @@ static void _reset(candy_lexer_t *self) {
 
 static char _view(candy_lexer_t *self, size_t ahead) {
   char ch = 0;
-  int res = candy_buffer_view(&self->buff, self->gc, &ch, sizeof(char), ahead);
+  int res = candy_buffer_view(&self->buff, candy_gc_memory(self->gc), self->ctx, &ch, sizeof(char), ahead);
   lex_assert(res >= 0, "abnormal input stream");
   return ch;
 }
 
 static void _readn(candy_lexer_t *self, char str[], size_t size) {
-  int res = candy_buffer_read(&self->buff, self->gc, str, size);
+  int res = candy_buffer_read(&self->buff, candy_gc_memory(self->gc), self->ctx, str, size);
   lex_assert(res >= 0, "abnormal input stream");
   self->dbg.column += size;
 }
@@ -254,8 +255,8 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta, const
   }
   exit:
   _skipn(self, multiline ? 3 : 1);
-  meta->s = candy_array_create(self->gc, CANDY_BASE_CHAR, MASK_NONE);
-  candy_array_append(meta->s, self->gc, _head(self), _size(self));
+  meta->s = candy_array_create(self->gc, self->ctx, CANDY_BASE_CHAR, MASK_NONE);
+  candy_array_append(meta->s, self->gc, self->ctx, _head(self), _size(self));
   printf("string <%.*s>\n", (int)_size(self), _head(self));
   return TK_STRING;
 }
@@ -270,8 +271,8 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_meta_t *m
     #define CANDY_KW_MATCH
     #include "core/candy_keyword.list"
     default:
-      meta->s = candy_array_create(self->gc, CANDY_BASE_CHAR, MASK_NONE);
-      candy_array_append(meta->s, self->gc, _head(self), _size(self));
+      meta->s = candy_array_create(self->gc, self->ctx, CANDY_BASE_CHAR, MASK_NONE);
+      candy_array_append(meta->s, self->gc, self->ctx, _head(self), _size(self));
       printf("ident <%.*s>\n", (int)_size(self), _head(self));
       return TK_IDENT;
   }
@@ -343,7 +344,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
   return gen_operator(_read(self), _read(self), _read(self));
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_exce_t *ctx, candy_gc_t *gc, candy_reader_t reader, void *arg) {
+int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_exce_t *ctx, candy_reader_t reader, void *arg) {
   memset(self, 0, sizeof(struct candy_lexer));
   candy_buffer_init(&self->buff, reader, arg);
   self->dbg.line = 1;
@@ -355,7 +356,7 @@ int candy_lexer_init(candy_lexer_t *self, candy_exce_t *ctx, candy_gc_t *gc, can
 }
 
 int candy_lexer_deinit(candy_lexer_t *self) {
-  candy_buffer_deinit(&self->buff, self->gc);
+  candy_buffer_deinit(&self->buff, candy_gc_memory(self->gc));
   return 0;
 }
 

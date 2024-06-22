@@ -14,9 +14,7 @@
   * limitations under the License.
   */
 #include "core/candy_vector.h"
-#include "core/candy_object.h"
-#include "core/candy_gc.h"
-#include "core/candy_lib.h"
+#include "core/candy_memory.h"
 #include <string.h>
 
 static void _set_capacity(candy_vector_t *self, size_t capacity) {
@@ -43,45 +41,41 @@ int candy_vector_init(candy_vector_t *self, size_t cell) {
   return 0;
 }
 
-void candy_vector_deinit(candy_vector_t *self, candy_gc_t *gc) {
-  _set_data(self, candy_gc_alloc(gc, candy_vector_data(self),
+int candy_vector_deinit(candy_vector_t *self, candy_memory_t *mem) {
+  _set_data(self, candy_memory_realloc(mem, NULL, candy_vector_data(self),
     candy_vector_cell(self) * candy_vector_capacity(self),
     0
   ));
   _set_size(self, 0);
   _set_cell(self, 0);
   _set_capacity(self, 0);
+  return 0;
 }
 
-void candy_vector_reserve(candy_vector_t *self, candy_gc_t *gc, size_t capacity) {
+void candy_vector_reserve(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, size_t capacity) {
   size_t cap = candy_vector_capacity(self);
   if (capacity <= cap)
     return;
   _set_capacity(self, capacity);
-  _set_data(self, candy_gc_alloc(gc, candy_vector_data(self),
+  _set_data(self, candy_memory_realloc(mem, ctx, candy_vector_data(self),
     candy_vector_cell(self) * cap,
     candy_vector_cell(self) * candy_vector_capacity(self)
   ));
-  memset(candy_vector_data(self), 0, candy_vector_cell(self) * candy_vector_capacity(self));
 }
 
-void candy_vector_resize(candy_vector_t *self, candy_gc_t *gc, size_t size) {
+void candy_vector_resize(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, size_t size) {
   size_t sz = candy_vector_size(self);
   if (sz < size)
-    candy_vector_append(self, gc, NULL, size - sz);
+    candy_vector_append(self, mem, ctx, NULL, size - sz);
   else
     _set_size(self, size);
 }
 
-int candy_vector_append(candy_vector_t *self, candy_gc_t *gc, const void *data, size_t size) {
+int candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, const void *data, size_t size) {
   size_t cap = candy_vector_capacity(self);
   size_t sz = candy_vector_size(self);
   if (cap < size + sz) {
-    _set_capacity(self, candy_vector_capacity(self) + size);
-    _set_data(self, candy_gc_alloc(gc, candy_vector_data(self),
-      candy_vector_cell(self) * cap,
-      candy_vector_cell(self) * candy_vector_capacity(self)
-    ));
+    candy_vector_reserve(self, mem, ctx, cap + size);
   }
   if (size) {
     if (data)

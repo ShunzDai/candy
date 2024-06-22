@@ -34,7 +34,7 @@ extern "C" {
 
 #define candy_assert(_self, _gc, _condition, _err, _format, ...) \
 ((_condition) ? ((void)0U) : candy_exce_throw(_self, _err, \
-  (candy_object_t *)candy_print(_gc, "%s error: " _format, candy_err_str(_err), ##__VA_ARGS__) \
+  (candy_object_t *)candy_print(_gc, _self, "%s error: " _format, candy_err_str(_err), ##__VA_ARGS__) \
 ))
 
 typedef enum candy_masks {
@@ -42,6 +42,7 @@ typedef enum candy_masks {
   MASK_ARRAY = 1 << 0,
 } candy_masks_t;
 
+typedef struct candy_memory candy_memory_t;
 typedef struct candy_gc candy_gc_t;
 typedef struct candy_wrap candy_wrap_t;
 typedef struct candy_object candy_object_t;

@@ -21,7 +21,7 @@ extern "C" {
 
 #include "core/candy_priv.h"
 
-candy_object_t *candy_parse(candy_gc_t *gc, candy_reader_t reader, void *arg);
+candy_object_t *candy_parse(candy_gc_t *gc, candy_exce_t *ctx, candy_reader_t reader, void *arg);
 
 #ifdef __cplusplus
 }

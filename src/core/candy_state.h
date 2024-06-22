@@ -19,16 +19,21 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "core/candy_types.h"
+#include "core/candy_priv.h"
 
-candy_state_t *candy_state_create(candy_allocator_t alloc, void *arg);
-candy_state_t *candy_state_create_default(void);
+candy_state_t *candy_state_create(candy_gc_t *gc);
+
 candy_state_t *candy_state_create_coroutine(candy_state_t *self);
-int candy_state_delete(candy_state_t *self);
+
+int candy_state_delete(candy_state_t *self, candy_gc_t *gc);
+
+int candy_state_close(candy_state_t *self);
+
+int candy_state_colouring(candy_state_t *self, candy_gc_t *gc);
+
+int candy_state_diffusion(candy_state_t *self, candy_gc_t *gc);
 
 int candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
-int candy_state_dostring(candy_state_t *self, const char exp[]);
-int candy_state_dofile(candy_state_t *self, const char name[]);
 
 bool candy_state_is_main(candy_state_t *self);
 

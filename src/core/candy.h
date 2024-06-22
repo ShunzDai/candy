@@ -13,19 +13,29 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_CORE_FORMAT_H
-#define CANDY_CORE_FORMAT_H
+#ifndef CANDY_CORE_CANDY_H
+#define CANDY_CORE_CANDY_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include "core/candy_priv.h"
-#include <stdarg.h>
+#include "core/candy_types.h"
 
-candy_array_t *candy_vprint(candy_gc_t *gc, candy_exce_t *ctx, const char format[], va_list args) CANDY_FORMAT(3, 0);
-candy_array_t *candy_print(candy_gc_t *gc, candy_exce_t *ctx, const char format[], ...) CANDY_FORMAT(3, 4);
+candy_state_t *candy_new_state(candy_allocator_t alloc, void *arg);
+
+candy_state_t *candy_new_state_default(void);
+
+candy_state_t *candy_new_coroutine(candy_state_t *self);
+
+int candy_close(candy_state_t *self);
+
+int candy_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
+
+int candy_dostring(candy_state_t *self, const char exp[], size_t size);
+
+int candy_dofile(candy_state_t *self, const char name[]);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_CORE_FORMAT_H */
+#endif /* CANDY_CORE_CANDY_H */

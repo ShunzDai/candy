@@ -48,10 +48,12 @@ static void handle_sig(int sig) {
 }
 
 int main(int argc, const char *argv[]) {
-  candy_state_t *state = candy_state_create_default();
+  candy_state_t *state = candy_new_state_default();
+  if (state == NULL)
+    return -1;
   if (argc > 1) {
-    candy_state_dofile(state, argv[1]);
-    candy_state_delete(state);
+    candy_dofile(state, argv[1]);
+    candy_close(state);
     return 0;
   }
   fcntl(fileno(stdin), F_SETFL, O_NONBLOCK);
@@ -60,9 +62,9 @@ int main(int argc, const char *argv[]) {
   bool expected = false;
   while (atomic_compare_exchange_strong(&_quit, &expected, false)) {
     int ch = '\n';
-    if (candy_state_dostream(state, stream_reader, &ch) < 0)
+    if (candy_dostream(state, stream_reader, &ch) < 0)
       (void)0;
   }
-  candy_state_delete(state);
+  candy_close(state);
   return 0;
 }
