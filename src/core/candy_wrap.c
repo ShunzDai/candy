@@ -17,6 +17,8 @@
 #include "core/candy_lib.h"
 #include <inttypes.h>
 
+const candy_wrap_t CANDY_WRAP_NULL = {0};
+
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
   switch (candy_wrap_get_type(self)) {
     case CANDY_BASE_NONE:

@@ -23,8 +23,6 @@ extern "C" {
 #include "core/candy_priv.h"
 #include <assert.h>
 
-#define CANDY_WRAP_NULL (candy_wrap_t){0}
-
 union candy_udata {
   candy_integer_t i;
   candy_float_t f;
@@ -41,6 +39,8 @@ struct candy_wrap {
   uint8_t type : 8;
   uint8_t mask : 4;
 };
+
+extern const candy_wrap_t CANDY_WRAP_NULL;
 
 static inline const char *candy_type_str(candy_types_t type) {
   return (const char *[]) {
