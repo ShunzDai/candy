@@ -22,9 +22,11 @@ extern "C" {
 #include "core/candy_buffer.h"
 #include "core/candy_priv.h"
 
-#define gen_operator_rule(_byte, ...) (_byte)
-#define gen_operator_glue(_byte0, _byte1) (_byte0 << 8 | _byte1)
-#define gen_operator(...) CANDY_VA_NONEMPTY(gen_operator_rule, gen_operator_glue, ##__VA_ARGS__)
+#define gen_opr1(_byte1)                    (_byte1)
+#define gen_opr2(_byte1, _byte2)            ((gen_opr1(_byte1)         << 8) | gen_opr1(_byte2))
+#define gen_opr3(_byte1, _byte2, _byte3)    ((gen_opr2(_byte1, _byte2) << 8) | gen_opr1(_byte3))
+#define gen_opr_select(_1, _2, _3, _n, ...) gen_opr##_n
+#define gen_operator(...)                   gen_opr_select(__VA_ARGS__, 3, 2, 1)(__VA_ARGS__)
 
 typedef enum candy_tokens {
   TK_EOS,

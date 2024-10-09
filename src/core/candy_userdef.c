@@ -26,7 +26,7 @@ struct candy_userdef {
 };
 
 candy_userdef_t *candy_userdef_create(candy_gc_t *gc, candy_exce_t *ctx, const void *data, size_t size) {
-  candy_userdef_t *self = (candy_userdef_t *)candy_gc_add(gc, ctx, CANDY_EXTD_HEAVY, sizeof(struct candy_userdef) + size);
+  candy_userdef_t *self = (candy_userdef_t *)candy_gc_add(gc, ctx, CANDY_TYPE_UDHVY, sizeof(struct candy_userdef) + size);
   self->gray = NULL;
   self->size = size;
   memcpy(self->data, data, size);

@@ -15,7 +15,6 @@
   */
 #define CANDY_TYPE_LIST
 #include "core/candy_type.h"
-#include "core/candy_macro.h"
 #undef CANDY_TYPE_LIST
 
 #ifdef CANDY_TYPE
@@ -25,8 +24,11 @@ CANDY_TYPE(candy_boolean_t, BOOLEAN)
 CANDY_TYPE(candy_integer_t, INTEGER)
 CANDY_TYPE(  candy_float_t,   FLOAT)
 CANDY_TYPE(           char,    CHAR)
-CANDY_TYPE(         void *, FUNCTOR, CFUNC, CCLSR, SCLSR)
-CANDY_TYPE(         void *, USERDEF, LIGHT, HEAVY)
+CANDY_TYPE(         void *,   CFUNC)
+CANDY_TYPE(         void *,   CCLSR)
+CANDY_TYPE(         void *,   SCLSR)
+CANDY_TYPE(         void *,   UDLGT)
+CANDY_TYPE(         void *,   UDHVY)
 CANDY_TYPE(candy_table_t *,   TABLE)
 CANDY_TYPE(candy_proto_t *,   PROTO)
 CANDY_TYPE(candy_state_t *,   STATE)

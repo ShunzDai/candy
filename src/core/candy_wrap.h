@@ -80,49 +80,49 @@ static inline void candy_wrap_set_mask(candy_wrap_t *self, uint8_t mask) {
 }
 
 static inline candy_integer_t candy_wrap_get_integer(const candy_wrap_t *self) {
-  assert(candy_wrap_get_type(self) == CANDY_BASE_INTEGER);
+  assert(candy_wrap_get_type(self) == CANDY_TYPE_INTEGER);
   assert(self->mask == MASK_NONE);
   return *(candy_integer_t *)candy_wrap_data(self);
 }
 
 static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t val) {
-  candy_wrap_set_type(self, CANDY_BASE_INTEGER);
+  candy_wrap_set_type(self, CANDY_TYPE_INTEGER);
   candy_wrap_set_mask(self, MASK_NONE);
   *(candy_integer_t *)candy_wrap_data(self) = val;
 }
 
 static inline candy_float_t candy_wrap_get_float(const candy_wrap_t *self) {
-  assert(candy_wrap_get_type(self) == CANDY_BASE_FLOAT);
+  assert(candy_wrap_get_type(self) == CANDY_TYPE_FLOAT);
   assert(self->mask == MASK_NONE);
   return *(candy_float_t *)candy_wrap_data(self);
 }
 
 static inline void candy_wrap_set_float(candy_wrap_t *self, const candy_float_t val) {
-  candy_wrap_set_type(self, CANDY_BASE_FLOAT);
+  candy_wrap_set_type(self, CANDY_TYPE_FLOAT);
   candy_wrap_set_mask(self, MASK_NONE);
   *(candy_float_t *)candy_wrap_data(self) = val;
 }
 
 static inline candy_boolean_t candy_wrap_get_boolean(const candy_wrap_t *self) {
-  assert(candy_wrap_get_type(self) == CANDY_BASE_BOOLEAN);
+  assert(candy_wrap_get_type(self) == CANDY_TYPE_BOOLEAN);
   assert(self->mask == MASK_NONE);
   return *(candy_boolean_t *)candy_wrap_data(self);
 }
 
 static inline void candy_wrap_set_boolean(candy_wrap_t *self, const candy_boolean_t val) {
-  candy_wrap_set_type(self, CANDY_BASE_BOOLEAN);
+  candy_wrap_set_type(self, CANDY_TYPE_BOOLEAN);
   candy_wrap_set_mask(self, MASK_NONE);
   *(candy_boolean_t *)candy_wrap_data(self) = val;
 }
 
 static inline candy_cfunc_t candy_wrap_get_cfunc(const candy_wrap_t *self) {
-  assert(candy_wrap_get_type(self) == CANDY_EXTD_CFUNC);
+  assert(candy_wrap_get_type(self) == CANDY_TYPE_CFUNC);
   assert(self->mask == MASK_NONE);
   return *(candy_cfunc_t *)candy_wrap_data(self);
 }
 
 static inline void candy_wrap_set_cfunc(candy_wrap_t *self, const candy_cfunc_t val) {
-  candy_wrap_set_type(self, CANDY_EXTD_CFUNC);
+  candy_wrap_set_type(self, CANDY_TYPE_CFUNC);
   candy_wrap_set_mask(self, MASK_NONE);
   *(candy_cfunc_t *)candy_wrap_data(self) = val;
 }

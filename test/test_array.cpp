@@ -24,7 +24,7 @@ static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
 TEST(array, string) {
   candy_gc_t gc{};
   candy_gc_init(&gc, handler, test_allocator, nullptr);
-  candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_BASE_CHAR, MASK_NONE);
+  candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(self, &gc, nullptr, (char *)"hello world", strlen("hello world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
@@ -34,7 +34,7 @@ TEST(array, string) {
 TEST(array, append) {
   candy_gc_t gc{};
   candy_gc_init(&gc, handler, test_allocator, nullptr);
-  candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_BASE_CHAR, MASK_NONE);
+  candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(self, &gc, nullptr, (char *)"hello", strlen("hello"));
   EXPECT_EQ(candy_array_size(self), strlen("hello"));
   EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));

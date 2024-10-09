@@ -63,9 +63,9 @@ static inline bool _boundary_check(const candy_vector_t *self, candy_pair_t *pai
 
 static size_t _hash(const candy_wrap_t *key) {
   switch (candy_wrap_get_type(key)) {
-    case CANDY_BASE_INTEGER:
+    case CANDY_TYPE_INTEGER:
       return djb_hash(candy_wrap_data(key), 8);
-    case CANDY_BASE_CHAR:
+    case CANDY_TYPE_CHAR:
       return 0;
     default:
       return 0;
@@ -80,9 +80,9 @@ static bool _equal(const candy_wrap_t *keyl, const candy_wrap_t *keyr) {
   if (keyl->type != keyr->type)
     return false;
   switch (candy_wrap_get_type(keyl)) {
-    case CANDY_BASE_INTEGER:
+    case CANDY_TYPE_INTEGER:
       return candy_wrap_get_integer(keyl) == candy_wrap_get_integer(keyr);
-    case CANDY_BASE_FLOAT:
+    case CANDY_TYPE_FLOAT:
       return candy_wrap_get_float(keyl) == candy_wrap_get_float(keyr);
     default:
       return false;
@@ -93,7 +93,7 @@ static int _set(const candy_vector_t *self, const candy_wrap_t *key, const candy
   candy_pair_t *pair = _main_position(self, key);
   for (size_t idx = 0; _boundary_check(self, pair); pair += _next(++idx)) {
     switch (candy_wrap_get_type(&pair->key)) {
-      case CANDY_BASE_NULL:
+      case CANDY_TYPE_NULL:
         pair->key = *key;
         break;
       default:
@@ -114,7 +114,7 @@ static int _resize(candy_table_t *self, candy_gc_t *gc, candy_exce_t *ctx) {
   begin:
   memset(candy_vector_data(&vec), 0, sizeof(struct candy_wrap[2]) * candy_vector_capacity(&vec));
   for (candy_pair_t *pair = _head(&self->vec); pair <= _tail(&self->vec); ++pair) {
-    if (candy_wrap_get_type(&pair->key) == CANDY_BASE_NULL)
+    if (candy_wrap_get_type(&pair->key) == CANDY_TYPE_NULL)
       continue;
     if (_set(&vec, &pair->key, &pair->val) < 0) {
       candy_vector_reserve(&vec, candy_gc_memory(gc), ctx, candy_vector_capacity(&vec) + 8);
@@ -127,7 +127,7 @@ static int _resize(candy_table_t *self, candy_gc_t *gc, candy_exce_t *ctx) {
 }
 
 candy_table_t *candy_table_create(candy_gc_t *gc, candy_exce_t *ctx) {
-  candy_table_t *self = (candy_table_t *)candy_gc_add(gc, ctx, CANDY_BASE_TABLE, sizeof(struct candy_table));
+  candy_table_t *self = (candy_table_t *)candy_gc_add(gc, ctx, CANDY_TYPE_TABLE, sizeof(struct candy_table));
   candy_vector_init(&self->vec, sizeof(struct candy_wrap[2]));
   candy_vector_reserve(&self->vec, candy_gc_memory(gc), ctx, 8);
   memset(_head(&self->vec), 0, sizeof(struct candy_wrap[2]) * _capacity(&self->vec));
@@ -160,7 +160,7 @@ const candy_wrap_t *candy_table_get(const candy_table_t *self, const candy_wrap_
   for (size_t idx = 0; _boundary_check(&self->vec, pair); pair += _next(++idx)) {
     if (_equal(&pair->key, key))
       return &pair->val;
-    else if (candy_wrap_get_type(&pair->key) == CANDY_BASE_NULL)
+    else if (candy_wrap_get_type(&pair->key) == CANDY_TYPE_NULL)
       break;
   }
   return &CANDY_WRAP_NULL;

@@ -36,36 +36,36 @@ static int _event_delete(candy_object_t *self, candy_gc_t *gc) {
   if (candy_object_get_mask(self) & MASK_ARRAY)
     return candy_array_delete((candy_array_t *)self, gc);
   switch (candy_object_get_type(self)) {
-    case CANDY_EXTD_CCLSR: return candy_cclosure_delete((candy_cclosure_t *)self, gc);
-    case CANDY_EXTD_SCLSR: return candy_sclosure_delete((candy_sclosure_t *)self, gc);
-    case CANDY_EXTD_HEAVY: return candy_userdef_delete((candy_userdef_t *)self, gc);
-    case CANDY_BASE_TABLE: return candy_table_delete((candy_table_t *)self, gc);
-    case CANDY_BASE_PROTO: return candy_proto_delete((candy_proto_t *)self, gc);
-    case CANDY_BASE_STATE: return candy_state_delete((candy_state_t *)self, gc);
+    case CANDY_TYPE_CCLSR: return candy_cclosure_delete((candy_cclosure_t *)self, gc);
+    case CANDY_TYPE_SCLSR: return candy_sclosure_delete((candy_sclosure_t *)self, gc);
+    case CANDY_TYPE_UDHVY: return candy_userdef_delete((candy_userdef_t *)self, gc);
+    case CANDY_TYPE_TABLE: return candy_table_delete((candy_table_t *)self, gc);
+    case CANDY_TYPE_PROTO: return candy_proto_delete((candy_proto_t *)self, gc);
+    case CANDY_TYPE_STATE: return candy_state_delete((candy_state_t *)self, gc);
     default:               return -1;
   }
 }
 
 static int _event_colouring(candy_object_t *self, candy_gc_t *gc) {
   switch (candy_object_get_type(self)) {
-    case CANDY_EXTD_CCLSR: return -1;
-    case CANDY_EXTD_SCLSR: return candy_sclosure_colouring((candy_sclosure_t *)self, gc);
-    case CANDY_EXTD_HEAVY: return -1;
-    case CANDY_BASE_TABLE: return -1;
-    case CANDY_BASE_PROTO: return candy_proto_colouring((candy_proto_t *)self, gc);
-    case CANDY_BASE_STATE: return candy_state_colouring((candy_state_t *)self, gc);
+    case CANDY_TYPE_CCLSR: return -1;
+    case CANDY_TYPE_SCLSR: return candy_sclosure_colouring((candy_sclosure_t *)self, gc);
+    case CANDY_TYPE_UDHVY: return -1;
+    case CANDY_TYPE_TABLE: return -1;
+    case CANDY_TYPE_PROTO: return candy_proto_colouring((candy_proto_t *)self, gc);
+    case CANDY_TYPE_STATE: return candy_state_colouring((candy_state_t *)self, gc);
     default:               return -1;
   }
 }
 
 static int _event_diffusion(candy_object_t *self, candy_gc_t *gc) {
   switch (candy_object_get_type(self)) {
-    case CANDY_EXTD_CCLSR: return -1;
-    case CANDY_EXTD_SCLSR: return candy_sclosure_diffusion((candy_sclosure_t *)self, gc);
-    case CANDY_EXTD_HEAVY: return -1;
-    case CANDY_BASE_TABLE: return -1;
-    case CANDY_BASE_PROTO: return candy_proto_diffusion((candy_proto_t *)self, gc);
-    case CANDY_BASE_STATE: return candy_state_diffusion((candy_state_t *)self, gc);
+    case CANDY_TYPE_CCLSR: return -1;
+    case CANDY_TYPE_SCLSR: return candy_sclosure_diffusion((candy_sclosure_t *)self, gc);
+    case CANDY_TYPE_UDHVY: return -1;
+    case CANDY_TYPE_TABLE: return -1;
+    case CANDY_TYPE_PROTO: return candy_proto_diffusion((candy_proto_t *)self, gc);
+    case CANDY_TYPE_STATE: return candy_state_diffusion((candy_state_t *)self, gc);
     default:               return -1;
   }
 }
