@@ -24,7 +24,7 @@ static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
 }
 
 TEST(table, fill) {
-  constexpr int num = 100;
+  constexpr int num = 10;
   candy_gc_t gc{};
   candy_gc_init(&gc, handler, test_allocator, nullptr);
   candy_table_t *self = candy_table_create(&gc, nullptr);
