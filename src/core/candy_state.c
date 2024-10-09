@@ -65,7 +65,7 @@ static int candy_state_deinit(candy_state_t *self) {
 // }
 
 static void protect_create(struct protect_create_arg *arg) {
-  candy_primary_t *p = (candy_primary_t *)candy_gc_add(arg->gc, arg->ctx, CANDY_BASE_STATE, sizeof(struct candy_primary));
+  candy_primary_t *p = (candy_primary_t *)candy_gc_add(arg->gc, arg->ctx, CANDY_TYPE_STATE, sizeof(struct candy_primary));
   memcpy(&p->gc, arg->gc, sizeof(struct candy_gc));
   candy_gc_move(&p->gc, GC_MV_MAIN);
   arg->co = &p->co;
@@ -88,7 +88,7 @@ candy_state_t *candy_state_create(candy_gc_t *gc) {
 }
 
 candy_state_t *candy_state_create_coroutine(candy_state_t *self) {
-  candy_state_t *co = (candy_state_t *)candy_gc_add(self->gc, &self->ctx, CANDY_BASE_STATE, sizeof(struct candy_state));
+  candy_state_t *co = (candy_state_t *)candy_gc_add(self->gc, &self->ctx, CANDY_TYPE_STATE, sizeof(struct candy_state));
   candy_state_init(co, self->gc);
   return co;
 }
@@ -121,7 +121,7 @@ int candy_state_diffusion(candy_state_t *self, candy_gc_t *gc) {
 int candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg) {
   candy_exce_init(&self->ctx);
   candy_object_t *out = candy_parse(self->gc, &self->ctx, reader, arg);
-  if (candy_object_get_type(out) == CANDY_BASE_CHAR)
+  if (candy_object_get_type(out) == CANDY_TYPE_CHAR)
     printf("%.*s\n",
       (int)candy_array_size((candy_array_t *)out),
       (char *)candy_array_data((candy_array_t *)out)

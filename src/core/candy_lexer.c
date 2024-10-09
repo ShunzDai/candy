@@ -255,7 +255,7 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta, const
   }
   exit:
   _skipn(self, multiline ? 3 : 1);
-  meta->s = candy_array_create(self->gc, self->ctx, CANDY_BASE_CHAR, MASK_NONE);
+  meta->s = candy_array_create(self->gc, self->ctx, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(meta->s, self->gc, self->ctx, _head(self), _size(self));
   printf("string <%.*s>\n", (int)_size(self), _head(self));
   return TK_STRING;
@@ -271,7 +271,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_meta_t *m
     #define CANDY_KW_MATCH
     #include "core/candy_keyword.list"
     default:
-      meta->s = candy_array_create(self->gc, self->ctx, CANDY_BASE_CHAR, MASK_NONE);
+      meta->s = candy_array_create(self->gc, self->ctx, CANDY_TYPE_CHAR, MASK_NONE);
       candy_array_append(meta->s, self->gc, self->ctx, _head(self), _size(self));
       printf("ident <%.*s>\n", (int)_size(self), _head(self));
       return TK_IDENT;
