@@ -26,7 +26,7 @@ typedef struct candy_primary candy_primary_t;
 
 struct candy_state {
   candy_object_t header;
-  candy_exce_t ctx;
+  candy_excep_t ctx;
   candy_vm_t vm;
   candy_gc_t *gc;
   candy_object_t *gray;
@@ -41,7 +41,7 @@ struct candy_primary {
 struct protect_create_arg {
   candy_state_t *co;
   candy_gc_t *gc;
-  candy_exce_t *ctx;
+  candy_excep_t *ctx;
 };
 
 static size_t candy_state_size(candy_state_t *self) {
@@ -73,15 +73,15 @@ static void protect_create(struct protect_create_arg *arg) {
 }
 
 candy_state_t *candy_state_create(candy_gc_t *gc) {
-  candy_exce_t ctx;
+  candy_excep_t ctx;
   struct protect_create_arg arg = {
     .co = NULL,
     .gc = gc,
     .ctx = &ctx,
   };
-  candy_exce_init(&ctx);
-  candy_err_t err = candy_exce_try(&ctx, (candy_exce_cb_t)protect_create, &arg, NULL);
-  candy_exce_deinit(&ctx);
+  candy_excep_init(&ctx);
+  candy_err_t err = candy_excep_try(&ctx, (candy_excep_cb_t)protect_create, &arg, NULL);
+  candy_excep_deinit(&ctx);
   if (err != EXCE_OK)
     return NULL;
   return arg.co;
@@ -119,7 +119,7 @@ int candy_state_diffusion(candy_state_t *self, candy_gc_t *gc) {
 }
 
 int candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg) {
-  candy_exce_init(&self->ctx);
+  candy_excep_init(&self->ctx);
   candy_object_t *out = candy_parse(self->gc, &self->ctx, reader, arg);
   if (candy_object_get_type(out) == CANDY_TYPE_CHAR)
     printf("%.*s\n",
@@ -128,7 +128,7 @@ int candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg) 
     );
   // candy_vm_execute(&self->vm, out);
   candy_gc_full(self->gc);
-  candy_exce_deinit(&self->ctx);
+  candy_excep_deinit(&self->ctx);
   return 0;
 }
 

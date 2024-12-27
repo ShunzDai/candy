@@ -13,20 +13,28 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_ERROR_LIST
-#error "can only be include by candy_error.list"
-#endif /* CANDY_ERROR_LIST */
+#ifndef CANDY_CORE_ERROR_H
+#define CANDY_CORE_ERROR_H
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-#ifdef CANDY_ERR
-#undef CANDY_ERR
-#endif /* CANDY_ERR */
+#include "core/candy_priv.h"
 
-#ifdef CANDY_ERR_ENUM
-#undef CANDY_ERR_ENUM
-#define CANDY_ERR(_err, _val, _str) EXCE_##_err = _val,
-#endif /* CANDY_ERR_ENUM */
+typedef enum candy_err {
+  #define CANDY_ERR_ENUM
+  #include "core/candy_error.list"
+} candy_err_t;
 
-#ifdef CANDY_ERR_STR
-#undef CANDY_ERR_STR
-#define CANDY_ERR(_err, _val, _str) case EXCE_##_err: return _str;
-#endif /* CANDY_ERR_STR */
+static inline const char *candy_err_str(candy_err_t err) {
+  switch (err) {
+    #define CANDY_ERR_STR
+    #include "core/candy_error.list"
+    default: return "unknown";
+  }
+}
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* CANDY_CORE_ERROR_H */

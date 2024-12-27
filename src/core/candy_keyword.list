@@ -13,9 +13,29 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#define CANDY_KEYWORD_LIST
-#include "core/candy_keyword.h"
-#undef CANDY_KEYWORD_LIST
+#ifdef CANDY_KW
+#undef CANDY_KW
+#endif /* CANDY_KW */
+
+#ifdef CANDY_KW_ENUM
+#undef CANDY_KW_ENUM
+#define CANDY_KW(_keyword, ...) TK_##_keyword,
+#endif /* CANDY_KW_ENUM */
+
+#ifdef CANDY_KW_STR
+#undef CANDY_KW_STR
+#define CANDY_KW(_keyword, ...) case TK_##_keyword: return #_keyword;
+#endif /* CANDY_KW_STR */
+
+#ifdef CANDY_KW_MATCH
+#undef CANDY_KW_MATCH
+#define CANDY_KW(_keyword, _hash) case _hash: return TK_##_keyword;
+#endif /* CANDY_KW_MATCH */
+
+#ifdef CANDY_KW_TEST
+#undef CANDY_KW_TEST
+#define CANDY_KW(_keyword, ...) TEST_NORMAL(_keyword, TK_##_keyword, #_keyword);
+#endif /* CANDY_KW_TEST */
 
 #ifdef CANDY_KW
 CANDY_KW(    true, 0x7C9E9FE5U)

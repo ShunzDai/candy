@@ -13,23 +13,40 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#define CANDY_OPCODE_LIST
-#include "core/candy_opcode.h"
-#undef CANDY_OPCODE_LIST
+#ifdef CANDY_OPCODE
+#undef CANDY_OPCODE
+#endif /* CANDY_OPCODE */
 
-#ifdef CANDY_OP
-CANDY_OP(LOADCST,
+#if defined(CANDY_OPCODE_ENUM)
+#undef CANDY_OPCODE_ENUM
+#define CANDY_OPCODE(_opcode, ...) OP_##_opcode,
+#endif /* CANDY_OPCODE_ENUM */
+
+#if defined(CANDY_OPCODE_CASE)
+#undef CANDY_OPCODE_CASE
+#define CANDY_OPCODE(_opcode, ...) case OP_##_opcode: { \
+  __VA_ARGS__ \
+}
+#endif /* CANDY_OPCODE_CASE */
+
+#ifdef CANDY_OPCODE_STR
+#undef CANDY_OPCODE_STR
+#define CANDY_OPCODE(_opcode, ...) #_opcode,
+#endif /* CANDY_OPCODE_STR */
+
+#ifdef CANDY_OPCODE
+CANDY_OPCODE(LOADCST,
   candy_vm_push(self, &((candy_wrap_t *)candy_array_data(candy_proto_get_cnst(block)))[ins->iabx.b]);
   break;
 )
 
-CANDY_OP(GETTABUP,
+CANDY_OPCODE(GETTABUP,
   candy_vm_push(self, candy_table_get(&self->glb, &((candy_wrap_t *)candy_array_data(candy_proto_get_cnst(block)))[ins->iabc.c]));
   break;
 )
 
-CANDY_OP(CALL,
+CANDY_OPCODE(CALL,
   (*candy_wrap_get_cfunc(candy_vm_pop(self)))((candy_state_t *)self);
   break;
 )
-#endif /* CANDY_OP */
+#endif /* CANDY_OPCODE */

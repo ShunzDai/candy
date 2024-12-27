@@ -17,7 +17,7 @@
 #include "core/candy_object.h"
 #include <assert.h>
 
-static candy_object_t *_add_node(candy_gc_t *self, candy_exce_t *ctx, candy_object_t **pos, candy_types_t type, size_t size) {
+static candy_object_t *_add_node(candy_gc_t *self, candy_excep_t *ctx, candy_object_t **pos, candy_types_t type, size_t size) {
   candy_object_t *obj = (candy_object_t *)candy_memory_alloc(candy_gc_memory(self), ctx, size);
   candy_object_set_next(obj, *pos);
   candy_object_set_type(obj, type);
@@ -83,7 +83,7 @@ int candy_gc_deinit(candy_gc_t *self) {
   return 0;
 }
 
-candy_object_t *candy_gc_add(candy_gc_t *self, candy_exce_t *ctx, candy_types_t type, size_t size) {
+candy_object_t *candy_gc_add(candy_gc_t *self, candy_excep_t *ctx, candy_types_t type, size_t size) {
   return _add_node(self, ctx, &self->pool, type, size);
 }
 

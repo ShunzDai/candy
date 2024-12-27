@@ -12,8 +12,8 @@ set(CANDY_BOOLEAN_TYPE       bool)
 set(CANDY_MEMORY_ALIGNMENT   false)
 set(CANDY_BUFFER_EXPAND_SIZE 4)
 
-set(CANDY_TARGET_CORE       "candy_core")
-set(CANDY_TARGET_BUILTIN    "candy_builtin")
+set(CANDY_TARGET_CORE        candy_core)
+set(CANDY_TARGET_BUILTIN     candy_builtin)
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/GetGitRevisionDescription.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/candy_utility.cmake)

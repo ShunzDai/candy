@@ -73,14 +73,14 @@ static void tast_body(const char exp[], const supposed & ... value) {
     candy_meta_t next{};
   };
   catch_info cinfo{};
-  candy_exce_t ctx{};
+  candy_excep_t ctx{};
   candy_gc_t gc{};
   str_info info{exp, strlen(exp), 0};
-  candy_exce_init(&ctx);
+  candy_excep_init(&ctx);
   candy_gc_init(&gc, handler, test_allocator, nullptr);
   candy_lexer_init(&cinfo.ls, &gc, &ctx, string_reader, &info);
   candy_object_t *msg = nullptr;
-  auto err = candy_exce_try(&ctx, (candy_exce_cb_t)+[](catch_info *self) {
+  auto err = candy_excep_try(&ctx, (candy_excep_cb_t)+[](catch_info *self) {
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), token);
     if constexpr (token != TK_EOS)
       self->next = *candy_lexer_next(&self->ls);
@@ -98,7 +98,7 @@ static void tast_body(const char exp[], const supposed & ... value) {
     (void)msg;
   }
   candy_gc_deinit(&gc);
-  candy_exce_deinit(&ctx);
+  candy_excep_deinit(&ctx);
 }
 
 TEST_NORMAL(empty, TK_EOS, "")
@@ -194,7 +194,7 @@ TEST_ASSERT(number_invalid, "1..2",  "lexical error: malformed number"sv)
 TEST_NORMAL(ident, TK_IDENT, "i")
 TEST_NORMAL(ident, TK_IDENT, "ifif")
 
-#define CANDY_OPR_TEST
+#define CANDY_OP_TEST
 #include "core/candy_operator.list"
 
 #define CANDY_KW_TEST

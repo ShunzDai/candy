@@ -18,7 +18,7 @@
 #include "core/candy_array.h"
 #include <stdio.h>
 
-candy_array_t *candy_vprint(candy_gc_t *gc, candy_exce_t *ctx, const char format[], va_list args) {
+candy_array_t *candy_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char format[], va_list args) {
   candy_array_t *out = candy_array_create(gc, ctx, CANDY_TYPE_CHAR, MASK_NONE);
   va_list args_copy;
   va_copy(args_copy, args);
@@ -31,7 +31,7 @@ candy_array_t *candy_vprint(candy_gc_t *gc, candy_exce_t *ctx, const char format
   return out;
 }
 
-candy_array_t *candy_print(candy_gc_t *gc, candy_exce_t *ctx, const char format[], ...) {
+candy_array_t *candy_print(candy_gc_t *gc, candy_excep_t *ctx, const char format[], ...) {
   va_list args;
 	va_start(args, format);
 	candy_array_t *out = candy_vprint(gc, ctx, format, args);

@@ -26,7 +26,7 @@ extern "C" {
 typedef struct candy_vm candy_vm_t;
 
 struct candy_vm {
-  candy_exce_t ctx;
+  candy_excep_t ctx;
   candy_vector_t root;
 };
 

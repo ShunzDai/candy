@@ -125,7 +125,7 @@ static void _statement(candy_parser_t *self) {
   }
 }
 
-candy_object_t *candy_parse(candy_gc_t *gc, candy_exce_t *ctx, candy_reader_t reader, void *arg) {
+candy_object_t *candy_parse(candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
   candy_funcstate_t fs = {
     .prev = NULL,
     .proto = candy_proto_create(gc, ctx),
@@ -135,7 +135,7 @@ candy_object_t *candy_parse(candy_gc_t *gc, candy_exce_t *ctx, candy_reader_t re
   };
   candy_object_t *msg = NULL;
   candy_lexer_init(&parser.ls, gc, ctx, reader, arg);
-  candy_err_t err = candy_exce_try(ctx, (candy_exce_cb_t)_statement, &parser, &msg);
+  candy_err_t err = candy_excep_try(ctx, (candy_excep_cb_t)_statement, &parser, &msg);
   candy_lexer_deinit(&parser.ls);
   if (err != EXCE_OK)
     return msg;

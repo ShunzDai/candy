@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 #define candy_assert(_self, _gc, _condition, _err, _format, ...) \
-((_condition) ? ((void)0U) : candy_exce_throw(_self, _err, \
+((_condition) ? ((void)0U) : candy_excep_throw(_self, _err, \
   (candy_object_t *)candy_print(_gc, _self, "%s error: " _format, candy_err_str(_err), ##__VA_ARGS__) \
 ))
 
@@ -55,7 +55,7 @@ typedef struct candy_cclosure candy_cclosure_t;
 /* script-closure */
 typedef struct candy_sclosure candy_sclosure_t;
 
-typedef struct candy_exce candy_exce_t;
+typedef struct candy_excep candy_excep_t;
 
 #ifdef __cplusplus
 }

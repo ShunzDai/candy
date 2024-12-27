@@ -22,8 +22,8 @@ extern "C" {
 #include "core/candy_priv.h"
 #include <stdarg.h>
 
-candy_array_t *candy_vprint(candy_gc_t *gc, candy_exce_t *ctx, const char format[], va_list args) CANDY_FORMAT(3, 0);
-candy_array_t *candy_print(candy_gc_t *gc, candy_exce_t *ctx, const char format[], ...) CANDY_FORMAT(3, 4);
+candy_array_t *candy_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char format[], va_list args) CANDY_FORMAT(3, 0);
+candy_array_t *candy_print(candy_gc_t *gc, candy_excep_t *ctx, const char format[], ...) CANDY_FORMAT(3, 4);
 
 #ifdef __cplusplus
 }

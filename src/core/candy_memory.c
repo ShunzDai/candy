@@ -31,12 +31,12 @@ int candy_memory_deinit(candy_memory_t *self) {
   return 0;
 }
 
-void *candy_memory_realloc(candy_memory_t *self, candy_exce_t *ctx, void *prev, size_t prev_size, size_t next_size) {
+void *candy_memory_realloc(candy_memory_t *self, candy_excep_t *ctx, void *prev, size_t prev_size, size_t next_size) {
   assert((prev_size == 0) == (prev == NULL));
   void *next = self->alloc(prev, prev_size, next_size, self->arg);
   if (next_size && next == NULL) {
     if (ctx)
-      candy_exce_throw(ctx, EXCE_ERR_MEMORY, NULL);
+      candy_excep_throw(ctx, EXCE_ERR_MEMORY, NULL);
     else
       abort();
   }

@@ -22,7 +22,7 @@ extern "C" {
 #include "core/candy_priv.h"
 
 typedef enum candy_opcodes {
-  #define CANDY_OP_ENUM
+  #define CANDY_OPCODE_ENUM
   #include "core/candy_opcode.list"
 } candy_opcodes_t;
 
@@ -54,7 +54,7 @@ struct candy_proto_config {
   const candy_vector_t *inst;
 };
 
-candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_exce_t *ctx);
+candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx);
 
 int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
 

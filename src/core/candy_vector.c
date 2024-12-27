@@ -52,7 +52,7 @@ int candy_vector_deinit(candy_vector_t *self, candy_memory_t *mem) {
   return 0;
 }
 
-void candy_vector_reserve(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, size_t capacity) {
+void candy_vector_reserve(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, size_t capacity) {
   size_t cap = candy_vector_capacity(self);
   if (capacity <= cap)
     return;
@@ -63,7 +63,7 @@ void candy_vector_reserve(candy_vector_t *self, candy_memory_t *mem, candy_exce_
   ));
 }
 
-void candy_vector_resize(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, size_t size) {
+void candy_vector_resize(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, size_t size) {
   size_t sz = candy_vector_size(self);
   if (sz < size)
     candy_vector_append(self, mem, ctx, NULL, size - sz);
@@ -71,7 +71,7 @@ void candy_vector_resize(candy_vector_t *self, candy_memory_t *mem, candy_exce_t
     _set_size(self, size);
 }
 
-int candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, const void *data, size_t size) {
+int candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, const void *data, size_t size) {
   size_t cap = candy_vector_capacity(self);
   size_t sz = candy_vector_size(self);
   if (cap < size + sz) {

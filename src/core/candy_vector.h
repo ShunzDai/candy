@@ -31,11 +31,11 @@ struct candy_vector {
 int candy_vector_init(candy_vector_t *self, size_t cell);
 int candy_vector_deinit(candy_vector_t *self, candy_memory_t *mem);
 
-void candy_vector_reserve(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, size_t capacity);
+void candy_vector_reserve(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, size_t capacity);
 
-void candy_vector_resize(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, size_t size);
+void candy_vector_resize(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, size_t size);
 
-int candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_exce_t *ctx, const void *data, size_t size);
+int candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, const void *data, size_t size);
 
 static inline size_t candy_vector_capacity(const candy_vector_t *self) {
   return self->cap;

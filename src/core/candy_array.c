@@ -31,7 +31,7 @@ static size_t type_to_size(candy_types_t type) {
   }[type];
 }
 
-candy_array_t *candy_array_create(candy_gc_t *gc, candy_exce_t *ctx, candy_types_t type, uint8_t mask) {
+candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, uint8_t mask) {
   candy_array_t *self = (candy_array_t *)candy_gc_add(gc, ctx, type, sizeof(struct candy_array));
   candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | mask);
   self->gray = NULL;
@@ -69,14 +69,14 @@ void *candy_array_data(const candy_array_t *self) {
   return candy_vector_data(&self->vec);
 }
 
-void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, candy_exce_t *ctx, size_t capacity) {
+void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t capacity) {
   candy_vector_reserve(&self->vec, candy_gc_memory(gc), ctx, capacity);
 }
 
-void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_exce_t *ctx, size_t size) {
+void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t size) {
   candy_vector_resize(&self->vec, candy_gc_memory(gc), ctx, size);
 }
 
-int candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_exce_t *ctx, const void *data, size_t size) {
+int candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size) {
   return candy_vector_append(&self->vec, candy_gc_memory(gc), ctx, data, size);
 }

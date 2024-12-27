@@ -22,11 +22,11 @@ extern "C" {
 #include "core/candy_buffer.h"
 #include "core/candy_priv.h"
 
-#define gen_opr1(_byte1)                    (_byte1)
-#define gen_opr2(_byte1, _byte2)            ((gen_opr1(_byte1)         << 8) | gen_opr1(_byte2))
-#define gen_opr3(_byte1, _byte2, _byte3)    ((gen_opr2(_byte1, _byte2) << 8) | gen_opr1(_byte3))
-#define gen_opr_select(_1, _2, _3, _n, ...) gen_opr##_n
-#define gen_operator(...)                   gen_opr_select(__VA_ARGS__, 3, 2, 1)(__VA_ARGS__)
+#define gen_op1(_byte0)                    (_byte0)
+#define gen_op2(_byte0, _byte1)            ((gen_op1(_byte0)         << 8) | gen_op1(_byte1))
+#define gen_op3(_byte0, _byte1, _byte2)    ((gen_op2(_byte0, _byte1) << 8) | gen_op1(_byte2))
+#define gen_op_select(_1, _2, _3, _n, ...) gen_op##_n
+#define gen_operator(...)                  gen_op_select(__VA_ARGS__, 3, 2, 1)(__VA_ARGS__)
 
 typedef enum candy_tokens {
   TK_EOS,
@@ -34,7 +34,7 @@ typedef enum candy_tokens {
   TK_INTEGER,
   TK_FLOAT,
   TK_STRING,
-  #define CANDY_OPR_ENUM
+  #define CANDY_OP_ENUM
   #include "core/candy_operator.list"
   #define CANDY_KW_ENUM
   #include "core/candy_keyword.list"
@@ -58,7 +58,7 @@ struct candy_lexer {
     candy_tokens_t token;
     candy_meta_t meta;
   } lookahead;
-  candy_exce_t *ctx;
+  candy_excep_t *ctx;
   candy_gc_t *gc;
 };
 
@@ -71,7 +71,7 @@ static inline const char *candy_token_str(candy_tokens_t token) {
     case TK_INTEGER: return "integer";
     case TK_FLOAT:   return "float";
     case TK_STRING:  return "string";
-    #define CANDY_OPR_STR
+    #define CANDY_OP_STR
     #include "core/candy_operator.list"
     #define CANDY_KW_STR
     #include "core/candy_keyword.list"
@@ -79,7 +79,7 @@ static inline const char *candy_token_str(candy_tokens_t token) {
   }
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_exce_t *ctx, candy_reader_t reader, void *arg);
+int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg);
 int candy_lexer_deinit(candy_lexer_t *self);
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);

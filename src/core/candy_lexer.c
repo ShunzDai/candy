@@ -292,28 +292,28 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
         break;
       case '!':
         lex_assert(_view(self, 1) == '=', "unknown character '%c'(0x%02X)", _view(self, 1), _view(self, 1));
-        goto opr2;
+        goto op2;
       /* 'o', 'o=', 'oo' */
       case '>': case '<':
         /* 'oo' */
         if (_view(self, 1) == _view(self, 0))
-          goto opr2;
+          goto op2;
         /* fall through */
       /* 'o', 'o=' */
       case '=': case '&': case '|': case '^':
       case '+': case '-': case '*': case '/': case '%':
         /* 'o=' */
         if (_view(self, 1) == '=')
-          goto opr2;
+          goto op2;
         /* fall through */
       /* 'o' */
       case '~': case ',': case ':': case ';': case '@':
       case '(': case ')': case '[': case ']': case '{': case '}':
-        goto opr1;
+        goto op1;
       case '.':
         if (_view(self, 1) == '.' && _view(self, 2) == '.')
-          goto opr3;
-        goto opr1;
+          goto op3;
+        goto op1;
       /* is comment */
       case '#':
         _skip(self);
@@ -336,15 +336,15 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
         lex_assert(false, "unrecognized token");
     }
   }
-  opr1:
+  op1:
   return gen_operator(_read(self));
-  opr2:
+  op2:
   return gen_operator(_read(self), _read(self));
-  opr3:
+  op3:
   return gen_operator(_read(self), _read(self), _read(self));
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_exce_t *ctx, candy_reader_t reader, void *arg) {
+int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
   memset(self, 0, sizeof(struct candy_lexer));
   candy_buffer_init(&self->buff, reader, arg);
   self->dbg.line = 1;

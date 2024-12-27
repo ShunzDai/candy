@@ -24,7 +24,7 @@ struct candy_proto {
   candy_inst_t *inst;
 };
 
-candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_exce_t *ctx) {
+candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, ctx, CANDY_TYPE_PROTO, sizeof(struct candy_proto));
   self->size_inst = 0;
   // self->inst = (candy_inst_t *)candy_vector_data(cfg->inst);

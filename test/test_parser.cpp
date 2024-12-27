@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "core/candy_exce.h"
+#include "core/candy_exception.h"
 #include "core/candy_parser.h"
 #include "core/candy_reader.h"
 
@@ -22,12 +22,12 @@
 
 // static void test_body(const char exp[]) {
 //   str_info info = {exp, strlen(exp), 0};
-//   candy_exce_t io;
-//   candy_exce_init(&io);
+//   candy_excep_t io;
+//   candy_excep_init(&io);
 //   auto tick = os::tick_ns();
 //   EXPECT_EQ(candy_parse(&io, string_reader, &info) != 0, false);
 //   printf("delta time = %ld ns\n", os::tick_ns() - tick);
-//   candy_exce_deinit(&io);
+//   candy_excep_deinit(&io);
 // }
 
 // PARSER_TEST(exp_add_0, "a = 1 + 2")

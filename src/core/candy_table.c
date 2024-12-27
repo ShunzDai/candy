@@ -107,7 +107,7 @@ static int _set(const candy_vector_t *self, const candy_wrap_t *key, const candy
   return -1;
 }
 
-static int _resize(candy_table_t *self, candy_gc_t *gc, candy_exce_t *ctx) {
+static int _resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
   candy_vector_t vec;
   candy_vector_init(&vec, sizeof(struct candy_wrap[2]));
   candy_vector_reserve(&vec, candy_gc_memory(gc), ctx, _capacity(&self->vec) + 8);
@@ -126,7 +126,7 @@ static int _resize(candy_table_t *self, candy_gc_t *gc, candy_exce_t *ctx) {
   return 0;
 }
 
-candy_table_t *candy_table_create(candy_gc_t *gc, candy_exce_t *ctx) {
+candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_table_t *self = (candy_table_t *)candy_gc_add(gc, ctx, CANDY_TYPE_TABLE, sizeof(struct candy_table));
   candy_vector_init(&self->vec, sizeof(struct candy_wrap[2]));
   candy_vector_reserve(&self->vec, candy_gc_memory(gc), ctx, 8);
@@ -166,7 +166,7 @@ const candy_wrap_t *candy_table_get(const candy_table_t *self, const candy_wrap_
   return &CANDY_WRAP_NULL;
 }
 
-int candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_exce_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
+int candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
   while (_set(&self->vec, key, val) < 0)
     _resize(self, gc, ctx);
   return 0;

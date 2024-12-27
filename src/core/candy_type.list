@@ -13,9 +13,24 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#define CANDY_TYPE_LIST
-#include "core/candy_type.h"
-#undef CANDY_TYPE_LIST
+#ifdef CANDY_TYPE
+#undef CANDY_TYPE
+#endif /* CANDY_TYPE */
+
+#ifdef CANDY_TYPE_ENUM
+#undef CANDY_TYPE_ENUM
+#define CANDY_TYPE(_type, _name, ...) CANDY_TYPE_##_name,
+#endif /* CANDY_TYPE_ENUM */
+
+#ifdef CANDY_TYPE_STR
+#undef CANDY_TYPE_STR
+#define CANDY_TYPE(_type, _name, ...) #_name,
+#endif /* CANDY_TYPE_STR */
+
+#ifdef CANDY_TYPE_SIZE
+#undef CANDY_TYPE_SIZE
+#define CANDY_TYPE(_type, _name, ...) sizeof(_type),
+#endif /* CANDY_TYPE_SIZE */
 
 #ifdef CANDY_TYPE
 CANDY_TYPE(      size_t[0],    NULL)

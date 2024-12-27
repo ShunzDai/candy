@@ -21,7 +21,7 @@
 #include <string.h>
 #include <assert.h>
 
-#define vm_assert(_condition, _format, ...) candy_assert((candy_exce_t *)(self), _condition, vm, _format, ##__VA_ARGS__)
+#define vm_assert(_condition, _format, ...) candy_assert((candy_excep_t *)(self), _condition, vm, _format, ##__VA_ARGS__)
 
 // static const candy_inst_t *_get_ins(candy_proto_t *block) {
 //   return (const candy_inst_t *)candy_array_data(candy_proto_get_inst(block));
@@ -39,14 +39,14 @@
 // }
 
 int candy_vm_init(candy_vm_t *self) {
-  candy_exce_init(&self->ctx);
+  candy_excep_init(&self->ctx);
   candy_vector_init(&self->root, sizeof(struct candy_wrap));
   return 0;
 }
 
 int candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc) {
   candy_vector_deinit(&self->root, candy_gc_memory(gc));
-  candy_exce_deinit(&self->ctx);
+  candy_excep_deinit(&self->ctx);
   return 0;
 }
 
@@ -98,5 +98,5 @@ int candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc) {
 // }
 
 // int candy_vm_execute(candy_vm_t *self, candy_proto_t *block) {
-//   return candy_exce_try(&self->io, (candy_try_catch_cb_t)execute, self, block);
+//   return candy_excep_try(&self->io, (candy_try_catch_cb_t)execute, self, block);
 // }

@@ -32,7 +32,7 @@ static size_t _size(candy_buffer_t *self) {
   return candy_vector_size(&self->vec);
 }
 
-static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_exce_t *ctx, size_t ahead) {
+static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, size_t ahead) {
   size_t size = _size(self);
   /* if the look-ahead step is smaller than the total length will be returned directly */
   if (self->r + ahead < size)
@@ -72,7 +72,7 @@ int candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem) {
   return 0;
 }
 
-int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_exce_t *ctx, void *data, size_t cell, size_t ahead) {
+int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, void *data, size_t cell, size_t ahead) {
   size_t size = cell * ahead;
   int res = 0;
   while ((res = _fill(self, mem, ctx, cell * ahead)) > 0);
@@ -82,7 +82,7 @@ int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_exce_t *c
   return res;
 }
 
-int candy_buffer_read(candy_buffer_t *self, candy_memory_t *mem, candy_exce_t *ctx, void *data, size_t size) {
+int candy_buffer_read(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, void *data, size_t size) {
   int res = 0;
   while ((res = _fill(self, mem, ctx, size)) > 0);
   if (res < 0)

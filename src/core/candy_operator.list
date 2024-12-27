@@ -13,45 +13,60 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#define CANDY_OPERATOR_LIST
-#include "core/candy_operator.h"
-#undef CANDY_OPERATOR_LIST
+#ifdef CANDY_OP
+#undef CANDY_OP
+#endif /* CANDY_OP */
 
-#ifdef CANDY_OPR
-CANDY_OPR(PERCENT, '%')
-CANDY_OPR(  AMPER, '&')
-CANDY_OPR( LPAREN, '(')
-CANDY_OPR( RPAREN, ')')
-CANDY_OPR(   ASTE, '*')
-CANDY_OPR(   PLUS, '+')
-CANDY_OPR(  COMMA, ',')
-CANDY_OPR(  MINUS, '-')
-CANDY_OPR(    DOT, '.')
-CANDY_OPR(  SLASH, '/')
-CANDY_OPR(  COLON, ':')
-CANDY_OPR(   LESS, '<')
-CANDY_OPR( ASSIGN, '=')
-CANDY_OPR(GREATER, '>')
-CANDY_OPR(LSQUARE, '[')
-CANDY_OPR(RSQUARE, ']')
-CANDY_OPR(  CARET, '^')
-CANDY_OPR( LBRACE, '{')
-CANDY_OPR(   VERT, '|')
-CANDY_OPR( RBRACE, '}')
-CANDY_OPR(  TILDE, '~')
-CANDY_OPR(  EQUAL, '=', '=')
-CANDY_OPR( NEQUAL, '!', '=')
-CANDY_OPR( MODASS, '%', '=')
-CANDY_OPR( MULASS, '*', '=')
-CANDY_OPR( ADDASS, '+', '=')
-CANDY_OPR( AMPASS, '&', '=')
-CANDY_OPR( VERASS, '|', '=')
-CANDY_OPR( CARASS, '^', '=')
-CANDY_OPR( SUBASS, '-', '=')
-CANDY_OPR( DIVASS, '/', '=')
-CANDY_OPR( LSHIFT, '<', '<')
-CANDY_OPR( RSHIFT, '>', '>')
-CANDY_OPR( LEQUAL, '<', '=')
-CANDY_OPR( GEQUAL, '>', '=')
-CANDY_OPR( VARARG, '.', '.', '.')
-#endif /* CANDY_OPR */
+#ifdef CANDY_OP_ENUM
+#undef CANDY_OP_ENUM
+#define CANDY_OP(_name, ...) TK_##_name = gen_operator(__VA_ARGS__),
+#endif /* CANDY_OP_ENUM */
+
+#ifdef CANDY_OP_STR
+#undef CANDY_OP_STR
+#define CANDY_OP(_name, ...) case TK_##_name: return #_name;
+#endif /* CANDY_OP_STR */
+
+#ifdef CANDY_OP_TEST
+#undef CANDY_OP_TEST
+#define CANDY_OP(_name, ...) TEST_NORMAL(_name, TK_##_name, std::string{__VA_ARGS__}.data());
+#endif /* CANDY_OP_TEST */
+
+#ifdef CANDY_OP
+CANDY_OP(PERCENT, '%')
+CANDY_OP(  AMPER, '&')
+CANDY_OP( LPAREN, '(')
+CANDY_OP( RPAREN, ')')
+CANDY_OP(   ASTE, '*')
+CANDY_OP(   PLUS, '+')
+CANDY_OP(  COMMA, ',')
+CANDY_OP(  MINUS, '-')
+CANDY_OP(    DOT, '.')
+CANDY_OP(  SLASH, '/')
+CANDY_OP(  COLON, ':')
+CANDY_OP(   LESS, '<')
+CANDY_OP( ASSIGN, '=')
+CANDY_OP(GREATER, '>')
+CANDY_OP(LSQUARE, '[')
+CANDY_OP(RSQUARE, ']')
+CANDY_OP(  CARET, '^')
+CANDY_OP( LBRACE, '{')
+CANDY_OP(   VERT, '|')
+CANDY_OP( RBRACE, '}')
+CANDY_OP(  TILDE, '~')
+CANDY_OP(  EQUAL, '=', '=')
+CANDY_OP( NEQUAL, '!', '=')
+CANDY_OP( MODASS, '%', '=')
+CANDY_OP( MULASS, '*', '=')
+CANDY_OP( ADDASS, '+', '=')
+CANDY_OP( AMPASS, '&', '=')
+CANDY_OP( VERASS, '|', '=')
+CANDY_OP( CARASS, '^', '=')
+CANDY_OP( SUBASS, '-', '=')
+CANDY_OP( DIVASS, '/', '=')
+CANDY_OP( LSHIFT, '<', '<')
+CANDY_OP( RSHIFT, '>', '>')
+CANDY_OP( LEQUAL, '<', '=')
+CANDY_OP( GEQUAL, '>', '=')
+CANDY_OP( VARARG, '.', '.', '.')
+#endif /* CANDY_OP */

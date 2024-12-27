@@ -22,38 +22,38 @@ struct context {
   candy_object_t *err;
 };
 
-int candy_exce_init(candy_exce_t *self) {
+int candy_excep_init(candy_excep_t *self) {
   self->prev = NULL;
   return 0;
 }
 
-int candy_exce_deinit(candy_exce_t *self) {
+int candy_excep_deinit(candy_excep_t *self) {
   return 0;
 }
 
-candy_err_t candy_exce_try(candy_exce_t *self, candy_exce_cb_t cb, void *arg, candy_object_t **err) {
+candy_err_t candy_excep_try(candy_excep_t *self, candy_excep_cb_t cb, void *arg, candy_object_t **err) {
   candy_err_t code = EXCE_OK;
   struct context next = {
     .prev = (struct context *)self->prev,
   };
-  self->prev = (candy_exce_t *)&next;
+  self->prev = (candy_excep_t *)&next;
   if ((code = (candy_err_t)setjmp(next.jmp)) != EXCE_OK)
     goto catch;
   cb(arg);
   catch:
-  self->prev = (candy_exce_t *)next.prev;
+  self->prev = (candy_excep_t *)next.prev;
   if (err)
     *err = next.err;
   return code;
 }
 
-void candy_exce_throw(candy_exce_t *self, candy_err_t code, candy_object_t *err) {
+void candy_excep_throw(candy_excep_t *self, candy_err_t code, candy_object_t *err) {
   struct context *ctx = (struct context *)self->prev;
   ctx->err = err;
   longjmp(ctx->jmp, (int)code);
 }
 
-size_t candy_exce_depth(const candy_exce_t *self) {
+size_t candy_excep_depth(const candy_excep_t *self) {
   struct context *ctx = (struct context *)self->prev;
   size_t depth = 0;
   for (const struct context *it = ctx; it; ++depth, it = it->prev);

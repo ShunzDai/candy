@@ -31,9 +31,9 @@ int candy_memory_init(candy_memory_t *self, candy_allocator_t alloc, void *arg);
 
 int candy_memory_deinit(candy_memory_t *self);
 
-void *candy_memory_realloc(candy_memory_t *self, candy_exce_t *ctx, void *prev, size_t prev_size, size_t next_size);
+void *candy_memory_realloc(candy_memory_t *self, candy_excep_t *ctx, void *prev, size_t prev_size, size_t next_size);
 
-static inline void *candy_memory_alloc(candy_memory_t *self, candy_exce_t *ctx, size_t size) {
+static inline void *candy_memory_alloc(candy_memory_t *self, candy_excep_t *ctx, size_t size) {
   return candy_memory_realloc(self, ctx, NULL, 0, size);
 }
 

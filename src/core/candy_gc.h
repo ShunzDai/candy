@@ -52,7 +52,7 @@ struct candy_gc {
 int candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg);
 int candy_gc_deinit(candy_gc_t *self);
 
-candy_object_t *candy_gc_add(candy_gc_t *self, candy_exce_t *ctx, candy_types_t type, size_t size);
+candy_object_t *candy_gc_add(candy_gc_t *self, candy_excep_t *ctx, candy_types_t type, size_t size);
 
 int candy_gc_move(candy_gc_t *self, candy_gc_move_t type);
 
@@ -82,7 +82,7 @@ static inline candy_handler_t candy_gc_event_handler(candy_gc_t *self) {
   return self->handler;
 }
 
-static inline void *candy_gc_alloc(candy_gc_t *self, candy_exce_t *ctx, size_t size) {
+static inline void *candy_gc_alloc(candy_gc_t *self, candy_excep_t *ctx, size_t size) {
   return candy_memory_alloc(candy_gc_memory(self), ctx, size);
 }
 
