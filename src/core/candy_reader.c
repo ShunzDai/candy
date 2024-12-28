@@ -16,21 +16,21 @@
 #include "core/candy_reader.h"
 #include <string.h>
 
-int string_reader(char buffer[], const size_t max_len, void *arg) {
+int string_reader(void *buffer, const size_t max_len, void *arg) {
   struct str_info *info = (struct str_info *)arg;
   size_t residual = info->size - info->offset;
   size_t len = (max_len > residual) ? residual : max_len;
   memcpy(buffer, info->exp + info->offset, len);
   info->offset += len;
   if (info->offset == info->size && len < max_len)
-    buffer[len++] = '\0';
+    ((char *)buffer)[len++] = '\0';
   return len;
 }
 
-int file_reader(char buffer[], const size_t max_len, void *arg) {
+int file_reader(void *buffer, const size_t max_len, void *arg) {
   struct file_info *info = (struct file_info *)arg;
   size_t len = fread(buffer, sizeof(char), max_len, info->f);
   if (len < max_len)
-    buffer[len++] = '\0';
+    ((char *)buffer)[len++] = '\0';
   return len;
 }

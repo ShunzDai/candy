@@ -80,9 +80,7 @@ static int _event_handler(candy_object_t *self, candy_gc_t *gc, candy_events_t e
 }
 
 candy_state_t *candy_new_state(candy_allocator_t alloc, void *arg) {
-  candy_gc_t gc;
-  candy_gc_init(&gc, _event_handler, alloc, arg);
-  return candy_state_create(&gc);
+  return candy_state_create(_event_handler, alloc, arg);
 }
 
 candy_state_t *candy_new_state_default(void) {

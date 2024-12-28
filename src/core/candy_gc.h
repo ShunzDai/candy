@@ -22,12 +22,6 @@ extern "C" {
 #include "core/candy_memory.h"
 #include "core/candy_priv.h"
 
-typedef enum candy_events {
-  EVT_DELETE,
-  EVT_COLOURING,
-  EVT_DIFFUSION,
-} candy_events_t;
-
 typedef enum cnady_gc_move {
   GC_MV_MAIN,
 } candy_gc_move_t;
@@ -37,8 +31,6 @@ typedef enum cnady_gc_fsm {
   GC_FSM_DIFFUSION,
   GC_FSM_END,
 } candy_gc_fsm_t;
-
-typedef int (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt);
 
 struct candy_gc {
   candy_memory_t mem;

@@ -35,7 +35,7 @@ typedef CANDY_BOOLEAN_TYPE candy_boolean_t;
 
 typedef struct candy_state candy_state_t;
 
-typedef int (*candy_reader_t)(char buffer[], const size_t max_len, void *arg);
+typedef int (*candy_reader_t)(void *buffer, const size_t max_len, void *arg);
 
 typedef void *(*candy_allocator_t)(void *prev, size_t prev_size, size_t next_size, void *arg);
 

@@ -41,6 +41,12 @@ typedef enum candy_masks {
   MASK_ARRAY = 1 << 0,
 } candy_masks_t;
 
+typedef enum candy_events {
+  EVT_DELETE,
+  EVT_COLOURING,
+  EVT_DIFFUSION,
+} candy_events_t;
+
 typedef struct candy_memory candy_memory_t;
 typedef struct candy_gc candy_gc_t;
 typedef struct candy_wrap candy_wrap_t;
@@ -56,6 +62,8 @@ typedef struct candy_cclosure candy_cclosure_t;
 typedef struct candy_sclosure candy_sclosure_t;
 
 typedef struct candy_excep candy_excep_t;
+
+typedef int (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt);
 
 #ifdef __cplusplus
 }

@@ -35,13 +35,14 @@ struct candy_state {
 struct candy_primary {
   candy_state_t co;
   candy_gc_t gc;
-  bool is_deleting;
 };
 
-struct protect_create_arg {
+struct pack {
+  candy_excep_t ctx;
+  candy_handler_t handler;
+  candy_allocator_t alloc;
+  void *arg;
   candy_state_t *co;
-  candy_gc_t *gc;
-  candy_excep_t *ctx;
 };
 
 static size_t candy_state_size(candy_state_t *self) {
@@ -64,27 +65,29 @@ static int candy_state_deinit(candy_state_t *self) {
 //   return (candy_primary_t *)candy_gc_main(self->gc);
 // }
 
-static void protect_create(struct protect_create_arg *arg) {
-  candy_primary_t *p = (candy_primary_t *)candy_gc_add(arg->gc, arg->ctx, CANDY_TYPE_STATE, sizeof(struct candy_primary));
-  memcpy(&p->gc, arg->gc, sizeof(struct candy_gc));
+static void protect_create(struct pack *pack) {
+  candy_gc_t gc;
+  candy_gc_init(&gc, pack->handler, pack->alloc, pack->arg);
+  candy_primary_t *p = (candy_primary_t *)candy_gc_add(&gc, &pack->ctx, CANDY_TYPE_STATE, sizeof(struct candy_primary));
+  memcpy(&p->gc, &gc, sizeof(struct candy_gc));
   candy_gc_move(&p->gc, GC_MV_MAIN);
-  arg->co = &p->co;
-  candy_state_init(arg->co, &p->gc);
+  candy_state_init(&p->co, &p->gc);
+  pack->co = &p->co;
 }
 
-candy_state_t *candy_state_create(candy_gc_t *gc) {
-  candy_excep_t ctx;
-  struct protect_create_arg arg = {
+candy_state_t *candy_state_create(candy_handler_t handler, candy_allocator_t alloc, void *arg) {
+  struct pack pack = {
+    .handler = handler,
+    .alloc = alloc,
+    .arg = arg,
     .co = NULL,
-    .gc = gc,
-    .ctx = &ctx,
   };
-  candy_excep_init(&ctx);
-  candy_err_t err = candy_excep_try(&ctx, (candy_excep_cb_t)protect_create, &arg, NULL);
-  candy_excep_deinit(&ctx);
+  candy_excep_init(&pack.ctx);
+  candy_err_t err = candy_excep_try(&pack.ctx, (candy_excep_cb_t)protect_create, &pack, NULL);
+  candy_excep_deinit(&pack.ctx);
   if (err != EXCE_OK)
     return NULL;
-  return arg.co;
+  return pack.co;
 }
 
 candy_state_t *candy_state_create_coroutine(candy_state_t *self) {

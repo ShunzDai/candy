@@ -38,7 +38,7 @@ static void _reset(candy_lexer_t *self) {
 
 static char _view(candy_lexer_t *self, size_t ahead) {
   char ch = 0;
-  int res = candy_buffer_view(&self->buff, candy_gc_memory(self->gc), self->ctx, &ch, sizeof(char), ahead);
+  int res = candy_buffer_view(&self->buff, candy_gc_memory(self->gc), self->ctx, &ch, ahead);
   lex_assert(res >= 0, "abnormal input stream");
   return ch;
 }
@@ -346,7 +346,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
 
 int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
   memset(self, 0, sizeof(struct candy_lexer));
-  candy_buffer_init(&self->buff, reader, arg);
+  candy_buffer_init(&self->buff, sizeof(char), reader, arg);
   self->dbg.line = 1;
   self->dbg.column = 1;
   self->lookahead.token = TK_EOS;

@@ -29,7 +29,7 @@ __DATE__ " " __TIME__ ", \
 
 static _Atomic(bool) _quit = false;
 
-static int stream_reader(char buffer[], const size_t max_len, void *arg) {
+static int stream_reader(void *buffer, const size_t max_len, void *arg) {
   int *ch = (int *)arg;
   if (*ch == '\n')
     fwrite("> ", 1, 2, stdout);
@@ -38,7 +38,7 @@ static int stream_reader(char buffer[], const size_t max_len, void *arg) {
     if (!atomic_compare_exchange_strong(&_quit, &expected, false))
       return -1;
   }
-  buffer[0] = *ch;
+  ((char *)buffer)[0] = *ch;
   return 1;
 }
 

@@ -32,11 +32,11 @@ struct candy_buffer {
   void *arg;
 };
 
-int candy_buffer_init(candy_buffer_t *self, candy_reader_t reader, void *arg);
+int candy_buffer_init(candy_buffer_t *self, size_t cell, candy_reader_t reader, void *arg);
 
 int candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem);
 
-int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, void *data, size_t cell, size_t ahead);
+int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, void *data, size_t ahead);
 
 int candy_buffer_read(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, void *data, size_t size);
 

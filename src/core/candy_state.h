@@ -21,7 +21,7 @@ extern "C" {
 
 #include "core/candy_priv.h"
 
-candy_state_t *candy_state_create(candy_gc_t *gc);
+candy_state_t *candy_state_create(candy_handler_t handler, candy_allocator_t alloc, void *arg);
 
 candy_state_t *candy_state_create_coroutine(candy_state_t *self);
 
