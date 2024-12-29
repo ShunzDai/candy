@@ -47,15 +47,7 @@ static inline void candy_object_set_next(candy_object_t *self, candy_object_t *n
 }
 
 static inline candy_types_t candy_object_get_type(const candy_object_t *self) {
-  return (candy_types_t)((self->type >> 0) & 0xFFU);
-}
-
-static inline candy_types_t candy_object_get_base(const candy_object_t *self) {
-  return (candy_types_t)((self->type >> 0) & 0x0FU);
-}
-
-static inline candy_types_t candy_object_get_extd(const candy_object_t *self) {
-  return (candy_types_t)((self->type >> 4) & 0x0FU);
+  return (candy_types_t)self->type;
 }
 
 static inline void candy_object_set_type(candy_object_t *self, candy_types_t type) {

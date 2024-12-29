@@ -37,12 +37,12 @@ static int _object_stub0_delete(object_stub0 *self, candy_gc_t *gc) {
   return 0;
 }
 
-static int _object_stub0_colouring(object_stub0 *self, candy_gc_t *gc) {
+static int _object_stub0_colour(object_stub0 *self, candy_gc_t *gc) {
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return 0;
 }
 
-static int _object_stub0_diffusion(object_stub0 *self, candy_gc_t *gc) {
+static int _object_stub0_diffuse(object_stub0 *self, candy_gc_t *gc) {
   return 0;
 }
 
@@ -58,16 +58,16 @@ static int _object_stub1_delete(object_stub1 *self, candy_gc_t *gc) {
   return 0;
 }
 
-static int _object_stub1_colouring(object_stub1 *self, candy_gc_t *gc) {
+static int _object_stub1_colour(object_stub1 *self, candy_gc_t *gc) {
   self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
   candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
   return 0;
 }
 
-static int _object_stub1_diffusion(object_stub1 *self, candy_gc_t *gc) {
+static int _object_stub1_diffuse(object_stub1 *self, candy_gc_t *gc) {
   candy_gc_gray_swap(gc, self->gray);
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  candy_gc_event_handler(gc)((candy_object_t *)self->stub, gc, EVT_COLOURING);
+  candy_gc_event_handler(gc)((candy_object_t *)self->stub, gc, EVT_COLOUR);
   return 0;
 }
 
@@ -79,18 +79,18 @@ static int _event_delete(candy_object_t *self, candy_gc_t *gc) {
   }
 }
 
-static int _event_colouring(candy_object_t *self, candy_gc_t *gc) {
+static int _event_colour(candy_object_t *self, candy_gc_t *gc) {
   switch (candy_object_get_type(self)) {
-    case CANDY_TYPE_STUB0: return _object_stub0_colouring((object_stub0 *)self, gc);
-    case CANDY_TYPE_STUB1: return _object_stub1_colouring((object_stub1 *)self, gc);
+    case CANDY_TYPE_STUB0: return _object_stub0_colour((object_stub0 *)self, gc);
+    case CANDY_TYPE_STUB1: return _object_stub1_colour((object_stub1 *)self, gc);
     default:               return -1;
   }
 }
 
-static int _event_diffusion(candy_object_t *self, candy_gc_t *gc) {
+static int _event_diffuse(candy_object_t *self, candy_gc_t *gc) {
   switch (candy_object_get_type(self)) {
-    case CANDY_TYPE_STUB0: return _object_stub0_diffusion((object_stub0 *)self, gc);
-    case CANDY_TYPE_STUB1: return _object_stub1_diffusion((object_stub1 *)self, gc);
+    case CANDY_TYPE_STUB0: return _object_stub0_diffuse((object_stub0 *)self, gc);
+    case CANDY_TYPE_STUB1: return _object_stub1_diffuse((object_stub1 *)self, gc);
     default:               return -1;
   }
 }
@@ -98,13 +98,13 @@ static int _event_diffusion(candy_object_t *self, candy_gc_t *gc) {
 static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
   switch (evt) {
     case EVT_DELETE:    return _event_delete(self, gc);
-    case EVT_COLOURING: return _event_colouring(self, gc);
-    case EVT_DIFFUSION: return _event_diffusion(self, gc);
+    case EVT_COLOUR: return _event_colour(self, gc);
+    case EVT_DIFFUSE: return _event_diffuse(self, gc);
     default:            return -1;
   }
 }
 
-TEST(gc, unique_name(colouring)) {
+TEST(gc, unique_name(color)) {
   candy_gc_t gc{};
   candy_gc_init(&gc, handler, test_allocator, nullptr);
   auto main = _object_stub1_create(&gc);
@@ -126,7 +126,7 @@ TEST(gc, unique_name(colouring)) {
 
   candy_gc_step(&gc);
 
-  EXPECT_EQ(candy_gc_fsm(&gc), GC_FSM_DIFFUSION);
+  EXPECT_EQ(candy_gc_fsm(&gc), GC_FSM_DIFFUSE);
   ASSERT_EQ(gc.pool, obj1);
   ASSERT_EQ(*candy_object_get_next(gc.pool), obj0);
   ASSERT_EQ(*candy_object_get_next(*candy_object_get_next(gc.pool)), nullptr);
@@ -136,7 +136,7 @@ TEST(gc, unique_name(colouring)) {
 
   candy_gc_step(&gc);
 
-  EXPECT_EQ(candy_gc_fsm(&gc), GC_FSM_DIFFUSION);
+  EXPECT_EQ(candy_gc_fsm(&gc), GC_FSM_DIFFUSE);
   ASSERT_EQ(gc.pool, obj1);
   ASSERT_EQ(*candy_object_get_next(gc.pool), obj0);
   ASSERT_EQ(*candy_object_get_next(*candy_object_get_next(gc.pool)), nullptr);

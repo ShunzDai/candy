@@ -13,22 +13,21 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_utility.h"
-#include "core/candy_vm.h"
+#include "candy_utils.h"
+#include "core/candy_state.h"
 #include <stdlib.h>
 
-static int _builtin_exit(candy_state_t *self) {
-  exit(0);
+// static int _builtin_exit(candy_state_t *self) {
+//   exit(0);
+//   return 0;
+// }
+
+// static int _builtin_print(candy_state_t *self) {
+
+//   return 0;
+// }
+
+int candy_builtin_entry_utils(candy_state_t *self) {
+
   return 0;
 }
-
-static int _builtin_print(candy_state_t *self) {
-
-  return 0;
-}
-
-const candy_regist_t candy_builtin_list_utility[] = {
-  {"exit" ,  _builtin_exit},
-  {"print", _builtin_print},
-  {   NULL,   NULL},
-};

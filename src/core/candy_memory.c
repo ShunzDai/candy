@@ -17,6 +17,8 @@
 #include "core/candy_exception.h"
 #include <stdlib.h>
 
+static const char TAG[] = "candy::memory";
+
 int candy_memory_init(candy_memory_t *self, candy_allocator_t alloc, void *arg) {
   self->used = 0;
   self->alloc = alloc;
@@ -41,5 +43,6 @@ void *candy_memory_realloc(candy_memory_t *self, candy_excep_t *ctx, void *prev,
       abort();
   }
   self->used += next_size - prev_size;
+  candy_logv(TAG, "prev %zu, next %zu, used %zu bytes", prev_size, next_size, self->used);
   return next;
 }

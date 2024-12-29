@@ -58,9 +58,9 @@ candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx);
 
 int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
 
-int candy_proto_colouring(candy_proto_t *self, candy_gc_t *gc);
+int candy_proto_colour(candy_proto_t *self, candy_gc_t *gc);
 
-int candy_proto_diffusion(candy_proto_t *self, candy_gc_t *gc);
+int candy_proto_diffuse(candy_proto_t *self, candy_gc_t *gc);
 
 static inline void candy_proto_add_iax(candy_proto_t *self, candy_opcodes_t op, uint32_t a) {
   int candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
@@ -95,7 +95,8 @@ static inline void candy_proto_add_iabc(candy_proto_t *self, candy_opcodes_t op,
   });
 }
 
-candy_inst_t *candy_proto_get_inst(candy_proto_t *self);
+candy_vector_t *candy_proto_get_const(candy_proto_t *self);
+candy_vector_t *candy_proto_get_inst(candy_proto_t *self);
 
 #ifdef __cplusplus
 }

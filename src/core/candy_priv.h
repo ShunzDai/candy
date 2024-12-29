@@ -43,8 +43,8 @@ typedef enum candy_masks {
 
 typedef enum candy_events {
   EVT_DELETE,
-  EVT_COLOURING,
-  EVT_DIFFUSION,
+  EVT_COLOUR,
+  EVT_DIFFUSE,
 } candy_events_t;
 
 typedef struct candy_memory candy_memory_t;

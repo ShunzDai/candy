@@ -28,7 +28,7 @@ typedef enum cnady_gc_move {
 
 typedef enum cnady_gc_fsm {
   GC_FSM_BEGIN,
-  GC_FSM_DIFFUSION,
+  GC_FSM_DIFFUSE,
   GC_FSM_END,
 } candy_gc_fsm_t;
 

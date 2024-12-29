@@ -24,6 +24,8 @@
 #define lex_assert(_condition, _format, ...) \
 candy_assert(self->ctx, self->gc, _condition, EXCE_ERR_LEXICAL, _format, ##__VA_ARGS__)
 
+static const char TAG[] = "lexer";
+
 static const char *_head(candy_lexer_t *self) {
   return candy_buffer_head(&self->buff);
 }
@@ -153,10 +155,10 @@ static void _save_hex(candy_lexer_t *self) {
 }
 
 static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
+  char first = _view(self, 0);
   candy_tokens_t token = TK_INTEGER;
   bool(*check)(char) = is_dec;
-  char first = _read(self);
-  _save_char(self, first);
+  _save(self);
   if (first == '0') {
     if (_check_dual(self, "Xx", _skip)) {
       lex_assert(is_hex(_view(self, 0)), "invalid hexadecimal number");
@@ -257,7 +259,7 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta, const
   _skipn(self, multiline ? 3 : 1);
   meta->s = candy_array_create(self->gc, self->ctx, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(meta->s, self->gc, self->ctx, _head(self), _size(self));
-  printf("string <%.*s>\n", (int)_size(self), _head(self));
+  candy_logd(TAG, "string <%.*s>\n", (int)_size(self), _head(self));
   return TK_STRING;
 }
 
@@ -273,7 +275,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_meta_t *m
     default:
       meta->s = candy_array_create(self->gc, self->ctx, CANDY_TYPE_CHAR, MASK_NONE);
       candy_array_append(meta->s, self->gc, self->ctx, _head(self), _size(self));
-      printf("ident <%.*s>\n", (int)_size(self), _head(self));
+      candy_logd(TAG, "ident <%.*s>\n", (int)_size(self), _head(self));
       return TK_IDENT;
   }
 }
@@ -345,7 +347,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
 }
 
 int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
-  memset(self, 0, sizeof(struct candy_lexer));
+  memset(self, 0, sizeof(candy_lexer_t));
   candy_buffer_init(&self->buff, sizeof(char), reader, arg);
   self->dbg.line = 1;
   self->dbg.column = 1;

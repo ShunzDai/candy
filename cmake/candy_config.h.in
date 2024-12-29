@@ -44,6 +44,30 @@ extern "C" {
   */
 #define CANDY_BUFFER_EXPAND_SIZE ${CANDY_BUFFER_EXPAND_SIZE}
 
+#define CANDY_LOG_COLOR_BLACK   "30"
+#define CANDY_LOG_COLOR_RED     "31"
+#define CANDY_LOG_COLOR_GREEN   "32"
+#define CANDY_LOG_COLOR_BROWN   "33"
+#define CANDY_LOG_COLOR_BLUE    "34"
+#define CANDY_LOG_COLOR_PURPLE  "35"
+#define CANDY_LOG_COLOR_CYAN    "36"
+#define CANDY_LOG_COLOR(COLOR)  "\033[0;" COLOR "m"
+#define CANDY_LOG_BOLD(COLOR)   "\033[1;" COLOR "m"
+#define CANDY_LOG_RESET_COLOR   "\033[0m"
+#define CANDY_LOG_COLOR_E       CANDY_LOG_COLOR(CANDY_LOG_COLOR_RED)   "E"
+#define CANDY_LOG_COLOR_W       CANDY_LOG_COLOR(CANDY_LOG_COLOR_BROWN) "W"
+#define CANDY_LOG_COLOR_I       CANDY_LOG_COLOR(CANDY_LOG_COLOR_GREEN) "I"
+#define CANDY_LOG_COLOR_D       CANDY_LOG_COLOR(CANDY_LOG_COLOR_CYAN)  "D"
+#define CANDY_LOG_COLOR_V       "V"
+
+#define candy_log(_level, _tag, _fmt, ...) do { printf(_level "(%s) " _fmt CANDY_LOG_RESET_COLOR "\n", _tag, __VA_ARGS__); } while(0)
+
+#define candy_loge(_tag, ...) candy_log(CANDY_LOG_COLOR_E, _tag, __VA_ARGS__)
+#define candy_logw(_tag, ...) candy_log(CANDY_LOG_COLOR_W, _tag, __VA_ARGS__)
+#define candy_logi(_tag, ...) candy_log(CANDY_LOG_COLOR_I, _tag, __VA_ARGS__)
+#define candy_logd(_tag, ...) candy_log(CANDY_LOG_COLOR_D, _tag, __VA_ARGS__)
+#define candy_logv(_tag, ...) candy_log(CANDY_LOG_COLOR_V, _tag, __VA_ARGS__)
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

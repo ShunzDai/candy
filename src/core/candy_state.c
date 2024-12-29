@@ -46,7 +46,7 @@ struct pack {
 };
 
 static size_t candy_state_size(candy_state_t *self) {
-  return candy_state_is_main(self) ? sizeof(struct candy_primary) : sizeof(struct candy_state);
+  return candy_state_is_main(self) ? sizeof(candy_primary_t) : sizeof(candy_state_t);
 }
 
 static int candy_state_init(candy_state_t *self, candy_gc_t *gc) {
@@ -68,8 +68,8 @@ static int candy_state_deinit(candy_state_t *self) {
 static void protect_create(struct pack *pack) {
   candy_gc_t gc;
   candy_gc_init(&gc, pack->handler, pack->alloc, pack->arg);
-  candy_primary_t *p = (candy_primary_t *)candy_gc_add(&gc, &pack->ctx, CANDY_TYPE_STATE, sizeof(struct candy_primary));
-  memcpy(&p->gc, &gc, sizeof(struct candy_gc));
+  candy_primary_t *p = (candy_primary_t *)candy_gc_add(&gc, &pack->ctx, CANDY_TYPE_STATE, sizeof(candy_primary_t));
+  memcpy(&p->gc, &gc, sizeof(candy_gc_t));
   candy_gc_move(&p->gc, GC_MV_MAIN);
   candy_state_init(&p->co, &p->gc);
   pack->co = &p->co;
@@ -91,7 +91,7 @@ candy_state_t *candy_state_create(candy_handler_t handler, candy_allocator_t all
 }
 
 candy_state_t *candy_state_create_coroutine(candy_state_t *self) {
-  candy_state_t *co = (candy_state_t *)candy_gc_add(self->gc, &self->ctx, CANDY_TYPE_STATE, sizeof(struct candy_state));
+  candy_state_t *co = (candy_state_t *)candy_gc_add(self->gc, &self->ctx, CANDY_TYPE_STATE, sizeof(candy_state_t));
   candy_state_init(co, self->gc);
   return co;
 }
@@ -104,18 +104,18 @@ int candy_state_delete(candy_state_t *self, candy_gc_t *gc) {
 
 int candy_state_close(candy_state_t *self) {
   candy_gc_t gc;
-  memcpy(&gc, self->gc, sizeof(struct candy_gc));
+  memcpy(&gc, self->gc, sizeof(candy_gc_t));
   candy_gc_deinit(&gc);
   return 0;
 }
 
-int candy_state_colouring(candy_state_t *self, candy_gc_t *gc) {
+int candy_state_colour(candy_state_t *self, candy_gc_t *gc) {
   self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
   candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
   return 0;
 }
 
-int candy_state_diffusion(candy_state_t *self, candy_gc_t *gc) {
+int candy_state_diffuse(candy_state_t *self, candy_gc_t *gc) {
   candy_gc_gray_swap(gc, self->gray);
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return 0;

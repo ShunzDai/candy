@@ -44,7 +44,22 @@ struct candy_parser {
   candy_funcstate_t *fs;
 };
 
-static void expr(candy_parser_t *self, candy_expdesc_t *e) {
+static void _parser_init(candy_parser_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
+  self->fs = NULL;
+  candy_lexer_init(&self->ls, gc, ctx, reader, arg);
+}
+
+static void _parser_deinit(candy_parser_t *self) {
+  candy_lexer_deinit(&self->ls);
+}
+
+static void _fs_init(candy_funcstate_t *self, candy_parser_t *par) {
+  self->prev = par->fs;
+  self->proto = candy_proto_create(par->ls.gc, par->ls.ctx);
+  par->fs = self;
+}
+
+static void _expr(candy_parser_t *self, candy_expdesc_t *e) {
   while (1) {
     switch (candy_lexer_lookahead(&self->ls)) {
       case ')':
@@ -54,39 +69,39 @@ static void expr(candy_parser_t *self, candy_expdesc_t *e) {
       case TK_FLOAT:
         break;
       default:
-        par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->ls));
+        par_assert(false, "unknown token %s", candy_token_str(candy_lexer_lookahead(&self->ls)));
         break;
     }
   }
 }
 
 /* lambda '(' expr ')' */
-static void expr_lambda(candy_parser_t *self) {
+static void _expr_lambda(candy_parser_t *self) {
   candy_expdesc_t e;
-  // candy_proto_t *b = NULL;
   /* skip '(' */
   candy_lexer_next(&self->ls);
-  expr(self, &e);
+  _expr(self, &e);
   /* skip ')' */
   candy_lexer_next(&self->ls);
 }
 
-/*  */
 static void stat_def(candy_parser_t *self) {
+  candy_funcstate_t fs;
+  _fs_init(&fs, self);
   /* skip def */
   candy_lexer_next(&self->ls);
   switch (candy_lexer_lookahead(&self->ls)) {
     case TK_IDENT:
       candy_lexer_next(&self->ls);
-      par_assert(candy_lexer_lookahead(&self->ls) == '(', "unknown token %d", candy_lexer_lookahead(&self->ls));
-      expr_lambda(self);
+      par_assert(candy_lexer_lookahead(&self->ls) == '(', "unknown token %s", candy_token_str(candy_lexer_lookahead(&self->ls)));
+      _expr_lambda(self);
       break;
     /* lambda expression */
     case '(':
-      expr_lambda(self);
+      _expr_lambda(self);
       break;
     default:
-      par_assert(false, "unknown token %d", candy_lexer_lookahead(&self->ls));
+      par_assert(false, "unknown token %s", candy_token_str(candy_lexer_lookahead(&self->ls)));
   }
 }
 
@@ -126,17 +141,13 @@ static void _statement(candy_parser_t *self) {
 }
 
 candy_object_t *candy_parse(candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
-  candy_funcstate_t fs = {
-    .prev = NULL,
-    .proto = candy_proto_create(gc, ctx),
-  };
-  candy_parser_t parser = {
-    .fs = &fs,
-  };
+  candy_funcstate_t fs;
+  candy_parser_t parser;
   candy_object_t *msg = NULL;
-  candy_lexer_init(&parser.ls, gc, ctx, reader, arg);
+  _parser_init(&parser, gc, ctx, reader, arg);
+  _fs_init(&fs, &parser);
   candy_err_t err = candy_excep_try(ctx, (candy_excep_cb_t)_statement, &parser, &msg);
-  candy_lexer_deinit(&parser.ls);
+  _parser_deinit(&parser);
   if (err != EXCE_OK)
     return msg;
   return (candy_object_t *)candy_sclosure_create(gc, ctx, fs.proto);

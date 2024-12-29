@@ -35,15 +35,15 @@ static void _del_node(candy_gc_t *self, candy_object_t **pos) {
 }
 
 static int _fsm_begin(candy_gc_t *self) {
-  int res = candy_gc_event_handler(self)(self->main, self, EVT_COLOURING);
+  int res = candy_gc_event_handler(self)(self->main, self, EVT_COLOUR);
   assert(res >= 0);
   return 0;
 }
 
-static int _fsm_diffusion(candy_gc_t *self) {
+static int _fsm_diffuse(candy_gc_t *self) {
   candy_object_t *obj = self->gray;
   /* remove from 'gray' list */
-  int res = candy_gc_event_handler(self)(obj, self, EVT_DIFFUSION);
+  int res = candy_gc_event_handler(self)(obj, self, EVT_DIFFUSE);
   assert(res >= 0);
   return 0;
 }
@@ -113,11 +113,11 @@ int candy_gc_step(candy_gc_t *self) {
   switch (self->fsm) {
     case GC_FSM_BEGIN:
       _fsm_begin(self);
-      self->fsm = GC_FSM_DIFFUSION;
+      self->fsm = GC_FSM_DIFFUSE;
       return 0;
-    case GC_FSM_DIFFUSION:
+    case GC_FSM_DIFFUSE:
       if (self->gray)
-        _fsm_diffusion(self);
+        _fsm_diffuse(self);
       else
         self->fsm = GC_FSM_END;
       return 0;

@@ -42,13 +42,6 @@ struct candy_wrap {
 
 extern const candy_wrap_t CANDY_WRAP_NULL;
 
-static inline const char *candy_type_str(candy_types_t type) {
-  return (const char *[]) {
-    #define CANDY_TYPE_STR
-    #include "core/candy_type.list"
-  }[type];
-}
-
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align);
 
 static inline void *candy_wrap_data(const candy_wrap_t *self) {

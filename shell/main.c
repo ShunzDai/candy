@@ -14,6 +14,7 @@
   * limitations under the License.
   */
 #include "candy.h"
+#include "builtin/candy_utils.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,7 @@ int main(int argc, const char *argv[]) {
   candy_state_t *state = candy_new_state_default();
   if (state == NULL)
     return -1;
+  candy_builtin_entry_utils(state);
   if (argc > 1) {
     candy_dofile(state, argv[1]);
     candy_close(state);

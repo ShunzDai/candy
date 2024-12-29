@@ -40,7 +40,7 @@
 
 int candy_vm_init(candy_vm_t *self) {
   candy_excep_init(&self->ctx);
-  candy_vector_init(&self->root, sizeof(struct candy_wrap));
+  candy_vector_init(&self->root, sizeof(candy_wrap_t));
   return 0;
 }
 

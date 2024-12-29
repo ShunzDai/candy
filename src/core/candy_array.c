@@ -32,7 +32,7 @@ static size_t type_to_size(candy_types_t type) {
 }
 
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, uint8_t mask) {
-  candy_array_t *self = (candy_array_t *)candy_gc_add(gc, ctx, type, sizeof(struct candy_array));
+  candy_array_t *self = (candy_array_t *)candy_gc_add(gc, ctx, type, sizeof(candy_array_t));
   candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | mask);
   self->gray = NULL;
   candy_vector_init(&self->vec, type_to_size(type));
@@ -41,16 +41,16 @@ candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_type
 
 int candy_array_delete(candy_array_t *self, candy_gc_t *gc) {
   candy_vector_deinit(&self->vec, candy_gc_memory(gc));
-  candy_gc_free(gc, self, sizeof(struct candy_array));
+  candy_gc_free(gc, self, sizeof(candy_array_t));
   return 0;
 }
 
-int candy_array_colouring(candy_array_t *self, candy_gc_t *gc) {
+int candy_array_colour(candy_array_t *self, candy_gc_t *gc) {
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return 0;
 }
 
-int candy_array_diffusion(candy_array_t *self, candy_gc_t *gc) {
+int candy_array_diffuse(candy_array_t *self, candy_gc_t *gc) {
   // candy_object_t *obj = candy_gc_gray_swap(gc, self->gray);
   // candy_object_set_mark(obj, MARK_DARK);
   // /* todo: traverse obj */

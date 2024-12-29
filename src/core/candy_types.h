@@ -49,6 +49,13 @@ typedef struct candy_regist {
   candy_cfunc_t func;
 } candy_regist_t;
 
+static inline const char *candy_type_str(candy_types_t type) {
+  return (const char *[]) {
+    #define CANDY_TYPE_STR
+    #include "core/candy_type.list"
+  }[type];
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

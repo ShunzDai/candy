@@ -16,37 +16,42 @@
 #include "core/candy_proto.h"
 #include "core/candy_object.h"
 #include "core/candy_vector.h"
+#include "core/candy_wrap.h"
 #include "core/candy_gc.h"
 
 struct candy_proto {
   candy_object_t header;
-  size_t size_inst;
-  candy_inst_t *inst;
+  candy_vector_t constv;
+  candy_vector_t inst;
 };
 
 candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx) {
-  candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, ctx, CANDY_TYPE_PROTO, sizeof(struct candy_proto));
-  self->size_inst = 0;
-  // self->inst = (candy_inst_t *)candy_vector_data(cfg->inst);
-  self->inst = NULL;
+  candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, ctx, CANDY_TYPE_PROTO, sizeof(candy_proto_t));
+  candy_vector_init(&self->constv, sizeof(candy_wrap_t));
+  candy_vector_init(&self->inst, sizeof(candy_inst_t));
   return self;
 }
 
 int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc) {
-  candy_gc_free(gc, self->inst, self->size_inst);
-  candy_gc_free(gc, self, sizeof(struct candy_proto));
+  candy_vector_deinit(&self->inst, candy_gc_memory(gc));
+  candy_vector_deinit(&self->constv, candy_gc_memory(gc));
+  candy_gc_free(gc, self, sizeof(candy_proto_t));
   return 0;
 }
 
-int candy_proto_colouring(candy_proto_t *self, candy_gc_t *gc) {
+int candy_proto_colour(candy_proto_t *self, candy_gc_t *gc) {
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return 0;
 }
 
-int candy_proto_diffusion(candy_proto_t *self, candy_gc_t *gc) {
+int candy_proto_diffuse(candy_proto_t *self, candy_gc_t *gc) {
   return 0;
 }
 
-candy_inst_t *candy_proto_get_inst(candy_proto_t *self) {
-  return self->inst;
+candy_vector_t *candy_proto_get_const(candy_proto_t *self) {
+  return &self->constv;
+}
+
+candy_vector_t *candy_proto_get_inst(candy_proto_t *self) {
+  return &self->inst;
 }

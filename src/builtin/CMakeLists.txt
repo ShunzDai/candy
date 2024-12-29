@@ -1,5 +1,5 @@
 file(GLOB_RECURSE CANDY_SOURCES_BUILTIN LIST_DIRECTORIES false
-  candy_utility.c
+  candy_utils.c
 )
 
 add_library(${CANDY_TARGET_BUILTIN} SHARED ${CANDY_SOURCES_BUILTIN})
