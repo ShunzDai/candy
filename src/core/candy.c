@@ -28,6 +28,7 @@
 static const char TAG[] = "candy";
 
 static void *default_allocator(void *prev, size_t prev_size, size_t next_size, void *arg) {
+  (void)prev_size, (void)arg;
   if (next_size)
     return realloc(prev, next_size);
   free(prev);

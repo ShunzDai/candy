@@ -14,11 +14,6 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "core/candy_lexer.h"
-#include "core/candy_exception.h"
-#include "core/candy_gc.h"
-#include "core/candy_reader.h"
-#include "core/candy_array.h"
 #include <string>
 
 #define TEST_BODY(_name, _token, _exp, ...) \

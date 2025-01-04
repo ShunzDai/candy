@@ -13,6 +13,25 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
+#include "core/candy_lib.h"
+#include "core/candy_wrap.h"
+#include "core/candy_exception.h"
+#include "core/candy_reader.h"
+#include "core/candy_memory.h"
+#include "core/candy_buffer.h"
+#include "core/candy_vector.h"
+#include "core/candy_gc.h"
+#include "core/candy_table.h"
+#include "core/candy_proto.h"
+#include "core/candy_closure.h"
+#include "core/candy_userdef.h"
+#include "core/candy_array.h"
+#include "core/candy_print.h"
+#include "core/candy_lexer.h"
+#include "core/candy_parser.h"
+#include "core/candy_vm.h"
+#include "core/candy_state.h"
+#include "core/candy.h"
 #include "gtest/gtest.h"
 #include <stdlib.h>
 

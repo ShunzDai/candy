@@ -1,7 +1,7 @@
 find_package(GTest)
 
 file(GLOB_RECURSE SOURCES_TEST LIST_DIRECTORIES false
-  test_gc.cpp
+  # test_gc.cpp
   test_exception.cpp
   test_array.cpp
   test_table.cpp

@@ -31,11 +31,11 @@ union candy_udata {
 };
 
 struct candy_wrap {
-  #if CANDY_MEMORY_ALIGNMENT
+  #if CANDY_CONFIG_MEMORY_ALIGNMENT
   union candy_udata data;
-  #else /* CANDY_MEMORY_ALIGNMENT */
+  #else /* CANDY_CONFIG_MEMORY_ALIGNMENT */
   uint8_t data[sizeof(union candy_udata)];
-  #endif /* CANDY_MEMORY_ALIGNMENT */
+  #endif /* CANDY_CONFIG_MEMORY_ALIGNMENT */
   uint8_t type : 8;
   uint8_t mask : 4;
 };

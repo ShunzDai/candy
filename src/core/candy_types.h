@@ -24,14 +24,23 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
+#define CANDY_MACRO_STR_IMPL(_val)   #_val
+#define CANDY_MACRO_STR(_val)        CANDY_MACRO_STR_IMPL(_val)
+
+#define CANDY_VERSION_MAJOR     0
+#define CANDY_VERSION_MINOR     0
+#define CANDY_VERSION_PATCH     1
+#define CANDY_VERSION_STR       CANDY_MACRO_STR(CANDY_VERSION_MAJOR) "." CANDY_MACRO_STR(CANDY_VERSION_MINOR) "." CANDY_MACRO_STR(CANDY_VERSION_PATCH)
+#define CANDY_VERSION_NUM       (CANDY_VERSION_MAJOR << 16 | CANDY_VERSION_MINOR << 8 | CANDY_VERSION_PATCH)
+
 typedef enum candy_types {
   #define CANDY_TYPE_ENUM
   #include "core/candy_type.list"
 } candy_types_t;
 
-typedef CANDY_INTEGER_TYPE candy_integer_t;
-typedef CANDY_FLOAT_TYPE   candy_float_t;
-typedef CANDY_BOOLEAN_TYPE candy_boolean_t;
+typedef CANDY_CONFIG_INTEGER_TYPE candy_integer_t;
+typedef CANDY_CONFIG_FLOAT_TYPE   candy_float_t;
+typedef CANDY_CONFIG_BOOLEAN_TYPE candy_boolean_t;
 
 typedef struct candy_state candy_state_t;
 
@@ -43,18 +52,6 @@ typedef void *(*candy_allocator_t)(void *prev, size_t prev_size, size_t next_siz
   * @brief c-type function
   */
 typedef int (*candy_cfunc_t)(candy_state_t *self);
-
-typedef struct candy_regist {
-  const char *name;
-  candy_cfunc_t func;
-} candy_regist_t;
-
-static inline const char *candy_type_str(candy_types_t type) {
-  return (const char *[]) {
-    #define CANDY_TYPE_STR
-    #include "core/candy_type.list"
-  }[type];
-}
 
 #ifdef __cplusplus
 }

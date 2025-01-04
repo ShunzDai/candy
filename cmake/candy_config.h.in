@@ -13,62 +13,39 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#ifndef CANDY_RELEASE_H
-#define CANDY_RELEASE_H
+#ifndef CANDY_CONFIG_H
+#define CANDY_CONFIG_H
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#define CANDY_ENV               "${CANDY_ENV}"
-#define CANDY_GIT_DESCRIBE      "${CANDY_GIT_DESCRIBE}"
-#define CANDY_SYSTEM_NAME       "${CMAKE_SYSTEM_NAME}"
-#define CANDY_SYSTEM_VERSION    "${CMAKE_SYSTEM_VERSION}"
-#define CANDY_COMPILER_ID       "${CMAKE_CXX_COMPILER_ID}"
-#define CANDY_COMPILER_VERSION  "${CMAKE_CXX_COMPILER_VERSION}"
+#include <stdbool.h>
 
-#define CANDY_VERSION_MAJOR     0x${CANDY_VERSION_MAJOR}
-#define CANDY_VERSION_MINOR     0x${CANDY_VERSION_MINOR}
-#define CANDY_VERSION_PATCH     0x${CANDY_VERSION_PATCH}
-#define CANDY_VERSION_STR       "${CANDY_VERSION}"
-#define CANDY_VERSION_NUM       (CANDY_VERSION_MAJOR << 16 | CANDY_VERSION_MINOR << 8 | CANDY_VERSION_PATCH)
+#define CANDY_GIT_DESCRIBE              "${CANDY_GIT_DESCRIBE}"
+#define CANDY_SYSTEM_NAME               "${CMAKE_SYSTEM_NAME}"
+#define CANDY_SYSTEM_VERSION            "${CMAKE_SYSTEM_VERSION}"
+#define CANDY_COMPILER_ID               "${CMAKE_CXX_COMPILER_ID}"
+#define CANDY_COMPILER_VERSION          "${CMAKE_CXX_COMPILER_VERSION}"
 
-#define CANDY_INTEGER_TYPE      ${CANDY_INTEGER_TYPE}
-#define CANDY_FLOAT_TYPE        ${CANDY_FLOAT_TYPE}
-#define CANDY_BOOLEAN_TYPE      ${CANDY_BOOLEAN_TYPE}
+#define CANDY_CONFIG_INTEGER_TYPE       ${CANDY_CONFIG_INTEGER_TYPE}
+#define CANDY_CONFIG_FLOAT_TYPE         ${CANDY_CONFIG_FLOAT_TYPE}
+#define CANDY_CONFIG_BOOLEAN_TYPE       ${CANDY_CONFIG_BOOLEAN_TYPE}
 
-#define CANDY_MEMORY_ALIGNMENT  ${CANDY_MEMORY_ALIGNMENT}
+#define CANDY_CONFIG_MEMORY_ALIGNMENT   ${CANDY_CONFIG_MEMORY_ALIGNMENT}
 
 /**
   * @brief  smaller expand size mean less space utilization and more load times,
   *         which can be decided by the user depending on the usage scenario.
   */
-#define CANDY_BUFFER_EXPAND_SIZE ${CANDY_BUFFER_EXPAND_SIZE}
+#define CANDY_CONFIG_BUFFER_EXPAND_SIZE ${CANDY_CONFIG_BUFFER_EXPAND_SIZE}
 
-#define CANDY_LOG_COLOR_BLACK   "30"
-#define CANDY_LOG_COLOR_RED     "31"
-#define CANDY_LOG_COLOR_GREEN   "32"
-#define CANDY_LOG_COLOR_BROWN   "33"
-#define CANDY_LOG_COLOR_BLUE    "34"
-#define CANDY_LOG_COLOR_PURPLE  "35"
-#define CANDY_LOG_COLOR_CYAN    "36"
-#define CANDY_LOG_COLOR(COLOR)  "\033[0;" COLOR "m"
-#define CANDY_LOG_BOLD(COLOR)   "\033[1;" COLOR "m"
-#define CANDY_LOG_RESET_COLOR   "\033[0m"
-#define CANDY_LOG_COLOR_E       CANDY_LOG_COLOR(CANDY_LOG_COLOR_RED)   "E"
-#define CANDY_LOG_COLOR_W       CANDY_LOG_COLOR(CANDY_LOG_COLOR_BROWN) "W"
-#define CANDY_LOG_COLOR_I       CANDY_LOG_COLOR(CANDY_LOG_COLOR_GREEN) "I"
-#define CANDY_LOG_COLOR_D       CANDY_LOG_COLOR(CANDY_LOG_COLOR_CYAN)  "D"
-#define CANDY_LOG_COLOR_V       "V"
+#define CANDY_CONFIG_LOG_LEVEL          ${CANDY_CONFIG_LOG_LEVEL}
 
-#define candy_log(_level, _tag, _fmt, ...) do { printf(_level "(%s) " _fmt CANDY_LOG_RESET_COLOR "\n", _tag, __VA_ARGS__); } while(0)
+#define CANDY_CONFIG_LOG_COLOR          ${CANDY_CONFIG_LOG_COLOR}
 
-#define candy_loge(_tag, ...) candy_log(CANDY_LOG_COLOR_E, _tag, __VA_ARGS__)
-#define candy_logw(_tag, ...) candy_log(CANDY_LOG_COLOR_W, _tag, __VA_ARGS__)
-#define candy_logi(_tag, ...) candy_log(CANDY_LOG_COLOR_I, _tag, __VA_ARGS__)
-#define candy_logd(_tag, ...) candy_log(CANDY_LOG_COLOR_D, _tag, __VA_ARGS__)
-#define candy_logv(_tag, ...) candy_log(CANDY_LOG_COLOR_V, _tag, __VA_ARGS__)
+#define candy_log_impl(_fmt, ...)       printf(_fmt, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif /* CANDY_RELEASE_H */
+#endif /* CANDY_CONFIG_H */

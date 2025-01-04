@@ -14,9 +14,6 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "core/candy_exception.h"
-#include "core/candy_parser.h"
-#include "core/candy_reader.h"
 
 #define PARSER_TEST(_name, _exp) TEST(parser, _name) {test_body(_exp);}
 

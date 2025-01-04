@@ -32,9 +32,9 @@ static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, 
   /* calculate the filling position of the read-only buffer */
   size_t offset = self->w + ahead;
   /** if the number of bytes that can be filled is less than
-      @ref CANDY_BUFFER_EXPAND_SIZE bytes, the buffer will be enlarged */
+      @ref CANDY_CONFIG_BUFFER_EXPAND_SIZE bytes, the buffer will be enlarged */
   if (size <= offset) {
-    candy_vector_append(&self->vec, mem, ctx, NULL, CANDY_BUFFER_EXPAND_SIZE);
+    candy_vector_append(&self->vec, mem, ctx, NULL, CANDY_CONFIG_BUFFER_EXPAND_SIZE);
     offset = size;
   }
   /* otherwise buffer will be filled directly */

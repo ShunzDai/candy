@@ -19,6 +19,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include "core/candy_log.h"
 #include "core/candy_types.h"
 #include <assert.h>
 #include <stdio.h> /* todo: remove */
@@ -64,6 +65,20 @@ typedef struct candy_sclosure candy_sclosure_t;
 typedef struct candy_excep candy_excep_t;
 
 typedef int (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt);
+
+static inline const char *candy_type_str(candy_types_t type) {
+  return (const char *[]) {
+    #define CANDY_TYPE_STR
+    #include "core/candy_type.list"
+  }[type];
+}
+
+static inline size_t candy_type_size(candy_types_t type) {
+  return (size_t[]) {
+    #define CANDY_TYPE_SIZE
+    #include "core/candy_type.list"
+  }[type];
+}
 
 #ifdef __cplusplus
 }

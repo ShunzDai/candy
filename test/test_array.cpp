@@ -14,8 +14,6 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "core/candy_array.h"
-#include "core/candy_gc.h"
 
 static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
   return candy_array_delete((candy_array_t *)self, gc);

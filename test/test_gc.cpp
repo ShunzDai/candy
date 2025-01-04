@@ -14,8 +14,6 @@
   * limitations under the License.
   */
 #include "test.h"
-#include "core/candy_object.h"
-#include "core/candy_gc.h"
 
 struct object_stub0 {
   candy_object_t header;
