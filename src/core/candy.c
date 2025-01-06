@@ -36,7 +36,6 @@ static void *default_allocator(void *prev, size_t prev_size, size_t next_size, v
 }
 
 static int _event_delete(candy_object_t *self, candy_gc_t *gc) {
-  candy_logi(TAG, "object deleting, type %s", candy_type_str(candy_object_get_type(self)));
   if (candy_object_get_mask(self) & MASK_ARRAY)
     return candy_array_delete((candy_array_t *)self, gc);
   switch (candy_object_get_type(self)) {
@@ -50,21 +49,19 @@ static int _event_delete(candy_object_t *self, candy_gc_t *gc) {
   }
 }
 
-static int _event_colour(candy_object_t *self, candy_gc_t *gc) {
-  candy_logi(TAG, "object colour, type %s", candy_type_str(candy_object_get_type(self)));
+static int _event_color(candy_object_t *self, candy_gc_t *gc) {
   switch (candy_object_get_type(self)) {
     case CANDY_TYPE_CCLSR: return -1;
-    case CANDY_TYPE_SCLSR: return candy_sclosure_colour((candy_sclosure_t *)self, gc);
+    case CANDY_TYPE_SCLSR: return candy_sclosure_color((candy_sclosure_t *)self, gc);
     case CANDY_TYPE_UDHVY: return -1;
     case CANDY_TYPE_TABLE: return -1;
-    case CANDY_TYPE_PROTO: return candy_proto_colour((candy_proto_t *)self, gc);
-    case CANDY_TYPE_STATE: return candy_state_colour((candy_state_t *)self, gc);
+    case CANDY_TYPE_PROTO: return candy_proto_color((candy_proto_t *)self, gc);
+    case CANDY_TYPE_STATE: return candy_state_color((candy_state_t *)self, gc);
     default:               return -1;
   }
 }
 
 static int _event_diffuse(candy_object_t *self, candy_gc_t *gc) {
-  candy_logi(TAG, "object diffusing, type %s", candy_type_str(candy_object_get_type(self)));
   switch (candy_object_get_type(self)) {
     case CANDY_TYPE_CCLSR: return -1;
     case CANDY_TYPE_SCLSR: return candy_sclosure_diffuse((candy_sclosure_t *)self, gc);
@@ -77,9 +74,10 @@ static int _event_diffuse(candy_object_t *self, candy_gc_t *gc) {
 }
 
 static int _event_handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
+  candy_logd(TAG, "%s type %s", candy_event_str(evt), candy_type_str(candy_object_get_type(self)));
   switch (evt) {
     case EVT_DELETE:  return _event_delete(self, gc);
-    case EVT_COLOUR:  return _event_colour(self, gc);
+    case EVT_COLOR:  return _event_color(self, gc);
     case EVT_DIFFUSE: return _event_diffuse(self, gc);
     default:          return -1;
   }

@@ -24,7 +24,7 @@
 #define lex_assert(_condition, _format, ...) \
 candy_assert(self->ctx, self->gc, _condition, EXCE_ERR_LEXICAL, _format, ##__VA_ARGS__)
 
-static const char TAG[] = "lexer";
+static const char TAG[] = "candy::lexer";
 
 static const char *_head(candy_lexer_t *self) {
   return candy_buffer_head(&self->buff);
@@ -259,7 +259,7 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta, const
   _skipn(self, multiline ? 3 : 1);
   meta->s = candy_array_create(self->gc, self->ctx, CANDY_TYPE_CHAR, MASK_NONE);
   candy_array_append(meta->s, self->gc, self->ctx, _head(self), _size(self));
-  candy_logd(TAG, "string <%.*s>\n", (int)_size(self), _head(self));
+  candy_logd(TAG, "string <%.*s>", (int)_size(self), _head(self));
   return TK_STRING;
 }
 
@@ -275,7 +275,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_meta_t *m
     default:
       meta->s = candy_array_create(self->gc, self->ctx, CANDY_TYPE_CHAR, MASK_NONE);
       candy_array_append(meta->s, self->gc, self->ctx, _head(self), _size(self));
-      candy_logd(TAG, "ident <%.*s>\n", (int)_size(self), _head(self));
+      candy_logd(TAG, "ident <%.*s>", (int)_size(self), _head(self));
       return TK_IDENT;
   }
 }

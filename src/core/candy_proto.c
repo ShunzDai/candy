@@ -39,7 +39,7 @@ int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc) {
   return 0;
 }
 
-int candy_proto_colour(candy_proto_t *self, candy_gc_t *gc) {
+int candy_proto_color(candy_proto_t *self, candy_gc_t *gc) {
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return 0;
 }

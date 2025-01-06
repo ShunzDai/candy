@@ -44,7 +44,7 @@ typedef enum candy_masks {
 
 typedef enum candy_events {
   EVT_DELETE,
-  EVT_COLOUR,
+  EVT_COLOR,
   EVT_DIFFUSE,
 } candy_events_t;
 
@@ -66,18 +66,26 @@ typedef struct candy_excep candy_excep_t;
 
 typedef int (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt);
 
-static inline const char *candy_type_str(candy_types_t type) {
+static inline const char *candy_event_str(candy_events_t val) {
+  switch (val) {
+    case EVT_DELETE:  return "deleting";
+    case EVT_COLOR:   return "coloring";
+    case EVT_DIFFUSE: return "diffusing";
+  }
+}
+
+static inline const char *candy_type_str(candy_types_t val) {
   return (const char *[]) {
     #define CANDY_TYPE_STR
     #include "core/candy_type.list"
-  }[type];
+  }[val];
 }
 
-static inline size_t candy_type_size(candy_types_t type) {
+static inline size_t candy_type_size(candy_types_t val) {
   return (size_t[]) {
     #define CANDY_TYPE_SIZE
     #include "core/candy_type.list"
-  }[type];
+  }[val];
 }
 
 #ifdef __cplusplus

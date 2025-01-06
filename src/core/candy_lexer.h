@@ -25,6 +25,8 @@ extern "C" {
 
 typedef union candy_meta candy_meta_t;
 
+typedef struct candy_lexer candy_lexer_t;
+
 union candy_meta {
   candy_integer_t i;
   candy_float_t f;
@@ -44,8 +46,6 @@ struct candy_lexer {
   candy_excep_t *ctx;
   candy_gc_t *gc;
 };
-
-typedef struct candy_lexer candy_lexer_t;
 
 int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg);
 int candy_lexer_deinit(candy_lexer_t *self);

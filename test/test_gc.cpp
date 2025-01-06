@@ -35,7 +35,7 @@ static int _object_stub0_delete(object_stub0 *self, candy_gc_t *gc) {
   return 0;
 }
 
-static int _object_stub0_colour(object_stub0 *self, candy_gc_t *gc) {
+static int _object_stub0_color(object_stub0 *self, candy_gc_t *gc) {
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return 0;
 }
@@ -56,7 +56,7 @@ static int _object_stub1_delete(object_stub1 *self, candy_gc_t *gc) {
   return 0;
 }
 
-static int _object_stub1_colour(object_stub1 *self, candy_gc_t *gc) {
+static int _object_stub1_color(object_stub1 *self, candy_gc_t *gc) {
   self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
   candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
   return 0;
@@ -65,7 +65,7 @@ static int _object_stub1_colour(object_stub1 *self, candy_gc_t *gc) {
 static int _object_stub1_diffuse(object_stub1 *self, candy_gc_t *gc) {
   candy_gc_gray_swap(gc, self->gray);
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  candy_gc_event_handler(gc)((candy_object_t *)self->stub, gc, EVT_COLOUR);
+  candy_gc_event_handler(gc)((candy_object_t *)self->stub, gc, EVT_COLOR);
   return 0;
 }
 
@@ -77,10 +77,10 @@ static int _event_delete(candy_object_t *self, candy_gc_t *gc) {
   }
 }
 
-static int _event_colour(candy_object_t *self, candy_gc_t *gc) {
+static int _event_color(candy_object_t *self, candy_gc_t *gc) {
   switch (candy_object_get_type(self)) {
-    case CANDY_TYPE_STUB0: return _object_stub0_colour((object_stub0 *)self, gc);
-    case CANDY_TYPE_STUB1: return _object_stub1_colour((object_stub1 *)self, gc);
+    case CANDY_TYPE_STUB0: return _object_stub0_color((object_stub0 *)self, gc);
+    case CANDY_TYPE_STUB1: return _object_stub1_color((object_stub1 *)self, gc);
     default:               return -1;
   }
 }
@@ -96,7 +96,7 @@ static int _event_diffuse(candy_object_t *self, candy_gc_t *gc) {
 static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
   switch (evt) {
     case EVT_DELETE:    return _event_delete(self, gc);
-    case EVT_COLOUR: return _event_colour(self, gc);
+    case EVT_COLOR: return _event_color(self, gc);
     case EVT_DIFFUSE: return _event_diffuse(self, gc);
     default:            return -1;
   }

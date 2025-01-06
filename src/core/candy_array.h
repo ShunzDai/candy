@@ -24,7 +24,7 @@ extern "C" {
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, uint8_t mask);
 int candy_array_delete(candy_array_t *self, candy_gc_t *gc);
 
-int candy_array_colour(candy_array_t *self, candy_gc_t *gc);
+int candy_array_color(candy_array_t *self, candy_gc_t *gc);
 int candy_array_diffuse(candy_array_t *self, candy_gc_t *gc);
 
 size_t candy_array_capacity(const candy_array_t *self);

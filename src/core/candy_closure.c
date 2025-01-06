@@ -53,7 +53,7 @@ int candy_sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
   return 0;
 }
 
-int candy_sclosure_colour(candy_sclosure_t *self, candy_gc_t *gc) {
+int candy_sclosure_color(candy_sclosure_t *self, candy_gc_t *gc) {
   return 0;
 }
 

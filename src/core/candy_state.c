@@ -109,7 +109,7 @@ int candy_state_close(candy_state_t *self) {
   return 0;
 }
 
-int candy_state_colour(candy_state_t *self, candy_gc_t *gc) {
+int candy_state_color(candy_state_t *self, candy_gc_t *gc) {
   self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
   candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
   return 0;

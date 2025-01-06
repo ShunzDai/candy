@@ -24,18 +24,11 @@ struct candy_array {
   candy_vector_t vec;
 };
 
-static size_t type_to_size(candy_types_t type) {
-  return (size_t[]) {
-    #define CANDY_TYPE_SIZE
-    #include "core/candy_type.list"
-  }[type];
-}
-
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, uint8_t mask) {
   candy_array_t *self = (candy_array_t *)candy_gc_add(gc, ctx, type, sizeof(candy_array_t));
   candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | mask);
   self->gray = NULL;
-  candy_vector_init(&self->vec, type_to_size(type));
+  candy_vector_init(&self->vec, candy_type_size(type));
   return self;
 }
 
@@ -45,7 +38,7 @@ int candy_array_delete(candy_array_t *self, candy_gc_t *gc) {
   return 0;
 }
 
-int candy_array_colour(candy_array_t *self, candy_gc_t *gc) {
+int candy_array_color(candy_array_t *self, candy_gc_t *gc) {
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return 0;
 }

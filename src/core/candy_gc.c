@@ -35,7 +35,7 @@ static void _del_node(candy_gc_t *self, candy_object_t **pos) {
 }
 
 static int _fsm_begin(candy_gc_t *self) {
-  int res = candy_gc_event_handler(self)(self->main, self, EVT_COLOUR);
+  int res = candy_gc_event_handler(self)(self->main, self, EVT_COLOR);
   assert(res >= 0);
   return 0;
 }

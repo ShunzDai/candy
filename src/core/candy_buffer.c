@@ -16,6 +16,8 @@
 #include "core/candy_buffer.h"
 #include <string.h>
 
+static const char TAG[] = "candy::buffer";
+
 static void *_wptr(candy_buffer_t *self) {
   return candy_vector_data(&self->vec) + self->w;
 }
@@ -25,26 +27,30 @@ static const void *_rptr(candy_buffer_t *self) {
 }
 
 static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, size_t ahead) {
-  size_t size = candy_vector_size(&self->vec);
+  size_t sz = candy_vector_size(&self->vec);
+  size_t cap = candy_vector_capacity(&self->vec);
   /* if the look-ahead step is smaller than the total length will be returned directly */
-  if (self->r + ahead < size)
+  if (self->r + ahead < sz)
     return 0;
   /* calculate the filling position of the read-only buffer */
   size_t offset = self->w + ahead;
+  candy_logv(TAG, "w %zu r %zu sz %zu cap %zu offset %zu", self->w, self->r, sz, cap, offset);
   /** if the number of bytes that can be filled is less than
       @ref CANDY_CONFIG_BUFFER_EXPAND_SIZE bytes, the buffer will be enlarged */
-  if (size <= offset) {
-    candy_vector_append(&self->vec, mem, ctx, NULL, CANDY_CONFIG_BUFFER_EXPAND_SIZE);
-    offset = size;
+  if (cap <= offset) {
+    candy_vector_reserve(&self->vec, mem, ctx, cap + CANDY_CONFIG_BUFFER_EXPAND_SIZE);
+    candy_logd(TAG, "expanded from %zu to %zu", cap, candy_vector_capacity(&self->vec));
   }
   /* otherwise buffer will be filled directly */
   else {
     /* move the unread bytes to the head of the read-only buffer */
     memmove(_wptr(self), _rptr(self), ahead);
+    candy_logd(TAG, "move %zu bytes from %zu to %zu", ahead, self->r, self->w);
     self->r = self->w;
   }
   /* fill buffer */
-  int res = self->reader(candy_vector_data(&self->vec) + offset, candy_vector_size(&self->vec) - offset, self->arg);
+  int res = self->reader(candy_vector_data(&self->vec) + offset, candy_vector_capacity(&self->vec) - offset, self->arg);
+  candy_logd(TAG, "fill %d bytes at %zu", res, offset);
   if (res > 0)
     candy_vector_resize(&self->vec, mem, ctx, offset + res);
   return res;

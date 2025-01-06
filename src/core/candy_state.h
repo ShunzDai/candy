@@ -29,7 +29,7 @@ int candy_state_delete(candy_state_t *self, candy_gc_t *gc);
 
 int candy_state_close(candy_state_t *self);
 
-int candy_state_colour(candy_state_t *self, candy_gc_t *gc);
+int candy_state_color(candy_state_t *self, candy_gc_t *gc);
 
 int candy_state_diffuse(candy_state_t *self, candy_gc_t *gc);
 

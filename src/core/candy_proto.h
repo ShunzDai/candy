@@ -58,7 +58,7 @@ candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx);
 
 int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
 
-int candy_proto_colour(candy_proto_t *self, candy_gc_t *gc);
+int candy_proto_color(candy_proto_t *self, candy_gc_t *gc);
 
 int candy_proto_diffuse(candy_proto_t *self, candy_gc_t *gc);
 
