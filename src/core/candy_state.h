@@ -33,9 +33,9 @@ int candy_state_color(candy_state_t *self, candy_gc_t *gc);
 
 int candy_state_diffuse(candy_state_t *self, candy_gc_t *gc);
 
-int candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
+candy_err_t candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
 
-bool candy_state_is_main(candy_state_t *self);
+bool candy_state_is_primary(candy_state_t *self);
 
 candy_types_t candy_state_get_type(candy_state_t *self, size_t pos);
 

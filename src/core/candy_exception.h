@@ -19,7 +19,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "core/candy_error.h"
 #include "core/candy_priv.h"
 
 typedef void (*candy_excep_cb_t)(void *arg);

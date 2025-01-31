@@ -74,13 +74,6 @@ static inline const char *candy_event_str(candy_events_t val) {
   }
 }
 
-static inline const char *candy_type_str(candy_types_t val) {
-  return (const char *[]) {
-    #define CANDY_TYPE_STR
-    #include "core/candy_type.list"
-  }[val];
-}
-
 static inline size_t candy_type_size(candy_types_t val) {
   return (size_t[]) {
     #define CANDY_TYPE_SIZE

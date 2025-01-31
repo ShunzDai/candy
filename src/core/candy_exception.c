@@ -32,12 +32,12 @@ int candy_excep_deinit(candy_excep_t *self) {
 }
 
 candy_err_t candy_excep_try(candy_excep_t *self, candy_excep_cb_t cb, void *arg, candy_object_t **err) {
-  candy_err_t code = EXCE_OK;
+  candy_err_t code = CANDY_OK;
   struct context next = {
     .prev = (struct context *)self->prev,
   };
   self->prev = (candy_excep_t *)&next;
-  if ((code = (candy_err_t)setjmp(next.jmp)) != EXCE_OK)
+  if ((code = (candy_err_t)setjmp(next.jmp)) != CANDY_OK)
     goto catch;
   cb(arg);
   catch:

@@ -23,7 +23,7 @@ extern "C" {
 #include "core/candy_priv.h"
 
 typedef enum cnady_gc_move {
-  GC_MV_MAIN,
+  GC_MV_PRIM,
 } candy_gc_move_t;
 
 typedef enum cnady_gc_fsm {
@@ -34,11 +34,11 @@ typedef enum cnady_gc_fsm {
 
 struct candy_gc {
   candy_memory_t mem;
-  candy_object_t *pool;
-  candy_object_t *gray;
-  candy_object_t *main;
   candy_handler_t handler;
   candy_gc_fsm_t fsm;
+  candy_object_t *pool;
+  candy_object_t *gray;
+  candy_object_t *prim;
 };
 
 int candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg);
@@ -66,8 +66,8 @@ static inline candy_object_t *candy_gc_gray_swap(candy_gc_t *self, candy_object_
   return gray;
 }
 
-static inline candy_object_t *candy_gc_main(candy_gc_t *self) {
-  return self->main;
+static inline candy_object_t *candy_gc_primary(candy_gc_t *self) {
+  return self->prim;
 }
 
 static inline candy_handler_t candy_gc_event_handler(candy_gc_t *self) {

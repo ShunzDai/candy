@@ -83,7 +83,7 @@ static void tast_body(const char exp[], const supposed & ... value) {
   }, &cinfo, &msg);
   candy_lexer_deinit(&cinfo.ls);
   if constexpr(sizeof...(value)) {
-    if (err != EXCE_OK)
+    if (err != CANDY_OK)
       test_assert((candy_array_t *)msg, value ...);
     else
       test_normal(cinfo.next, value ...);

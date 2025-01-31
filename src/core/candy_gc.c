@@ -35,7 +35,7 @@ static void _del_node(candy_gc_t *self, candy_object_t **pos) {
 }
 
 static int _fsm_begin(candy_gc_t *self) {
-  int res = candy_gc_event_handler(self)(self->main, self, EVT_COLOR);
+  int res = candy_gc_event_handler(self)(self->prim, self, EVT_COLOR);
   assert(res >= 0);
   return 0;
 }
@@ -67,19 +67,19 @@ static int _fsm_end(candy_gc_t *self) {
 
 int candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg) {
   candy_memory_init(&self->mem, alloc, arg);
+  self->handler = handler;
   self->fsm = GC_FSM_BEGIN;
   self->pool = NULL;
   self->gray = NULL;
-  self->main = NULL;
-  self->handler = handler;
+  self->prim = NULL;
   return 0;
 }
 
 int candy_gc_deinit(candy_gc_t *self) {
   while (self->pool)
     _del_node(self, &self->pool);
-  if (self->main)
-    candy_gc_event_handler(self)((candy_object_t *)self->main, self, EVT_DELETE);
+  if (self->prim)
+    candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_DELETE);
   return 0;
 }
 
@@ -92,8 +92,8 @@ int candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {
   self->pool = *candy_object_get_next(obj);
   candy_object_set_next(obj, NULL);
   switch (type) {
-    case GC_MV_MAIN:
-      self->main = obj;
+    case GC_MV_PRIM:
+      self->prim = obj;
       break;
     default:
       return -1;

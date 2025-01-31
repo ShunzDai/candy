@@ -22,7 +22,7 @@
 #include <string.h>
 
 #define lex_assert(_condition, _format, ...) \
-candy_assert(self->ctx, self->gc, _condition, EXCE_ERR_LEXICAL, _format, ##__VA_ARGS__)
+candy_assert(self->ctx, self->gc, _condition, CANDY_ERR_LEXICAL, _format, ##__VA_ARGS__)
 
 static const char TAG[] = "candy::lexer";
 

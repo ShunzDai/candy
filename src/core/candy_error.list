@@ -19,15 +19,16 @@
 
 #ifdef CANDY_ERR_ENUM
 #undef CANDY_ERR_ENUM
-#define CANDY_ERR(_err, _val, _str) EXCE_##_err = _val,
+#define CANDY_ERR(_err, _val, _str) CANDY_##_err = _val,
 #endif /* CANDY_ERR_ENUM */
 
 #ifdef CANDY_ERR_STR
 #undef CANDY_ERR_STR
-#define CANDY_ERR(_err, _val, _str) case EXCE_##_err: return _str;
+#define CANDY_ERR(_err, _val, _str) case CANDY_##_err: return _str;
 #endif /* CANDY_ERR_STR */
 
 #ifdef CANDY_ERR
+CANDY_ERR(ERR_VM     , -4,      "vm")
 CANDY_ERR(ERR_SYNTAX , -3,  "syntax")
 CANDY_ERR(ERR_LEXICAL, -2, "lexical")
 CANDY_ERR(ERR_MEMORY , -1,  "memory")
