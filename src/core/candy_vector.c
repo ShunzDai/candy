@@ -77,11 +77,8 @@ int candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_excep_t
   if (cap < size + sz) {
     candy_vector_reserve(self, mem, ctx, cap + size);
   }
-  if (size) {
-    if (data)
-      memcpy(candy_vector_data(self) + candy_vector_cell(self) * sz, data, candy_vector_cell(self) * size);
-    else
-      memset(candy_vector_data(self) + candy_vector_cell(self) * sz, 0, candy_vector_cell(self) * size);
+  if (size && data) {
+    memcpy(candy_vector_data(self) + candy_vector_cell(self) * sz, data, candy_vector_cell(self) * size);
   }
   _set_size(self, candy_vector_size(self) + size);
   return 0;
