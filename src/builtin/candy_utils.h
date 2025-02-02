@@ -21,7 +21,7 @@ extern "C" {
 
 #include "core/candy_types.h"
 
-int candy_builtin_entry_utils(candy_state_t *self);
+candy_err_t candy_builtin_entry_utils(candy_state_t *self);
 
 #ifdef __cplusplus
 }

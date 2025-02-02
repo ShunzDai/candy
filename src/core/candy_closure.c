@@ -36,9 +36,9 @@ candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_excep_t *ctx, cand
   return self;
 }
 
-int candy_cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc) {
+candy_err_t candy_cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc) {
   candy_gc_free(gc, self, sizeof(candy_cclosure_t));
-  return 0;
+  return CANDY_OK;
 }
 
 candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_proto_t *proto) {
@@ -48,17 +48,17 @@ candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, cand
   return self;
 }
 
-int candy_sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
+candy_err_t candy_sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
   candy_gc_free(gc, self, sizeof(candy_sclosure_t));
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_sclosure_color(candy_sclosure_t *self, candy_gc_t *gc) {
-  return 0;
+candy_err_t candy_sclosure_color(candy_sclosure_t *self, candy_gc_t *gc) {
+  return CANDY_OK;
 }
 
-int candy_sclosure_diffuse(candy_sclosure_t *self, candy_gc_t *gc) {
-  return -1;
+candy_err_t candy_sclosure_diffuse(candy_sclosure_t *self, candy_gc_t *gc) {
+  return CANDY_OK;
 }
 
 const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self) {

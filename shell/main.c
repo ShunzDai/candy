@@ -64,7 +64,7 @@ int main(int argc, const char *argv[]) {
   bool expected = false;
   while (atomic_compare_exchange_strong(&_quit, &expected, false)) {
     int ch = '\n';
-    if (candy_dostream(state, stream_reader, &ch) < 0)
+    if (candy_dostream(state, stream_reader, &ch) != CANDY_OK)
       (void)0;
   }
   candy_close(state);

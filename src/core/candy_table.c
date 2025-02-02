@@ -89,7 +89,7 @@ static bool _equal(const candy_wrap_t *keyl, const candy_wrap_t *keyr) {
   }
 }
 
-static int _set(const candy_vector_t *self, const candy_wrap_t *key, const candy_wrap_t *val) {
+static candy_err_t _set(const candy_vector_t *self, const candy_wrap_t *key, const candy_wrap_t *val) {
   candy_pair_t *pair = _main_position(self, key);
   for (size_t idx = 0; _boundary_check(self, pair); pair += _next(++idx)) {
     switch (candy_wrap_get_type(&pair->key)) {
@@ -102,12 +102,12 @@ static int _set(const candy_vector_t *self, const candy_wrap_t *key, const candy
         continue;
     }
     pair->val = *val;
-    return 0;
+    return CANDY_OK;
   }
-  return -1;
+  return CANDY_ERR;
 }
 
-static int _resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
+static candy_err_t _resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
   candy_vector_t vec;
   candy_vector_init(&vec, sizeof(candy_wrap_t[2]));
   candy_vector_reserve(&vec, candy_gc_memory(gc), ctx, _capacity(&self->vec) + 8);
@@ -123,7 +123,7 @@ static int _resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
   }
   candy_vector_deinit(&self->vec, candy_gc_memory(gc));
   self->vec = vec;
-  return 0;
+  return CANDY_OK;
 }
 
 candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
@@ -134,13 +134,13 @@ candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
   return self;
 }
 
-int candy_table_delete(candy_table_t *self, candy_gc_t *gc) {
+candy_err_t candy_table_delete(candy_table_t *self, candy_gc_t *gc) {
   candy_vector_deinit(&self->vec, candy_gc_memory(gc));
   candy_gc_free(gc, self, sizeof(candy_table_t));
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_table_fprint(const candy_table_t *self, FILE *out) {
+candy_err_t candy_table_fprint(const candy_table_t *self, FILE *out) {
   fprintf(out, "\033[1;35m>>> table %p head\033[0m\n", self);
   fprintf(out, "pos  key-type         key-val  val-type         val-val\n");
   for (candy_pair_t *pair = _head(&self->vec); pair <= _tail(&self->vec); ++pair) {
@@ -152,7 +152,7 @@ int candy_table_fprint(const candy_table_t *self, FILE *out) {
     fprintf(out, "\n");
   }
   fprintf(out, "\033[1;35m<<< table %p tail\033[0m\n", self);
-  return 0;
+  return CANDY_OK;
 }
 
 const candy_wrap_t *candy_table_get(const candy_table_t *self, const candy_wrap_t *key) {
@@ -166,8 +166,8 @@ const candy_wrap_t *candy_table_get(const candy_table_t *self, const candy_wrap_
   return &CANDY_WRAP_NULL;
 }
 
-int candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
+candy_err_t candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
   while (_set(&self->vec, key, val) < 0)
     _resize(self, gc, ctx);
-  return 0;
+  return CANDY_OK;
 }

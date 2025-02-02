@@ -32,9 +32,11 @@ struct candy_buffer {
   void *arg;
 };
 
-int candy_buffer_init(candy_buffer_t *self, size_t cell, candy_reader_t reader, void *arg);
+candy_err_t candy_buffer_init(candy_buffer_t *self, size_t cell, candy_reader_t reader, void *arg);
 
-int candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem);
+candy_err_t candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem);
+
+candy_err_t candy_buffer_reset(candy_buffer_t *self);
 
 int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, void *data, size_t ahead);
 
@@ -45,8 +47,6 @@ int candy_buffer_write(candy_buffer_t *self, const void *data, size_t size);
 const void *candy_buffer_head(candy_buffer_t *self);
 
 size_t candy_buffer_size(candy_buffer_t *self);
-
-void candy_buffer_reset(candy_buffer_t *self);
 
 #ifdef __cplusplus
 }

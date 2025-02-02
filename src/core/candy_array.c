@@ -32,22 +32,22 @@ candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_type
   return self;
 }
 
-int candy_array_delete(candy_array_t *self, candy_gc_t *gc) {
+candy_err_t candy_array_delete(candy_array_t *self, candy_gc_t *gc) {
   candy_vector_deinit(&self->vec, candy_gc_memory(gc));
   candy_gc_free(gc, self, sizeof(candy_array_t));
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_array_color(candy_array_t *self, candy_gc_t *gc) {
+candy_err_t candy_array_color(candy_array_t *self, candy_gc_t *gc) {
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_array_diffuse(candy_array_t *self, candy_gc_t *gc) {
+candy_err_t candy_array_diffuse(candy_array_t *self, candy_gc_t *gc) {
   // candy_object_t *obj = candy_gc_gray_swap(gc, self->gray);
   // candy_object_set_mark(obj, MARK_DARK);
   // /* todo: traverse obj */
-  return 0;
+  return CANDY_OK;
 }
 
 size_t candy_array_capacity(const candy_array_t *self) {
@@ -70,6 +70,6 @@ void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx,
   candy_vector_resize(&self->vec, candy_gc_memory(gc), ctx, size);
 }
 
-int candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size) {
+candy_err_t candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size) {
   return candy_vector_append(&self->vec, candy_gc_memory(gc), ctx, data, size);
 }

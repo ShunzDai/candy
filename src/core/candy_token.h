@@ -28,6 +28,7 @@ extern "C" {
 #define gen_operator(...)                  gen_op_select(__VA_ARGS__, 3, 2, 1)(__VA_ARGS__)
 
 typedef enum candy_tokens {
+  TK_ERR,
   TK_EOS,
   TK_IDENT,
   TK_INTEGER,

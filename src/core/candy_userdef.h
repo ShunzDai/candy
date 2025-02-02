@@ -23,7 +23,7 @@ extern "C" {
 
 candy_userdef_t *candy_userdef_create(candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size);
 
-int candy_userdef_delete(candy_userdef_t *self, candy_gc_t *gc);
+candy_err_t candy_userdef_delete(candy_userdef_t *self, candy_gc_t *gc);
 
 #ifdef __cplusplus
 }

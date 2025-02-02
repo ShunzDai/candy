@@ -33,7 +33,7 @@ candy_userdef_t *candy_userdef_create(candy_gc_t *gc, candy_excep_t *ctx, const 
   return self;
 }
 
-int candy_userdef_delete(candy_userdef_t *self, candy_gc_t *gc) {
+candy_err_t candy_userdef_delete(candy_userdef_t *self, candy_gc_t *gc) {
   candy_gc_free(gc, self, sizeof(candy_userdef_t) + self->size);
-  return 0;
+  return CANDY_OK;
 }

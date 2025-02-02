@@ -214,7 +214,7 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta, const
     switch (_view(self, 0)) {
       case '\0':
         lex_assert(false, "unexpected end of string");
-        return -1;
+        return TK_ERR;
       case '\r': case '\n':
         lex_assert(multiline, "unexpected end of string");
         _handle_newline(self, _save);
@@ -346,7 +346,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
   return gen_operator(_read(self), _read(self), _read(self));
 }
 
-int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
+candy_err_t candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
   memset(self, 0, sizeof(candy_lexer_t));
   candy_buffer_init(&self->buff, sizeof(char), reader, arg);
   self->dbg.line = 1;
@@ -354,12 +354,12 @@ int candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, ca
   self->lookahead.token = TK_EOS;
   self->ctx = ctx;
   self->gc = gc;
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_lexer_deinit(candy_lexer_t *self) {
+candy_err_t candy_lexer_deinit(candy_lexer_t *self) {
   candy_buffer_deinit(&self->buff, candy_gc_memory(self->gc));
-  return 0;
+  return CANDY_OK;
 }
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {

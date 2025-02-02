@@ -34,21 +34,21 @@ static void _del_node(candy_gc_t *self, candy_object_t **pos) {
   assert(res >= 0);
 }
 
-static int _fsm_begin(candy_gc_t *self) {
+static candy_err_t _fsm_begin(candy_gc_t *self) {
   int res = candy_gc_event_handler(self)(self->prim, self, EVT_COLOR);
   assert(res >= 0);
-  return 0;
+  return CANDY_OK;
 }
 
-static int _fsm_diffuse(candy_gc_t *self) {
+static candy_err_t _fsm_diffuse(candy_gc_t *self) {
   candy_object_t *obj = self->gray;
   /* remove from 'gray' list */
   int res = candy_gc_event_handler(self)(obj, self, EVT_DIFFUSE);
   assert(res >= 0);
-  return 0;
+  return CANDY_OK;
 }
 
-static int _fsm_end(candy_gc_t *self) {
+static candy_err_t _fsm_end(candy_gc_t *self) {
   for (candy_object_t **it = &self->pool; *it; ) {
     switch (candy_object_get_mark(*it)) {
       case MARK_WHITE:
@@ -62,32 +62,32 @@ static int _fsm_end(candy_gc_t *self) {
         assert(0);
     }
   }
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg) {
+candy_err_t candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg) {
   candy_memory_init(&self->mem, alloc, arg);
   self->handler = handler;
   self->fsm = GC_FSM_BEGIN;
   self->pool = NULL;
   self->gray = NULL;
   self->prim = NULL;
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_gc_deinit(candy_gc_t *self) {
+candy_err_t candy_gc_deinit(candy_gc_t *self) {
   while (self->pool)
     _del_node(self, &self->pool);
   if (self->prim)
     candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_DELETE);
-  return 0;
+  return CANDY_OK;
 }
 
 candy_object_t *candy_gc_add(candy_gc_t *self, candy_excep_t *ctx, candy_types_t type, size_t size) {
   return _add_node(self, ctx, &self->pool, type, size);
 }
 
-int candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {
+candy_err_t candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {
   candy_object_t *obj = self->pool;
   self->pool = *candy_object_get_next(obj);
   candy_object_set_next(obj, NULL);
@@ -96,44 +96,44 @@ int candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {
       self->prim = obj;
       break;
     default:
-      return -1;
+      return CANDY_ERR;
   }
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_gc_sweep(candy_gc_t *self) {
+candy_err_t candy_gc_sweep(candy_gc_t *self) {
   // for (candy_object_t *obj = self->root, *next = candy_object_get_next(obj); obj;) {
   //   if (candy_object_get_mark(obj) == MARK_DARK)
 
   // }
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_gc_step(candy_gc_t *self) {
+candy_err_t candy_gc_step(candy_gc_t *self) {
   switch (self->fsm) {
     case GC_FSM_BEGIN:
       _fsm_begin(self);
       self->fsm = GC_FSM_DIFFUSE;
-      return 0;
+      return CANDY_OK;
     case GC_FSM_DIFFUSE:
       if (self->gray)
         _fsm_diffuse(self);
       else
         self->fsm = GC_FSM_END;
-      return 0;
+      return CANDY_OK;
     case GC_FSM_END:
       _fsm_end(self);
       self->fsm = GC_FSM_BEGIN;
-      return 0;
+      return CANDY_OK;
     default:
-      return -1;
+      return CANDY_ERR;
   }
 }
 
-int candy_gc_full(candy_gc_t *self) {
+candy_err_t candy_gc_full(candy_gc_t *self) {
   if (candy_gc_fsm(self) == GC_FSM_BEGIN)
     candy_gc_step(self);
   while (candy_gc_fsm(self) != GC_FSM_BEGIN)
     candy_gc_step(self);
-  return 0;
+  return CANDY_OK;
 }

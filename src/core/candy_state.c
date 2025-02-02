@@ -47,16 +47,16 @@ static size_t candy_state_size(candy_state_t *self) {
   return candy_state_is_primary(self) ? sizeof(candy_primary_t) : sizeof(candy_state_t);
 }
 
-static int candy_state_init(candy_state_t *self, candy_gc_t *gc) {
+static candy_err_t candy_state_init(candy_state_t *self, candy_gc_t *gc) {
   self->gc = gc;
   self->gray = NULL;
   candy_vm_init(&self->vm);
-  return 0;
+  return CANDY_OK;
 }
 
-static int candy_state_deinit(candy_state_t *self) {
+static candy_err_t candy_state_deinit(candy_state_t *self) {
   candy_vm_deinit(&self->vm, self->gc);
-  return 0;
+  return CANDY_OK;
 }
 
 // static candy_primary_t *get_primary(candy_state_t *self) {
@@ -92,29 +92,29 @@ candy_state_t *candy_state_create_coroutine(candy_state_t *self) {
   return co;
 }
 
-int candy_state_delete(candy_state_t *self, candy_gc_t *gc) {
+candy_err_t candy_state_delete(candy_state_t *self, candy_gc_t *gc) {
   candy_state_deinit(self);
   candy_gc_free(gc, self, candy_state_size(self));
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_state_close(candy_state_t *self) {
+candy_err_t candy_state_close(candy_state_t *self) {
   candy_gc_t gc;
   memcpy(&gc, self->gc, sizeof(candy_gc_t));
   candy_gc_deinit(&gc);
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_state_color(candy_state_t *self, candy_gc_t *gc) {
+candy_err_t candy_state_color(candy_state_t *self, candy_gc_t *gc) {
   self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
   candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_state_diffuse(candy_state_t *self, candy_gc_t *gc) {
+candy_err_t candy_state_diffuse(candy_state_t *self, candy_gc_t *gc) {
   candy_gc_gray_swap(gc, self->gray);
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  return 0;
+  return CANDY_OK;
 }
 
 candy_err_t candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg) {

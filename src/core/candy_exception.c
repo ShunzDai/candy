@@ -22,13 +22,13 @@ struct context {
   candy_object_t *err;
 };
 
-int candy_excep_init(candy_excep_t *self) {
+candy_err_t candy_excep_init(candy_excep_t *self) {
   self->prev = NULL;
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_excep_deinit(candy_excep_t *self) {
-  return 0;
+candy_err_t candy_excep_deinit(candy_excep_t *self) {
+  return CANDY_OK;
 }
 
 candy_err_t candy_excep_try(candy_excep_t *self, candy_excep_cb_t cb, void *arg, candy_object_t **err) {

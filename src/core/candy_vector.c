@@ -33,15 +33,15 @@ static void _set_data(candy_vector_t *self, void *data) {
   self->data = data;
 }
 
-int candy_vector_init(candy_vector_t *self, size_t cell) {
+candy_err_t candy_vector_init(candy_vector_t *self, size_t cell) {
   _set_capacity(self, 0);
   _set_cell(self, cell);
   _set_size(self, 0);
   _set_data(self, NULL);
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_vector_deinit(candy_vector_t *self, candy_memory_t *mem) {
+candy_err_t candy_vector_deinit(candy_vector_t *self, candy_memory_t *mem) {
   _set_data(self, candy_memory_realloc(mem, NULL, candy_vector_data(self),
     candy_vector_cell(self) * candy_vector_capacity(self),
     0
@@ -49,7 +49,20 @@ int candy_vector_deinit(candy_vector_t *self, candy_memory_t *mem) {
   _set_size(self, 0);
   _set_cell(self, 0);
   _set_capacity(self, 0);
-  return 0;
+  return CANDY_OK;
+}
+
+candy_err_t candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, const void *data, size_t size) {
+  size_t cap = candy_vector_capacity(self);
+  size_t sz = candy_vector_size(self);
+  if (cap < size + sz) {
+    candy_vector_reserve(self, mem, ctx, cap + size);
+  }
+  if (size && data) {
+    memcpy(candy_vector_data(self) + candy_vector_cell(self) * sz, data, candy_vector_cell(self) * size);
+  }
+  _set_size(self, candy_vector_size(self) + size);
+  return CANDY_OK;
 }
 
 void candy_vector_reserve(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, size_t capacity) {
@@ -69,17 +82,4 @@ void candy_vector_resize(candy_vector_t *self, candy_memory_t *mem, candy_excep_
     candy_vector_append(self, mem, ctx, NULL, size - sz);
   else
     _set_size(self, size);
-}
-
-int candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, const void *data, size_t size) {
-  size_t cap = candy_vector_capacity(self);
-  size_t sz = candy_vector_size(self);
-  if (cap < size + sz) {
-    candy_vector_reserve(self, mem, ctx, cap + size);
-  }
-  if (size && data) {
-    memcpy(candy_vector_data(self) + candy_vector_cell(self) * sz, data, candy_vector_cell(self) * size);
-  }
-  _set_size(self, candy_vector_size(self) + size);
-  return 0;
 }

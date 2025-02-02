@@ -22,10 +22,10 @@ extern "C" {
 #include "core/candy_priv.h"
 
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, uint8_t mask);
-int candy_array_delete(candy_array_t *self, candy_gc_t *gc);
+candy_err_t candy_array_delete(candy_array_t *self, candy_gc_t *gc);
 
-int candy_array_color(candy_array_t *self, candy_gc_t *gc);
-int candy_array_diffuse(candy_array_t *self, candy_gc_t *gc);
+candy_err_t candy_array_color(candy_array_t *self, candy_gc_t *gc);
+candy_err_t candy_array_diffuse(candy_array_t *self, candy_gc_t *gc);
 
 size_t candy_array_capacity(const candy_array_t *self);
 size_t candy_array_size(const candy_array_t *self);
@@ -35,7 +35,7 @@ void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx
 
 void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t size);
 
-int candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size);
+candy_err_t candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size);
 
 #ifdef __cplusplus
 }

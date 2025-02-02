@@ -30,18 +30,18 @@ struct candy_vm {
   candy_vector_t root;
 };
 
-int candy_vm_init(candy_vm_t *self);
-int candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc);
+candy_err_t candy_vm_init(candy_vm_t *self);
+candy_err_t candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc);
 
-int candy_vm_fprint(candy_vm_t *self, FILE *out);
+candy_err_t candy_vm_fprint(candy_vm_t *self, FILE *out);
 
 void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap);
 const candy_wrap_t *candy_vm_pop(candy_vm_t *self);
 
-int candy_vm_set_global(candy_vm_t *self, const char name[]);
-int candy_vm_get_global(candy_vm_t *self, const char name[]);
-int candy_vm_call(candy_vm_t *self, int nargs, int nresults);
-int candy_vm_execute(candy_vm_t *self, candy_gc_t *gc);
+candy_err_t candy_vm_set_global(candy_vm_t *self, const char name[]);
+candy_err_t candy_vm_get_global(candy_vm_t *self, const char name[]);
+candy_err_t candy_vm_call(candy_vm_t *self, int nargs, int nresults);
+candy_err_t candy_vm_execute(candy_vm_t *self, candy_gc_t *gc);
 
 #ifdef __cplusplus
 }

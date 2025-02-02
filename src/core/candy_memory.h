@@ -27,9 +27,9 @@ struct candy_memory {
   void *arg;
 };
 
-int candy_memory_init(candy_memory_t *self, candy_allocator_t alloc, void *arg);
+candy_err_t candy_memory_init(candy_memory_t *self, candy_allocator_t alloc, void *arg);
 
-int candy_memory_deinit(candy_memory_t *self);
+candy_err_t candy_memory_deinit(candy_memory_t *self);
 
 void *candy_memory_realloc(candy_memory_t *self, candy_excep_t *ctx, void *prev, size_t prev_size, size_t next_size);
 

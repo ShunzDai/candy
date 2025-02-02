@@ -27,13 +27,13 @@ candy_state_t *candy_new_state_default(void);
 
 candy_state_t *candy_new_coroutine(candy_state_t *self);
 
-int candy_close(candy_state_t *self);
+candy_err_t candy_close(candy_state_t *self);
 
-int candy_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
+candy_err_t candy_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
 
-int candy_dostring(candy_state_t *self, const char exp[], size_t size);
+candy_err_t candy_dostring(candy_state_t *self, const char exp[], size_t size);
 
-int candy_dofile(candy_state_t *self, const char name[]);
+candy_err_t candy_dofile(candy_state_t *self, const char name[]);
 
 #ifdef __cplusplus
 }

@@ -38,19 +38,19 @@
 //   }
 // }
 
-int candy_vm_init(candy_vm_t *self) {
+candy_err_t candy_vm_init(candy_vm_t *self) {
   candy_excep_init(&self->ctx);
   candy_vector_init(&self->root, sizeof(candy_wrap_t));
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc) {
+candy_err_t candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc) {
   candy_vector_deinit(&self->root, candy_gc_memory(gc));
   candy_excep_deinit(&self->ctx);
-  return 0;
+  return CANDY_OK;
 }
 
-// int candy_vm_fprint(candy_vm_t *self, FILE *out) {
+// candy_err_t candy_vm_fprint(candy_vm_t *self, FILE *out) {
 //   return candy_wrap_fprint(candy_vm_pop(self), out, 0, candy_table_fprint);
 // }
 
@@ -66,37 +66,37 @@ int candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc) {
 //   return self->top ? &candy_wrap_get_wrap(&self->base)[--self->top] : &null;
 // }
 
-// int candy_vm_regist(candy_vm_t *self, const candy_regist_t list[], int size) {
+// candy_err_t candy_vm_regist(candy_vm_t *self, const candy_regist_t list[], int size) {
 //   for (int idx = 0; idx < size; ++idx) {
 //     candy_wrap_t key = {0}, val = {0};
 //     candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name));
 //     candy_wrap_set_cfunc(&val, &list[idx].func, 1);
 //     candy_table_set(&self->glb, &key, &val);
 //   }
-//   return 0;
+//   return CANDY_OK;
 // }
 
-// int candy_vm_set_global(candy_vm_t *self, const char name[]) {
+// candy_err_t candy_vm_set_global(candy_vm_t *self, const char name[]) {
 //   candy_wrap_t key;
 //   candy_wrap_set_string(&key, name, strlen(name));
 //   candy_table_set(&self->glb, &key, candy_vm_pop(self));
 //   candy_wrap_deinit(&key);
-//   return 0;
+//   return CANDY_OK;
 // }
 
-// int candy_vm_get_global(candy_vm_t *self, const char name[]) {
+// candy_err_t candy_vm_get_global(candy_vm_t *self, const char name[]) {
 //   candy_wrap_t key;
 //   candy_wrap_set_string(&key, name, strlen(name));
 //   candy_vm_push(self, candy_table_get(&self->glb, &key));
 //   candy_wrap_deinit(&key);
-//   return 0;
+//   return CANDY_OK;
 // }
 
-// int candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
+// candy_err_t candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
 //   (*candy_wrap_get_cfunc(candy_vm_pop(self)))((candy_state_t *)self);
-//   return 0;
+//   return CANDY_OK;
 // }
 
-// int candy_vm_execute(candy_vm_t *self, candy_proto_t *block) {
+// candy_err_t candy_vm_execute(candy_vm_t *self, candy_proto_t *block) {
 //   return candy_excep_try(&self->io, (candy_try_catch_cb_t)execute, self, block);
 // }

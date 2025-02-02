@@ -27,8 +27,8 @@ struct candy_excep {
   candy_excep_t *prev;
 };
 
-int candy_excep_init(candy_excep_t *self);
-int candy_excep_deinit(candy_excep_t *self);
+candy_err_t candy_excep_init(candy_excep_t *self);
+candy_err_t candy_excep_deinit(candy_excep_t *self);
 
 candy_err_t candy_excep_try(candy_excep_t *self, candy_excep_cb_t cb, void *arg, candy_object_t **err);
 void candy_excep_throw(candy_excep_t *self, candy_err_t code, candy_object_t *err) CANDY_NORETURN;

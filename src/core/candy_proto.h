@@ -56,14 +56,14 @@ struct candy_proto_config {
 
 candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx);
 
-int candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
+candy_err_t candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
 
-int candy_proto_color(candy_proto_t *self, candy_gc_t *gc);
+candy_err_t candy_proto_color(candy_proto_t *self, candy_gc_t *gc);
 
-int candy_proto_diffuse(candy_proto_t *self, candy_gc_t *gc);
+candy_err_t candy_proto_diffuse(candy_proto_t *self, candy_gc_t *gc);
 
 static inline void candy_proto_add_iax(candy_proto_t *self, candy_opcodes_t op, uint32_t a) {
-  int candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
+  candy_err_t candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
   candy_proto_add_inst(self, (candy_inst_t) {
     .iax = {
       .op = (uint32_t)op,
@@ -73,7 +73,7 @@ static inline void candy_proto_add_iax(candy_proto_t *self, candy_opcodes_t op, 
 }
 
 static inline void candy_proto_add_iabx(candy_proto_t *self, candy_opcodes_t op, uint32_t a, uint32_t b) {
-  int candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
+  candy_err_t candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
   candy_proto_add_inst(self, (candy_inst_t) {
     .iabx = {
       .op = (uint32_t)op,
@@ -84,7 +84,7 @@ static inline void candy_proto_add_iabx(candy_proto_t *self, candy_opcodes_t op,
 }
 
 static inline void candy_proto_add_iabc(candy_proto_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
-  int candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
+  candy_err_t candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);
   candy_proto_add_inst(self, (candy_inst_t) {
     .iabc = {
       .op = (uint32_t)op,

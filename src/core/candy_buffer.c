@@ -56,18 +56,23 @@ static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, 
   return res;
 }
 
-int candy_buffer_init(candy_buffer_t *self, size_t cell, candy_reader_t reader, void *arg) {
+candy_err_t candy_buffer_init(candy_buffer_t *self, size_t cell, candy_reader_t reader, void *arg) {
   candy_vector_init(&self->vec, cell);
   self->w = 0;
   self->r = self->w;
   self->reader = reader;
   self->arg = arg;
-  return 0;
+  return CANDY_OK;
 }
 
-int candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem) {
+candy_err_t candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem) {
   candy_vector_deinit(&self->vec, mem);
-  return 0;
+  return CANDY_OK;
+}
+
+candy_err_t candy_buffer_reset(candy_buffer_t *self) {
+  self->w = 0;
+  return CANDY_OK;
 }
 
 int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, void *data, size_t ahead) {
@@ -105,8 +110,4 @@ const void *candy_buffer_head(candy_buffer_t *self) {
 
 size_t candy_buffer_size(candy_buffer_t *self) {
   return self->w;
-}
-
-void candy_buffer_reset(candy_buffer_t *self) {
-  self->w = 0;
 }

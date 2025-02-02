@@ -95,21 +95,21 @@ candy_state_t *candy_new_coroutine(candy_state_t *self) {
   return candy_state_create_coroutine(self);
 }
 
-int candy_close(candy_state_t *self) {
+candy_err_t candy_close(candy_state_t *self) {
   return candy_state_close(self);
 }
 
-int candy_dostream(candy_state_t *self, candy_reader_t reader, void *arg) {
+candy_err_t candy_dostream(candy_state_t *self, candy_reader_t reader, void *arg) {
   return candy_state_dostream(self, reader, arg);
 }
 
-int candy_dostring(candy_state_t *self, const char exp[], size_t size) {
+candy_err_t candy_dostring(candy_state_t *self, const char exp[], size_t size) {
   struct str_info info = {exp, size, 0};
   int res = candy_dostream(self, string_reader, &info);
   return res;
 }
 
-int candy_dofile(candy_state_t *self, const char name[]) {
+candy_err_t candy_dofile(candy_state_t *self, const char name[]) {
   FILE *f = fopen(name, "r");
   if (f == NULL)
     return perror(NULL), -1;
