@@ -15,7 +15,6 @@
   */
 #include "core/candy_memory.h"
 #include "core/candy_exception.h"
-#include <stdlib.h>
 
 static const char TAG[] = "candy::memory";
 
@@ -37,10 +36,7 @@ void *candy_memory_realloc(candy_memory_t *self, candy_excep_t *ctx, void *prev,
   assert((prev_size == 0) == (prev == NULL));
   void *next = self->alloc(prev, prev_size, next_size, self->arg);
   if (next_size && next == NULL) {
-    if (ctx)
-      candy_excep_throw(ctx, CANDY_ERR_MEMORY, NULL);
-    else
-      abort();
+    candy_excep_throw(ctx, CANDY_ERR_MEMORY, NULL);
   }
   self->used += next_size - prev_size;
   candy_logv(TAG, "prev %zu, next %zu, used %zu bytes", prev_size, next_size, self->used);

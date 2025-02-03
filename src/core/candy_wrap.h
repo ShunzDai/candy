@@ -27,7 +27,7 @@ union candy_udata {
   candy_integer_t i;
   candy_float_t f;
   candy_boolean_t b;
-  void *p;
+  candy_object_t *o;
 };
 
 struct candy_wrap {

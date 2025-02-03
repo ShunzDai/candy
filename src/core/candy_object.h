@@ -29,9 +29,9 @@ typedef enum candy_marks {
 
 struct candy_object {
   #if CANDY_CONFIG_MEMORY_ALIGNMENT
-  void *next;
+  candy_object_t *next;
   #else /* CANDY_CONFIG_MEMORY_ALIGNMENT */
-  uint8_t next[sizeof(void *)];
+  uint8_t next[sizeof(candy_object_t *)];
   #endif /* CANDY_CONFIG_MEMORY_ALIGNMENT */
   uint8_t type : 8;
   uint8_t mask : 4;
