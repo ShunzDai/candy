@@ -71,6 +71,7 @@ static inline const char *candy_event_str(candy_events_t val) {
     case EVT_DELETE:  return "deleting";
     case EVT_COLOR:   return "coloring";
     case EVT_DIFFUSE: return "diffusing";
+    default:          return "unknown";
   }
 }
 

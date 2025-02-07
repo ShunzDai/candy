@@ -39,8 +39,8 @@ static int _event_delete(candy_object_t *self, candy_gc_t *gc) {
   if (candy_object_get_mask(self) & MASK_ARRAY)
     return candy_array_delete((candy_array_t *)self, gc);
   switch (candy_object_get_type(self)) {
-    case CANDY_TYPE_CCLSR: return candy_cclosure_delete((candy_cclosure_t *)self, gc);
-    case CANDY_TYPE_SCLSR: return candy_sclosure_delete((candy_sclosure_t *)self, gc);
+    case CANDY_TYPE_CCLOS: return candy_cclosure_delete((candy_cclosure_t *)self, gc);
+    case CANDY_TYPE_SCLOS: return candy_sclosure_delete((candy_sclosure_t *)self, gc);
     case CANDY_TYPE_UDHVY: return candy_userdef_delete((candy_userdef_t *)self, gc);
     case CANDY_TYPE_TABLE: return candy_table_delete((candy_table_t *)self, gc);
     case CANDY_TYPE_PROTO: return candy_proto_delete((candy_proto_t *)self, gc);
@@ -51,8 +51,8 @@ static int _event_delete(candy_object_t *self, candy_gc_t *gc) {
 
 static int _event_color(candy_object_t *self, candy_gc_t *gc) {
   switch (candy_object_get_type(self)) {
-    case CANDY_TYPE_CCLSR: return -1;
-    case CANDY_TYPE_SCLSR: return candy_sclosure_color((candy_sclosure_t *)self, gc);
+    case CANDY_TYPE_CCLOS: return -1;
+    case CANDY_TYPE_SCLOS: return candy_sclosure_color((candy_sclosure_t *)self, gc);
     case CANDY_TYPE_UDHVY: return -1;
     case CANDY_TYPE_TABLE: return -1;
     case CANDY_TYPE_PROTO: return candy_proto_color((candy_proto_t *)self, gc);
@@ -63,8 +63,8 @@ static int _event_color(candy_object_t *self, candy_gc_t *gc) {
 
 static int _event_diffuse(candy_object_t *self, candy_gc_t *gc) {
   switch (candy_object_get_type(self)) {
-    case CANDY_TYPE_CCLSR: return -1;
-    case CANDY_TYPE_SCLSR: return candy_sclosure_diffuse((candy_sclosure_t *)self, gc);
+    case CANDY_TYPE_CCLOS: return -1;
+    case CANDY_TYPE_SCLOS: return candy_sclosure_diffuse((candy_sclosure_t *)self, gc);
     case CANDY_TYPE_UDHVY: return -1;
     case CANDY_TYPE_TABLE: return -1;
     case CANDY_TYPE_PROTO: return candy_proto_diffuse((candy_proto_t *)self, gc);

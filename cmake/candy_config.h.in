@@ -27,11 +27,16 @@ extern "C" {
 #define CANDY_COMPILER_ID               "${CMAKE_CXX_COMPILER_ID}"
 #define CANDY_COMPILER_VERSION          "${CMAKE_CXX_COMPILER_VERSION}"
 
+#define CANDY_CONFIG_MEMORY_ALIGNMENT   ${CANDY_CONFIG_MEMORY_ALIGNMENT}
+
 #define CANDY_CONFIG_INTEGER_TYPE       ${CANDY_CONFIG_INTEGER_TYPE}
 #define CANDY_CONFIG_FLOAT_TYPE         ${CANDY_CONFIG_FLOAT_TYPE}
 #define CANDY_CONFIG_BOOLEAN_TYPE       ${CANDY_CONFIG_BOOLEAN_TYPE}
 
-#define CANDY_CONFIG_MEMORY_ALIGNMENT   ${CANDY_CONFIG_MEMORY_ALIGNMENT}
+#define CANDY_CONFIG_LOG_LEVEL          ${CANDY_CONFIG_LOG_LEVEL}
+#define CANDY_CONFIG_LOG_COLOR          ${CANDY_CONFIG_LOG_COLOR}
+
+#define candy_log_impl(_fmt, ...)       printf(_fmt, __VA_ARGS__)
 
 /**
   * @brief  smaller expand size mean less space utilization and more load times,
@@ -39,11 +44,7 @@ extern "C" {
   */
 #define CANDY_CONFIG_BUFFER_EXPAND_SIZE ${CANDY_CONFIG_BUFFER_EXPAND_SIZE}
 
-#define CANDY_CONFIG_LOG_LEVEL          ${CANDY_CONFIG_LOG_LEVEL}
-
-#define CANDY_CONFIG_LOG_COLOR          ${CANDY_CONFIG_LOG_COLOR}
-
-#define candy_log_impl(_fmt, ...)       printf(_fmt, __VA_ARGS__)
+#define CANDY_CONFIG_VM_STACK_SIZE      ${CANDY_CONFIG_VM_STACK_SIZE}
 
 #ifdef __cplusplus
 }

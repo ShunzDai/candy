@@ -30,7 +30,7 @@ struct candy_sclosure {
 };
 
 candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_cfunc_t cfunc) {
-  candy_cclosure_t *self = (candy_cclosure_t *)candy_gc_add(gc, ctx, CANDY_TYPE_CCLSR, sizeof(candy_cclosure_t));
+  candy_cclosure_t *self = (candy_cclosure_t *)candy_gc_add(gc, ctx, CANDY_TYPE_CCLOS, sizeof(candy_cclosure_t));
   self->gray = NULL;
   self->cfunc = cfunc;
   return self;
@@ -42,7 +42,7 @@ candy_err_t candy_cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc) {
 }
 
 candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_proto_t *proto) {
-  candy_sclosure_t *self = (candy_sclosure_t *)candy_gc_add(gc, ctx, CANDY_TYPE_SCLSR, sizeof(candy_sclosure_t));
+  candy_sclosure_t *self = (candy_sclosure_t *)candy_gc_add(gc, ctx, CANDY_TYPE_SCLOS, sizeof(candy_sclosure_t));
   self->gray = NULL;
   self->proto = proto;
   return self;
