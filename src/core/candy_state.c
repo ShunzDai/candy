@@ -15,7 +15,7 @@
   */
 #include "core/candy_state.h"
 #include "core/candy_object.h"
-#include "core/candy_exception.h"
+#include "core/candy_wrap.h"
 #include "core/candy_gc.h"
 #include "core/candy_array.h"
 #include "core/candy_parser.h"
@@ -26,9 +26,7 @@ typedef struct candy_primary candy_primary_t;
 
 struct candy_state {
   candy_object_t header;
-  candy_excep_t ctx;
   candy_vm_t vm;
-  candy_gc_t *gc;
   candy_object_t *gray;
 };
 
@@ -37,10 +35,16 @@ struct candy_primary {
   candy_gc_t gc;
 };
 
-struct pack {
+struct pack_primary {
   candy_excep_t ctx;
   candy_gc_t *gc;
   candy_state_t *co;
+};
+
+struct pack_call {
+  candy_state_t *co;
+  candy_reader_t reader;
+  void *arg;
 };
 
 static size_t candy_state_size(candy_state_t *self) {
@@ -48,22 +52,17 @@ static size_t candy_state_size(candy_state_t *self) {
 }
 
 static candy_err_t candy_state_init(candy_state_t *self, candy_gc_t *gc) {
-  self->gc = gc;
+  candy_vm_init(&self->vm, gc);
   self->gray = NULL;
-  candy_vm_init(&self->vm);
   return CANDY_OK;
 }
 
 static candy_err_t candy_state_deinit(candy_state_t *self) {
-  candy_vm_deinit(&self->vm, self->gc);
+  candy_vm_deinit(&self->vm);
   return CANDY_OK;
 }
 
-// static candy_primary_t *get_primary(candy_state_t *self) {
-//   return (candy_primary_t *)candy_gc_main(self->gc);
-// }
-
-static void protect_create(struct pack *self) {
+static void _primary_create(struct pack_primary *self) {
   candy_primary_t *p = (candy_primary_t *)candy_gc_add(self->gc, &self->ctx, CANDY_TYPE_STATE, sizeof(candy_primary_t));
   memcpy(&p->gc, self->gc, sizeof(candy_gc_t));
   candy_gc_move(&p->gc, GC_MV_PRIM);
@@ -71,15 +70,25 @@ static void protect_create(struct pack *self) {
   self->co = &p->co;
 }
 
+static void _protected_call(struct pack_call *self) {
+  candy_sclosure_t *clos = candy_parse(self->co->vm.gc, &self->co->vm.ctx, self->reader, self->arg);
+  candy_wrap_t wrap;
+  candy_wrap_set_object(&wrap, (candy_object_t *)clos);
+  candy_vm_push(&self->co->vm, &wrap);
+  candy_vm_call(&self->co->vm, self->co);
+  candy_gc_full(self->co->vm.gc);
+}
+
 candy_state_t *candy_state_create(candy_handler_t handler, candy_allocator_t alloc, void *arg) {
+  /* create a new object on the heap from the one on the stack and migrate all its contents */
   candy_gc_t gc;
-  struct pack pack = {
+  struct pack_primary pack = {
     .gc = &gc,
     .co = NULL,
   };
   candy_gc_init(&gc, handler, alloc, arg);
   candy_excep_init(&pack.ctx);
-  candy_err_t err = candy_excep_try(&pack.ctx, (candy_excep_cb_t)protect_create, &pack, NULL);
+  candy_err_t err = candy_excep_try(&pack.ctx, (candy_excep_cb_t)_primary_create, &pack, NULL);
   candy_excep_deinit(&pack.ctx);
   if (err != CANDY_OK)
     return NULL;
@@ -87,9 +96,10 @@ candy_state_t *candy_state_create(candy_handler_t handler, candy_allocator_t all
 }
 
 candy_state_t *candy_state_create_coroutine(candy_state_t *self) {
-  candy_state_t *co = (candy_state_t *)candy_gc_add(self->gc, &self->ctx, CANDY_TYPE_STATE, sizeof(candy_state_t));
-  candy_state_init(co, self->gc);
-  return co;
+  // candy_state_t *co = (candy_state_t *)candy_gc_add(self->vm.gc), candy_vm_excep(&self->vm), CANDY_TYPE_STATE, sizeof(candy_state_t));
+  // candy_state_init(co, self->vm.gc);
+  // return co;
+  return NULL;
 }
 
 candy_err_t candy_state_delete(candy_state_t *self, candy_gc_t *gc) {
@@ -100,7 +110,7 @@ candy_err_t candy_state_delete(candy_state_t *self, candy_gc_t *gc) {
 
 candy_err_t candy_state_close(candy_state_t *self) {
   candy_gc_t gc;
-  memcpy(&gc, self->gc, sizeof(candy_gc_t));
+  memcpy(&gc, self->vm.gc, sizeof(candy_gc_t));
   candy_gc_deinit(&gc);
   return CANDY_OK;
 }
@@ -118,18 +128,45 @@ candy_err_t candy_state_diffuse(candy_state_t *self, candy_gc_t *gc) {
 }
 
 candy_err_t candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg) {
+  struct pack_call pack = {
+    .co = self,
+    .reader = reader,
+    .arg = arg,
+  };
   candy_object_t *out = NULL;
-  candy_err_t err = candy_parse(self->gc, reader, arg, &out);
-  if (err == CANDY_OK) {
-    // err = candy_vm_execute(&self->vm, self->gc);
-  }
-  else {
+  candy_err_t err = candy_excep_try(&self->vm.ctx, (candy_excep_cb_t)_protected_call, &pack, &out);
+  if (err != CANDY_OK && out != NULL) {
     printf("%.*s\n", (int)candy_array_size((candy_array_t *)out), (char *)candy_array_data((candy_array_t *)out));
   }
-  candy_gc_full(self->gc);
   return err;
 }
 
+candy_err_t candy_state_push_integer(candy_state_t *self, candy_integer_t val) {
+  candy_wrap_t wrap;
+  candy_wrap_set_integer(&wrap, val);
+  candy_err_t err = candy_vm_push(&self->vm, &wrap);
+  return err;
+}
+
+candy_err_t candy_state_push_float(candy_state_t *self, candy_float_t val) {
+  candy_wrap_t wrap;
+  candy_wrap_set_float(&wrap, val);
+  candy_err_t err = candy_vm_push(&self->vm, &wrap);
+  return err;
+}
+
+candy_integer_t candy_state_to_integer(candy_state_t *self, int idx) {
+  const candy_wrap_t *wrap = candy_vm_view(&self->vm, idx);
+  candy_integer_t val = candy_wrap_get_integer(wrap);
+  return val;
+}
+
+candy_float_t candy_state_to_float(candy_state_t *self, int idx) {
+  const candy_wrap_t *wrap = candy_vm_view(&self->vm, idx);
+  candy_float_t val = candy_wrap_get_float(wrap);
+  return val;
+}
+
 bool candy_state_is_primary(candy_state_t *self) {
-  return candy_gc_primary(self->gc) == (candy_object_t *)self;
+  return candy_gc_primary(self->vm.gc) == (candy_object_t *)self;
 }

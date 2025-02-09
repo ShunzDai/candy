@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2024 ShunzDai
+  * Copyright 2022-2025 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -15,8 +15,9 @@
   */
 #include "test.h"
 
-TEST(vm, call) {
-  candy_vm_t vm{};
-  candy_vm_init(&vm);
-  candy_vm_deinit(&vm);
+TEST(state, push_pull) {
+  candy_state_t *co = candy_new_state_default();
+  candy_state_push_integer(co, 123);
+  ASSERT_EQ(candy_state_to_integer(co, -1), 123);
+  candy_close(co);
 }

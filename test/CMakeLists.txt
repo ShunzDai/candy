@@ -7,7 +7,7 @@ file(GLOB_RECURSE SOURCES_TEST LIST_DIRECTORIES false
   test_table.cpp
   test_lexer.cpp
   # test_parser.cpp
-  # test_vm.cpp
+  test_state.cpp
   main.cpp
 )
 

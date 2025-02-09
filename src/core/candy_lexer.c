@@ -367,6 +367,7 @@ candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
     self->lookahead.meta = (candy_meta_t){};
     self->lookahead.token = _lexer(self, &self->lookahead.meta);
   }
+  candy_logd(TAG, "lookahead %s", candy_token_str(self->lookahead.token));
   return self->lookahead.token;
 }
 

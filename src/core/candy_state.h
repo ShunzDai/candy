@@ -35,9 +35,15 @@ candy_err_t candy_state_diffuse(candy_state_t *self, candy_gc_t *gc);
 
 candy_err_t candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
 
-bool candy_state_is_primary(candy_state_t *self);
+candy_err_t candy_state_push_integer(candy_state_t *self, candy_integer_t val);
 
-candy_types_t candy_state_get_type(candy_state_t *self, size_t pos);
+candy_err_t candy_state_push_float(candy_state_t *self, candy_float_t val);
+
+candy_integer_t candy_state_to_integer(candy_state_t *self, int idx);
+
+candy_float_t candy_state_to_float(candy_state_t *self, int idx);
+
+bool candy_state_is_primary(candy_state_t *self);
 
 #ifdef __cplusplus
 }

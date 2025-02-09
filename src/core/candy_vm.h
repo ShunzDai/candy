@@ -1,5 +1,5 @@
 /**
-  * Copyright 2022-2025 ShunzDai
+  * Copyright 2022-2024 ShunzDai
   *
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -27,21 +27,25 @@ typedef struct candy_vm candy_vm_t;
 
 struct candy_vm {
   candy_excep_t ctx;
-  candy_vector_t root;
+  candy_vector_t s;
+  candy_gc_t *gc;
+  // candy_callinfo_t *ci;
 };
 
-candy_err_t candy_vm_init(candy_vm_t *self);
-candy_err_t candy_vm_deinit(candy_vm_t *self, candy_gc_t *gc);
+candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc);
+candy_err_t candy_vm_deinit(candy_vm_t *self);
 
 candy_err_t candy_vm_fprint(candy_vm_t *self, FILE *out);
 
-void candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap);
-const candy_wrap_t *candy_vm_pop(candy_vm_t *self);
-
 candy_err_t candy_vm_set_global(candy_vm_t *self, const char name[]);
 candy_err_t candy_vm_get_global(candy_vm_t *self, const char name[]);
-candy_err_t candy_vm_call(candy_vm_t *self, int nargs, int nresults);
-candy_err_t candy_vm_execute(candy_vm_t *self, candy_gc_t *gc);
+
+candy_err_t candy_vm_call(candy_vm_t *self, candy_state_t *co);
+
+candy_err_t candy_vm_pop(candy_vm_t *self);
+candy_err_t candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap);
+
+const candy_wrap_t *candy_vm_view(candy_vm_t *self, int idx);
 
 #ifdef __cplusplus
 }

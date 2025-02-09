@@ -20,8 +20,8 @@
 
 struct candy_array {
   candy_object_t header;
-  candy_object_t *gray;
   candy_vector_t vec;
+  candy_object_t *gray;
 };
 
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, uint8_t mask) {
@@ -39,14 +39,27 @@ candy_err_t candy_array_delete(candy_array_t *self, candy_gc_t *gc) {
 }
 
 candy_err_t candy_array_color(candy_array_t *self, candy_gc_t *gc) {
-  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  return CANDY_OK;
+  switch (candy_object_get_type((candy_object_t *)self)) {
+    case CANDY_TYPE_TABLE:
+    case CANDY_TYPE_PROTO:
+    case CANDY_TYPE_STATE:
+      self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
+      candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
+      return CANDY_OK;
+    default:
+      candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+      return CANDY_OK;
+  }
 }
 
 candy_err_t candy_array_diffuse(candy_array_t *self, candy_gc_t *gc) {
-  // candy_object_t *obj = candy_gc_gray_swap(gc, self->gray);
-  // candy_object_set_mark(obj, MARK_DARK);
-  // /* todo: traverse obj */
+  candy_gc_gray_swap(gc, self->gray);
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  /* traverse objects */
+  candy_object_t *tail = (candy_object_t *)candy_array_data(self) + candy_array_size(self);
+  for (candy_object_t *it = (candy_object_t *)candy_array_data(self); it < tail; ++it) {
+    candy_gc_event_handler(gc)(it, gc, EVT_COLOR);
+  }
   return CANDY_OK;
 }
 

@@ -79,7 +79,7 @@ candy_err_t candy_gc_deinit(candy_gc_t *self) {
   while (self->pool)
     _del_node(self, &self->pool);
   if (self->prim)
-    candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_DELETE);
+    candy_gc_event_handler(self)(self->prim, self, EVT_DELETE);
   return CANDY_OK;
 }
 
