@@ -41,7 +41,7 @@ static inline size_t _size(uint8_t cap) {
 }
 
 static candy_hash_t _hash(const candy_wrap_t *pos) {
-  switch (candy_wrap_get_type(pos)) {
+  switch (candy_wrap_type(pos)) {
     case CANDY_TYPE_INTEGER:
       return candy_wrap_get_integer(pos);
     case CANDY_TYPE_CHAR:
@@ -63,9 +63,9 @@ static candy_pair_t *_find(const candy_table_t *self, const candy_wrap_t *key, b
   candy_hash_t hash = _hash(key);
   for (size_t idx = 0; _next(idx) != INT32_MAX; ++idx) {
     candy_pair_t *pos = _position(self, hash + _next(idx));
-    if (candy_wrap_get_type(&pos->key) == CANDY_TYPE_NONE) {
+    if (candy_wrap_type(&pos->key) == CANDY_TYPE_NONE) {
       if (view) {
-        if (candy_wrap_get_mask(&pos->key) & MASK_TOMB)
+        if (candy_wrap_mask(&pos->key) & MASK_TOMB)
           continue;
         break;
       }
@@ -98,9 +98,9 @@ candy_err_t candy_table_fprint(const candy_table_t *self, FILE *out) {
   fprintf(out, "pos  key-type         key-val  val-type         val-val\n");
   for (candy_pair_t *pos = self->data; pos < self->data + (1 << self->cap); ++pos) {
     fprintf(out, "%3ld", pos - self->data);
-    fprintf(out, "%10s", candy_type_str(candy_wrap_get_type(&pos->key)));
+    fprintf(out, "%10s", candy_type_str(candy_wrap_type(&pos->key)));
     candy_wrap_fprint(&pos->key, out, 16);
-    fprintf(out, "%10s", candy_type_str(candy_wrap_get_type(&pos->val)));
+    fprintf(out, "%10s", candy_type_str(candy_wrap_type(&pos->val)));
     candy_wrap_fprint(&pos->val, out, 16);
     fprintf(out, "\n");
   }
@@ -117,7 +117,7 @@ candy_err_t candy_table_resize(candy_table_t *self, candy_gc_t *gc, candy_excep_
   memset(_head(&tb), 0, sizeof(candy_pair_t) * nsize);
   for (size_t idx = 0; idx < psize; ++idx) {
     candy_pair_t *from = _head(self) + idx;
-    if (candy_wrap_get_type(&from->key) == CANDY_TYPE_NONE)
+    if (candy_wrap_type(&from->key) == CANDY_TYPE_NONE)
       continue;
     candy_pair_t *to = _find(&tb, &from->key, false);
     if (to) {

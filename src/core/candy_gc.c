@@ -29,7 +29,7 @@ static candy_object_t *_add_node(candy_gc_t *self, candy_excep_t *ctx, candy_obj
 
 static void _del_node(candy_gc_t *self, candy_object_t **pos) {
   candy_object_t *obj = *pos;
-  *pos = *candy_object_get_next(obj);
+  *pos = *candy_object_next(obj);
   int res = candy_gc_event_handler(self)(obj, self, EVT_DELETE);
   assert(res >= 0);
 }
@@ -50,13 +50,13 @@ static candy_err_t _fsm_diffuse(candy_gc_t *self) {
 
 static candy_err_t _fsm_end(candy_gc_t *self) {
   for (candy_object_t **it = &self->pool; *it; ) {
-    switch (candy_object_get_mark(*it)) {
+    switch (candy_object_mark(*it)) {
       case MARK_WHITE:
         _del_node(self, it);
         break;
       case MARK_DARK:
         candy_object_set_mark(*it, MARK_WHITE);
-        it = candy_object_get_next(*it);
+        it = candy_object_next(*it);
         break;
       default:
         assert(0);
@@ -89,7 +89,7 @@ candy_object_t *candy_gc_add(candy_gc_t *self, candy_excep_t *ctx, candy_types_t
 
 candy_err_t candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {
   candy_object_t *obj = self->pool;
-  self->pool = *candy_object_get_next(obj);
+  self->pool = *candy_object_next(obj);
   candy_object_set_next(obj, NULL);
   switch (type) {
     case GC_MV_PRIM:
@@ -102,8 +102,8 @@ candy_err_t candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {
 }
 
 candy_err_t candy_gc_sweep(candy_gc_t *self) {
-  // for (candy_object_t *obj = self->root, *next = candy_object_get_next(obj); obj;) {
-  //   if (candy_object_get_mark(obj) == MARK_DARK)
+  // for (candy_object_t *obj = self->root, *next = candy_object_next(obj); obj;) {
+  //   if (candy_object_mark(obj) == MARK_DARK)
 
   // }
   return CANDY_OK;

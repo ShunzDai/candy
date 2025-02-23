@@ -38,15 +38,15 @@ struct candy_object {
   uint8_t mark : 4;
 };
 
-static inline candy_object_t **candy_object_get_next(candy_object_t *self) {
+static inline candy_object_t **candy_object_next(candy_object_t *self) {
   return (candy_object_t **)&self->next;
 }
 
 static inline void candy_object_set_next(candy_object_t *self, candy_object_t *next) {
-  *candy_object_get_next(self) = next;
+  *candy_object_next(self) = next;
 }
 
-static inline candy_types_t candy_object_get_type(const candy_object_t *self) {
+static inline candy_types_t candy_object_type(const candy_object_t *self) {
   return (candy_types_t)self->type;
 }
 
@@ -54,7 +54,7 @@ static inline void candy_object_set_type(candy_object_t *self, candy_types_t typ
   self->type = type;
 }
 
-static inline uint8_t candy_object_get_mask(const candy_object_t *self) {
+static inline uint8_t candy_object_mask(const candy_object_t *self) {
   return self->mask;
 }
 
@@ -62,7 +62,7 @@ static inline void candy_object_set_mask(candy_object_t *self, uint8_t mask) {
   self->mask = mask;
 }
 
-static inline candy_marks_t candy_object_get_mark(const candy_object_t *self) {
+static inline candy_marks_t candy_object_mark(const candy_object_t *self) {
   return (candy_marks_t)self->mark;
 }
 

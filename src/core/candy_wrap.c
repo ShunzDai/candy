@@ -20,7 +20,7 @@
 const candy_wrap_t CANDY_WRAP_NULL = {0};
 
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
-  switch (candy_wrap_get_type(self)) {
+  switch (candy_wrap_type(self)) {
     case CANDY_TYPE_NULL:
       return fprintf(out, "%*s", align, "null");
     case CANDY_TYPE_INTEGER:
