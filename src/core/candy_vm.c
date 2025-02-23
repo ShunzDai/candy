@@ -18,9 +18,9 @@
 #include "core/candy_gc.h"
 #include "core/candy_wrap.h"
 #include "core/candy_vector.h"
+#include "core/candy_array.h"
 #include "core/candy_table.h"
 #include "core/candy_proto.h"
-#include "core/candy_print.h"
 #include <string.h>
 #include <stdlib.h>
 

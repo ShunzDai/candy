@@ -16,7 +16,7 @@
 
 [6]游戏猫. Lua5.1.5源码分析之table实现[DB/OL]. [link](https://blog.csdn.net/gamekit/article/details/122975184), 2022-02-17, 2023-02-24
 
-[7]co lin. 深入Lua：Table的实现[DB/OL]. [link](https://www.zhihu.com/collection/685811848), 2019-12-17, 2023-04-01
+[7]co lin. 深入Lua：Table的实现[DB/OL]. [link](https://zhuanlan.zhihu.com/p/97830462), 2019-12-17, 2023-04-01
 
 [8]frog-game. [Lua5.4.4源码].指令集[DB/OL]. [link](https://zhuanlan.zhihu.com/p/610168640), 2023-02-28, 2023-05-01
 
@@ -25,3 +25,5 @@
 [10]阿文. lua源码分析之语法分析 (干货)[DB/OL]. [link](https://zhuanlan.zhihu.com/p/581491614), 2022-11-11, 2024-02-13
 
 [11] Xun. Lua篇 — 垃圾回收[DB/OL]. [link](https://fallingxun.github.io/post/lua/lua_gc/), 2023-11-07, 2024-12-29
+
+[12] 码农成长宝典. Lua5.4源代码剖析[DB/OL]. [link](https://www.zhihu.com/column/c_1595011738562494465), 2024-05-22, 2025-02-09

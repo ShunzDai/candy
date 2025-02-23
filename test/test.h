@@ -26,7 +26,6 @@
 #include "core/candy_closure.h"
 #include "core/candy_userdef.h"
 #include "core/candy_array.h"
-#include "core/candy_print.h"
 #include "core/candy_lexer.h"
 #include "core/candy_parser.h"
 #include "core/candy_vm.h"

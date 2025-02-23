@@ -34,13 +34,14 @@ extern "C" {
 
 #define candy_assert(_self, _gc, _condition, _err, _format, ...) \
 ((_condition) ? ((void)0U) : candy_excep_throw(_self, _err, \
-  (candy_object_t *)candy_print(_gc, _self, "%s error: " _format, candy_err_str(_err), ##__VA_ARGS__) \
+  (candy_object_t *)candy_array_print(_gc, _self, "%s error: " _format, candy_err_str(_err), ##__VA_ARGS__) \
 ))
 
 typedef enum candy_masks {
-  MASK_NONE  = 0,
-  MASK_TOMB  = 1 << 1,
-  MASK_ARRAY = 1 << 2,
+  MASK_NONE   = 0,
+  MASK_TOMB   = 1 << 0,
+  MASK_ARRAY  = 1 << 1,
+  MASK_STATIC = 1 << 2,
 } candy_masks_t;
 
 typedef enum candy_events {
@@ -67,7 +68,7 @@ typedef struct candy_sclosure candy_sclosure_t;
 
 typedef struct candy_excep candy_excep_t;
 
-typedef int (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt);
+typedef candy_err_t (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt);
 
 static inline const char *candy_event_str(candy_events_t val) {
   switch (val) {

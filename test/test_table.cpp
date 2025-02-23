@@ -15,7 +15,7 @@
   */
 #include "test.h"
 
-static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
+static candy_err_t handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
   return candy_table_delete((candy_table_t *)self, gc);
 }
 

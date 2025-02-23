@@ -29,9 +29,10 @@
 
 #ifdef CANDY_ERR
 CANDY_ERR(OK         , 0x0000,      "ok")
-CANDY_ERR(ERR        , 0x1000, "default")
-CANDY_ERR(ERR_MEMORY , 0x1001,  "memory")
-CANDY_ERR(ERR_LEXICAL, 0x1002, "lexical")
-CANDY_ERR(ERR_SYNTAX , 0x1003,  "syntax")
-CANDY_ERR(ERR_VM     , 0x1004,      "vm")
+CANDY_ERR(ERR        , 0x0001, "default")
+CANDY_ERR(ERR_MEMORY , 0x1000,  "memory")
+CANDY_ERR(ERR_ARRAY  , 0x1001,   "array")
+CANDY_ERR(ERR_LEXICAL, 0x2000, "lexical")
+CANDY_ERR(ERR_SYNTAX , 0x2001,  "syntax")
+CANDY_ERR(ERR_VM     , 0x2002,      "vm")
 #endif /* CANDY_ERR */

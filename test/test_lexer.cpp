@@ -27,7 +27,7 @@ TEST_BODY(_name, _token, _exp __VA_OPT__(,) __VA_ARGS__)
 
 using namespace std;
 
-static int handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
+static candy_err_t handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
   return candy_array_delete((candy_array_t *)self, gc);
 }
 

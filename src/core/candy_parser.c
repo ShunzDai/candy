@@ -19,7 +19,6 @@
 #include "core/candy_proto.h"
 #include "core/candy_closure.h"
 #include "core/candy_array.h"
-#include "core/candy_print.h"
 #include "core/candy_lexer.h"
 
 #define par_assert(_condition, _format, ...) \

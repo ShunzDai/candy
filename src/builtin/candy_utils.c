@@ -19,12 +19,12 @@
 
 // static int _builtin_exit(candy_state_t *self) {
 //   exit(0);
-//   return CANDY_OK;
+//   return 0;
 // }
 
 // static int _builtin_print(candy_state_t *self) {
 
-//   return CANDY_OK;
+//   return 0;
 // }
 
 candy_err_t candy_builtin_entry_utils(candy_state_t *self) {

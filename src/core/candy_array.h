@@ -20,15 +20,26 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include "core/candy_priv.h"
+#include <stdarg.h>
 
-candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, uint8_t mask);
+candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type);
+
+candy_array_t *candy_array_create_static(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size);
+
+candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char format[], va_list args) CANDY_FORMAT(3, 0);
+
+candy_array_t *candy_array_print(candy_gc_t *gc, candy_excep_t *ctx, const char format[], ...) CANDY_FORMAT(3, 4);
+
 candy_err_t candy_array_delete(candy_array_t *self, candy_gc_t *gc);
 
 candy_err_t candy_array_color(candy_array_t *self, candy_gc_t *gc);
+
 candy_err_t candy_array_diffuse(candy_array_t *self, candy_gc_t *gc);
 
 size_t candy_array_capacity(const candy_array_t *self);
+
 size_t candy_array_size(const candy_array_t *self);
+
 void *candy_array_data(const candy_array_t *self);
 
 void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t capacity);
