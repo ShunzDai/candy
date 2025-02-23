@@ -32,7 +32,7 @@ struct candy_buffer {
   void *arg;
 };
 
-candy_err_t candy_buffer_init(candy_buffer_t *self, size_t cell, candy_reader_t reader, void *arg);
+candy_err_t candy_buffer_init(candy_buffer_t *self, candy_reader_t reader, void *arg);
 
 candy_err_t candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem);
 

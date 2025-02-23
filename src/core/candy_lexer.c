@@ -345,7 +345,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
 
 candy_err_t candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
   memset(self, 0, sizeof(candy_lexer_t));
-  candy_buffer_init(&self->buff, sizeof(char), reader, arg);
+  candy_buffer_init(&self->buff, reader, arg);
   self->dbg.line = 1;
   self->dbg.column = 1;
   self->lookahead.token = TK_EOS;

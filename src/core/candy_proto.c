@@ -21,20 +21,21 @@
 
 struct candy_proto {
   candy_object_t header;
+
   candy_vector_t constv;
   candy_vector_t inst;
 };
 
 candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, ctx, CANDY_TYPE_PROTO, sizeof(candy_proto_t));
-  candy_vector_init(&self->constv, sizeof(candy_wrap_t));
-  candy_vector_init(&self->inst, sizeof(candy_inst_t));
+  candy_vector_init(&self->constv);
+  candy_vector_init(&self->inst);
   return self;
 }
 
 candy_err_t candy_proto_delete(candy_proto_t *self, candy_gc_t *gc) {
-  candy_vector_deinit(&self->inst, candy_gc_memory(gc));
-  candy_vector_deinit(&self->constv, candy_gc_memory(gc));
+  candy_vector_deinit(&self->inst, candy_gc_memory(gc), sizeof(candy_inst_t));
+  candy_vector_deinit(&self->constv, candy_gc_memory(gc), sizeof(candy_wrap_t));
   candy_gc_free(gc, self, sizeof(candy_proto_t));
   return CANDY_OK;
 }

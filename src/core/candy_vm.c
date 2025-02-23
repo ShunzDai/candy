@@ -78,13 +78,13 @@ static void _call(vmll_t *self) {
 
 candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc) {
   candy_excep_init(&self->ctx);
-  candy_vector_init(&self->s, sizeof(candy_wrap_t));
+  candy_vector_init(&self->s);
   self->gc = gc;
   return CANDY_OK;
 }
 
 candy_err_t candy_vm_deinit(candy_vm_t *self) {
-  candy_vector_deinit(&self->s, candy_gc_memory(self->gc));
+  candy_vector_deinit(&self->s, candy_gc_memory(self->gc), sizeof(candy_wrap_t));
   candy_excep_deinit(&self->ctx);
   return CANDY_OK;
 }
@@ -136,14 +136,14 @@ candy_err_t candy_vm_call(candy_vm_t *self, candy_state_t *co) {
 candy_err_t candy_vm_pop(candy_vm_t *self) {
   size_t size = candy_vector_size(&self->s);
   vm_assert(size, "stack is already empty");
-  candy_vector_resize(&self->s, candy_gc_memory(self->gc), &self->ctx, size - 1);
+  candy_vector_resize(&self->s, candy_gc_memory(self->gc), &self->ctx, size - 1, sizeof(candy_wrap_t));
   return CANDY_OK;
 }
 
 candy_err_t candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
   size_t size = candy_vector_size(&self->s);
   vm_assert(size < CANDY_CONFIG_VM_STACK_SIZE, "stack overflow");
-  candy_vector_append(&self->s, candy_gc_memory(self->gc), &self->ctx, wrap, 1);
+  candy_vector_append(&self->s, candy_gc_memory(self->gc), &self->ctx, wrap, 1, sizeof(candy_wrap_t));
   return CANDY_OK;
 }
 

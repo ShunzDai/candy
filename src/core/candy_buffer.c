@@ -38,7 +38,7 @@ static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, 
   /** if the number of bytes that can be filled is less than
       @ref CANDY_CONFIG_BUFFER_EXPAND_SIZE bytes, the buffer will be enlarged */
   if (cap <= offset) {
-    candy_vector_reserve(&self->vec, mem, ctx, cap + CANDY_CONFIG_BUFFER_EXPAND_SIZE);
+    candy_vector_reserve(&self->vec, mem, ctx, cap + CANDY_CONFIG_BUFFER_EXPAND_SIZE, sizeof(char));
     candy_logd(TAG, "expanded from %zu to %zu", cap, candy_vector_capacity(&self->vec));
   }
   /* otherwise buffer will be filled directly */
@@ -52,12 +52,12 @@ static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, 
   int res = self->reader(candy_vector_data(&self->vec) + offset, candy_vector_capacity(&self->vec) - offset, self->arg);
   candy_logd(TAG, "fill %d bytes at %zu", res, offset);
   if (res > 0)
-    candy_vector_resize(&self->vec, mem, ctx, offset + res);
+    candy_vector_resize(&self->vec, mem, ctx, offset + res, sizeof(char));
   return res;
 }
 
-candy_err_t candy_buffer_init(candy_buffer_t *self, size_t cell, candy_reader_t reader, void *arg) {
-  candy_vector_init(&self->vec, cell);
+candy_err_t candy_buffer_init(candy_buffer_t *self, candy_reader_t reader, void *arg) {
+  candy_vector_init(&self->vec);
   self->w = 0;
   self->r = self->w;
   self->reader = reader;
@@ -66,7 +66,7 @@ candy_err_t candy_buffer_init(candy_buffer_t *self, size_t cell, candy_reader_t 
 }
 
 candy_err_t candy_buffer_deinit(candy_buffer_t *self, candy_memory_t *mem) {
-  candy_vector_deinit(&self->vec, mem);
+  candy_vector_deinit(&self->vec, mem, sizeof(char));
   return CANDY_OK;
 }
 
@@ -76,12 +76,12 @@ candy_err_t candy_buffer_reset(candy_buffer_t *self) {
 }
 
 int candy_buffer_view(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, void *data, size_t ahead) {
-  size_t size = candy_vector_cell(&self->vec) * ahead;
+  size_t size = ahead;
   int res = 0;
   while ((res = _fill(self, mem, ctx, size)) > 0);
   if (res < 0)
     return res;
-  memcpy(data, _rptr(self) + size, candy_vector_cell(&self->vec));
+  memcpy(data, _rptr(self) + size, sizeof(char));
   return size;
 }
 
