@@ -36,7 +36,7 @@ struct candy_wrap {
   #else /* CANDY_CONFIG_MEMORY_ALIGNMENT */
   uint8_t data[sizeof(union candy_udata)];
   #endif /* CANDY_CONFIG_MEMORY_ALIGNMENT */
-  uint8_t type : 8;
+  uint8_t type : 4;
   uint8_t mask : 4;
 };
 
@@ -50,14 +50,6 @@ static inline void *candy_wrap_data(const candy_wrap_t *self) {
 
 static inline candy_types_t candy_wrap_get_type(const candy_wrap_t *self) {
   return (candy_types_t)((self->type >> 0) & 0xFFU);
-}
-
-static inline candy_types_t candy_wrap_get_base(const candy_wrap_t *self) {
-  return (candy_types_t)((self->type >> 0) & 0x0FU);
-}
-
-static inline candy_types_t candy_wrap_get_extd(const candy_wrap_t *self) {
-  return (candy_types_t)((self->type >> 4) & 0x0FU);
 }
 
 static inline void candy_wrap_set_type(candy_wrap_t *self, candy_types_t type) {

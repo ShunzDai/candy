@@ -15,14 +15,14 @@ keywords = [
   ["continue", 0],
 ]
 
-def djb_hash(str):
+def hash_djb(str):
   hash = 5381
   for ch in str:
     hash += (hash << 5) + ord(ch)
   return hash & 0x7FFFFFFF
 
 for key in keywords:
-  key[1] = djb_hash(key[0])
+  key[1] = hash_djb(key[0])
 
 # keywords.sort(key = lambda x : x[1])
 

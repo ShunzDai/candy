@@ -38,8 +38,9 @@ extern "C" {
 ))
 
 typedef enum candy_masks {
-  MASK_NONE  = 0 << 0,
-  MASK_ARRAY = 1 << 0,
+  MASK_NONE  = 0,
+  MASK_TOMB  = 1 << 1,
+  MASK_ARRAY = 1 << 2,
 } candy_masks_t;
 
 typedef enum candy_events {
@@ -47,6 +48,8 @@ typedef enum candy_events {
   EVT_COLOR,
   EVT_DIFFUSE,
 } candy_events_t;
+
+typedef uint32_t candy_hash_t;
 
 typedef struct candy_memory candy_memory_t;
 typedef struct candy_gc candy_gc_t;

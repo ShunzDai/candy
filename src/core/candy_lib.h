@@ -27,11 +27,19 @@ extern "C" {
 long strntol(const char nptr[], size_t size, char *endptr[], int base);
 double strntod(const char nptr[], size_t size, char *endptr[]);
 
-static inline uint32_t djb_hash(const char str[], size_t size) {
-  uint32_t hash = 5381;
+static inline candy_hash_t hash_djb(const char str[], size_t size) {
+  candy_hash_t hash = 5381;
   for (size_t idx = 0; idx < size; ++idx)
     hash += (hash << 5) + str[idx];
   return hash & 0x7FFFFFFF;
+}
+
+static inline candy_hash_t hash_knuth(const void *data, size_t size) {
+  candy_hash_t hash = size;
+  candy_hash_t step = (size >> 5) + 1;
+  for (size_t i = size; i >= step; i -= step)
+    hash = hash ^ ((hash << 5) + (hash >> 2) + (candy_hash_t)((uint8_t *)data)[i - 1]);
+  return hash;
 }
 
 static inline bool is_power2(size_t n) {

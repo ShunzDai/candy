@@ -269,7 +269,7 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_meta_t *m
   /* save alpha or number */
   while (_check_next(self, is_alnum, _save));
   /* check keyword */
-  switch (djb_hash(_head(self), _size(self))) {
+  switch (hash_djb(_head(self), _size(self))) {
     #define CANDY_KW_MATCH
     #include "core/candy_keyword.list"
     default:

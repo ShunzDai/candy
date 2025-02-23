@@ -5,8 +5,6 @@ file(GLOB_RECURSE CANDY_SOURCES_CORE LIST_DIRECTORIES false
   candy_reader.c
   candy_memory.c
   candy_buffer.c
-  candy_vector.c
-  candy_gc.c
   candy_table.c
   candy_proto.c
   candy_closure.c
@@ -16,6 +14,7 @@ file(GLOB_RECURSE CANDY_SOURCES_CORE LIST_DIRECTORIES false
   candy_lexer.c
   candy_parser.c
   candy_vm.c
+  candy_gc.c
   candy_state.c
   candy.c
 )
