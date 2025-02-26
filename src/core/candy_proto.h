@@ -56,11 +56,7 @@ struct candy_proto_config {
 
 candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx);
 
-candy_err_t candy_proto_delete(candy_proto_t *self, candy_gc_t *gc);
-
-candy_err_t candy_proto_color(candy_proto_t *self, candy_gc_t *gc);
-
-candy_err_t candy_proto_diffuse(candy_proto_t *self, candy_gc_t *gc);
+candy_err_t candy_proto_handler(candy_proto_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
 static inline void candy_proto_add_iax(candy_proto_t *self, candy_opcodes_t op, uint32_t a) {
   candy_err_t candy_proto_add_inst(candy_proto_t *self, candy_inst_t inst);

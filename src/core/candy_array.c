@@ -48,7 +48,7 @@ static bool _is_static(const candy_array_t *self) {
   return candy_object_mask((candy_object_t *)self) & MASK_STATIC;
 }
 
-static candy_array_t *_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, size_t size, uint8_t mask) {
+static candy_array_t *_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, size_t size, uint8_t mask) {
   candy_array_t *self = (candy_array_t *)candy_gc_add(gc, ctx, type, size);
   candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | mask);
   self->hash = 0;
@@ -56,14 +56,50 @@ static candy_array_t *_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t 
   return self;
 }
 
+static candy_err_t _array_delete(candy_array_t *self, candy_gc_t *gc, void *arg) {
+  if (!_is_static(self)) {
+    candy_vector_deinit(&((candy_dynamic_t *)self)->vec,
+      candy_gc_memory(gc),
+      candy_type_size(candy_object_type((candy_object_t *)self))
+    );
+  }
+  candy_gc_free(gc, self, sizeof(candy_array_t));
+  return CANDY_OK;
+}
+
+static candy_err_t _array_color(candy_array_t *self, candy_gc_t *gc, void *arg) {
+  switch (candy_object_type((candy_object_t *)self)) {
+    case CANDY_TYPE_TABLE:
+    case CANDY_TYPE_PROTO:
+    case CANDY_TYPE_STATE:
+      self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
+      candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
+      return CANDY_OK;
+    default:
+      candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+      return CANDY_OK;
+  }
+}
+
+static candy_err_t _array_diffuse(candy_array_t *self, candy_gc_t *gc, void *arg) {
+  candy_gc_gray_swap(gc, self->gray);
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  /* traverse objects */
+  candy_object_t *tail = (candy_object_t *)candy_array_data(self) + candy_array_size(self);
+  for (candy_object_t *it = (candy_object_t *)candy_array_data(self); it < tail; ++it) {
+    candy_gc_event_handler(gc)(it, gc, EVT_COLOR, arg);
+  }
+  return CANDY_OK;
+}
+
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type) {
-  candy_dynamic_t *self = (candy_dynamic_t *)_create(gc, ctx, type, sizeof(candy_dynamic_t), MASK_NONE);
+  candy_dynamic_t *self = (candy_dynamic_t *)_array_create(gc, ctx, type, sizeof(candy_dynamic_t), MASK_NONE);
   candy_vector_init(&((candy_dynamic_t *)self)->vec);
   return (candy_array_t *)self;
 }
 
 candy_array_t *candy_array_create_static(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size) {
-  candy_static_t *self = (candy_static_t *)_create(gc, ctx, type, sizeof(candy_static_t) + size, MASK_STATIC);
+  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, type, sizeof(candy_static_t) + size, MASK_STATIC);
   if (data && size) {
     memcpy(self->data, data, size);
   }
@@ -78,7 +114,7 @@ candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char
   int len = vsnprintf(NULL, 0, format, args_copy);
   if (len < 0)
     return NULL;
-  candy_static_t *self = (candy_static_t *)_create(gc, ctx, CANDY_TYPE_CHAR, sizeof(candy_static_t) + len + 1, MASK_STATIC);
+  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, CANDY_TYPE_CHAR, sizeof(candy_static_t) + len + 1, MASK_STATIC);
   vsnprintf((char *)self->data, len + 1, format, args);
   self->size = len;
   self->arr.hash = hash_knuth(self->data, self->size);
@@ -93,40 +129,13 @@ candy_array_t *candy_array_print(candy_gc_t *gc, candy_excep_t *ctx, const char 
   return out;
 }
 
-candy_err_t candy_array_delete(candy_array_t *self, candy_gc_t *gc) {
-  if (!_is_static(self)) {
-    candy_vector_deinit(&((candy_dynamic_t *)self)->vec,
-      candy_gc_memory(gc),
-      candy_type_size(candy_object_type((candy_object_t *)self))
-    );
+candy_err_t candy_array_handler(candy_array_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
+  switch (evt) {
+    case EVT_DELETE:  return _array_delete(self, gc, arg);
+    case EVT_COLOR:   return _array_color(self, gc, arg);
+    case EVT_DIFFUSE: return _array_diffuse(self, gc, arg);
+    default:          return CANDY_ERR;
   }
-  candy_gc_free(gc, self, sizeof(candy_array_t));
-  return CANDY_OK;
-}
-
-candy_err_t candy_array_color(candy_array_t *self, candy_gc_t *gc) {
-  switch (candy_object_type((candy_object_t *)self)) {
-    case CANDY_TYPE_TABLE:
-    case CANDY_TYPE_PROTO:
-    case CANDY_TYPE_STATE:
-      self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
-      candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
-      return CANDY_OK;
-    default:
-      candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-      return CANDY_OK;
-  }
-}
-
-candy_err_t candy_array_diffuse(candy_array_t *self, candy_gc_t *gc) {
-  candy_gc_gray_swap(gc, self->gray);
-  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  /* traverse objects */
-  candy_object_t *tail = (candy_object_t *)candy_array_data(self) + candy_array_size(self);
-  for (candy_object_t *it = (candy_object_t *)candy_array_data(self); it < tail; ++it) {
-    candy_gc_event_handler(gc)(it, gc, EVT_COLOR);
-  }
-  return CANDY_OK;
 }
 
 size_t candy_array_capacity(const candy_array_t *self) {

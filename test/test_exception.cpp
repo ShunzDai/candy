@@ -15,10 +15,6 @@
   */
 #include "test.h"
 
-static candy_err_t handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
-  return candy_array_delete((candy_array_t *)self, gc);
-}
-
 TEST(catch, exception_ok) {
   candy_excep_t jmp{};
   auto err = candy_excep_try(&jmp, (candy_excep_cb_t)+[](void *arg) {
@@ -33,7 +29,7 @@ TEST(catch, exception_err) {
     candy_gc_t gc;
   };
   arg info{};
-  candy_gc_init(&info.gc, handler, test_allocator, nullptr);
+  candy_gc_init(&info.gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_object_t *msg = nullptr;
   auto err = candy_excep_try(&info.jmp, (candy_excep_cb_t)+[](arg *info) {
     candy_excep_throw(&info->jmp, CANDY_ERR_LEXICAL, (candy_object_t *)candy_array_print(&info->gc, nullptr, "assert string"));
@@ -61,7 +57,7 @@ TEST(catch, nest_err) {
     size_t depth;
   };
   arg info{};
-  candy_gc_init(&info.gc, handler, test_allocator, nullptr);
+  candy_gc_init(&info.gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_object_t *msg = nullptr;
   auto err = candy_excep_try(&info.jmp, (candy_excep_cb_t)+[](arg *info) {
     EXPECT_EQ(++info->depth, candy_excep_depth(&info->jmp));

@@ -25,13 +25,9 @@ candy_state_t *candy_state_create(candy_handler_t handler, candy_allocator_t all
 
 candy_state_t *candy_state_create_coroutine(candy_state_t *self);
 
-candy_err_t candy_state_delete(candy_state_t *self, candy_gc_t *gc);
+candy_err_t candy_state_handler(candy_state_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
 candy_err_t candy_state_close(candy_state_t *self);
-
-candy_err_t candy_state_color(candy_state_t *self, candy_gc_t *gc);
-
-candy_err_t candy_state_diffuse(candy_state_t *self, candy_gc_t *gc);
 
 candy_err_t candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
 

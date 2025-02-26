@@ -68,7 +68,7 @@ typedef struct candy_sclosure candy_sclosure_t;
 
 typedef struct candy_excep candy_excep_t;
 
-typedef candy_err_t (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt);
+typedef candy_err_t (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
 static inline const char *candy_event_str(candy_events_t val) {
   switch (val) {

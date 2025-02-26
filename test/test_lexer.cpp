@@ -27,10 +27,6 @@ TEST_BODY(_name, _token, _exp __VA_OPT__(,) __VA_ARGS__)
 
 using namespace std;
 
-static candy_err_t handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
-  return candy_array_delete((candy_array_t *)self, gc);
-}
-
 template <typename supposed>
 static void test_assert(const candy_array_t *err, const supposed &val) {
   (void)err;
@@ -72,7 +68,7 @@ static void tast_body(const char exp[], const supposed & ... value) {
   candy_gc_t gc{};
   str_info info{exp, strlen(exp), 0};
   candy_excep_init(&ctx);
-  candy_gc_init(&gc, handler, test_allocator, nullptr);
+  candy_gc_init(&gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_lexer_init(&cinfo.ls, &gc, &ctx, string_reader, &info);
   candy_object_t *msg = nullptr;
   auto err = candy_excep_try(&ctx, (candy_excep_cb_t)+[](catch_info *self) {

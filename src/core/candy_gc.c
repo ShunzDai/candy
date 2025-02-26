@@ -30,12 +30,12 @@ static candy_object_t *_add_node(candy_gc_t *self, candy_excep_t *ctx, candy_obj
 static void _del_node(candy_gc_t *self, candy_object_t **pos) {
   candy_object_t *obj = *pos;
   *pos = *candy_object_next(obj);
-  int res = candy_gc_event_handler(self)(obj, self, EVT_DELETE);
+  int res = candy_gc_event_handler(self)(obj, self, EVT_DELETE, NULL);
   assert(res >= 0);
 }
 
 static candy_err_t _fsm_begin(candy_gc_t *self) {
-  int res = candy_gc_event_handler(self)(self->prim, self, EVT_COLOR);
+  int res = candy_gc_event_handler(self)(self->prim, self, EVT_COLOR, NULL);
   assert(res >= 0);
   return CANDY_OK;
 }
@@ -43,7 +43,7 @@ static candy_err_t _fsm_begin(candy_gc_t *self) {
 static candy_err_t _fsm_diffuse(candy_gc_t *self) {
   candy_object_t *obj = self->gray;
   /* remove from 'gray' list */
-  int res = candy_gc_event_handler(self)(obj, self, EVT_DIFFUSE);
+  int res = candy_gc_event_handler(self)(obj, self, EVT_DIFFUSE, NULL);
   assert(res >= 0);
   return CANDY_OK;
 }
@@ -79,7 +79,7 @@ candy_err_t candy_gc_deinit(candy_gc_t *self) {
   while (self->pool)
     _del_node(self, &self->pool);
   if (self->prim)
-    candy_gc_event_handler(self)(self->prim, self, EVT_DELETE);
+    candy_gc_event_handler(self)(self->prim, self, EVT_DELETE, NULL);
   return CANDY_OK;
 }
 

@@ -79,6 +79,20 @@ static candy_pair_t *_find(const candy_table_t *self, const candy_wrap_t *key, b
   return NULL;
 }
 
+static candy_err_t _table_delete(candy_table_t *self, candy_gc_t *gc, void *arg) {
+  candy_gc_free(gc, self->data, sizeof(candy_pair_t) * _size(self->cap));
+  candy_gc_free(gc, self, sizeof(candy_table_t));
+  return CANDY_OK;
+}
+
+static candy_err_t _table_color(candy_table_t *self, candy_gc_t *gc, void *arg) {
+  return CANDY_OK;
+}
+
+static candy_err_t _table_diffuse(candy_table_t *self, candy_gc_t *gc, void *arg) {
+  return CANDY_OK;
+}
+
 candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_table_t *self = (candy_table_t *)candy_gc_add(gc, ctx, CANDY_TYPE_TABLE, sizeof(candy_table_t));
   self->cap = 0;
@@ -87,10 +101,13 @@ candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
   return self;
 }
 
-candy_err_t candy_table_delete(candy_table_t *self, candy_gc_t *gc) {
-  candy_gc_free(gc, self->data, sizeof(candy_pair_t) * _size(self->cap));
-  candy_gc_free(gc, self, sizeof(candy_table_t));
-  return CANDY_OK;
+candy_err_t candy_table_handler(candy_table_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
+  switch (evt) {
+    case EVT_DELETE:  return _table_delete(self, gc, arg);
+    case EVT_COLOR:   return _table_color(self, gc, arg);
+    case EVT_DIFFUSE: return _table_diffuse(self, gc, arg);
+    default:          return CANDY_ERR;
+  }
 }
 
 candy_err_t candy_table_fprint(const candy_table_t *self, FILE *out) {

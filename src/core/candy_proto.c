@@ -26,6 +26,22 @@ struct candy_proto {
   candy_vector_t inst;
 };
 
+static candy_err_t _proto_delete(candy_proto_t *self, candy_gc_t *gc, void *arg) {
+  candy_vector_deinit(&self->inst, candy_gc_memory(gc), sizeof(candy_inst_t));
+  candy_vector_deinit(&self->constv, candy_gc_memory(gc), sizeof(candy_wrap_t));
+  candy_gc_free(gc, self, sizeof(candy_proto_t));
+  return CANDY_OK;
+}
+
+static candy_err_t _proto_color(candy_proto_t *self, candy_gc_t *gc, void *arg) {
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  return CANDY_OK;
+}
+
+static candy_err_t _proto_diffuse(candy_proto_t *self, candy_gc_t *gc, void *arg) {
+  return CANDY_OK;
+}
+
 candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, ctx, CANDY_TYPE_PROTO, sizeof(candy_proto_t));
   candy_vector_init(&self->constv);
@@ -33,20 +49,13 @@ candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx) {
   return self;
 }
 
-candy_err_t candy_proto_delete(candy_proto_t *self, candy_gc_t *gc) {
-  candy_vector_deinit(&self->inst, candy_gc_memory(gc), sizeof(candy_inst_t));
-  candy_vector_deinit(&self->constv, candy_gc_memory(gc), sizeof(candy_wrap_t));
-  candy_gc_free(gc, self, sizeof(candy_proto_t));
-  return CANDY_OK;
-}
-
-candy_err_t candy_proto_color(candy_proto_t *self, candy_gc_t *gc) {
-  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  return CANDY_OK;
-}
-
-candy_err_t candy_proto_diffuse(candy_proto_t *self, candy_gc_t *gc) {
-  return CANDY_OK;
+candy_err_t candy_proto_handler(candy_proto_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
+  switch (evt) {
+    case EVT_DELETE:  return _proto_delete(self, gc, arg);
+    case EVT_COLOR:   return _proto_color(self, gc, arg);
+    case EVT_DIFFUSE: return _proto_diffuse(self, gc, arg);
+    default:          return CANDY_ERR;
+  }
 }
 
 candy_vector_t *candy_proto_get_const(candy_proto_t *self) {

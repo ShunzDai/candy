@@ -79,6 +79,24 @@ static void _protected_call(struct pack_call *self) {
   candy_gc_full(self->co->vm.gc);
 }
 
+static candy_err_t _state_delete(candy_state_t *self, candy_gc_t *gc, void *arg) {
+  candy_state_deinit(self);
+  candy_gc_free(gc, self, candy_state_size(self));
+  return CANDY_OK;
+}
+
+static candy_err_t _state_color(candy_state_t *self, candy_gc_t *gc, void *arg) {
+  self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
+  candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
+  return CANDY_OK;
+}
+
+static candy_err_t _state_diffuse(candy_state_t *self, candy_gc_t *gc, void *arg) {
+  candy_gc_gray_swap(gc, self->gray);
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  return CANDY_OK;
+}
+
 candy_state_t *candy_state_create(candy_handler_t handler, candy_allocator_t alloc, void *arg) {
   /* create a new object on the heap from the one on the stack and migrate all its contents */
   candy_gc_t gc;
@@ -102,28 +120,19 @@ candy_state_t *candy_state_create_coroutine(candy_state_t *self) {
   return NULL;
 }
 
-candy_err_t candy_state_delete(candy_state_t *self, candy_gc_t *gc) {
-  candy_state_deinit(self);
-  candy_gc_free(gc, self, candy_state_size(self));
-  return CANDY_OK;
+candy_err_t candy_state_handler(candy_state_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
+  switch (evt) {
+    case EVT_DELETE:  return _state_delete(self, gc, arg);
+    case EVT_COLOR:   return _state_color(self, gc, arg);
+    case EVT_DIFFUSE: return _state_diffuse(self, gc, arg);
+    default:          return CANDY_ERR;
+  }
 }
 
 candy_err_t candy_state_close(candy_state_t *self) {
   candy_gc_t gc;
   memcpy(&gc, self->vm.gc, sizeof(candy_gc_t));
   candy_gc_deinit(&gc);
-  return CANDY_OK;
-}
-
-candy_err_t candy_state_color(candy_state_t *self, candy_gc_t *gc) {
-  self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
-  candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
-  return CANDY_OK;
-}
-
-candy_err_t candy_state_diffuse(candy_state_t *self, candy_gc_t *gc) {
-  candy_gc_gray_swap(gc, self->gray);
-  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return CANDY_OK;
 }
 

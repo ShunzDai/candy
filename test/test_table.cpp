@@ -15,14 +15,10 @@
   */
 #include "test.h"
 
-static candy_err_t handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
-  return candy_table_delete((candy_table_t *)self, gc);
-}
-
 TEST(table, fill) {
   constexpr int num = 10;
   candy_gc_t gc{};
-  candy_gc_init(&gc, handler, test_allocator, nullptr);
+  candy_gc_init(&gc, (candy_handler_t)candy_table_handler, test_allocator, nullptr);
   candy_table_t *self = candy_table_create(&gc, nullptr);
   candy_integer_t k[num], v[num];
   for (size_t idx = 0; idx < num; ++idx) {

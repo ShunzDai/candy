@@ -27,7 +27,7 @@
 
 static const char TAG[] = "candy";
 
-static void *default_allocator(void *prev, size_t prev_size, size_t next_size, void *arg) {
+static void *_default_allocator(void *prev, size_t prev_size, size_t next_size, void *arg) {
   (void)prev_size, (void)arg;
   if (next_size)
     return realloc(prev, next_size);
@@ -35,51 +35,17 @@ static void *default_allocator(void *prev, size_t prev_size, size_t next_size, v
   return NULL;
 }
 
-static int _event_delete(candy_object_t *self, candy_gc_t *gc) {
-  if (candy_object_mask(self) & MASK_ARRAY)
-    return candy_array_delete((candy_array_t *)self, gc);
-  switch (candy_object_type(self)) {
-    case CANDY_TYPE_CCLOS: return candy_cclosure_delete((candy_cclosure_t *)self, gc);
-    case CANDY_TYPE_SCLOS: return candy_sclosure_delete((candy_sclosure_t *)self, gc);
-    case CANDY_TYPE_UDHVY: return candy_userdef_delete((candy_userdef_t *)self, gc);
-    case CANDY_TYPE_TABLE: return candy_table_delete((candy_table_t *)self, gc);
-    case CANDY_TYPE_PROTO: return candy_proto_delete((candy_proto_t *)self, gc);
-    case CANDY_TYPE_STATE: return candy_state_delete((candy_state_t *)self, gc);
-    default:               return -1;
-  }
-}
-
-static int _event_color(candy_object_t *self, candy_gc_t *gc) {
-  switch (candy_object_type(self)) {
-    case CANDY_TYPE_CCLOS: return -1;
-    case CANDY_TYPE_SCLOS: return candy_sclosure_color((candy_sclosure_t *)self, gc);
-    case CANDY_TYPE_UDHVY: return -1;
-    case CANDY_TYPE_TABLE: return -1;
-    case CANDY_TYPE_PROTO: return candy_proto_color((candy_proto_t *)self, gc);
-    case CANDY_TYPE_STATE: return candy_state_color((candy_state_t *)self, gc);
-    default:               return -1;
-  }
-}
-
-static int _event_diffuse(candy_object_t *self, candy_gc_t *gc) {
-  switch (candy_object_type(self)) {
-    case CANDY_TYPE_CCLOS: return -1;
-    case CANDY_TYPE_SCLOS: return candy_sclosure_diffuse((candy_sclosure_t *)self, gc);
-    case CANDY_TYPE_UDHVY: return -1;
-    case CANDY_TYPE_TABLE: return -1;
-    case CANDY_TYPE_PROTO: return candy_proto_diffuse((candy_proto_t *)self, gc);
-    case CANDY_TYPE_STATE: return candy_state_diffuse((candy_state_t *)self, gc);
-    default:               return -1;
-  }
-}
-
-static int _event_handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt) {
+static candy_err_t _event_handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
   candy_logd(TAG, "%s type %s", candy_event_str(evt), candy_type_str(candy_object_type(self)));
-  switch (evt) {
-    case EVT_DELETE:  return _event_delete(self, gc);
-    case EVT_COLOR:  return _event_color(self, gc);
-    case EVT_DIFFUSE: return _event_diffuse(self, gc);
-    default:          return -1;
+  if (candy_object_mask(self) & MASK_ARRAY)
+    return candy_array_handler((candy_array_t *)self, gc, evt, arg);
+  switch (candy_object_type(self)) {
+    case CANDY_TYPE_CCLOS: return candy_cclosure_handler((candy_cclosure_t *)self, gc, evt, arg);
+    case CANDY_TYPE_SCLOS: return candy_sclosure_handler((candy_sclosure_t *)self, gc, evt, arg);
+    case CANDY_TYPE_TABLE: return -1;
+    case CANDY_TYPE_PROTO: return candy_proto_handler((candy_proto_t *)self, gc, evt, arg);
+    case CANDY_TYPE_STATE: return candy_state_handler((candy_state_t *)self, gc, evt, arg);
+    default:               return -1;
   }
 }
 
@@ -88,7 +54,7 @@ candy_state_t *candy_new_state(candy_allocator_t alloc, void *arg) {
 }
 
 candy_state_t *candy_new_state_default(void) {
-  return candy_new_state(default_allocator, NULL);
+  return candy_new_state(_default_allocator, NULL);
 }
 
 candy_state_t *candy_new_coroutine(candy_state_t *self) {

@@ -29,6 +29,32 @@ struct candy_sclosure {
   candy_proto_t *proto;
 };
 
+static candy_err_t _cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc, void *arg) {
+  candy_gc_free(gc, self, sizeof(candy_cclosure_t));
+  return CANDY_OK;
+}
+
+static candy_err_t _cclosure_color(candy_cclosure_t *self, candy_gc_t *gc, void *arg) {
+  return CANDY_OK;
+}
+
+static candy_err_t _cclosure_diffuse(candy_cclosure_t *self, candy_gc_t *gc, void *arg) {
+  return CANDY_OK;
+}
+
+static candy_err_t _sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc, void *arg) {
+  candy_gc_free(gc, self, sizeof(candy_sclosure_t));
+  return CANDY_OK;
+}
+
+static candy_err_t _sclosure_color(candy_sclosure_t *self, candy_gc_t *gc, void *arg) {
+  return CANDY_OK;
+}
+
+static candy_err_t _sclosure_diffuse(candy_sclosure_t *self, candy_gc_t *gc, void *arg) {
+  return CANDY_OK;
+}
+
 candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_cfunc_t cfunc) {
   candy_cclosure_t *self = (candy_cclosure_t *)candy_gc_add(gc, ctx, CANDY_TYPE_CCLOS, sizeof(candy_cclosure_t));
   self->gray = NULL;
@@ -36,9 +62,13 @@ candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_excep_t *ctx, cand
   return self;
 }
 
-candy_err_t candy_cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc) {
-  candy_gc_free(gc, self, sizeof(candy_cclosure_t));
-  return CANDY_OK;
+candy_err_t candy_cclosure_handler(candy_cclosure_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
+  switch (evt) {
+    case EVT_DELETE:  return _cclosure_delete(self, gc, arg);
+    case EVT_COLOR:   return _cclosure_color(self, gc, arg);
+    case EVT_DIFFUSE: return _cclosure_diffuse(self, gc, arg);
+    default:          return CANDY_ERR;
+  }
 }
 
 candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_proto_t *proto) {
@@ -48,17 +78,13 @@ candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, cand
   return self;
 }
 
-candy_err_t candy_sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc) {
-  candy_gc_free(gc, self, sizeof(candy_sclosure_t));
-  return CANDY_OK;
-}
-
-candy_err_t candy_sclosure_color(candy_sclosure_t *self, candy_gc_t *gc) {
-  return CANDY_OK;
-}
-
-candy_err_t candy_sclosure_diffuse(candy_sclosure_t *self, candy_gc_t *gc) {
-  return CANDY_OK;
+candy_err_t candy_sclosure_handler(candy_sclosure_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
+  switch (evt) {
+    case EVT_DELETE:  return _sclosure_delete(self, gc, arg);
+    case EVT_COLOR:   return _sclosure_color(self, gc, arg);
+    case EVT_DIFFUSE: return _sclosure_diffuse(self, gc, arg);
+    default:          return CANDY_ERR;
+  }
 }
 
 const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self) {

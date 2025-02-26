@@ -30,11 +30,7 @@ candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char
 
 candy_array_t *candy_array_print(candy_gc_t *gc, candy_excep_t *ctx, const char format[], ...) CANDY_FORMAT(3, 4);
 
-candy_err_t candy_array_delete(candy_array_t *self, candy_gc_t *gc);
-
-candy_err_t candy_array_color(candy_array_t *self, candy_gc_t *gc);
-
-candy_err_t candy_array_diffuse(candy_array_t *self, candy_gc_t *gc);
+candy_err_t candy_array_handler(candy_array_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
 size_t candy_array_capacity(const candy_array_t *self);
 
