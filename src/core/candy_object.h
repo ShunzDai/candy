@@ -33,7 +33,7 @@ struct candy_object {
   #else /* CANDY_CONFIG_MEMORY_ALIGNMENT */
   uint8_t next[sizeof(candy_object_t *)];
   #endif /* CANDY_CONFIG_MEMORY_ALIGNMENT */
-  uint8_t type : 8;
+  uint8_t type : 4;
   uint8_t mask : 4;
   uint8_t mark : 4;
 };

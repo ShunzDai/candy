@@ -57,13 +57,18 @@ static candy_array_t *_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_ty
 }
 
 static candy_err_t _array_delete(candy_array_t *self, candy_gc_t *gc, void *arg) {
-  if (!_is_static(self)) {
+  size_t size = candy_array_size(self);
+  if (_is_static(self)) {
+    size += sizeof(candy_static_t);
+  }
+  else {
     candy_vector_deinit(&((candy_dynamic_t *)self)->vec,
       candy_gc_memory(gc),
       candy_type_size(candy_object_type((candy_object_t *)self))
     );
+    size += sizeof(candy_dynamic_t);
   }
-  candy_gc_free(gc, self, sizeof(candy_array_t));
+  candy_gc_free(gc, self, size);
   return CANDY_OK;
 }
 
@@ -89,6 +94,14 @@ static candy_err_t _array_diffuse(candy_array_t *self, candy_gc_t *gc, void *arg
   for (candy_object_t *it = (candy_object_t *)candy_array_data(self); it < tail; ++it) {
     candy_gc_event_handler(gc)(it, gc, EVT_COLOR, arg);
   }
+  return CANDY_OK;
+}
+
+static candy_err_t _array_hash(candy_array_t *self, candy_gc_t *gc, void *arg) {
+  *(candy_hash_t *)arg = hash_knuth(
+    candy_array_data(self),
+    candy_type_size(candy_object_type((candy_object_t *)self)) * candy_array_size(self)
+  );
   return CANDY_OK;
 }
 
@@ -134,6 +147,7 @@ candy_err_t candy_array_handler(candy_array_t *self, candy_gc_t *gc, candy_event
     case EVT_DELETE:  return _array_delete(self, gc, arg);
     case EVT_COLOR:   return _array_color(self, gc, arg);
     case EVT_DIFFUSE: return _array_diffuse(self, gc, arg);
+    case EVT_HASH:    return _array_hash(self, gc, arg);
     default:          return CANDY_ERR;
   }
 }

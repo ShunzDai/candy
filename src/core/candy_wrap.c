@@ -14,10 +14,29 @@
   * limitations under the License.
   */
 #include "core/candy_wrap.h"
+#include "core/candy_gc.h"
 #include "core/candy_lib.h"
 #include <inttypes.h>
 
 const candy_wrap_t CANDY_WRAP_NULL = {0};
+
+candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc) {
+  if (candy_wrap_mask(self) & MASK_ARRAY) {
+    candy_hash_t hash;
+    candy_gc_event_handler(gc)(candy_wrap_get_object(self), gc, EVT_HASH, &hash);
+    return hash;
+  }
+  switch (candy_wrap_type(self)) {
+    case CANDY_TYPE_NULL:
+    case CANDY_TYPE_BOOLEAN:
+    case CANDY_TYPE_INTEGER:
+    case CANDY_TYPE_FLOAT:
+    case CANDY_TYPE_CHAR:
+      return *(candy_hash_t *)candy_wrap_data(self);
+    default:
+      return 0;
+  }
+}
 
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
   switch (candy_wrap_type(self)) {
@@ -27,8 +46,8 @@ int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
       return fprintf(out, "%*" PRId64, align, candy_wrap_get_integer(self));
     case CANDY_TYPE_FLOAT:
       return fprintf(out, "%*f", align, candy_wrap_get_float(self));
-    // case CANDY_TYPE_CFUNC:
-    //   return fprintf(out, "%*p", align, candy_wrap_get_cfunc(self));
+    case CANDY_TYPE_CHAR:
+      return fprintf(out, "%*p", align, candy_wrap_get_object(self));
     default:
       return fprintf(out, "%*s", align, "NA");
   }

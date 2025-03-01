@@ -42,7 +42,7 @@ static candy_err_t _event_handler(candy_object_t *self, candy_gc_t *gc, candy_ev
   switch (candy_object_type(self)) {
     case CANDY_TYPE_CCLOS: return candy_cclosure_handler((candy_cclosure_t *)self, gc, evt, arg);
     case CANDY_TYPE_SCLOS: return candy_sclosure_handler((candy_sclosure_t *)self, gc, evt, arg);
-    case CANDY_TYPE_TABLE: return -1;
+    case CANDY_TYPE_TABLE: return candy_table_handler((candy_table_t *)self, gc, evt, arg);;
     case CANDY_TYPE_PROTO: return candy_proto_handler((candy_proto_t *)self, gc, evt, arg);
     case CANDY_TYPE_STATE: return candy_state_handler((candy_state_t *)self, gc, evt, arg);
     default:               return -1;

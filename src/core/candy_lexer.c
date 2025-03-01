@@ -205,9 +205,10 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
   * @param  multiline is multiline string or not
   * @retval tokens enum
   */
-static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta, const bool multiline) {
+static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta) {
   const char del = _view(self, 0);
-  /* skip first " or ' */
+  const bool multiline = _view(self, 1) == del && _view(self, 2) == del;
+  /* skip " or ' */
   _skipn(self, multiline ? 3 : 1);
   while (1) {
     switch (_view(self, 0)) {
@@ -320,7 +321,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
         break;
       /* is string */
       case '"': case '\'':
-        return _get_string(self, meta, _view(self, 1) == _view(self, 0) && _view(self, 2) == _view(self, 0));
+        return _get_string(self, meta);
       /* is line-continuation */
       case '\\':
         _skip(self);

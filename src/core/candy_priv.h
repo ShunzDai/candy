@@ -48,6 +48,8 @@ typedef enum candy_events {
   EVT_DELETE,
   EVT_COLOR,
   EVT_DIFFUSE,
+  EVT_HASH,
+  EVT_FORMAT,
 } candy_events_t;
 
 typedef uint32_t candy_hash_t;

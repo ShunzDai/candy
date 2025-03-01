@@ -24,6 +24,7 @@ extern "C" {
 #include <assert.h>
 
 union candy_udata {
+  candy_hash_t h;
   candy_integer_t i;
   candy_float_t f;
   candy_boolean_t b;
@@ -41,6 +42,8 @@ struct candy_wrap {
 };
 
 extern const candy_wrap_t CANDY_WRAP_NULL;
+
+candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc);
 
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align);
 
