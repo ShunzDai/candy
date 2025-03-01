@@ -16,7 +16,7 @@
 #include "core/candy_memory.h"
 #include "core/candy_exception.h"
 
-static const char TAG[] = "candy::memory";
+static const char TAG[] = "memory";
 
 candy_err_t candy_memory_init(candy_memory_t *self, candy_allocator_t alloc, void *arg) {
   self->used = 0;

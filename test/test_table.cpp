@@ -46,7 +46,7 @@ TEST(table, fill) {
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     candy_wrap_set_integer(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
+    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, nullptr, &key)), v[idx]);
   }
   candy_gc_deinit(&gc);
 }
@@ -65,7 +65,7 @@ TEST(table, reset) {
     candy_wrap_set_integer(&val, v[idx]);
     candy_table_set(self, &gc, nullptr, &key, &val);
     if (k[idx] % 3) {
-      candy_table_reset(self, &gc, &key);
+      candy_table_reset(self, &gc, nullptr, &key);
       k[idx] = 0;
     }
   }
@@ -75,7 +75,7 @@ TEST(table, reset) {
     if (k[idx] == 0)
       continue;
     candy_wrap_set_integer(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
+    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, nullptr, &key)), v[idx]);
   }
   candy_gc_deinit(&gc);
 }
@@ -89,7 +89,7 @@ TEST(table, key_obj) {
   candy_integer_t v[num];
   for (size_t idx = 0; idx < num; ++idx) {
     auto s = std::to_string(rand());
-    k[idx] = (candy_object_t *)candy_array_create_static(&gc, nullptr, CANDY_TYPE_CHAR, s.data(), s.size());
+    k[idx] = (candy_object_t *)candy_array_create_const(&gc, nullptr, CANDY_TYPE_CHAR, s.data(), s.size());
     v[idx] = rand();
     candy_wrap_t key{}, val{};
     candy_wrap_set_object(&key, k[idx]);
@@ -100,7 +100,7 @@ TEST(table, key_obj) {
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     candy_wrap_set_object(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
+    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, nullptr, &key)), v[idx]);
   }
   candy_gc_deinit(&gc);
 }

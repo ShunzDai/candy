@@ -35,4 +35,5 @@ CANDY_ERR(ERR_ARRAY  , 0x1001,   "array")
 CANDY_ERR(ERR_LEXICAL, 0x2000, "lexical")
 CANDY_ERR(ERR_SYNTAX , 0x2001,  "syntax")
 CANDY_ERR(ERR_VM     , 0x2002,      "vm")
+CANDY_ERR(ERR_UNHASH , 0xF000, "runtime")
 #endif /* CANDY_ERR */

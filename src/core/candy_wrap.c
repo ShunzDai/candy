@@ -14,13 +14,17 @@
   * limitations under the License.
   */
 #include "core/candy_wrap.h"
-#include "core/candy_gc.h"
 #include "core/candy_lib.h"
+#include "core/candy_exception.h"
+#include "core/candy_gc.h"
 #include <inttypes.h>
 
 const candy_wrap_t CANDY_WRAP_NULL = {0};
 
-candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc) {
+candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
+  if ((candy_wrap_mask(self) & MASK_HASHABLE) == 0) {
+    candy_excep_throw(ctx, CANDY_ERR_UNHASH, candy_wrap_get_object(self));
+  }
   if (candy_wrap_mask(self) & MASK_ARRAY) {
     candy_hash_t hash;
     candy_gc_event_handler(gc)(candy_wrap_get_object(self), gc, EVT_HASH, &hash);

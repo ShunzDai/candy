@@ -16,7 +16,7 @@
 #include "core/candy_buffer.h"
 #include <string.h>
 
-static const char TAG[] = "candy::buffer";
+static const char TAG[] = "buffer";
 
 static void *_wptr(candy_buffer_t *self) {
   return candy_vector_data(&self->vec) + self->w;

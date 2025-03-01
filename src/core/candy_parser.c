@@ -55,7 +55,7 @@ struct parser {
   funcstate_t *fs;
 };
 
-static const char TAG[] = "candy::parser";
+static const char TAG[] = "parser";
 
 static void _block(parser_t *self);
 

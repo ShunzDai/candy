@@ -44,8 +44,8 @@ struct candy_static {
 #define arr_assert(_condition, _format, ...) \
 candy_assert(ctx, gc, _condition, CANDY_ERR_ARRAY, _format, ##__VA_ARGS__)
 
-static bool _is_static(const candy_array_t *self) {
-  return candy_object_mask((candy_object_t *)self) & MASK_STATIC;
+static bool _is_const(const candy_array_t *self) {
+  return candy_object_mask((candy_object_t *)self) & MASK_CONST;
 }
 
 static candy_array_t *_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, size_t size, uint8_t mask) {
@@ -58,7 +58,7 @@ static candy_array_t *_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_ty
 
 static candy_err_t _array_delete(candy_array_t *self, candy_gc_t *gc, void *arg) {
   size_t size = candy_array_size(self);
-  if (_is_static(self)) {
+  if (_is_const(self)) {
     size += sizeof(candy_static_t);
   }
   else {
@@ -98,10 +98,7 @@ static candy_err_t _array_diffuse(candy_array_t *self, candy_gc_t *gc, void *arg
 }
 
 static candy_err_t _array_hash(candy_array_t *self, candy_gc_t *gc, void *arg) {
-  *(candy_hash_t *)arg = hash_knuth(
-    candy_array_data(self),
-    candy_type_size(candy_object_type((candy_object_t *)self)) * candy_array_size(self)
-  );
+  *(candy_hash_t *)arg = self->hash;
   return CANDY_OK;
 }
 
@@ -111,8 +108,8 @@ candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_type
   return (candy_array_t *)self;
 }
 
-candy_array_t *candy_array_create_static(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size) {
-  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, type, sizeof(candy_static_t) + size, MASK_STATIC);
+candy_array_t *candy_array_create_const(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size) {
+  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, type, sizeof(candy_static_t) + size, MASK_CONST);
   if (data && size) {
     memcpy(self->data, data, size);
   }
@@ -127,7 +124,7 @@ candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char
   int len = vsnprintf(NULL, 0, format, args_copy);
   if (len < 0)
     return NULL;
-  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, CANDY_TYPE_CHAR, sizeof(candy_static_t) + len + 1, MASK_STATIC);
+  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, CANDY_TYPE_CHAR, sizeof(candy_static_t) + len + 1, MASK_CONST);
   vsnprintf((char *)self->data, len + 1, format, args);
   self->size = len;
   self->arr.hash = hash_knuth(self->data, self->size);
@@ -153,25 +150,25 @@ candy_err_t candy_array_handler(candy_array_t *self, candy_gc_t *gc, candy_event
 }
 
 size_t candy_array_capacity(const candy_array_t *self) {
-  if (_is_static(self))
+  if (_is_const(self))
     return ((candy_static_t *)self)->size;
   return candy_vector_capacity(&((candy_dynamic_t *)self)->vec);
 }
 
 size_t candy_array_size(const candy_array_t *self) {
-  if (_is_static(self))
+  if (_is_const(self))
     return ((candy_static_t *)self)->size;
   return candy_vector_size(&((candy_dynamic_t *)self)->vec);
 }
 
 void *candy_array_data(const candy_array_t *self) {
-  if (_is_static(self))
+  if (_is_const(self))
     return (void *)((candy_static_t *)self)->data;
   return candy_vector_data(&((candy_dynamic_t *)self)->vec);
 }
 
 void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t capacity) {
-  arr_assert(!_is_static(self), "object must be a dynamic array");
+  arr_assert(!_is_const(self), "object must be a dynamic array");
   candy_vector_reserve(&((candy_dynamic_t *)self)->vec,
     candy_gc_memory(gc), ctx, capacity,
     candy_type_size(candy_object_type((candy_object_t *)self))
@@ -179,7 +176,7 @@ void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx
 }
 
 void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t size) {
-  arr_assert(!_is_static(self), "object must be a dynamic array");
+  arr_assert(!_is_const(self), "object must be a dynamic array");
   candy_vector_resize(&((candy_dynamic_t *)self)->vec,
     candy_gc_memory(gc), ctx, size,
     candy_type_size(candy_object_type((candy_object_t *)self))
@@ -187,7 +184,7 @@ void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx,
 }
 
 candy_err_t candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size) {
-  arr_assert(!_is_static(self), "object must be a dynamic array");
+  arr_assert(!_is_const(self), "object must be a dynamic array");
   return candy_vector_append(&((candy_dynamic_t *)self)->vec,
     candy_gc_memory(gc), ctx, data, size,
     candy_type_size(candy_object_type((candy_object_t *)self))

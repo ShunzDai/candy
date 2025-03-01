@@ -38,10 +38,11 @@ extern "C" {
 ))
 
 typedef enum candy_masks {
-  MASK_NONE   = 0,
-  MASK_TOMB   = 1 << 0,
-  MASK_ARRAY  = 1 << 1,
-  MASK_STATIC = 1 << 2,
+  MASK_NONE     = 0,
+  MASK_TOMB     = 1 << 0,
+  MASK_ARRAY    = 1 << 1,
+  MASK_CONST    = 1 << 2,
+  MASK_HASHABLE = MASK_CONST,
 } candy_masks_t;
 
 typedef enum candy_events {
