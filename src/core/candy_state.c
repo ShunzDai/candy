@@ -132,6 +132,7 @@ candy_err_t candy_state_handler(candy_state_t *self, candy_gc_t *gc, candy_event
 candy_err_t candy_state_close(candy_state_t *self) {
   candy_gc_t gc;
   memcpy(&gc, self->vm.gc, sizeof(candy_gc_t));
+  self->vm.gc = &gc;
   candy_gc_deinit(&gc);
   return CANDY_OK;
 }

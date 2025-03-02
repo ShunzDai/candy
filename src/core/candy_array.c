@@ -44,7 +44,7 @@ struct candy_static {
 #define arr_assert(_condition, _format, ...) \
 candy_assert(ctx, gc, _condition, CANDY_ERR_ARRAY, _format, ##__VA_ARGS__)
 
-static bool _is_const(const candy_array_t *self) {
+static inline bool _is_const(const candy_array_t *self) {
   return candy_object_mask((candy_object_t *)self) & MASK_CONST;
 }
 
@@ -57,18 +57,14 @@ static candy_array_t *_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_ty
 }
 
 static candy_err_t _array_delete(candy_array_t *self, candy_gc_t *gc, void *arg) {
-  size_t size = candy_array_size(self);
+  size_t cell = candy_type_size(candy_object_type((candy_object_t *)self));
   if (_is_const(self)) {
-    size += sizeof(candy_static_t);
+    candy_gc_free(gc, self, sizeof(candy_static_t) + cell * (candy_array_size(self) + 1));
   }
   else {
-    candy_vector_deinit(&((candy_dynamic_t *)self)->vec,
-      candy_gc_memory(gc),
-      candy_type_size(candy_object_type((candy_object_t *)self))
-    );
-    size += sizeof(candy_dynamic_t);
+    candy_vector_deinit(&((candy_dynamic_t *)self)->vec, candy_gc_memory(gc), cell);
+    candy_gc_free(gc, self, sizeof(candy_dynamic_t));
   }
-  candy_gc_free(gc, self, size);
   return CANDY_OK;
 }
 
@@ -109,12 +105,15 @@ candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_type
 }
 
 candy_array_t *candy_array_create_const(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size) {
-  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, type, sizeof(candy_static_t) + size, MASK_CONST);
+  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, type,
+    sizeof(candy_static_t) + candy_type_size(type) * (size + 1), MASK_CONST
+  );
   if (data && size) {
-    memcpy(self->data, data, size);
+    memcpy(self->data, data, candy_type_size(type) * size);
+    self->arr.hash = hash_knuth(data, candy_type_size(type) * size);
   }
+  memset(self->data + candy_type_size(type) * size, 0, candy_type_size(type));
   self->size = size;
-  self->arr.hash = hash_knuth(data, size);
   return (candy_array_t *)self;
 }
 
@@ -124,9 +123,8 @@ candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char
   int len = vsnprintf(NULL, 0, format, args_copy);
   if (len < 0)
     return NULL;
-  candy_static_t *self = (candy_static_t *)_array_create(gc, ctx, CANDY_TYPE_CHAR, sizeof(candy_static_t) + len + 1, MASK_CONST);
-  vsnprintf((char *)self->data, len + 1, format, args);
-  self->size = len;
+  candy_static_t *self = (candy_static_t *)candy_array_create_const(gc, ctx, CANDY_TYPE_CHAR, NULL, len);
+  vsnprintf((char *)self->data, self->size + 1, format, args);
   self->arr.hash = hash_knuth(self->data, self->size);
   return (candy_array_t *)self;
 }
