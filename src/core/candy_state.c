@@ -37,7 +37,9 @@ struct candy_primary {
 
 struct pack_primary {
   candy_excep_t ctx;
-  candy_gc_t *gc;
+  candy_handler_t handler;
+  candy_allocator_t alloc;
+  void *arg;
   candy_state_t *co;
 };
 
@@ -63,17 +65,20 @@ static candy_err_t candy_state_deinit(candy_state_t *self) {
 }
 
 static void _primary_create(struct pack_primary *self) {
-  candy_primary_t *p = (candy_primary_t *)candy_gc_add(self->gc, &self->ctx, CANDY_TYPE_STATE, sizeof(candy_primary_t));
-  memcpy(&p->gc, self->gc, sizeof(candy_gc_t));
-  candy_gc_move(&p->gc, GC_MV_PRIM);
+  candy_gc_t gc;
+  candy_gc_init(&gc, self->handler, self->alloc, self->arg);
+  candy_primary_t *p = (candy_primary_t *)candy_gc_add_primary(&gc, &self->ctx, sizeof(candy_primary_t));
+  memcpy(&p->gc, &gc, sizeof(candy_gc_t));
   candy_state_init(&p->co, &p->gc);
   self->co = &p->co;
 }
 
 static void _protected_call(struct pack_call *self) {
-  candy_sclosure_t *clos = candy_parse(self->co->vm.gc, &self->co->vm.ctx, self->reader, self->arg);
+  candy_object_t *clos = NULL;
+  candy_err_t err = candy_parse(self->co->vm.gc, &self->co->vm.ctx, self->reader, self->arg, &clos);
+  (void)err;
   candy_wrap_t wrap;
-  candy_wrap_set_object(&wrap, (candy_object_t *)clos);
+  candy_wrap_set_object(&wrap, clos);
   candy_vm_push(&self->co->vm, &wrap);
   candy_vm_call(&self->co->vm, self->co);
   candy_gc_full(self->co->vm.gc);
@@ -98,13 +103,12 @@ static candy_err_t _state_diffuse(candy_state_t *self, candy_gc_t *gc, void *arg
 }
 
 candy_state_t *candy_state_create(candy_handler_t handler, candy_allocator_t alloc, void *arg) {
-  /* create a new object on the heap from the one on the stack and migrate all its contents */
-  candy_gc_t gc;
   struct pack_primary pack = {
-    .gc = &gc,
+    .handler = handler,
+    .alloc = alloc,
+    .arg = arg,
     .co = NULL,
   };
-  candy_gc_init(&gc, handler, alloc, arg);
   candy_excep_init(&pack.ctx);
   candy_err_t err = candy_excep_try(&pack.ctx, (candy_excep_cb_t)_primary_create, &pack, NULL);
   candy_excep_deinit(&pack.ctx);

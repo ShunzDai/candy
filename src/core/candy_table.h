@@ -29,11 +29,11 @@ candy_err_t candy_table_fprint(const candy_table_t *self, FILE *out);
 
 candy_err_t candy_table_resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap);
 
-const candy_wrap_t *candy_table_get(const candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key);
+const candy_wrap_t *candy_table_get(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key);
 
 candy_err_t candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val);
 
-candy_err_t candy_table_reset(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key);
+candy_err_t candy_table_reset(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key);
 
 #ifdef __cplusplus
 }

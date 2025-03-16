@@ -46,7 +46,7 @@ TEST(table, fill) {
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     candy_wrap_set_integer(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, nullptr, &key)), v[idx]);
+    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
   }
   candy_gc_deinit(&gc);
 }
@@ -65,7 +65,7 @@ TEST(table, reset) {
     candy_wrap_set_integer(&val, v[idx]);
     candy_table_set(self, &gc, nullptr, &key, &val);
     if (k[idx] % 3) {
-      candy_table_reset(self, &gc, nullptr, &key);
+      candy_table_reset(self, &gc, &key);
       k[idx] = 0;
     }
   }
@@ -75,7 +75,7 @@ TEST(table, reset) {
     if (k[idx] == 0)
       continue;
     candy_wrap_set_integer(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, nullptr, &key)), v[idx]);
+    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
   }
   candy_gc_deinit(&gc);
 }
@@ -100,7 +100,7 @@ TEST(table, key_obj) {
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     candy_wrap_set_object(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, nullptr, &key)), v[idx]);
+    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
   }
   candy_gc_deinit(&gc);
 }

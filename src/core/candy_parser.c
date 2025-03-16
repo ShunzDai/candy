@@ -186,13 +186,15 @@ static void _block(parser_t *self) {
   _statement(self);
 }
 
-candy_sclosure_t *candy_parse(candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
+candy_err_t candy_parse(candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg, candy_object_t **out) {
   parser_t prsr;
   funcstate_t fs;
   _parser_init(&prsr, gc, ctx, reader, arg);
   _funcstate_open(&fs, &prsr);
-  _block(&prsr);
+  candy_err_t err = candy_excep_try(ctx, (candy_excep_cb_t)_block, &prsr, out);
   _funcstate_close(&fs, &prsr);
   _parser_deinit(&prsr);
-  return candy_sclosure_create(gc, ctx, fs.proto);
+  if (err == CANDY_OK)
+    *out = (candy_object_t *)candy_sclosure_create(gc, ctx, fs.proto);
+  return err;
 }

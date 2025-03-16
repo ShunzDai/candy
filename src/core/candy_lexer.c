@@ -202,7 +202,7 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
   * @brief  gets token of type string, like "hello world\n", 'A\tB\tC',
   *         "\x41\x42\x43", '\041\042\043'
   * @param  self lexer
-  * @param  multiline is multiline string or not
+  * @param  meta container
   * @retval tokens enum
   */
 static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta) {

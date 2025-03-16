@@ -56,9 +56,9 @@ typedef enum candy_log_level {
 
 #define candy_log(_level, _tag, _fmt, ...) do { \
   if (CANDY_CONFIG_LOG_LEVEL >= CANDY_LOG_LEVEL_##_level) { \
-    candy_log_impl(CANDY_LOG_COLOR_##_level #_level "(%s) " _fmt CANDY_LOG_RESET_COLOR "\n", _tag, __VA_ARGS__); \
+    candy_log_impl(CANDY_LOG_COLOR_##_level #_level "(%s): " _fmt CANDY_LOG_RESET_COLOR "\n", _tag, ##__VA_ARGS__); \
   } \
-} while(0)
+} while (0)
 
 #define candy_loge(_tag, ...) candy_log(E, _tag, __VA_ARGS__)
 #define candy_logw(_tag, ...) candy_log(W, _tag, __VA_ARGS__)

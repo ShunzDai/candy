@@ -88,18 +88,8 @@ candy_object_t *candy_gc_add(candy_gc_t *self, candy_excep_t *ctx, candy_types_t
   return _add_node(self, ctx, &self->pool, type, size);
 }
 
-candy_err_t candy_gc_move(candy_gc_t *self, candy_gc_move_t type) {
-  candy_object_t *obj = self->pool;
-  self->pool = *candy_object_next(obj);
-  candy_object_set_next(obj, NULL);
-  switch (type) {
-    case GC_MV_PRIM:
-      self->prim = obj;
-      break;
-    default:
-      return CANDY_ERR;
-  }
-  return CANDY_OK;
+candy_object_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t size) {
+  return _add_node(self, ctx, (candy_object_t **)&self->prim, CANDY_TYPE_STATE, size);
 }
 
 candy_err_t candy_gc_sweep(candy_gc_t *self) {
