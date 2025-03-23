@@ -66,7 +66,7 @@ static candy_err_t candy_state_deinit(candy_state_t *self) {
 
 static void _primary_create(struct pack_primary *self) {
   candy_gc_t gc;
-  candy_gc_init(&gc, self->handler, self->alloc, self->arg);
+  candy_gc_init(&gc, &self->ctx, self->handler, self->alloc, self->arg);
   candy_primary_t *p = (candy_primary_t *)candy_gc_add_primary(&gc, &self->ctx, sizeof(candy_primary_t));
   memcpy(&p->gc, &gc, sizeof(candy_gc_t));
   candy_state_init(&p->co, &p->gc);

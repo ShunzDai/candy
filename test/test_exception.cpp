@@ -29,7 +29,7 @@ TEST(catch, exception_err) {
     candy_gc_t gc;
   };
   arg info{};
-  candy_gc_init(&info.gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
+  candy_gc_init(&info.gc, nullptr, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_object_t *msg = nullptr;
   auto err = candy_excep_try(&info.jmp, (candy_excep_cb_t)+[](arg *info) {
     candy_excep_throw(&info->jmp, CANDY_ERR_LEXICAL, (candy_object_t *)candy_array_print(&info->gc, nullptr, "assert string"));
@@ -57,7 +57,7 @@ TEST(catch, nest_err) {
     size_t depth;
   };
   arg info{};
-  candy_gc_init(&info.gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
+  candy_gc_init(&info.gc, nullptr, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_object_t *msg = nullptr;
   auto err = candy_excep_try(&info.jmp, (candy_excep_cb_t)+[](arg *info) {
     EXPECT_EQ(++info->depth, candy_excep_depth(&info->jmp));

@@ -17,7 +17,7 @@
 
 TEST(array, string) {
   candy_gc_t gc{};
-  candy_gc_init(&gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
+  candy_gc_init(&gc, nullptr, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_TYPE_CHAR);
   candy_array_append(self, &gc, nullptr, (char *)"hello world", strlen("hello world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
@@ -27,7 +27,7 @@ TEST(array, string) {
 
 TEST(array, append) {
   candy_gc_t gc{};
-  candy_gc_init(&gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
+  candy_gc_init(&gc, nullptr, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_TYPE_CHAR);
   candy_array_append(self, &gc, nullptr, (char *)"hello", strlen("hello"));
   EXPECT_EQ(candy_array_size(self), strlen("hello"));

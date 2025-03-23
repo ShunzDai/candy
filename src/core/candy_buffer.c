@@ -39,7 +39,7 @@ static int _fill(candy_buffer_t *self, candy_memory_t *mem, candy_excep_t *ctx, 
       @ref CANDY_CONFIG_BUFFER_EXPAND_SIZE bytes, the buffer will be enlarged */
   if (cap <= offset) {
     candy_vector_reserve(&self->vec, mem, ctx, cap + CANDY_CONFIG_BUFFER_EXPAND_SIZE, sizeof(char));
-    candy_logd(TAG, "expanded from %zu to %zu", cap, candy_vector_capacity(&self->vec));
+    candy_logw(TAG, "expanded from %zu to %zu", cap, candy_vector_capacity(&self->vec));
   }
   /* otherwise buffer will be filled directly */
   else {

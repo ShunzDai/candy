@@ -25,8 +25,6 @@
 #include "core/candy_state.h"
 #include <stdlib.h>
 
-static const char TAG[] = "candy";
-
 static void *_default_allocator(void *prev, size_t prev_size, size_t next_size, void *arg) {
   (void)prev_size, (void)arg;
   if (next_size)
@@ -36,7 +34,6 @@ static void *_default_allocator(void *prev, size_t prev_size, size_t next_size, 
 }
 
 static candy_err_t _event_handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
-  candy_logd(TAG, "%s type %s", candy_event_str(evt), candy_type_str(candy_object_type(self)));
   if (candy_object_mask(self) & MASK_ARRAY)
     return candy_array_handler((candy_array_t *)self, gc, evt, arg);
   switch (candy_object_type(self)) {

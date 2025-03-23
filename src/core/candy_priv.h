@@ -38,11 +38,13 @@ extern "C" {
 ))
 
 typedef enum candy_masks {
-  MASK_NONE     = 0,
-  MASK_TOMB     = 1 << 0,
-  MASK_ARRAY    = 1 << 1,
-  MASK_CONST    = 1 << 2,
-  MASK_HASHABLE = MASK_CONST,
+  MASK_NONE     = (uint8_t)(0),
+  MASK_ARRAY    = (uint8_t)(1 << 0),
+  MASK_CONST    = (uint8_t)(1 << 1),
+  MASK_HASHABLE = (uint8_t)(MASK_CONST),
+  /** @brief since the actual key must contain the hashable bits, when the key in the table is reset,
+    the slot will be filled with a mask that does not contain the hashable bits as a tombstone */
+  MASK_TOMB     = (uint8_t)(~MASK_HASHABLE),
 } candy_masks_t;
 
 typedef enum candy_events {
@@ -50,10 +52,11 @@ typedef enum candy_events {
   EVT_COLOR,
   EVT_DIFFUSE,
   EVT_HASH,
+  EVT_COMPARE,
   EVT_FORMAT,
 } candy_events_t;
 
-typedef uint32_t candy_hash_t;
+typedef int32_t candy_hash_t;
 
 typedef struct candy_memory candy_memory_t;
 typedef struct candy_gc candy_gc_t;
