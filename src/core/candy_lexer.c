@@ -21,96 +21,93 @@
 #include <string.h>
 
 #define lex_assert(_condition, _format, ...) \
-candy_assert(self->ctx, self->gc, _condition, CANDY_ERR_LEXICAL, _format, ##__VA_ARGS__)
+candy_assert(self->ctx, self->gc, _condition, CANDY_ERR_LEXICAL, \
+_format, ##__VA_ARGS__)
 
 static const char TAG[] = "lexer";
 
-static const char *_head(candy_lexer_t *self) {
+static inline const char *_head(candy_lexer_t *self) {
   return candy_buffer_head(&self->buff);
 }
 
-static size_t _size(candy_lexer_t *self) {
+static inline size_t _size(candy_lexer_t *self) {
   return candy_buffer_size(&self->buff);
 }
 
-static void _reset(candy_lexer_t *self) {
+static inline void _reset(candy_lexer_t *self) {
   candy_buffer_reset(&self->buff);
 }
 
-static char _view(candy_lexer_t *self, size_t ahead) {
+static inline char _view(candy_lexer_t *self, size_t ahead) {
   char ch = 0;
   int res = candy_buffer_view(&self->buff, candy_gc_memory(self->gc), self->ctx, &ch, ahead);
   lex_assert(res >= 0, "abnormal input stream");
   return ch;
 }
 
-static void _readn(candy_lexer_t *self, char str[], size_t size) {
+static inline void _readn(candy_lexer_t *self, char str[], size_t size) {
   int res = candy_buffer_read(&self->buff, candy_gc_memory(self->gc), self->ctx, str, size);
   lex_assert(res >= 0, "abnormal input stream");
   self->dbg.column += size;
 }
 
-static char _read(candy_lexer_t *self) {
+static inline char _read(candy_lexer_t *self) {
   char ch = 0;
   _readn(self, &ch, 1);
   return ch;
 }
 
-static void _skipn(candy_lexer_t *self, size_t n) {
+static inline void _skipn(candy_lexer_t *self, size_t n) {
   _readn(self, NULL, n);
 }
 
-static void _skip(candy_lexer_t *self) {
+static inline void _skip(candy_lexer_t *self) {
   _skipn(self, 1);
 }
 
-static void _save_char(candy_lexer_t *self, char ch) {
+static inline void _save_char(candy_lexer_t *self, char ch) {
   candy_buffer_write(&self->buff, &ch, 1);
 }
 
-static void _save(candy_lexer_t *self) {
+static inline void _save(candy_lexer_t *self) {
   _save_char(self, _read(self));
 }
 
 /**
-  * @brief  check whether the next byte of the stream satisfies the check function,
-  *         if so, process this byte with the predicate
-  * @param  self  lexer
-  * @param  check check function
-  * @param  pred  predicate
-  * @retval boolean
-  */
+   * @brief  Check whether the next byte of the stream satisfies the check function.
+   * If so, it applies the predicate to this byte.
+ * @param  self  lexer
+ * @param  check check function
+ * @param  pred  predicate
+ * @retval boolean
+ */
 static inline bool _check_next(candy_lexer_t *self, bool (*check)(char), void (*pred)(candy_lexer_t *)) {
   return check(_view(self, 0)) ? pred(self), true : false;
 }
 
 /**
-  * @brief  checks whether the next byte of the stream is one of the two bytes the user expects,
-  *         if so, process this byte with the predicate
-  * @param  self lexer
-  * @param  str  the string that the user expects
-  * @param  pred predicate
-  * @retval boolean
-  */
+ * @brief  Checks whether the next byte of the stream is one of the two bytes it expects.
+ * If so, it applies the predicate to this byte.
+ * @param  self lexer
+ * @param  str  the string that the expects
+ * @param  pred predicate
+ * @retval boolean
+ */
 static inline bool _check_dual(candy_lexer_t *self, const char str[], void (*pred)(candy_lexer_t *)) {
   return (_view(self, 0) == str[0] || _view(self, 0) == str[1]) ? pred(self), true : false;
 }
 
 /**
-  * @brief  get newline, like
-  *         \r
-  *         \n
-  *         \r\n
-  *         \n\r
-  *         first byte has been checked by up layer function
-  * @param  self lexer
-  * @param  pred predicate
-  * @return none
-  */
+ * @brief  Get newline, like '\r', '\n', '\r\n', '\n\r'.
+ * First byte has been checked by up layer function.
+ * @param  self lexer
+ * @param  pred predicate
+ * @return none
+ */
 static void _handle_newline(candy_lexer_t *self, void (*pred)(candy_lexer_t *)) {
-  char old = _view(self, 0);
+  char ch = _view(self, 0);
   pred(self);
-  if (_view(self, 0) == "\r\n"[old == '\r'])
+  if (_view(self, 0) == "\r\n"[ch == '\r'])
     pred(self);
   self->dbg.line++;
   self->dbg.column = 1;
@@ -131,10 +128,10 @@ static void _skip_line(candy_lexer_t *self) {
 }
 
 /**
-  * @brief  save octal escape character, like "0", "01", "012"
-  * @param  self lexer
-  * @retval none
-  */
+ * @brief  Save octal escape character, like "0", "01", "012".
+ * @param  self lexer
+ * @retval none
+ */
 static void _save_oct(candy_lexer_t *self) {
   char buff[] = {_view(self, 0), _view(self, 1), _view(self, 2)};
   char *end = NULL;
@@ -144,10 +141,10 @@ static void _save_oct(candy_lexer_t *self) {
 }
 
 /**
-  * @brief  save hexadecimal escape character, like "30"
-  * @param  self lexer
-  * @retval none
-  */
+ * @brief  Save hexadecimal escape character, like "30".
+ * @param  self lexer
+ * @retval none
+ */
 static void _save_hex(candy_lexer_t *self) {
   lex_assert(is_hex(_view(self, 0)) && is_hex(_view(self, 1)), "invalid hexadecimal escape");
   _save_char(self, chtonum(_read(self)) << 4 | chtonum(_read(self)));
@@ -181,9 +178,11 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
       _save(self);
       token = TK_FLOAT;
     }
-    else {
-      lex_assert(!is_alpha(_view(self, 0)), "extra text after expected end of number");
+    else if (!is_alpha(_view(self, 0))) {
       break;
+    }
+    else {
+      lex_assert(false, "extra text after expected end of number");
     }
   }
   char *end = NULL;
@@ -199,12 +198,12 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
 }
 
 /**
-  * @brief  gets token of type string, like "hello world\n", 'A\tB\tC',
-  *         "\x41\x42\x43", '\041\042\043'
-  * @param  self lexer
-  * @param  meta container
-  * @retval tokens enum
-  */
+ * @brief  gets token of type string, like "hello world\n", 'A\tB\tC',
+ * "\x41\x42\x43", '\041\042\043'.
+ * @param  self lexer
+ * @param  meta container
+ * @retval tokens enum
+ */
 static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta) {
   const char del = _view(self, 0);
   const bool multiline = _view(self, 1) == del && _view(self, 2) == del;

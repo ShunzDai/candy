@@ -19,7 +19,7 @@
 
 #ifdef CANDY_ERR_ENUM
 #undef CANDY_ERR_ENUM
-#define CANDY_ERR(_err, _val, _str) CANDY_##_err = -_val,
+#define CANDY_ERR(_err, _val, _str) CANDY_##_err = _val,
 #endif /* CANDY_ERR_ENUM */
 
 #ifdef CANDY_ERR_STR
@@ -28,13 +28,13 @@
 #endif /* CANDY_ERR_STR */
 
 #ifdef CANDY_ERR
-CANDY_ERR(OK         , 0x0000,         ok)
-CANDY_ERR(ERR        , 0x0001,    default)
-CANDY_ERR(ERR_MEMORY , 0x1000,     memory)
-CANDY_ERR(ERR_LIMITED, 0x1001,    limited)
-CANDY_ERR(ERR_ARRAY  , 0x2000,      array)
-CANDY_ERR(ERR_LEXICAL, 0x3000,    lexical)
-CANDY_ERR(ERR_SYNTAX , 0x3001,     syntax)
-CANDY_ERR(ERR_VM     , 0x3002,         vm)
-CANDY_ERR(ERR_UNHASH , 0xF000, unhashable)
+CANDY_ERR(OK         ,  0x0000,         ok)
+CANDY_ERR(ERR        , -0x0001,    default)
+CANDY_ERR(ERR_MEMORY , -0x1000,     memory)
+CANDY_ERR(ERR_LIMITED, -0x1001,    limited)
+CANDY_ERR(ERR_ARRAY  , -0x2000,      array)
+CANDY_ERR(ERR_LEXICAL, -0x3000,    lexical)
+CANDY_ERR(ERR_SYNTAX , -0x3001,     syntax)
+CANDY_ERR(ERR_VM     , -0x3002,         vm)
+CANDY_ERR(ERR_UNHASH , -0xF000, unhashable)
 #endif /* CANDY_ERR */
