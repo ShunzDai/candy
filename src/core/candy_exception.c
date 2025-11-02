@@ -18,8 +18,8 @@
 #include <stdlib.h>
 
 struct context {
-  jmp_buf jmp;
   struct context *prev;
+  jmp_buf jmp;
   candy_object_t *err;
 };
 

@@ -140,9 +140,9 @@ candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char
 
 candy_array_t *candy_array_print(candy_gc_t *gc, candy_excep_t *ctx, const char format[], ...) {
   va_list args;
-	va_start(args, format);
-	candy_array_t *out = candy_array_vprint(gc, ctx, format, args);
-	va_end(args);
+  va_start(args, format);
+  candy_array_t *out = candy_array_vprint(gc, ctx, format, args);
+  va_end(args);
   return out;
 }
 
