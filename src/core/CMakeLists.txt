@@ -12,6 +12,7 @@ file(GLOB_RECURSE CANDY_SOURCES_CORE LIST_DIRECTORIES false
   candy_array.c
   candy_lexer.c
   candy_parser.c
+  candy_binary.c
   candy_vm.c
   candy_gc.c
   candy_state.c

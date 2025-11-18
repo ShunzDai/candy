@@ -31,13 +31,23 @@ candy_err_t candy_state_close(candy_state_t *self);
 
 candy_err_t candy_state_dostream(candy_state_t *self, candy_reader_t reader, void *arg);
 
+candy_err_t candy_state_call(candy_state_t *self, int narg, int nres);
+
 candy_err_t candy_state_push_integer(candy_state_t *self, candy_integer_t val);
 
 candy_err_t candy_state_push_float(candy_state_t *self, candy_float_t val);
 
+candy_err_t candy_state_push_object(candy_state_t *self, const candy_object_t *val);
+
+candy_err_t candy_state_push_cfunc(candy_state_t *self, candy_cfunc_t val);
+
 candy_integer_t candy_state_to_integer(candy_state_t *self, int idx);
 
 candy_float_t candy_state_to_float(candy_state_t *self, int idx);
+
+candy_object_t *candy_state_to_object(candy_state_t *self, int idx);
+
+candy_cfunc_t candy_state_to_cfunc(candy_state_t *self, int idx);
 
 bool candy_state_is_primary(candy_state_t *self);
 

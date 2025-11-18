@@ -25,25 +25,24 @@ extern "C" {
 
 typedef struct candy_vm candy_vm_t;
 
+typedef struct candy_callinfo candy_callinfo_t;
+
 struct candy_vm {
   candy_excep_t ctx;
   candy_vector_t s;
+  candy_callinfo_t *ci;
   candy_gc_t *gc;
-  // candy_callinfo_t *ci;
 };
 
 candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc);
+
 candy_err_t candy_vm_deinit(candy_vm_t *self);
 
-candy_err_t candy_vm_fprint(candy_vm_t *self, FILE *out);
+candy_err_t candy_vm_call(candy_vm_t *self, int narg, int nres, candy_state_t *co, candy_object_t **out);
 
-candy_err_t candy_vm_set_global(candy_vm_t *self, const char name[]);
-candy_err_t candy_vm_get_global(candy_vm_t *self, const char name[]);
+candy_err_t candy_vm_pop(candy_vm_t *self, size_t n);
 
-candy_err_t candy_vm_call(candy_vm_t *self, candy_state_t *co);
-
-candy_err_t candy_vm_pop(candy_vm_t *self);
-candy_err_t candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap);
+candy_err_t candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap, size_t n);
 
 const candy_wrap_t *candy_vm_view(candy_vm_t *self, int idx);
 

@@ -18,6 +18,20 @@
 TEST(state, push_pull) {
   candy_state_t *co = candy_new_state_default();
   candy_state_push_integer(co, 123);
-  ASSERT_EQ(candy_state_to_integer(co, -1), 123);
+  EXPECT_EQ(candy_state_to_integer(co, 0), 123);
+  EXPECT_EQ(candy_state_to_integer(co, -1), 123);
+  candy_close(co);
+}
+
+TEST(state, call) {
+  candy_state_t *co = candy_new_state_default();
+  candy_state_push_cfunc(co, +[](candy_state_t *self) -> int {
+    EXPECT_EQ(candy_state_to_integer(self, -1), 123);
+    candy_state_push_integer(self, 456);
+    return 1;
+  });
+  candy_state_push_integer(co, 123);
+  EXPECT_EQ(candy_state_call(co, 1, 1), CANDY_OK);
+  EXPECT_EQ(candy_state_to_integer(co, -1), 456);
   candy_close(co);
 }
