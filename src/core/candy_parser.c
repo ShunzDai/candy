@@ -208,6 +208,7 @@ static void _expr_suffixed(parser_t *self, expdesc_t *e) {
         candy_lexer_next(&self->ls);
         if (candy_lexer_lookahead(&self->ls) == ')') {
           exp.type = EXP_TYPE_VOID;
+          (void)exp;
         }
         candy_lexer_next(&self->ls);
         break;

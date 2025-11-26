@@ -23,13 +23,21 @@ extern "C" {
 #include "core/candy_vector.h"
 #include "core/candy_priv.h"
 
-typedef struct candy_vm candy_vm_t;
-
 typedef struct candy_callinfo candy_callinfo_t;
+
+typedef struct candy_vm candy_vm_t;
+struct candy_callinfo {
+  candy_callinfo_t *prev;
+  candy_callinfo_t *next;
+  ptrdiff_t bos;
+  ptrdiff_t tos;
+  candy_inst_t *pc;
+};
 
 struct candy_vm {
   candy_excep_t ctx;
   candy_vector_t s;
+  candy_callinfo_t base_ci;
   candy_callinfo_t *ci;
   candy_gc_t *gc;
 };
