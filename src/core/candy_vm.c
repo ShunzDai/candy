@@ -14,10 +14,8 @@
   * limitations under the License.
   */
 #include "core/candy_vm.h"
-#include "core/candy_exception.h"
 #include "core/candy_gc.h"
 #include "core/candy_wrap.h"
-#include "core/candy_vector.h"
 #include "core/candy_array.h"
 #include "core/candy_table.h"
 #include "core/candy_proto.h"
@@ -27,41 +25,59 @@
 #define vm_assert(_condition, _format, ...) \
 candy_assert(&self->ctx, self->gc, _condition, CANDY_ERR_VM, _format, ##__VA_ARGS__)
 
-typedef struct callinfo callinfo_t;
 typedef struct vmll vmll_t;
 
-struct callinfo {
-  callinfo_t *prev;
-  callinfo_t *next;
-  candy_wrap_t *tos;
-  candy_wrap_t *bos;
-  candy_inst_t *pc;
-  int nres;
-};
-
 struct vmll {
+  candy_callinfo_t ci;
   candy_vm_t *vm;
-  callinfo_t *ci;
   candy_state_t *co;
 };
 
-static candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, callinfo_t *ci, candy_state_t *co) {
-  self->vm = vm;
-  self->ci = ci;
-  self->co = co;
-  return CANDY_OK;
+static const char TAG[] = "vm";
+
+static candy_err_t _callinfo_init(candy_callinfo_t *self, candy_callinfo_t *prev, int narg) {
+  candy_err_t err = CANDY_OK;
+  self->prev = prev;
+  self->next = NULL;
+  prev->next = self;
+  self->bos = prev->tos - narg - 1;
+  self->tos = prev->tos;
+  self->pc = NULL;
+  candy_logi(TAG, "new callinfo: bos %lu, tos %lu", self->bos, self->tos);
+  return err;
 }
 
-static candy_err_t _vmll_deinit(vmll_t *self) {
-  return CANDY_OK;
+static candy_err_t _callinfo_deinit(candy_callinfo_t *self, candy_callinfo_t *prev, int nres) {
+  candy_err_t err = CANDY_OK;
+  prev->next = self->next;
+  prev->tos = prev->tos - nres;
+  candy_logi(TAG, "del callinfo: bos %lu, tos %lu", prev->bos, prev->tos);
+  return err;
 }
 
-// static void _op_loadc(candy_vm_t *self, const candy_inst_t *pc) {
-//   candy_wrap_t *reg = NULL;
-//   reg[pc->iabc.a] = reg[pc->iabc.b];
+// static inline void _op_move(candy_vm_t *self, const candy_inst_t *pc, candy_callinfo_t *ci) {
+//   ptrdiff_t a_idx = ci->bos + pc->iabx.a;
+//   ptrdiff_t b_idx = ci->bos + pc->iabx.b;
+//   vm_assert(a_idx < self->ci->tos, "invalid register index %d (MOVE)", pc->iabx.a);
+//   vm_assert(b_idx < self->ci->tos, "invalid register index %d (MOVE)", pc->iabx.b);
+//   candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
+//   stack[a_idx] = stack[b_idx];
 // }
 
-static void _execute(vmll_t *self, callinfo_t *ci) {
+static void _vmll_execute_cfunction(candy_vm_t *self, candy_callinfo_t *ci, const candy_wrap_t *fn, candy_state_t *co) {
+  candy_cfunc_t f = candy_wrap_get_cfunc(fn);
+  ++ci->bos;
+  int res = f(co);
+  --ci->bos;
+  (void)res;
+  candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
+  for (int i = 0; i < res; ++i) {
+    candy_logd(TAG, "mv %lu to %lu", ci->tos + i - res, ci->bos + i);
+    stack[ci->bos + i] = stack[ci->tos + i - res];
+  }
+}
+
+static void _vmll_execute_sclosure(candy_vm_t *self, candy_callinfo_t *ci, const candy_wrap_t *fn) {
   const candy_inst_t *head = NULL;
   const candy_inst_t *tail = head;
   for (const candy_inst_t *it = head; it < tail; ++it) {
@@ -72,89 +88,96 @@ static void _execute(vmll_t *self, callinfo_t *ci) {
   }
 }
 
-static void _call(vmll_t *self) {
-  _execute(self, self->ci);
-}
-
-candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc) {
-  candy_excep_init(&self->ctx);
-  candy_vector_init(&self->s);
-  self->gc = gc;
-  return CANDY_OK;
-}
-
-candy_err_t candy_vm_deinit(candy_vm_t *self) {
-  candy_vector_deinit(&self->s, candy_gc_memory(self->gc), sizeof(candy_wrap_t));
-  candy_excep_deinit(&self->ctx);
-  return CANDY_OK;
-}
-
-// candy_err_t candy_vm_fprint(candy_vm_t *self, FILE *out) {
-//   return candy_wrap_fprint(candy_vm_pop(self), out, 0, candy_table_fprint);
-// }
-
-// candy_err_t candy_vm_regist(candy_vm_t *self, const candy_regist_t list[], int size) {
-//   for (int idx = 0; idx < size; ++idx) {
-//     candy_wrap_t key = {0}, val = {0};
-//     candy_wrap_set_string(&key, list[idx].name, strlen(list[idx].name));
-//     candy_wrap_set_cfunc(&val, &list[idx].func, 1);
-//     candy_table_set(&self->glb, &key, &val);
-//   }
-//   return CANDY_OK;
-// }
-
-// candy_err_t candy_vm_set_global(candy_vm_t *self, const char name[]) {
-//   candy_wrap_t key;
-//   candy_wrap_set_string(&key, name, strlen(name));
-//   candy_table_set(&self->glb, &key, candy_vm_pop(self));
-//   candy_wrap_deinit(&key);
-//   return CANDY_OK;
-// }
-
-// candy_err_t candy_vm_get_global(candy_vm_t *self, const char name[]) {
-//   candy_wrap_t key;
-//   candy_wrap_set_string(&key, name, strlen(name));
-//   candy_vm_push(self, candy_table_get(&self->glb, &key));
-//   candy_wrap_deinit(&key);
-//   return CANDY_OK;
-// }
-
-// candy_err_t candy_vm_call(candy_vm_t *self, int nargs, int nresults) {
-//   (*candy_wrap_get_cfunc(candy_vm_pop(self)))((candy_state_t *)self);
-//   return CANDY_OK;
-// }
-
-candy_err_t candy_vm_call(candy_vm_t *self, candy_state_t *co) {
-  callinfo_t ci;
-  vmll_t vmll;
-  _vmll_init(&vmll, self, &ci, co);
-  candy_err_t err = candy_excep_try(&self->ctx, (candy_excep_cb_t)_call, &vmll, NULL);
-  _vmll_deinit(&vmll);
+static candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, int narg, int nres, candy_state_t *co) {
+  candy_err_t err = CANDY_OK;
+  _callinfo_init(&self->ci, vm->ci, narg);
+  vm->ci = &self->ci;
+  self->vm = vm;
+  self->co = co;
   return err;
 }
 
-candy_err_t candy_vm_pop(candy_vm_t *self) {
-  size_t size = candy_vector_size(&self->s);
-  vm_assert(size, "stack is already empty");
-  candy_vector_resize(&self->s, candy_gc_memory(self->gc), &self->ctx, size - 1, sizeof(candy_wrap_t));
-  return CANDY_OK;
+static candy_err_t _vmll_deinit(vmll_t *self, int nres) {
+  candy_err_t err = CANDY_OK;
+  candy_vm_t *vm = self->vm;
+  _callinfo_deinit(&self->ci, vm->ci->prev, nres);
+  vm->ci = vm->ci->prev;
+  return err;
 }
 
-candy_err_t candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap) {
+static void _call(vmll_t *self) {
+  candy_callinfo_t *ci = self->vm->ci;
+  candy_logi(TAG, "call function at stack index %lu", ci->bos);
+  const candy_wrap_t *fn = candy_vm_view(self->vm, 0);
+  candy_logi(TAG, "function type %s", candy_type_str(candy_wrap_type(fn)));
+  switch (candy_wrap_type(fn)) {
+    case CANDY_TYPE_CFUNC:
+      _vmll_execute_cfunction(self->vm, ci, fn, self->co);
+      break;
+    case CANDY_TYPE_SCLOS:
+      _vmll_execute_sclosure(self->vm, ci, fn);
+      break;
+    default:
+      assert(0);
+      break;
+  }
+}
+
+candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc) {
+  candy_err_t err = CANDY_OK;
+  candy_excep_init(&self->ctx);
+  candy_vector_init(&self->s);
+  candy_vector_resize(&self->s, candy_gc_memory(gc), &self->ctx, CANDY_CONFIG_VM_STACK_SIZE, sizeof(candy_wrap_t));
+  memset(&self->base_ci, 0, sizeof(candy_callinfo_t));
+  self->ci = &self->base_ci;
+  self->gc = gc;
+  return err;
+}
+
+candy_err_t candy_vm_deinit(candy_vm_t *self) {
+  candy_err_t err = CANDY_OK;
+  self->ci = NULL;
+  candy_vector_deinit(&self->s, candy_gc_memory(self->gc), sizeof(candy_wrap_t));
+  candy_excep_deinit(&self->ctx);
+  self->gc = NULL;
+  return err;
+}
+
+candy_err_t candy_vm_call(candy_vm_t *self, int narg, int nres, candy_state_t *co, candy_object_t **out) {
+  vmll_t vmll;
+  _vmll_init(&vmll, self, narg, nres, co);
+  candy_err_t err = candy_excep_try(&self->ctx, (candy_excep_cb_t)_call, &vmll, out);
+  _vmll_deinit(&vmll, nres);
+  return err;
+}
+
+candy_err_t candy_vm_pop(candy_vm_t *self, size_t n) {
+  candy_err_t err = CANDY_OK;
+  ptrdiff_t tos = self->ci->tos;
+  ptrdiff_t bos = self->ci->bos;
+  vm_assert(tos >= bos + (ptrdiff_t)n, "stack index out of bounds");
+  self->ci->tos -= n;
+  candy_logi(TAG, "pop %lu items from stack, new tos %lu", n, self->ci->tos);
+  return err;
+}
+
+candy_err_t candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap, size_t n) {
+  candy_err_t err = CANDY_OK;
   size_t size = candy_vector_size(&self->s);
-  vm_assert(size < CANDY_CONFIG_VM_STACK_SIZE, "stack overflow");
-  candy_vector_append(&self->s, candy_gc_memory(self->gc), &self->ctx, wrap, 1, sizeof(candy_wrap_t));
-  return CANDY_OK;
+  ptrdiff_t tos = self->ci->tos;
+  vm_assert(tos + n <= size, "stack overflow");
+  memcpy((candy_wrap_t *)candy_vector_data(&self->s) + tos, wrap, sizeof(candy_wrap_t) * n);
+  self->ci->tos += n;
+  candy_logi(TAG, "push %lu items to stack, new tos %lu", n, self->ci->tos);
+  return err;
 }
 
 const candy_wrap_t *candy_vm_view(candy_vm_t *self, int idx) {
-  size_t size = candy_vector_size(&self->s);
-  if (idx < 0) {
-    vm_assert(size >= (size_t)(-idx), "stack index out of bounds");
-    return (const candy_wrap_t *)candy_vector_data(&self->s) + size + idx;
-  }
-  else {
-    vm_assert(size > (size_t)idx, "stack index out of bounds");
-    return (const candy_wrap_t *)candy_vector_data(&self->s) + idx;
-  }
+  ptrdiff_t bos = self->ci->bos;
+  ptrdiff_t tos = self->ci->tos;
+  ptrdiff_t offset = (idx < 0 ? tos : bos) + idx;
+  candy_logi(TAG, "view stack index %d (real %lu) bos %lu tos %lu", idx, offset, bos, tos);
+  vm_assert(offset >= bos, "stack index out of bounds");
+  vm_assert(offset < tos, "stack index out of bounds");
+  return (const candy_wrap_t *)candy_vector_data(&self->s) + offset;
 }

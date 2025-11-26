@@ -41,11 +41,11 @@ static inline bool _comp(candy_object_t **pos, candy_hash_t key, candy_gc_t *gc)
 
 static inline candy_object_t **_find(const candy_map_t *self, candy_gc_t *gc, candy_hash_t key, bool view) {
   candy_hash_t hash = key;
-  candy_map_find(candy_object_t *, _is_none, _is_tomb, _comp);
+  candy_map_find(candy_object_t *);
 }
 
 static inline candy_err_t _resize(candy_map_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap) {
-  candy_map_resize(candy_object_t *, _is_none, _key);
+  candy_map_resize(candy_object_t *);
 }
 
 static candy_object_t *_add_node(candy_gc_t *self, candy_excep_t *ctx, candy_object_t **pos, candy_types_t type, size_t size) {

@@ -28,22 +28,22 @@ struct candy_map {
   uint8_t cap;
 };
 
-#define candy_map_find(_slot_type, _pred_none, _pred_tomb, _pred_comp) { \
+#define candy_map_find(_type) { \
   const int32_t list[] = {3, -3, 5, -5, 7, -7, INT32_MAX}; \
   for (size_t idx = 0; list[idx] != INT32_MAX; ++idx) { \
-    _slot_type *pos = (_slot_type *)self->data + ((hash + list[idx]) & (capacity_to_size(self->cap) - 1)); \
-    if (_pred_none(pos)) { \
+    _type *pos = (_type *)self->data + ((hash + list[idx]) & (capacity_to_size(self->cap) - 1)); \
+    if (_is_none(pos)) { \
       /* if it is view mode, determine whether it is a tombstone */ \
       if (view) { \
         /* if it is a tombstone, keep searching */ \
-        if (_pred_tomb(pos)) \
+        if (_is_tomb(pos)) \
           continue; \
         /* otherwise, this key does not exist */ \
         break; \
       } \
       /* otherwise, it has been found */ \
     } \
-    else if (!_pred_comp(pos, key, gc)) { \
+    else if (!_comp(pos, key, gc)) { \
       continue; \
     } \
     return pos; \
@@ -51,21 +51,21 @@ struct candy_map {
   return NULL; \
 }
 
-#define candy_map_resize(_slot_type, _pred_none, _pred_key) { \
+#define candy_map_resize(_type) { \
   size_t nsize = capacity_to_size(cap); \
   size_t psize = capacity_to_size(self->cap); \
   candy_map_t m; \
   m.cap = cap; \
-  m.data = candy_memory_alloc(candy_gc_memory(gc), ctx, sizeof(_slot_type) * nsize); \
-  memset(m.data, 0, sizeof(_slot_type) * nsize); \
+  m.data = candy_memory_alloc(candy_gc_memory(gc), ctx, sizeof(_type) * nsize); \
+  memset(m.data, 0, sizeof(_type) * nsize); \
   for (size_t idx = 0; idx < psize; ++idx) { \
-    _slot_type *from = (_slot_type *)self->data + idx; \
-    if (_pred_none(from)) \
+    _type *from = (_type *)self->data + idx; \
+    if (_is_none(from)) \
       continue; \
-    _slot_type *to = _find(&m, gc, _pred_key(from, gc), false); \
+    _type *to = _find(&m, gc, _key(from, gc), false); \
     *to = *from; \
   } \
-  candy_memory_free(candy_gc_memory(gc), self->data, sizeof(_slot_type) * psize); \
+  candy_memory_free(candy_gc_memory(gc), self->data, sizeof(_type) * psize); \
   *self = m; \
   candy_logw(TAG, "resize %p, size from %zu to %zu", self, psize, nsize); \
   return CANDY_OK; \

@@ -26,7 +26,7 @@ typedef enum candy_opcodes {
   #include "core/candy_opcode.list"
 } candy_opcodes_t;
 
-typedef union candy_inst {
+union candy_inst {
   struct {
     uint32_t op :  6;
     uint32_t    : 26;
@@ -46,7 +46,7 @@ typedef union candy_inst {
     uint32_t  b :  9;
     uint32_t  c :  9;
   } iabc;
-} candy_inst_t;
+};
 
 typedef struct candy_proto_config candy_proto_config_t;
 

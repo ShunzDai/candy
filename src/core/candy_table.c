@@ -53,11 +53,11 @@ static inline bool _comp(candy_pair_t *pos, const candy_wrap_t *key, candy_gc_t 
 
 static inline candy_pair_t *_find(const candy_map_t *self, candy_gc_t *gc, const candy_wrap_t *key, bool view) {
   candy_hash_t hash = candy_wrap_hash(key, gc);
-  candy_map_find(candy_pair_t, _is_none, _is_tomb, _comp);
+  candy_map_find(candy_pair_t);
 }
 
 static inline candy_err_t _resize(candy_map_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap) {
-  candy_map_resize(candy_pair_t, _is_none, _key);
+  candy_map_resize(candy_pair_t);
 }
 
 static candy_err_t _table_delete(candy_table_t *self, candy_gc_t *gc, void *arg) {

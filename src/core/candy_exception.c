@@ -38,7 +38,8 @@ candy_err_t candy_excep_try(candy_excep_t *self, candy_excep_cb_t cb, void *arg,
     .prev = (struct context *)self->prev,
   };
   self->prev = (candy_excep_t *)&next;
-  if ((code = (candy_err_t)setjmp(next.jmp)) != CANDY_OK)
+  code = (candy_err_t)setjmp(next.jmp);
+  if (code != CANDY_OK)
     goto catch;
   cb(arg);
   catch:
