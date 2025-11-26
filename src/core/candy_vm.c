@@ -50,7 +50,7 @@ static candy_err_t _callinfo_init(candy_callinfo_t *self, candy_callinfo_t *prev
 static candy_err_t _callinfo_deinit(candy_callinfo_t *self, candy_callinfo_t *prev, int nres) {
   candy_err_t err = CANDY_OK;
   prev->next = self->next;
-  prev->tos = prev->tos - nres;
+  prev->tos = self->tos;
   candy_logi(TAG, "del callinfo: bos %lu, tos %lu", prev->bos, prev->tos);
   return err;
 }
