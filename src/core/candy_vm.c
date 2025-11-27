@@ -50,7 +50,7 @@ static candy_err_t _callinfo_init(candy_callinfo_t *self, candy_callinfo_t *prev
 static candy_err_t _callinfo_deinit(candy_callinfo_t *self, candy_callinfo_t *prev, int nres) {
   candy_err_t err = CANDY_OK;
   prev->next = self->next;
-  prev->tos = self->tos;
+  prev->tos = self->bos + nres;
   candy_logi(TAG, "del callinfo: bos %lu, tos %lu", prev->bos, prev->tos);
   return err;
 }
@@ -74,6 +74,7 @@ static void _vmll_execute_cfunction(candy_vm_t *self, candy_callinfo_t *ci, cons
   for (int i = 0; i < res; ++i) {
     candy_logd(TAG, "mv %lu to %lu", ci->tos + i - res, ci->bos + i);
     stack[ci->bos + i] = stack[ci->tos + i - res];
+    stack[ci->tos + i - res] = CANDY_WRAP_NULL;
   }
 }
 
