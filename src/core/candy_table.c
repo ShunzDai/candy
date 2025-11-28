@@ -30,38 +30,62 @@ struct candy_pair {
 
 struct candy_table {
   candy_object_t header;
-  candy_map_t m;
+  candy_pair_t *data;
+  uint8_t cap;
 };
 
-static const char TAG[] = "table";
+// static const char TAG[] = "table";
 
-static inline const candy_wrap_t *_key(const candy_pair_t *pos, candy_gc_t *gc) {
-  return &pos->key;
+static candy_hash_t _hash(const void *pos, candy_gc_t *gc) {
+  return candy_wrap_hash(pos, gc);
 }
 
-static inline bool _is_none(const candy_pair_t *pos) {
-  return candy_wrap_type(&pos->key) == CANDY_TYPE_NONE;
+static inline bool _is_null(const void *pos) {
+  const candy_pair_t *self = (const candy_pair_t *)pos;
+  return candy_wrap_type(&self->key) == CANDY_TYPE_NULL;
 }
 
-static inline bool _is_tomb(const candy_pair_t *pos) {
-  return candy_wrap_mask(&pos->key) & MASK_TOMB;
+static inline bool _is_tomb(const void *pos) {
+  const candy_pair_t *self = (const candy_pair_t *)pos;
+  return candy_wrap_mask(&self->key) & MASK_TOMB;
 }
 
-static inline bool _comp(candy_pair_t *pos, const candy_wrap_t *key, candy_gc_t *gc) {
-  return candy_wrap_hash(&pos->key, gc) == candy_wrap_hash(key, gc);
+static inline bool _comp(const void *pos, const void *key, candy_gc_t *gc) {
+  const candy_wrap_t *keyl = (const candy_wrap_t *)pos;
+  const candy_wrap_t *keyr = (const candy_wrap_t *)key;
+  return candy_wrap_hash(keyl, gc) == candy_wrap_hash(keyr, gc);
 }
 
-static inline candy_pair_t *_find(const candy_map_t *self, candy_gc_t *gc, const candy_wrap_t *key, bool view) {
+static inline candy_pair_t *_find(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, bool view) {
   candy_hash_t hash = candy_wrap_hash(key, gc);
-  candy_map_find(candy_pair_t);
+  candy_map_t map;
+  map.is_null = _is_null;
+  map.is_tomb = _is_tomb;
+  map.comp = _comp;
+  map.data = (void *)self->data;
+  map.cell = sizeof(candy_pair_t);
+  map.cap = self->cap;
+  candy_pair_t *val = (candy_pair_t *)candy_map_find(&map, gc, key, hash, view);
+  return val;
 }
 
-static inline candy_err_t _resize(candy_map_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap) {
-  candy_map_resize(candy_pair_t);
+static inline candy_err_t _resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap) {
+  candy_err_t err = CANDY_OK;
+  candy_map_t map;
+  map.is_null = _is_null;
+  map.is_tomb = _is_tomb;
+  map.comp = _comp;
+  map.data = (void *)self->data;
+  map.cell = sizeof(candy_pair_t);
+  map.cap = self->cap;
+  err = candy_map_resize(&map, gc, ctx, cap, _hash);
+  self->data = (candy_pair_t *)map.data;
+  self->cap = map.cap;
+  return err;
 }
 
 static candy_err_t _table_delete(candy_table_t *self, candy_gc_t *gc, void *arg) {
-  candy_gc_free(gc, self->m.data, sizeof(candy_pair_t) * capacity_to_size(self->m.cap));
+  candy_gc_free(gc, self->data, sizeof(candy_pair_t) * capacity_to_size(self->cap));
   candy_gc_free(gc, self, sizeof(candy_table_t));
   return CANDY_OK;
 }
@@ -76,9 +100,9 @@ static candy_err_t _table_diffuse(candy_table_t *self, candy_gc_t *gc, void *arg
 
 candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_table_t *self = (candy_table_t *)candy_gc_add(gc, ctx, CANDY_TYPE_TABLE, sizeof(candy_table_t));
-  self->m.data = NULL;
-  self->m.cap = 0;
-  candy_table_resize(self, gc, ctx, 3);
+  self->data = NULL;
+  self->cap = 0;
+  _resize(self, gc, ctx, 3);
   return self;
 }
 
@@ -94,8 +118,8 @@ candy_err_t candy_table_handler(candy_table_t *self, candy_gc_t *gc, candy_event
 candy_err_t candy_table_fprint(const candy_table_t *self, FILE *out) {
   fprintf(out, "\033[1;35m>>> table %p head\033[0m\n", self);
   fprintf(out, "pos  key-type         key-val  val-type         val-val\n");
-  for (candy_pair_t *pos = self->m.data; pos < (candy_pair_t *)self->m.data + (1 << self->m.cap); ++pos) {
-    fprintf(out, "%3ld", pos - (candy_pair_t *)self->m.data);
+  for (candy_pair_t *pos = self->data; pos < self->data + (1 << self->cap); ++pos) {
+    fprintf(out, "%3ld", pos - (candy_pair_t *)self->data);
     fprintf(out, "%10s", candy_type_str(candy_wrap_type(&pos->key)));
     candy_wrap_fprint(&pos->key, out, 16);
     fprintf(out, "%10s", candy_type_str(candy_wrap_type(&pos->val)));
@@ -107,31 +131,31 @@ candy_err_t candy_table_fprint(const candy_table_t *self, FILE *out) {
 }
 
 candy_err_t candy_table_resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap) {
-  return _resize(&self->m, gc, ctx, cap);
+  return _resize(self, gc, ctx, cap);
 }
 
 const candy_wrap_t *candy_table_get(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key) {
-  const candy_pair_t *pos = _find(&self->m, gc, key, true);
+  const candy_pair_t *pos = _find(self, gc, key, true);
   return pos ? &pos->val : &CANDY_WRAP_NULL;
 }
 
 candy_err_t candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
   while (1) {
-    candy_pair_t *pos = _find(&self->m, gc, key, false);
+    candy_pair_t *pos = _find(self, gc, key, false);
     if (pos) {
       pos->key = *key;
       pos->val = *val;
       return CANDY_OK;
     }
-    else if (self->m.cap + 1 == 32) {
+    else if (self->cap + 1 == 32) {
       return CANDY_ERR_LIMITED;
     }
-    candy_table_resize(self, gc, ctx, self->m.cap + 1);
+    _resize(self, gc, ctx, self->cap + 1);
   }
 }
 
 candy_err_t candy_table_reset(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key) {
-  candy_pair_t *pos = _find(&self->m, gc, key, true);
+  candy_pair_t *pos = _find(self, gc, key, true);
   if (pos) {
     candy_wrap_set_type(&pos->key, CANDY_TYPE_NONE);
     candy_wrap_set_mask(&pos->key, MASK_TOMB);

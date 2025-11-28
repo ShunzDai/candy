@@ -33,8 +33,8 @@
 #endif /* CANDY_TYPE_SIZE */
 
 #ifdef CANDY_TYPE
-CANDY_TYPE(size_t[0]         ,    NONE)
 CANDY_TYPE(size_t[0]         ,    NULL)
+CANDY_TYPE(size_t[0]         ,    NONE)
 CANDY_TYPE(candy_boolean_t   , BOOLEAN)
 CANDY_TYPE(candy_integer_t   , INTEGER)
 CANDY_TYPE(candy_float_t     ,   FLOAT)

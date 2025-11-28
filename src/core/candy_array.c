@@ -101,25 +101,14 @@ candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_type
 
 candy_array_t *candy_array_create_const(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size) {
   size_t len = candy_type_size(type) * size;
-  candy_hash_t hash = hash_djb(data, len);
-  candy_static_t *self = (candy_static_t *)candy_gc_bloom_filter(gc, hash);
-  if (
-    self == NULL ||
-    candy_object_type((candy_object_t *)self) != type ||
-    self->size != size ||
-    memcmp(self->data, data, size) != 0
-  ) {
-    self = (candy_static_t *)candy_gc_add_pool(gc, ctx, type,
-      sizeof(candy_static_t) + len + candy_type_size(type),
-      hash
-    );
-    candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | MASK_CONST);
-    memcpy(self->data, data, len);
-    memset(self->data + len, 0, candy_type_size(type));
-    self->arr.hash = hash;
-    self->arr.gray = NULL;
-    self->size = size;
-  }
+  candy_hash_t hash = 0;
+  candy_static_t *self = (candy_static_t *)candy_gc_add_pool(gc, ctx, type, data, size, &hash);
+  candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | MASK_CONST);
+  memcpy(self->data, data, len);
+  memset(self->data + len, 0, candy_type_size(type));
+  self->size = size;
+  self->arr.hash = hash;
+  self->arr.gray = NULL;
   return (candy_array_t *)self;
 }
 

@@ -19,7 +19,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "core/candy_map.h"
 #include "core/candy_memory.h"
 #include "core/candy_priv.h"
 
@@ -32,12 +31,13 @@ typedef enum cnady_gc_fsm {
 struct candy_gc {
   candy_memory_t mem;
   /* const pool */
-  candy_map_t pool;
   candy_handler_t handler;
-  candy_gc_fsm_t fsm;
+  candy_object_t **pool;
   candy_object_t *list;
   candy_object_t *gray;
   candy_object_t *prim;
+  candy_gc_fsm_t fsm;
+  uint8_t pool_cap;
 };
 
 candy_err_t candy_gc_init(candy_gc_t *self, candy_excep_t *ctx, candy_handler_t handler, candy_allocator_t alloc, void *arg);
@@ -46,9 +46,7 @@ candy_err_t candy_gc_deinit(candy_gc_t *self);
 
 candy_object_t *candy_gc_add(candy_gc_t *self, candy_excep_t *ctx, candy_types_t type, size_t size);
 
-candy_object_t *candy_gc_bloom_filter(candy_gc_t *self, candy_hash_t hash);
-
-candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_excep_t *ctx, candy_types_t type, size_t size, candy_hash_t hash);
+candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size, candy_hash_t *hash);
 
 candy_object_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t size);
 
