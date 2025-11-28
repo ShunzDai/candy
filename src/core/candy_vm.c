@@ -69,7 +69,6 @@ static void _vmll_execute_cfunction(candy_vm_t *self, candy_callinfo_t *ci, cons
   ++ci->bos;
   int res = f(co);
   --ci->bos;
-  (void)res;
   candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
   for (int i = 0; i < res; ++i) {
     candy_logd(TAG, "mv %lu to %lu", ci->tos + i - res, ci->bos + i);

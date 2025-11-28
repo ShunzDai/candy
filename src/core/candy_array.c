@@ -90,6 +90,10 @@ static candy_err_t _array_hash(candy_array_t *self, candy_gc_t *gc, void *arg) {
   return CANDY_OK;
 }
 
+static candy_err_t _array_compare(candy_array_t *self, candy_gc_t *gc, void *arg) {
+  return CANDY_OK;
+}
+
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type) {
   candy_dynamic_t *self = (candy_dynamic_t *)candy_gc_add(gc, ctx, type, sizeof(candy_dynamic_t));
   candy_object_set_mask((candy_object_t *)self, MASK_ARRAY);
@@ -102,24 +106,16 @@ candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_type
 candy_array_t *candy_array_create_const(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size) {
   size_t len = candy_type_size(type) * size;
   candy_hash_t hash = hash_djb(data, len);
-  candy_static_t *self = (candy_static_t *)candy_gc_bloom_filter(gc, hash);
-  if (
-    self == NULL ||
-    candy_object_type((candy_object_t *)self) != type ||
-    self->size != size ||
-    memcmp(self->data, data, size) != 0
-  ) {
-    self = (candy_static_t *)candy_gc_add_pool(gc, ctx, type,
-      sizeof(candy_static_t) + len + candy_type_size(type),
-      hash
-    );
-    candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | MASK_CONST);
-    memcpy(self->data, data, len);
-    memset(self->data + len, 0, candy_type_size(type));
-    self->arr.hash = hash;
-    self->arr.gray = NULL;
-    self->size = size;
+  candy_static_t *self = (candy_static_t *)candy_gc_find(gc, type, data, len, hash);
+  if (self == NULL) {
+    self = (candy_static_t *)candy_gc_add_pool(gc, ctx, type, sizeof(candy_static_t) + len + candy_type_size(type), hash);
   }
+  candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | MASK_CONST);
+  memcpy(self->data, data, len);
+  memset(self->data + len, 0, candy_type_size(type));
+  self->size = size;
+  self->arr.hash = hash;
+  self->arr.gray = NULL;
   return (candy_array_t *)self;
 }
 
@@ -127,14 +123,10 @@ candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char
   va_list args_copy;
   va_copy(args_copy, args);
   int len = vsnprintf(NULL, 0, format, args_copy);
-  candy_static_t *self = (candy_static_t *)candy_gc_add(gc, ctx, CANDY_TYPE_CHAR,
-    sizeof(candy_static_t) + len + candy_type_size(CANDY_TYPE_CHAR)
-  );
-  candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | MASK_CONST);
-  vsnprintf((char *)self->data, len + 1, format, args);
-  self->arr.hash = hash_djb(self->data, len);
-  self->arr.gray = NULL;
-  self->size = len;
+  candy_array_t *self = candy_array_create(gc, ctx, CANDY_TYPE_CHAR);
+  candy_array_resize(self, gc, ctx, len + 1);
+  vsnprintf((char *)candy_array_data(self), len + 1, format, args);
+  candy_array_resize(self, gc, ctx, len);
   return (candy_array_t *)self;
 }
 
@@ -152,6 +144,7 @@ candy_err_t candy_array_handler(candy_array_t *self, candy_gc_t *gc, candy_event
     case EVT_COLOR:   return _array_color(self, gc, arg);
     case EVT_DIFFUSE: return _array_diffuse(self, gc, arg);
     case EVT_HASH:    return _array_hash(self, gc, arg);
+    case EVT_COMPARE: return _array_compare(self, gc, arg);
     default:          return CANDY_ERR;
   }
 }

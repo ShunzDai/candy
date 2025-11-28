@@ -35,7 +35,7 @@ static inline candy_hash_t hash_djb(const void *data, size_t size) {
 }
 
 static inline size_t capacity_to_size(size_t cap) {
-  return cap ? 1<< cap : 0;
+  return cap ? 1 << cap : 0;
 }
 
 static inline bool is_power2(size_t n) {

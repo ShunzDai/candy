@@ -19,9 +19,9 @@ TEST(array, string) {
   candy_gc_t gc{};
   candy_gc_init(&gc, nullptr, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_TYPE_CHAR);
-  candy_array_append(self, &gc, nullptr, (char *)"hello world", strlen("hello world"));
+  candy_array_append(self, &gc, nullptr, "hello world", strlen("hello world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
-  EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
+  EXPECT_MEMEQ(candy_array_data(self), "hello world", candy_array_size(self));
   candy_gc_deinit(&gc);
 }
 
@@ -29,11 +29,20 @@ TEST(array, append) {
   candy_gc_t gc{};
   candy_gc_init(&gc, nullptr, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_TYPE_CHAR);
-  candy_array_append(self, &gc, nullptr, (char *)"hello", strlen("hello"));
+  candy_array_append(self, &gc, nullptr, "hello", strlen("hello"));
   EXPECT_EQ(candy_array_size(self), strlen("hello"));
-  EXPECT_MEMEQ(candy_array_data(self), (char *)"hello", candy_array_size(self));
-  candy_array_append(self, &gc, nullptr, (char *)" world", strlen(" world"));
+  EXPECT_MEMEQ(candy_array_data(self), "hello", candy_array_size(self));
+  candy_array_append(self, &gc, nullptr, " world", strlen(" world"));
   EXPECT_EQ(candy_array_size(self), strlen("hello world"));
-  EXPECT_MEMEQ(candy_array_data(self), (char *)"hello world", candy_array_size(self));
+  EXPECT_MEMEQ(candy_array_data(self), "hello world", candy_array_size(self));
+  candy_gc_deinit(&gc);
+}
+
+TEST(array, reuse) {
+  candy_gc_t gc{};
+  candy_gc_init(&gc, nullptr, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
+  candy_array_t *a = candy_array_create_const(&gc, nullptr, CANDY_TYPE_CHAR, "hello", strlen("hello"));
+  candy_array_t *b = candy_array_create_const(&gc, nullptr, CANDY_TYPE_CHAR, "hello", strlen("hello"));
+  EXPECT_EQ(a, b);
   candy_gc_deinit(&gc);
 }
