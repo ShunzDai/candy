@@ -4,26 +4,26 @@
 
 ## 参考文献
 
-[1]李昂. PikaScript[DB/OL]. [link](https://gitee.com/Lyon1998/pikascript), 2022-03-09, 2022-03-09
+[1]李昂. PikaScript[EB/OL]. [link](https://gitee.com/Lyon1998/pikascript), 2022-03-09, 2022-03-09
 
-[2]Roberto Ierusalimschy. lua[DB/OL]. [link](https://github.com/lua/lua), 2022-06-18, 2022-06-18
+[2]Roberto Ierusalimschy. lua[EB/OL]. [link](https://github.com/lua/lua), 2022-06-18, 2022-06-18
 
-[3]骆国辉. 小试牛刀-递归下降算法（3）[DB/OL]. [link](https://mp.weixin.qq.com/s/4yv6JP8nVJCeUP8f_uvMFw), 2017-09-30, 2022-07-02
+[3]骆国辉. 小试牛刀-递归下降算法（3）[EB/OL]. [link](https://mp.weixin.qq.com/s/4yv6JP8nVJCeUP8f_uvMFw), 2017-09-30, 2022-07-02
 
-[4]猎户座. Python技法：实现简单的递归下降Parser[DB/OL]. [link](https://zhuanlan.zhihu.com/p/512300174), 2022-05-10, 2022-07-02
+[4]猎户座. Python技法：实现简单的递归下降Parser[EB/OL]. [link](https://zhuanlan.zhihu.com/p/512300174), 2022-05-10, 2022-07-02
 
-[5]Manistein. dummylua[DB/OL]. [link](https://github.com/Manistein/dummylua-tutorial), 2021-11-17, 2022-11-10
+[5]Manistein. dummylua[EB/OL]. [link](https://github.com/Manistein/dummylua-tutorial), 2021-11-17, 2022-11-10
 
-[6]游戏猫. Lua5.1.5源码分析之table实现[DB/OL]. [link](https://blog.csdn.net/gamekit/article/details/122975184), 2022-02-17, 2023-02-24
+[6]游戏猫. Lua5.1.5源码分析之table实现[EB/OL]. [link](https://blog.csdn.net/gamekit/article/details/122975184), 2022-02-17, 2023-02-24
 
-[7]co lin. 深入Lua：Table的实现[DB/OL]. [link](https://zhuanlan.zhihu.com/p/97830462), 2019-12-17, 2023-04-01
+[7]co lin. 深入Lua：Table的实现[EB/OL]. [link](https://zhuanlan.zhihu.com/p/97830462), 2019-12-17, 2023-04-01
 
-[8]frog-game. [Lua5.4.4源码].指令集[DB/OL]. [link](https://zhuanlan.zhihu.com/p/610168640), 2023-02-28, 2023-05-01
+[8]frog-game. [Lua5.4.4源码].指令集[EB/OL]. [link](https://zhuanlan.zhihu.com/p/610168640), 2023-02-28, 2023-05-01
 
-[9]科研者. 语法格式描述规范BNF、EBNF、ABNF[DB/OL]. [link](https://www.jianshu.com/p/15efcb0c06c8), 2017-09-22, 2023-05-04
+[9]科研者. 语法格式描述规范BNF、EBNF、ABNF[EB/OL]. [link](https://www.jianshu.com/p/15efcb0c06c8), 2017-09-22, 2023-05-04
 
-[10]阿文. lua源码分析之语法分析 (干货)[DB/OL]. [link](https://zhuanlan.zhihu.com/p/581491614), 2022-11-11, 2024-02-13
+[10]阿文. lua源码分析之语法分析 (干货)[EB/OL]. [link](https://zhuanlan.zhihu.com/p/581491614), 2022-11-11, 2024-02-13
 
-[11] Xun. Lua篇 — 垃圾回收[DB/OL]. [link](https://fallingxun.github.io/post/lua/lua_gc/), 2023-11-07, 2024-12-29
+[11] Xun. Lua篇 — 垃圾回收[EB/OL]. [link](https://fallingxun.github.io/post/lua/lua_gc/), 2023-11-07, 2024-12-29
 
-[12] 码农成长宝典. Lua5.4源代码剖析[DB/OL]. [link](https://www.zhihu.com/column/c_1595011738562494465), 2024-05-22, 2025-02-09
+[12] 码农成长宝典. Lua5.4源代码剖析[EB/OL]. [link](https://www.zhihu.com/column/c_1595011738562494465), 2024-05-22, 2025-02-09

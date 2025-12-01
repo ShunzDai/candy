@@ -13,21 +13,18 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-#include "candy_utils.h"
-#include "core/candy_state.h"
+#include "candy.hpp"
 #include <stdlib.h>
 
-// static int _builtin_exit(candy_state_t *self) {
-//   exit(0);
-//   return 0;
-// }
+static void *_default_allocator(void *prev, size_t prev_size, size_t next_size, void *arg) {
+  (void)prev_size, (void)arg;
+  if (next_size)
+    return realloc(prev, next_size);
+  free(prev);
+  return NULL;
+}
 
-// static int _builtin_print(candy_state_t *self) {
+candy::candy()
+: self(candy_new_state(_default_allocator, this)) {
 
-//   return 0;
-// }
-
-candy_err_t candy_builtin_entry_utils(candy_state_t *self) {
-  
-  return CANDY_OK;
 }

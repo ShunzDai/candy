@@ -15,7 +15,9 @@ add_executable(test ${SOURCES_TEST})
 
 target_link_libraries(test PUBLIC candy_core GTest::GTest)
 
-set_target_properties(test PROPERTIES
+set_target_properties(
+  test
+  PROPERTIES
   CXX_STANDARD 17
   C_STANDARD_REQUIRED ON
   C_EXTENSIONS OFF

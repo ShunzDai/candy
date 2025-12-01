@@ -42,6 +42,7 @@ typedef enum exptype {
 
 struct expdesc {
   exptype_t type;
+  candy_array_t *s;
 };
 
 struct lh_assign {
@@ -62,7 +63,7 @@ struct parser {
 
 static const char TAG[] = "parser";
 
-static void _statement(parser_t *self);
+static candy_err_t _statement(parser_t *self);
 
 static void _funcstate_open(funcstate_t *self, parser_t *prsr) {
   candy_logd(TAG, "open funcstate, prev %p, next %p", prsr->fs, self);
@@ -203,38 +204,43 @@ static void _expr_primary(parser_t *self, expdesc_t *e) {
 static void _expr_suffixed(parser_t *self, expdesc_t *e) {
   expdesc_t exp;
   _expr_primary(self, e);
-    switch (candy_lexer_lookahead(&self->ls)) {
-      case '(':
-        candy_lexer_next(&self->ls);
-        if (candy_lexer_lookahead(&self->ls) == ')') {
-          exp.type = EXP_TYPE_VOID;
-          (void)exp;
-        }
-        candy_lexer_next(&self->ls);
-        break;
-      default:
-        break;
-    }
+  switch (candy_lexer_lookahead(&self->ls)) {
+    case '(':
+      candy_lexer_next(&self->ls);
+      if (candy_lexer_lookahead(&self->ls) == ')') {
+        exp.type = EXP_TYPE_VOID;
+        (void)exp;
+      }
+      candy_lexer_next(&self->ls);
+      break;
+    default:
+      break;
+  }
 }
 
-static void _stat_func(parser_t *self) {
+static candy_err_t _stat_func(parser_t *self) {
+  candy_err_t err = CANDY_OK;
   expdesc_t args;
   /* skip 'def' */
   candy_lexer_next(&self->ls);
   _body(self, &args);
+  return err;
 }
 
 /**
   * @brief  if '(' expr ')' block { elif '(' expr ')' block } [ else block ] end
   * @param  self  parser handle.
   */
-static void _stat_if(parser_t *self) {
+static candy_err_t _stat_if(parser_t *self) {
+  candy_err_t err = CANDY_OK;
   /* if '(' expr ')' block */
   /* { elif '(' expr ')' block } */
   /* [ else block ] end */
+  return err;
 }
 
-static void _stat_expr(parser_t *self) {
+static candy_err_t _stat_expr(parser_t *self) {
+  candy_err_t err = CANDY_OK;
   lh_assign_t v;
   _expr_suffixed(self, &v.v);
   if (candy_lexer_lookahead(&self->ls) == '=' || candy_lexer_lookahead(&self->ls) == ',') {
@@ -245,27 +251,15 @@ static void _stat_expr(parser_t *self) {
     par_assert(v.v.type == EXP_TYPE_CALL, "syntax error");
     // candy_proto_add_iabc(self->fs->proto, OP_CALL);
   }
+  return err;
 }
 
-static void _statement(parser_t *self) {
+static candy_err_t _statement(parser_t *self) {
   switch (candy_lexer_lookahead(&self->ls)) {
-    case TK_EOS:
-      break;
-    case TK_def:
-      _stat_func(self);
-      break;
-    case TK_if:
-      _stat_if(self);
-      break;
-    case TK_while:
-      break;
-    case TK_for:
-      break;
-    case TK_break:
-      break;
-    default:
-      _stat_expr(self);
-      break;
+    case TK_def:   return _stat_func(self);
+    case TK_if:    return _stat_if(self);
+    case TK_IDENT: return _stat_expr(self);
+    default:       return CANDY_ERR;
   }
 }
 
