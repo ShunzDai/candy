@@ -32,7 +32,7 @@ struct candy_map {
   uint8_t cap;
 };
 
-void *candy_map_find(const candy_map_t *self, candy_gc_t *gc, const void *key, candy_hash_t hash, bool view);
+void *candy_map_find(const candy_map_t *self, candy_gc_t *gc, const void *key, candy_hash_t hash, bool expand);
 
 candy_err_t candy_map_resize(candy_map_t *self, candy_gc_t *gc, candy_excep_t *ctx, uint8_t cap, candy_hash_t (*hash)(const void *key, candy_gc_t *gc));
 

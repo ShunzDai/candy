@@ -2,9 +2,14 @@ file(GLOB_RECURSE CANDY_SOURCES_BUILTIN LIST_DIRECTORIES false
   candy_utils.c
 )
 
-add_library(${CANDY_TARGET_BUILTIN} SHARED ${CANDY_SOURCES_BUILTIN})
+add_library(
+  ${CANDY_TARGET_BUILTIN}
+  SHARED
+  ${CANDY_SOURCES_BUILTIN}
+)
 
-target_link_libraries(${CANDY_TARGET_BUILTIN}
+target_link_libraries(
+  ${CANDY_TARGET_BUILTIN}
   PRIVATE
   ${CANDY_TARGET_CORE}
 )

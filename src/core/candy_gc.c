@@ -62,7 +62,7 @@ static bool _comp(const void *pos, const void *key, candy_gc_t *gc) {
   return val;
 }
 
-static candy_err_t _map_init(candy_map_t *self, uint8_t cap, void *data) {
+static candy_err_t _map_init(candy_map_t *self, void *data, uint8_t cap) {
   candy_err_t err = CANDY_OK;
   self->is_null = _is_null;
   self->is_tomb = _is_tomb;
@@ -73,16 +73,16 @@ static candy_err_t _map_init(candy_map_t *self, uint8_t cap, void *data) {
   return err;
 }
 
-static candy_object_t **_find(candy_gc_t *self, const struct map_key *key, candy_hash_t hash, bool view) {
+static candy_object_t **_find(candy_gc_t *self, const struct map_key *key, candy_hash_t hash, bool expand) {
   candy_map_t map;
-  _map_init(&map, self->pool_cap, self->pool);
-  return (candy_object_t **)candy_map_find(&map, self, key, hash, view);
+  _map_init(&map, self->pool, self->pool_cap);
+  return (candy_object_t **)candy_map_find(&map, self, key, hash, expand);
 }
 
 static candy_err_t _resize(candy_gc_t *self, candy_excep_t *ctx, size_t cap) {
   candy_err_t err = CANDY_OK;
   candy_map_t map;
-  _map_init(&map, self->pool_cap, self->pool);
+  _map_init(&map, self->pool, self->pool_cap);
   err = candy_map_resize(&map, self, ctx, cap, _hash);
   self->pool_cap = map.cap;
   self->pool = (candy_object_t **)map.data;
@@ -184,7 +184,7 @@ candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_excep_t *ctx, candy_ty
     .hash = hash,
   };
   while (1) {
-    candy_object_t **pos = _find(self, &key, hash, false);
+    candy_object_t **pos = _find(self, &key, hash, true);
     if (pos) {
       return _add_node(self, ctx, pos, type, size);
     }
@@ -206,7 +206,7 @@ candy_object_t *candy_gc_find(candy_gc_t *self, candy_types_t type, const void *
     .size = size,
     .hash = hash,
   };
-  candy_object_t **pos = _find(self, &key, hash, true);
+  candy_object_t **pos = _find(self, &key, hash, false);
   return pos ? *pos : NULL;
 }
 

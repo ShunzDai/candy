@@ -21,21 +21,24 @@
 const candy_wrap_t CANDY_WRAP_NULL = {0};
 
 candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc) {
+  candy_hash_t hash = 0;
   if (candy_wrap_mask(self) & MASK_ARRAY) {
-    candy_hash_t hash;
     candy_gc_event_handler(gc)(candy_wrap_get_object(self), gc, EVT_HASH, &hash);
-    return hash;
   }
-  switch (candy_wrap_type(self)) {
-    case CANDY_TYPE_NULL:
-    case CANDY_TYPE_BOOLEAN:
-    case CANDY_TYPE_INTEGER:
-    case CANDY_TYPE_FLOAT:
-    case CANDY_TYPE_CHAR:
-      return *(candy_hash_t *)candy_wrap_data(self);
-    default:
-      return 0;
+  else {
+    switch (candy_wrap_type(self)) {
+      case CANDY_TYPE_NULL:
+      case CANDY_TYPE_BOOLEAN:
+      case CANDY_TYPE_INTEGER:
+      case CANDY_TYPE_FLOAT:
+      case CANDY_TYPE_CHAR:
+        hash = *(candy_hash_t *)candy_wrap_data(self);
+        break;
+      default:
+        break;
+    }
   }
+  return hash;
 }
 
 int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {

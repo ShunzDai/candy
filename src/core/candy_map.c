@@ -20,13 +20,13 @@
 
 static const char TAG[] = "map";
 
-void *candy_map_find(const candy_map_t *self, candy_gc_t *gc, const void *key, candy_hash_t hash, bool view) {
+void *candy_map_find(const candy_map_t *self, candy_gc_t *gc, const void *key, candy_hash_t hash, bool expand) {
   const int32_t list[] = {3, -3, 5, -5, 7, -7, INT32_MAX};
   for (size_t idx = 0; list[idx] != INT32_MAX; ++idx) {
     void *pos = self->data + self->cell * ((hash + list[idx]) & (capacity_to_size(self->cap) - 1));
     if (self->is_null(pos)) {
-      /* if it is view mode, determine whether it is a tombstone */
-      if (view) {
+      /* if it is not expand, determine whether it is a tombstone */
+      if (!expand) {
         /* if it is a tombstone, keep searching */
         if (self->is_tomb(pos))
           continue;
@@ -59,7 +59,7 @@ candy_err_t candy_map_resize(candy_map_t *self, candy_gc_t *gc, candy_excep_t *c
     const void *from = self->data + self->cell * idx;
     if (self->is_null(from))
       continue;
-    void *to = candy_map_find(&m, gc, from, hash(from, gc), false);
+    void *to = candy_map_find(&m, gc, from, hash(from, gc), true);
     memcpy(to, from, self->cell);
   }
   /** @attention can not longjmp end */
