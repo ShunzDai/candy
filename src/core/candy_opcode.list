@@ -36,6 +36,10 @@
 #endif /* CANDY_OPCODE_STR */
 
 #ifdef CANDY_OPCODE
+CANDY_OPCODE(LOADG,
+  _op_loadg(self, it, ci);
+)
+
 CANDY_OPCODE(LOADC,
 )
 

@@ -42,7 +42,7 @@ struct candy_vm {
   candy_gc_t *gc;
 };
 
-candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc);
+candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc, candy_excep_t *ctx);
 
 candy_err_t candy_vm_deinit(candy_vm_t *self);
 

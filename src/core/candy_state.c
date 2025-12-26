@@ -17,6 +17,7 @@
 #include "core/candy_object.h"
 #include "core/candy_wrap.h"
 #include "core/candy_gc.h"
+#include "core/candy_table.h"
 #include "core/candy_array.h"
 #include "core/candy_parser.h"
 #include "core/candy_vm.h"
@@ -53,8 +54,8 @@ static size_t candy_state_size(candy_state_t *self) {
   return candy_state_is_primary(self) ? sizeof(candy_primary_t) : sizeof(candy_state_t);
 }
 
-static candy_err_t candy_state_init(candy_state_t *self, candy_gc_t *gc) {
-  candy_vm_init(&self->vm, gc);
+static candy_err_t candy_state_init(candy_state_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
+  candy_vm_init(&self->vm, gc, ctx);
   self->gray = NULL;
   return CANDY_OK;
 }
@@ -70,7 +71,8 @@ static void _create(void *arg) {
   candy_gc_init(&gc, &self->ctx, self->handler, self->alloc, self->arg);
   candy_primary_t *p = (candy_primary_t *)candy_gc_add_primary(&gc, &self->ctx, sizeof(candy_primary_t));
   memcpy(&p->gc, &gc, sizeof(candy_gc_t));
-  candy_state_init(&p->co, &p->gc);
+  candy_state_init(&p->co, &p->gc, &self->ctx);
+  candy_table_create_global(&p->gc, &self->ctx);
   self->co = &p->co;
 }
 
@@ -222,5 +224,5 @@ candy_cfunc_t candy_state_to_cfunc(candy_state_t *self, int idx) {
 }
 
 bool candy_state_is_primary(candy_state_t *self) {
-  return candy_gc_primary(self->vm.gc) == (candy_object_t *)self;
+  return candy_gc_primary(self->vm.gc) == self;
 }

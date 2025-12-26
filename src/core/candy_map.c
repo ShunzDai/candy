@@ -22,6 +22,9 @@ static const char TAG[] = "map";
 
 void *candy_map_find(const candy_map_t *self, candy_gc_t *gc, const void *key, candy_hash_t hash, bool expand) {
   const int32_t list[] = {3, -3, 5, -5, 7, -7, INT32_MAX};
+  if (self->data == NULL) {
+    return NULL;
+  }
   for (size_t idx = 0; list[idx] != INT32_MAX; ++idx) {
     void *pos = self->data + self->cell * ((hash + list[idx]) & (capacity_to_size(self->cap) - 1));
     if (self->is_null(pos)) {

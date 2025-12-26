@@ -41,6 +41,7 @@ static candy_err_t _callinfo_init(candy_callinfo_t *self, candy_callinfo_t *prev
   self->next = NULL;
   prev->next = self;
   self->bos = prev->tos - narg - 1;
+  printf("_callinfo_init prev tos: %lu, prev bos: %lu, narg: %ld %d\n", prev->tos, prev->bos, prev->tos - prev->bos, narg);
   self->tos = prev->tos;
   self->pc = NULL;
   candy_logi(TAG, "new callinfo: bos %lu, tos %lu", self->bos, self->tos);
@@ -50,19 +51,20 @@ static candy_err_t _callinfo_init(candy_callinfo_t *self, candy_callinfo_t *prev
 static candy_err_t _callinfo_deinit(candy_callinfo_t *self, candy_callinfo_t *prev, int nres) {
   candy_err_t err = CANDY_OK;
   prev->next = self->next;
+  printf("_callinfo_deinit self->tos: %lu, self->bos: %lu, narg: %ld %d\n", self->tos, self->bos, self->tos - self->bos, nres);
   prev->tos = self->bos + nres;
   candy_logi(TAG, "del callinfo: bos %lu, tos %lu", prev->bos, prev->tos);
   return err;
 }
 
-// static inline void _op_move(candy_vm_t *self, const candy_inst_t *pc, candy_callinfo_t *ci) {
-//   ptrdiff_t a_idx = ci->bos + pc->iabx.a;
-//   ptrdiff_t b_idx = ci->bos + pc->iabx.b;
-//   vm_assert(a_idx < self->ci->tos, "invalid register index %d (MOVE)", pc->iabx.a);
-//   vm_assert(b_idx < self->ci->tos, "invalid register index %d (MOVE)", pc->iabx.b);
-//   candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
-//   stack[a_idx] = stack[b_idx];
-// }
+static inline void _op_loadg(candy_vm_t *self, const candy_inst_t *pc, candy_callinfo_t *ci) {
+  ptrdiff_t a_idx = ci->bos + pc->iabx.a;
+  ptrdiff_t b_idx = ci->bos + pc->iabx.b;
+  vm_assert(a_idx < self->ci->tos, "invalid register index %d (MOVE)", pc->iabx.a);
+  vm_assert(b_idx < self->ci->tos, "invalid register index %d (MOVE)", pc->iabx.b);
+  candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
+  stack[a_idx] = stack[b_idx];
+}
 
 static void _vmll_execute_cfunction(candy_vm_t *self, candy_callinfo_t *ci, const candy_wrap_t *fn, candy_state_t *co) {
   candy_cfunc_t f = candy_wrap_get_cfunc(fn);
@@ -88,7 +90,7 @@ static void _vmll_execute_sclosure(candy_vm_t *self, candy_callinfo_t *ci, const
   }
 }
 
-static candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, int narg, int nres, candy_state_t *co) {
+static candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, int narg, candy_state_t *co) {
   candy_err_t err = CANDY_OK;
   _callinfo_init(&self->ci, vm->ci, narg);
   vm->ci = &self->ci;
@@ -123,11 +125,11 @@ static void _call(vmll_t *self) {
   }
 }
 
-candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc) {
+candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
   candy_err_t err = CANDY_OK;
   candy_excep_init(&self->ctx);
   candy_vector_init(&self->s);
-  candy_vector_resize(&self->s, candy_gc_memory(gc), &self->ctx, CANDY_CONFIG_VM_STACK_SIZE, sizeof(candy_wrap_t));
+  candy_vector_resize(&self->s, candy_gc_memory(gc), ctx, CANDY_CONFIG_VM_STACK_SIZE, sizeof(candy_wrap_t));
   memset(&self->base_ci, 0, sizeof(candy_callinfo_t));
   self->ci = &self->base_ci;
   self->gc = gc;
@@ -145,7 +147,7 @@ candy_err_t candy_vm_deinit(candy_vm_t *self) {
 
 candy_err_t candy_vm_call(candy_vm_t *self, int narg, int nres, candy_state_t *co, candy_object_t **out) {
   vmll_t vmll;
-  _vmll_init(&vmll, self, narg, nres, co);
+  _vmll_init(&vmll, self, narg, co);
   candy_err_t err = candy_excep_try(&self->ctx, (candy_excep_cb_t)_call, &vmll, out);
   _vmll_deinit(&vmll, nres);
   return err;
