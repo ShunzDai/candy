@@ -93,7 +93,7 @@ static candy_object_t *_add_node(candy_gc_t *self, candy_excep_t *ctx, candy_obj
   candy_object_t *obj = (candy_object_t *)candy_memory_alloc(candy_gc_memory(self), ctx, size);
   candy_object_set_next(obj, *pos);
   candy_object_set_type(obj, type);
-  candy_object_set_mask(obj, MASK_NONE);
+  candy_object_set_mask(obj, MASK_OBJECT);
   candy_object_set_mark(obj, MARK_WHITE);
   *pos = obj;
   candy_logd(TAG, "add %s at %p", candy_type_str(type), obj);
@@ -109,12 +109,14 @@ static void _del_node(candy_gc_t *self, candy_object_t **pos) {
 }
 
 static candy_err_t _fsm_begin(candy_gc_t *self) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
   int res = candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_COLOR, NULL);
   assert(res >= 0);
   return CANDY_OK;
 }
 
 static candy_err_t _fsm_diffuse(candy_gc_t *self) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
   candy_object_t *obj = self->gray;
   /* remove from 'gray' list */
   int res = candy_gc_event_handler(self)(obj, self, EVT_DIFFUSE, NULL);
@@ -123,6 +125,7 @@ static candy_err_t _fsm_diffuse(candy_gc_t *self) {
 }
 
 static candy_err_t _fsm_end(candy_gc_t *self) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
   for (candy_object_t **it = &self->list; *it; ) {
     switch (candy_object_mark(*it)) {
       case MARK_WHITE:
@@ -148,7 +151,6 @@ candy_err_t candy_gc_init(candy_gc_t *self, candy_excep_t *ctx, candy_handler_t 
   self->list = NULL;
   self->gray = NULL;
   self->prim = NULL;
-  _resize(self, ctx, 3);
   return CANDY_OK;
 }
 
@@ -164,6 +166,9 @@ candy_err_t candy_gc_deinit(candy_gc_t *self) {
   /* free object list */
   while (self->list)
     _del_node(self, &self->list);
+  /* free global table */
+  if (self->glob)
+    candy_gc_event_handler(self)((candy_object_t *)self->glob, self, EVT_DELETE, NULL);
   /* free primary state */
   if (self->prim)
     candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_DELETE, NULL);
@@ -195,8 +200,12 @@ candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_excep_t *ctx, candy_ty
   }
 }
 
-candy_object_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t size) {
-  return _add_node(self, ctx, (candy_object_t **)&self->prim, CANDY_TYPE_STATE, size);
+candy_state_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t size) {
+  return (candy_state_t *)_add_node(self, ctx, (candy_object_t **)&self->prim, CANDY_TYPE_STATE, size);
+}
+
+candy_table_t *candy_gc_add_global(candy_gc_t *self, candy_excep_t *ctx, size_t size) {
+  return (candy_table_t *)_add_node(self, ctx, (candy_object_t **)&self->glob, CANDY_TYPE_TABLE, size);
 }
 
 candy_object_t *candy_gc_find(candy_gc_t *self, candy_types_t type, const void *data, size_t size, candy_hash_t hash) {
@@ -219,7 +228,7 @@ candy_err_t candy_gc_sweep(candy_gc_t *self) {
 }
 
 candy_err_t candy_gc_step(candy_gc_t *self) {
-  switch (self->fsm) {
+  switch (candy_gc_fsm(self)) {
     case GC_FSM_BEGIN:
       _fsm_begin(self);
       self->fsm = GC_FSM_DIFFUSE;

@@ -35,6 +35,7 @@ struct candy_gc {
   candy_object_t **pool;
   candy_object_t *list;
   candy_object_t *gray;
+  candy_object_t *glob;
   candy_object_t *prim;
   candy_gc_fsm_t fsm;
   uint8_t pool_cap;
@@ -48,7 +49,9 @@ candy_object_t *candy_gc_add(candy_gc_t *self, candy_excep_t *ctx, candy_types_t
 
 candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_excep_t *ctx, candy_types_t type, size_t size, candy_hash_t hash);
 
-candy_object_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t size);
+candy_state_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t size);
+
+candy_table_t *candy_gc_add_global(candy_gc_t *self, candy_excep_t *ctx, size_t size);
 
 candy_object_t *candy_gc_find(candy_gc_t *self, candy_types_t type, const void *data, size_t size, candy_hash_t hash);
 
@@ -70,8 +73,12 @@ static inline candy_object_t *candy_gc_gray_swap(candy_gc_t *self, candy_object_
   return gray;
 }
 
-static inline candy_object_t *candy_gc_primary(const candy_gc_t *self) {
-  return self->prim;
+static inline candy_state_t *candy_gc_primary(const candy_gc_t *self) {
+  return (candy_state_t *)self->prim;
+}
+
+static inline candy_table_t *candy_gc_global(const candy_gc_t *self) {
+  return (candy_table_t *)self->glob;
 }
 
 static inline candy_handler_t candy_gc_event_handler(const candy_gc_t *self) {

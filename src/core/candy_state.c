@@ -222,5 +222,5 @@ candy_cfunc_t candy_state_to_cfunc(candy_state_t *self, int idx) {
 }
 
 bool candy_state_is_primary(candy_state_t *self) {
-  return candy_gc_primary(self->vm.gc) == (candy_object_t *)self;
+  return candy_gc_primary(self->vm.gc) == self;
 }
