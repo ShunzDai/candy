@@ -148,7 +148,6 @@ candy_err_t candy_gc_init(candy_gc_t *self, candy_excep_t *ctx, candy_handler_t 
   self->list = NULL;
   self->gray = NULL;
   self->prim = NULL;
-  _resize(self, ctx, 3);
   return CANDY_OK;
 }
 
@@ -164,6 +163,9 @@ candy_err_t candy_gc_deinit(candy_gc_t *self) {
   /* free object list */
   while (self->list)
     _del_node(self, &self->list);
+  /* free global table */
+  if (self->glob)
+    candy_gc_event_handler(self)((candy_object_t *)self->glob, self, EVT_DELETE, NULL);
   /* free primary state */
   if (self->prim)
     candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_DELETE, NULL);
@@ -195,8 +197,12 @@ candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_excep_t *ctx, candy_ty
   }
 }
 
-candy_object_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t size) {
-  return _add_node(self, ctx, (candy_object_t **)&self->prim, CANDY_TYPE_STATE, size);
+candy_state_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t size) {
+  return (candy_state_t *)_add_node(self, ctx, (candy_object_t **)&self->prim, CANDY_TYPE_STATE, size);
+}
+
+candy_table_t *candy_gc_add_global(candy_gc_t *self, candy_excep_t *ctx, size_t size) {
+  return (candy_table_t *)_add_node(self, ctx, (candy_object_t **)&self->glob, CANDY_TYPE_TABLE, size);
 }
 
 candy_object_t *candy_gc_find(candy_gc_t *self, candy_types_t type, const void *data, size_t size, candy_hash_t hash) {

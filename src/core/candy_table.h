@@ -23,6 +23,8 @@ extern "C" {
 
 candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx);
 
+candy_table_t *candy_table_create_global(candy_gc_t *gc, candy_excep_t *ctx);
+
 candy_err_t candy_table_handler(candy_table_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
 candy_err_t candy_table_fprint(const candy_table_t *self, FILE *out);

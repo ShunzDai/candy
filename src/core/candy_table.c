@@ -104,7 +104,13 @@ candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_table_t *self = (candy_table_t *)candy_gc_add(gc, ctx, CANDY_TYPE_TABLE, sizeof(candy_table_t));
   self->data = NULL;
   self->cap = 0;
-  _resize(self, gc, ctx, 3);
+  return self;
+}
+
+candy_table_t *candy_table_create_global(candy_gc_t *gc, candy_excep_t *ctx) {
+  candy_table_t *self = (candy_table_t *)candy_gc_add_global(gc, ctx, sizeof(candy_table_t));
+  self->data = NULL;
+  self->cap = 0;
   return self;
 }
 
