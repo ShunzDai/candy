@@ -39,8 +39,9 @@ extern "C" {
 
 typedef enum candy_masks {
   MASK_NONE     = (uint8_t)(0),
-  MASK_ARRAY    = (uint8_t)(1 << 0),
-  MASK_CONST    = (uint8_t)(1 << 1),
+  MASK_OBJECT   = (uint8_t)(1 << 0),
+  MASK_ARRAY    = (uint8_t)(1 << 1),
+  MASK_CONST    = (uint8_t)(1 << 2),
   MASK_HASHABLE = (uint8_t)(MASK_CONST),
   /** @brief since the actual key must contain the hashable bits, when the key in the table is reset,
     the slot will be filled with a mask that does not contain the hashable bits as a tombstone */

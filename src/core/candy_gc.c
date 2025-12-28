@@ -93,7 +93,7 @@ static candy_object_t *_add_node(candy_gc_t *self, candy_excep_t *ctx, candy_obj
   candy_object_t *obj = (candy_object_t *)candy_memory_alloc(candy_gc_memory(self), ctx, size);
   candy_object_set_next(obj, *pos);
   candy_object_set_type(obj, type);
-  candy_object_set_mask(obj, MASK_NONE);
+  candy_object_set_mask(obj, MASK_OBJECT);
   candy_object_set_mark(obj, MARK_WHITE);
   *pos = obj;
   candy_logd(TAG, "add %s at %p", candy_type_str(type), obj);

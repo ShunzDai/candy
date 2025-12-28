@@ -168,7 +168,7 @@ void *candy_array_data(const candy_array_t *self) {
 }
 
 void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t capacity) {
-  arr_assert(!_is_const(self), "object must be a dynamic array");
+  arr_assert(!_is_const(self), "%s can only be applied to dynamic arrays", __FUNCTION__);
   candy_vector_reserve(&((candy_dynamic_t *)self)->vec,
     candy_gc_memory(gc), ctx, capacity,
     candy_type_size(candy_object_type((candy_object_t *)self))
@@ -176,7 +176,7 @@ void candy_array_reserve(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx
 }
 
 void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t size) {
-  arr_assert(!_is_const(self), "object must be a dynamic array");
+  arr_assert(!_is_const(self), "%s can only be applied to dynamic arrays", __FUNCTION__);
   candy_vector_resize(&((candy_dynamic_t *)self)->vec,
     candy_gc_memory(gc), ctx, size,
     candy_type_size(candy_object_type((candy_object_t *)self))
@@ -184,7 +184,7 @@ void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx,
 }
 
 candy_err_t candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size) {
-  arr_assert(!_is_const(self), "object must be a dynamic array");
+  arr_assert(!_is_const(self), "%s can only be applied to dynamic arrays", __FUNCTION__);
   return candy_vector_append(&((candy_dynamic_t *)self)->vec,
     candy_gc_memory(gc), ctx, data, size,
     candy_type_size(candy_object_type((candy_object_t *)self))

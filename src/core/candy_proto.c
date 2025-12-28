@@ -21,14 +21,19 @@
 
 struct candy_proto {
   candy_object_t header;
-
-  candy_vector_t constv;
+  candy_vector_t cst;
   candy_vector_t inst;
 };
 
+static candy_err_t candy_proto_add_inst(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_inst_t inst) {
+  candy_err_t err = CANDY_OK;
+  candy_vector_append(&self->inst, candy_gc_memory(gc), ctx, &inst, 1, sizeof(candy_inst_t));
+  return err;
+}
+
 static candy_err_t _proto_delete(candy_proto_t *self, candy_gc_t *gc, void *arg) {
   candy_vector_deinit(&self->inst, candy_gc_memory(gc), sizeof(candy_inst_t));
-  candy_vector_deinit(&self->constv, candy_gc_memory(gc), sizeof(candy_wrap_t));
+  candy_vector_deinit(&self->cst, candy_gc_memory(gc), sizeof(candy_wrap_t));
   candy_gc_free(gc, self, sizeof(candy_proto_t));
   return CANDY_OK;
 }
@@ -44,7 +49,7 @@ static candy_err_t _proto_diffuse(candy_proto_t *self, candy_gc_t *gc, void *arg
 
 candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, ctx, CANDY_TYPE_PROTO, sizeof(candy_proto_t));
-  candy_vector_init(&self->constv);
+  candy_vector_init(&self->cst);
   candy_vector_init(&self->inst);
   return self;
 }
@@ -58,10 +63,46 @@ candy_err_t candy_proto_handler(candy_proto_t *self, candy_gc_t *gc, candy_event
   }
 }
 
-candy_vector_t *candy_proto_get_const(candy_proto_t *self) {
-  return &self->constv;
+candy_err_t candy_proto_add_const(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *wrap) {
+  candy_err_t err = CANDY_OK;
+  err = candy_vector_append(&self->cst, candy_gc_memory(gc), ctx, wrap, 1, sizeof(candy_wrap_t));
+  return err;
 }
 
-candy_vector_t *candy_proto_get_inst(candy_proto_t *self) {
+candy_err_t candy_proto_add_iax(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_opcodes_t op, uint32_t a) {
+  return candy_proto_add_inst(self, gc, ctx, (candy_inst_t) {
+    .iax = {
+      .op = (uint32_t)op,
+      .a = a,
+    },
+  });
+}
+
+candy_err_t candy_proto_add_iabx(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_opcodes_t op, uint32_t a, uint32_t b) {
+  return candy_proto_add_inst(self, gc, ctx, (candy_inst_t) {
+    .iabx = {
+      .op = (uint32_t)op,
+      .a = a,
+      .b = b,
+    },
+  });
+}
+
+candy_err_t candy_proto_add_iabc(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
+  return candy_proto_add_inst(self, gc, ctx, (candy_inst_t) {
+    .iabc = {
+      .op = (uint32_t)op,
+      .a = a,
+      .b = b,
+      .c = c,
+    },
+  });
+}
+
+const candy_vector_t *candy_proto_get_const(const candy_proto_t *self) {
+  return &self->cst;
+}
+
+const candy_vector_t *candy_proto_get_inst(const candy_proto_t *self) {
   return &self->inst;
 }
