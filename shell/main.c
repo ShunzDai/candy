@@ -30,7 +30,7 @@ __DATE__ " " __TIME__ ", \
 
 static _Atomic(bool) _quit = false;
 
-static int stream_reader(void *buffer, const size_t max_len, void *arg) {
+static int stream_reader(void *buffer, size_t max_len, void *arg) {
   int *ch = (int *)arg;
   if (*ch == '\n') {
     fwrite("> ", 1, 2, stdout);
