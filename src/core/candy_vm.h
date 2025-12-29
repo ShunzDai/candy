@@ -26,6 +26,7 @@ extern "C" {
 typedef struct candy_callinfo candy_callinfo_t;
 
 typedef struct candy_vm candy_vm_t;
+
 struct candy_callinfo {
   candy_callinfo_t *prev;
   candy_callinfo_t *next;

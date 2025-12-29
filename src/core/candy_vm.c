@@ -148,7 +148,8 @@ candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc, candy_excep_t *ctx) 
   candy_err_t err = CANDY_OK;
   candy_excep_init(&self->ctx);
   candy_vector_init(&self->s);
-  candy_vector_resize(&self->s, candy_gc_memory(gc), ctx, CANDY_CONFIG_VM_STACK_SIZE, sizeof(candy_wrap_t));
+  candy_vector_resize(&self->s, candy_gc_memory(gc), ctx, 8, sizeof(candy_wrap_t));
+  memset(candy_vector_data(&self->s), 0, candy_vector_size(&self->s) * sizeof(candy_wrap_t));
   memset(&self->base_ci, 0, sizeof(candy_callinfo_t));
   self->ci = &self->base_ci;
   self->gc = gc;
@@ -166,9 +167,15 @@ candy_err_t candy_vm_deinit(candy_vm_t *self) {
 
 candy_err_t candy_vm_call(candy_vm_t *self, int narg, int nres, candy_state_t *co, candy_object_t **out) {
   vmll_t vmll;
+  for (size_t i = 0; i < candy_vector_size(&self->s); ++i) {
+    printf("in type %s\n", candy_type_str(candy_wrap_type((const candy_wrap_t *)candy_vector_data(&self->s) + i)));
+  }
   _vmll_init(&vmll, self, narg, co);
   candy_err_t err = candy_excep_try(&self->ctx, (candy_excep_cb_t)_call, &vmll, out);
   _vmll_deinit(&vmll, nres);
+  for (size_t i = 0; i < candy_vector_size(&self->s); ++i) {
+    printf("in type %s\n", candy_type_str(candy_wrap_type((const candy_wrap_t *)candy_vector_data(&self->s) + i)));
+  }
   return err;
 }
 

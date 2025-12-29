@@ -58,13 +58,9 @@ candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx);
 
 candy_err_t candy_proto_handler(candy_proto_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
-candy_err_t candy_proto_add_const(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *wrap);
+size_t candy_proto_add_const(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *wrap);
 
-candy_err_t candy_proto_add_iax(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_opcodes_t op, uint32_t a);
-
-candy_err_t candy_proto_add_iabx(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_opcodes_t op, uint32_t a, uint32_t b);
-
-candy_err_t candy_proto_add_iabc(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c);
+size_t candy_proto_add_inst(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_inst_t inst);
 
 const candy_vector_t *candy_proto_get_const(const candy_proto_t *self);
 

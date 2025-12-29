@@ -27,7 +27,12 @@
 //   return 0;
 // }
 
-candy_err_t candy_builtin_entry_utils(candy_state_t *self) {
+static int _builtin_test(candy_state_t *self) {
+  printf("hello!\n");
+  return 0;
+}
 
+candy_err_t candy_builtin_entry_utils(candy_state_t *self) {
+  candy_state_setglobal(self, "test", _builtin_test);
   return CANDY_OK;
 }
