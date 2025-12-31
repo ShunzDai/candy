@@ -39,7 +39,7 @@ candy_err_t candy_sclosure_color(candy_sclosure_t *self, candy_gc_t *gc);
 
 candy_err_t candy_sclosure_diffuse(candy_sclosure_t *self, candy_gc_t *gc);
 
-const candy_proto_t *candy_closure_get_proto(candy_sclosure_t *self);
+const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self);
 
 #ifdef __cplusplus
 }

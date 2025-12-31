@@ -17,6 +17,7 @@
 #include "core/candy_object.h"
 #include "core/candy_wrap.h"
 #include "core/candy_gc.h"
+#include "core/candy_table.h"
 #include "core/candy_array.h"
 #include "core/candy_parser.h"
 #include "core/candy_vm.h"
@@ -53,8 +54,8 @@ static size_t candy_state_size(candy_state_t *self) {
   return candy_state_is_primary(self) ? sizeof(candy_primary_t) : sizeof(candy_state_t);
 }
 
-static candy_err_t candy_state_init(candy_state_t *self, candy_gc_t *gc) {
-  candy_vm_init(&self->vm, gc);
+static candy_err_t candy_state_init(candy_state_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
+  candy_vm_init(&self->vm, gc, ctx);
   self->gray = NULL;
   return CANDY_OK;
 }
@@ -70,7 +71,8 @@ static void _create(void *arg) {
   candy_gc_init(&gc, &self->ctx, self->handler, self->alloc, self->arg);
   candy_primary_t *p = (candy_primary_t *)candy_gc_add_primary(&gc, &self->ctx, sizeof(candy_primary_t));
   memcpy(&p->gc, &gc, sizeof(candy_gc_t));
-  candy_state_init(&p->co, &p->gc);
+  candy_state_init(&p->co, &p->gc, &self->ctx);
+  candy_table_create_global(&p->gc, &self->ctx);
   self->co = &p->co;
 }
 
@@ -86,6 +88,7 @@ static void _dostream(void *arg) {
   }
   err = candy_state_push_object(self->co, out);
   err = candy_vm_call(vm, 0, 1, self->co, &out);
+  err = candy_gc_full(vm->gc);
 }
 
 static candy_err_t _state_delete(candy_state_t *self, candy_gc_t *gc, void *arg) {
@@ -166,6 +169,17 @@ candy_err_t candy_state_dostream(candy_state_t *self, candy_reader_t reader, voi
 candy_err_t candy_state_call(candy_state_t *self, int narg, int nres) {
   candy_array_t *out = NULL;
   candy_err_t err = candy_vm_call(&self->vm, narg, nres, self, (candy_object_t **)&out);
+  return err;
+}
+
+candy_err_t candy_state_setglobal(candy_state_t *self, const char name[], candy_cfunc_t entry) {
+  candy_err_t err = CANDY_OK;
+  candy_wrap_t key, val;
+  candy_table_t *g = candy_gc_global(self->vm.gc);
+  const candy_array_t *s = candy_array_create_const(self->vm.gc, &self->vm.ctx, CANDY_TYPE_CHAR, name, strlen(name));
+  candy_wrap_set_object(&key, (candy_object_t *)s);
+  candy_wrap_set_cfunc(&val, entry);
+  err = candy_table_set(g, self->vm.gc, &self->vm.ctx, &key, &val);
   return err;
 }
 

@@ -15,6 +15,7 @@
   */
 #include "core/candy_parser.h"
 #include "core/candy_exception.h"
+#include "core/candy_wrap.h"
 #include "core/candy_gc.h"
 #include "core/candy_proto.h"
 #include "core/candy_closure.h"
@@ -23,6 +24,23 @@
 
 /**
  * @brief  parser for candy language.
+ * @ENBF
+ *  ;
+ *  entry ::= statement
+ *  ;
+ *  funcname ::= name
+ *  expr ::= "false" | "true" | integer | float
+ *  exprlist ::= expr {"," expr}
+ *  prefixed ::= funcname
+ *  funccall ::= prefixed "(" [exprlist] ")"
+ *  assignment ::= name "=" expr
+ *  statement ::= funccall | assignment
+ *  ;
+ *  letter ::= "a" | "b" | ... | "Z"
+ *  digit ::= "0" | "1" | ... | "9"
+ *  name ::= letter {letter | digit | "_"}
+ *  integer ::= ["-"] digit {digit}
+ *  float ::= ["-"] (digit {digit} "." digit {digit} | "." digit {digit})
  */
 
 #define par_assert(_condition, _format, ...) \
@@ -42,6 +60,7 @@ typedef enum exptype {
 
 struct expdesc {
   exptype_t type;
+  candy_array_t *s;
 };
 
 struct lh_assign {
@@ -62,7 +81,7 @@ struct parser {
 
 static const char TAG[] = "parser";
 
-static void _statement(parser_t *self);
+static candy_err_t _statement(parser_t *self);
 
 static void _funcstate_open(funcstate_t *self, parser_t *prsr) {
   candy_logd(TAG, "open funcstate, prev %p, next %p", prsr->fs, self);
@@ -76,31 +95,67 @@ static void _funcstate_close(funcstate_t *self, parser_t *prsr) {
   prsr->fs = self->prev;
 }
 
-static int _search_local(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
-  return -1;
+size_t _add_string(parser_t *self, const candy_array_t *val) {
+  candy_wrap_t wrap;
+  candy_wrap_set_object(&wrap, (candy_object_t *)val);
+  return candy_proto_add_const(self->fs->proto, self->ls.gc, self->ls.ctx, &wrap);
 }
 
-static int _search_upvalue(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
-  return -1;
+size_t _add_iax(parser_t *self, candy_opcodes_t op, uint32_t a) {
+  return candy_proto_add_inst(self->fs->proto, self->ls.gc, self->ls.ctx, (candy_inst_t) {
+    .iax = {
+      .op = (uint32_t)op,
+      .a = a,
+    },
+  });
 }
 
-static void _var_single_aux(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
-  if (self) {
-    int idx = _search_local(self, id, e);
-    if (idx < 0) {
-      idx = _search_upvalue(self, id, e);
-      if (idx < 0) {
-        _var_single_aux(self->prev, id, e);
-      }
-    }
-    else {
-
-    }
-  }
-  else {
-    e->type = EXP_TYPE_NONE;
-  }
+size_t _add_iabx(parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b) {
+  return candy_proto_add_inst(self->fs->proto, self->ls.gc, self->ls.ctx, (candy_inst_t) {
+    .iabx = {
+      .op = (uint32_t)op,
+      .a = a,
+      .b = b,
+    },
+  });
 }
+
+size_t _add_iabc(parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
+  return candy_proto_add_inst(self->fs->proto, self->ls.gc, self->ls.ctx, (candy_inst_t) {
+    .iabc = {
+      .op = (uint32_t)op,
+      .a = a,
+      .b = b,
+      .c = c,
+    },
+  });
+}
+
+// static int _search_local(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
+//   return -1;
+// }
+
+// static int _search_upvalue(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
+//   return -1;
+// }
+
+// static void _var_single_aux(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
+//   if (self) {
+//     int idx = _search_local(self, id, e);
+//     if (idx < 0) {
+//       idx = _search_upvalue(self, id, e);
+//       if (idx < 0) {
+//         _var_single_aux(self->prev, id, e);
+//       }
+//     }
+//     else {
+
+//     }
+//   }
+//   else {
+//     e->type = EXP_TYPE_NONE;
+//   }
+// }
 
 static void _parser_init(parser_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
   self->fs = NULL;
@@ -129,20 +184,21 @@ static bool _test_next(parser_t *self, candy_tokens_t token) {
   return false;
 }
 
-static void _check_match(parser_t *self, candy_tokens_t begin, candy_tokens_t end, size_t at) {
-  bool res = _test_next(self, end);
-  par_assert(res, "%s was never closed with %s", candy_token_str(begin), candy_token_str(end));
-}
+// static void _check_match(parser_t *self, candy_tokens_t begin, candy_tokens_t end, size_t at) {
+//   bool res = _test_next(self, end);
+//   par_assert(res, "%s was never closed with %s", candy_token_str(begin), candy_token_str(end));
+// }
 
-static const candy_array_t *_check_ident(parser_t *self) {
-  _check(self, TK_IDENT);
-  const candy_array_t *id = candy_lexer_next(&self->ls)->s;
-  candy_lexer_lookahead(&self->ls);
-  return id;
-}
+// static const candy_array_t *_check_ident(parser_t *self) {
+//   _check(self, TK_IDENT);
+//   const candy_array_t *id = candy_lexer_next(&self->ls)->s;
+//   candy_lexer_lookahead(&self->ls);
+//   return id;
+// }
 
 /* param list -> [param {',' param}] */
-static void _param_list(parser_t *self) {
+static candy_err_t _param_list(parser_t *self) {
+  candy_err_t err = CANDY_OK;
   while (1) {
     switch (candy_lexer_lookahead(&self->ls)) {
       case TK_IDENT:
@@ -151,14 +207,18 @@ static void _param_list(parser_t *self) {
         break;
     }
   }
+  return err;
 }
 
-static void _block(parser_t *self) {
+static candy_err_t _block(parser_t *self) {
+  candy_err_t err = CANDY_OK;
   _statement(self);
+  return err;
 }
 
 /* '(' param list ')' */
-static void _body(parser_t *self, expdesc_t *args) {
+static candy_err_t _body(parser_t *self, expdesc_t *args) {
+  candy_err_t err = CANDY_OK;
   funcstate_t fs;
   _funcstate_open(&fs, self);
   _check_next(self, '(');
@@ -166,111 +226,81 @@ static void _body(parser_t *self, expdesc_t *args) {
   _check_next(self, ')');
   _block(self);
   _funcstate_close(&fs, self);
+  return err;
 }
 
-static void _var_single(parser_t *self, expdesc_t *e) {
-  const candy_array_t *id = _check_ident(self);
-  _var_single_aux(self->fs, id, e);
-  if (e->type == EXP_TYPE_NONE) {
+static candy_err_t _expr_prefixed(parser_t *self, expdesc_t *e) {
+  candy_err_t err = CANDY_OK;
+  size_t pos = _add_string(self, candy_lexer_next(&self->ls)->s);
+  _add_iax(self, OP_LOADG, pos);
+  return err;
+}
 
+static candy_err_t _expr_funccall(parser_t *self, expdesc_t *e) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  candy_err_t err = CANDY_OK;
+  /* skip '(' */
+  candy_lexer_next(&self->ls);
+  if (!_test_next(self, ')')) {
+    size_t pos = _add_string(self, candy_lexer_next(&self->ls)->s);
+    _add_iax(self, OP_LOADC, pos);
+    _check_next(self, ')');
   }
+  err = _add_iabx(self, OP_CALL, 1, 0);
+  return err;
 }
 
-static void _subexpr(parser_t *self, expdesc_t *e, int limit) {
+static candy_err_t _expr_assignment(parser_t *self, expdesc_t *e) {
+  candy_err_t err = CANDY_OK;
+  return err;
 }
 
-static void _expr(parser_t *self, expdesc_t *e) {
-  _subexpr(self, e, 0);
-}
-
-static void _expr_primary(parser_t *self, expdesc_t *e) {
-  switch(candy_lexer_lookahead(&self->ls)) {
-    case '(': {
-      size_t line = self->ls.dbg.line;
-      candy_lexer_next(&self->ls);
-      _expr(self, e);
-      _check_match(self, '(', ')', line);
-    } break;
-    case TK_IDENT:
-      _var_single(self, e);
-      break;
-    default:
-      par_assert(0, "unexpected symbol");
-      break;
-  }
-}
-
-static void _expr_suffixed(parser_t *self, expdesc_t *e) {
-  expdesc_t exp;
-  _expr_primary(self, e);
-    switch (candy_lexer_lookahead(&self->ls)) {
-      case '(':
-        candy_lexer_next(&self->ls);
-        if (candy_lexer_lookahead(&self->ls) == ')') {
-          exp.type = EXP_TYPE_VOID;
-          (void)exp;
-        }
-        candy_lexer_next(&self->ls);
-        break;
-      default:
-        break;
-    }
-}
-
-static void _stat_func(parser_t *self) {
+static candy_err_t _stat_def(parser_t *self) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  candy_err_t err = CANDY_OK;
   expdesc_t args;
   /* skip 'def' */
   candy_lexer_next(&self->ls);
   _body(self, &args);
+  return err;
 }
 
 /**
   * @brief  if '(' expr ')' block { elif '(' expr ')' block } [ else block ] end
   * @param  self  parser handle.
   */
-static void _stat_if(parser_t *self) {
+static candy_err_t _stat_if(parser_t *self) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  candy_err_t err = CANDY_OK;
   /* if '(' expr ')' block */
   /* { elif '(' expr ')' block } */
   /* [ else block ] end */
+  return err;
 }
 
-static void _stat_expr(parser_t *self) {
+/** @brief statement -> funccall | assignment */
+static candy_err_t _stat_expr(parser_t *self) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
   lh_assign_t v;
-  _expr_suffixed(self, &v.v);
-  if (candy_lexer_lookahead(&self->ls) == '=' || candy_lexer_lookahead(&self->ls) == ',') {
-    v.prev = NULL;
-
-  }
-  else {
-    par_assert(v.v.type == EXP_TYPE_CALL, "syntax error");
-    // candy_proto_add_iabc(self->fs->proto, OP_CALL);
+  _expr_prefixed(self, &v.v);
+  switch (candy_lexer_lookahead(&self->ls)) {
+    case '(': return _expr_funccall(self, &v.v);
+    case '=': return _expr_assignment(self, &v.v);
+    default:  return CANDY_ERR;
   }
 }
 
-static void _statement(parser_t *self) {
+static candy_err_t _statement(parser_t *self) {
   switch (candy_lexer_lookahead(&self->ls)) {
-    case TK_EOS:
-      break;
-    case TK_def:
-      _stat_func(self);
-      break;
-    case TK_if:
-      _stat_if(self);
-      break;
-    case TK_while:
-      break;
-    case TK_for:
-      break;
-    case TK_break:
-      break;
-    default:
-      _stat_expr(self);
-      break;
+    case TK_def:   return _stat_def(self);
+    case TK_if:    return _stat_if(self);
+    case TK_IDENT: return _stat_expr(self);
+    default:       return CANDY_ERR;
   }
 }
 
 static void _entry(parser_t *self) {
-  _statement(self);
+  while (_statement(self) != CANDY_ERR);
   _check(self, TK_EOS);
 }
 
@@ -282,6 +312,7 @@ candy_err_t candy_parse(candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reade
   candy_err_t err = candy_excep_try(ctx, (candy_excep_cb_t)_entry, &prsr, out);
   _funcstate_close(&fs, &prsr);
   _parser_deinit(&prsr);
+  candy_logw(TAG, "parse ret %s", candy_err_str(err));
   if (err == CANDY_OK)
     *out = (candy_object_t *)candy_sclosure_create(gc, ctx, fs.proto);
   return err;

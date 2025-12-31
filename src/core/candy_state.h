@@ -33,6 +33,8 @@ candy_err_t candy_state_dostream(candy_state_t *self, candy_reader_t reader, voi
 
 candy_err_t candy_state_call(candy_state_t *self, int narg, int nres);
 
+candy_err_t candy_state_setglobal(candy_state_t *self, const char name[], candy_cfunc_t entry);
+
 candy_err_t candy_state_push_integer(candy_state_t *self, candy_integer_t val);
 
 candy_err_t candy_state_push_float(candy_state_t *self, candy_float_t val);

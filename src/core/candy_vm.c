@@ -19,6 +19,7 @@
 #include "core/candy_array.h"
 #include "core/candy_table.h"
 #include "core/candy_proto.h"
+#include "core/candy_closure.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -55,19 +56,37 @@ static candy_err_t _callinfo_deinit(candy_callinfo_t *self, candy_callinfo_t *pr
   return err;
 }
 
-// static inline void _op_move(candy_vm_t *self, const candy_inst_t *pc, candy_callinfo_t *ci) {
-//   ptrdiff_t a_idx = ci->bos + pc->iabx.a;
-//   ptrdiff_t b_idx = ci->bos + pc->iabx.b;
-//   vm_assert(a_idx < self->ci->tos, "invalid register index %d (MOVE)", pc->iabx.a);
-//   vm_assert(b_idx < self->ci->tos, "invalid register index %d (MOVE)", pc->iabx.b);
-//   candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
-//   stack[a_idx] = stack[b_idx];
-// }
+static inline void _op_loadg(candy_vm_t *self, const candy_inst_t *pc, candy_sclosure_t *clos) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  candy_table_t *g = candy_gc_global(self->gc);
+  const candy_proto_t *proto = candy_sclosure_get_proto(clos);
+  const candy_vector_t *cst = candy_proto_get_const(proto);
+  const candy_wrap_t *key = (candy_wrap_t *)candy_vector_data(cst) + pc->iax.a;
+  const candy_wrap_t *val = candy_table_get(g, self->gc, key);
+  candy_vm_push(self, val, 1);
+}
 
-static void _vmll_execute_cfunction(candy_vm_t *self, candy_callinfo_t *ci, const candy_wrap_t *fn, candy_state_t *co) {
-  candy_cfunc_t f = candy_wrap_get_cfunc(fn);
+static inline void _op_loadc(candy_vm_t *self, const candy_inst_t *pc, candy_sclosure_t *clos) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  const candy_proto_t *proto = candy_sclosure_get_proto(clos);
+  const candy_vector_t *cst = candy_proto_get_const(proto);
+  const candy_wrap_t *val = (candy_wrap_t *)candy_vector_data(cst) + pc->iax.a;
+  candy_vm_push(self, val, 1);
+}
+
+static inline void _op_call(candy_vm_t *self, const candy_inst_t *pc, candy_state_t *co) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  candy_object_t *out = NULL;
+  candy_err_t err = candy_vm_call(self, pc->iabx.a, pc->iabx.b, co, &out);
+  (void)err;
+}
+
+static void _execute_cfunction(candy_vm_t *self, const candy_wrap_t *fn, candy_state_t *co) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  candy_callinfo_t *ci = self->ci;
+  candy_cfunc_t cfunc = candy_wrap_get_cfunc(fn);
   ++ci->bos;
-  int res = f(co);
+  int res = cfunc(co);
   --ci->bos;
   candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
   for (int i = 0; i < res; ++i) {
@@ -77,18 +96,23 @@ static void _vmll_execute_cfunction(candy_vm_t *self, candy_callinfo_t *ci, cons
   }
 }
 
-static void _vmll_execute_sclosure(candy_vm_t *self, candy_callinfo_t *ci, const candy_wrap_t *fn) {
-  const candy_inst_t *head = NULL;
-  const candy_inst_t *tail = head;
+static void _execute_sclosure(candy_vm_t *self, const candy_wrap_t *fn, candy_state_t *co) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  candy_callinfo_t *ci = self->ci;
+  candy_sclosure_t *clos = (candy_sclosure_t *)candy_wrap_get_object(fn);
+  const candy_vector_t *inst = candy_proto_get_inst(candy_sclosure_get_proto(clos));
+  const candy_inst_t *head = candy_vector_data(inst);
+  const candy_inst_t *tail = head + candy_vector_size(inst);
   for (const candy_inst_t *it = head; it < tail; ++it) {
     switch ((candy_opcodes_t)it->op) {
       #define CANDY_OPCODE_CASE
       #include "core/candy_opcode.list"
     }
   }
+  --ci->bos;
 }
 
-static candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, int narg, int nres, candy_state_t *co) {
+static candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, int narg, candy_state_t *co) {
   candy_err_t err = CANDY_OK;
   _callinfo_init(&self->ci, vm->ci, narg);
   vm->ci = &self->ci;
@@ -106,16 +130,15 @@ static candy_err_t _vmll_deinit(vmll_t *self, int nres) {
 }
 
 static void _call(vmll_t *self) {
-  candy_callinfo_t *ci = self->vm->ci;
-  candy_logi(TAG, "call function at stack index %" PRIdPTR, ci->bos);
+  candy_logi(TAG, "call function at stack index %" PRIdPTR, self->ci.bos);
   const candy_wrap_t *fn = candy_vm_view(self->vm, 0);
   candy_logi(TAG, "call type %s", candy_type_str(candy_wrap_type(fn)));
   switch (candy_wrap_type(fn)) {
     case CANDY_TYPE_CFUNC:
-      _vmll_execute_cfunction(self->vm, ci, fn, self->co);
+      _execute_cfunction(self->vm, fn, self->co);
       break;
     case CANDY_TYPE_SCLOS:
-      _vmll_execute_sclosure(self->vm, ci, fn);
+      _execute_sclosure(self->vm, fn, self->co);
       break;
     default:
       assert(0);
@@ -123,11 +146,12 @@ static void _call(vmll_t *self) {
   }
 }
 
-candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc) {
+candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc, candy_excep_t *ctx) {
   candy_err_t err = CANDY_OK;
   candy_excep_init(&self->ctx);
   candy_vector_init(&self->s);
-  candy_vector_resize(&self->s, candy_gc_memory(gc), &self->ctx, CANDY_CONFIG_VM_STACK_SIZE, sizeof(candy_wrap_t));
+  candy_vector_resize(&self->s, candy_gc_memory(gc), ctx, CANDY_CONFIG_VM_STACK_SIZE, sizeof(candy_wrap_t));
+  memset(candy_vector_data(&self->s), 0, candy_vector_size(&self->s) * sizeof(candy_wrap_t));
   memset(&self->base_ci, 0, sizeof(candy_callinfo_t));
   self->ci = &self->base_ci;
   self->gc = gc;
@@ -145,7 +169,7 @@ candy_err_t candy_vm_deinit(candy_vm_t *self) {
 
 candy_err_t candy_vm_call(candy_vm_t *self, int narg, int nres, candy_state_t *co, candy_object_t **out) {
   vmll_t vmll;
-  _vmll_init(&vmll, self, narg, nres, co);
+  _vmll_init(&vmll, self, narg, co);
   candy_err_t err = candy_excep_try(&self->ctx, (candy_excep_cb_t)_call, &vmll, out);
   _vmll_deinit(&vmll, nres);
   return err;

@@ -26,6 +26,7 @@ extern "C" {
 typedef struct candy_callinfo candy_callinfo_t;
 
 typedef struct candy_vm candy_vm_t;
+
 struct candy_callinfo {
   candy_callinfo_t *prev;
   candy_callinfo_t *next;
@@ -42,7 +43,7 @@ struct candy_vm {
   candy_gc_t *gc;
 };
 
-candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc);
+candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc, candy_excep_t *ctx);
 
 candy_err_t candy_vm_deinit(candy_vm_t *self);
 

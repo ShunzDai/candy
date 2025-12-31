@@ -33,14 +33,14 @@ static _Atomic(bool) _quit = false;
 static int stream_reader(void *buffer, size_t max_len, void *arg) {
   int *ch = (int *)arg;
   if (*ch == '\n') {
-    fwrite("> ", 1, 2, stdout);
+    fwrite("> ", sizeof(char), 2, stdout);
   }
-  while (fread(buffer, sizeof(char), 1, stdin) <= 0) {
+  while (fread(ch, sizeof(char), 1, stdin) <= 0) {
     bool expected = false;
     if (!atomic_compare_exchange_strong(&_quit, &expected, false))
       return -1;
   }
-  *ch = ((char *)buffer)[0];
+  ((char *)buffer)[0] = *ch == '\n' ? '\0' : *ch;
   return 1;
 }
 
