@@ -43,7 +43,7 @@ static candy_err_t _callinfo_init(candy_callinfo_t *self, candy_callinfo_t *prev
   self->bos = prev->tos - narg - 1;
   self->tos = prev->tos;
   self->pc = NULL;
-  candy_logi(TAG, "new callinfo: bos %lu, tos %lu", self->bos, self->tos);
+  candy_logi(TAG, "new callinfo: bos %" PRIuPTR ", tos %" PRIuPTR, self->bos, self->tos);
   return err;
 }
 
@@ -51,7 +51,7 @@ static candy_err_t _callinfo_deinit(candy_callinfo_t *self, candy_callinfo_t *pr
   candy_err_t err = CANDY_OK;
   prev->next = self->next;
   prev->tos = self->bos + nres;
-  candy_logi(TAG, "del callinfo: bos %lu, tos %lu", prev->bos, prev->tos);
+  candy_logi(TAG, "del callinfo: bos %" PRIuPTR ", tos %" PRIuPTR, prev->bos, prev->tos);
   return err;
 }
 
@@ -71,7 +71,7 @@ static void _vmll_execute_cfunction(candy_vm_t *self, candy_callinfo_t *ci, cons
   --ci->bos;
   candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
   for (int i = 0; i < res; ++i) {
-    candy_logd(TAG, "mv %lu to %lu", ci->tos + i - res, ci->bos + i);
+    candy_logd(TAG, "mv %" PRIdPTR " to %" PRIdPTR, ci->tos + i - res, ci->bos + i);
     stack[ci->bos + i] = stack[ci->tos + i - res];
     stack[ci->tos + i - res] = CANDY_WRAP_NULL;
   }
@@ -107,9 +107,9 @@ static candy_err_t _vmll_deinit(vmll_t *self, int nres) {
 
 static void _call(vmll_t *self) {
   candy_callinfo_t *ci = self->vm->ci;
-  candy_logi(TAG, "call function at stack index %lu", ci->bos);
+  candy_logi(TAG, "call function at stack index %" PRIdPTR, ci->bos);
   const candy_wrap_t *fn = candy_vm_view(self->vm, 0);
-  candy_logi(TAG, "function type %s", candy_type_str(candy_wrap_type(fn)));
+  candy_logi(TAG, "call type %s", candy_type_str(candy_wrap_type(fn)));
   switch (candy_wrap_type(fn)) {
     case CANDY_TYPE_CFUNC:
       _vmll_execute_cfunction(self->vm, ci, fn, self->co);
@@ -157,7 +157,7 @@ candy_err_t candy_vm_pop(candy_vm_t *self, size_t n) {
   ptrdiff_t bos = self->ci->bos;
   vm_assert(tos >= bos + (ptrdiff_t)n, "stack index out of bounds");
   self->ci->tos -= n;
-  candy_logi(TAG, "pop %lu items from stack, new tos %lu", n, self->ci->tos);
+  candy_logi(TAG, "pop %" PRIdPTR " items from stack, new tos %" PRIdPTR, n, self->ci->tos);
   return err;
 }
 
@@ -168,7 +168,7 @@ candy_err_t candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap, size_t n) 
   vm_assert(tos + n <= size, "stack overflow");
   memcpy((candy_wrap_t *)candy_vector_data(&self->s) + tos, wrap, sizeof(candy_wrap_t) * n);
   self->ci->tos += n;
-  candy_logi(TAG, "push %lu items to stack, new tos %lu", n, self->ci->tos);
+  candy_logi(TAG, "push %" PRIdPTR " items to stack, new tos %" PRIdPTR, n, self->ci->tos);
   return err;
 }
 
@@ -176,7 +176,7 @@ const candy_wrap_t *candy_vm_view(candy_vm_t *self, int idx) {
   ptrdiff_t bos = self->ci->bos;
   ptrdiff_t tos = self->ci->tos;
   ptrdiff_t offset = (idx < 0 ? tos : bos) + idx;
-  candy_logi(TAG, "view stack index %d (real %lu) bos %lu tos %lu", idx, offset, bos, tos);
+  candy_logi(TAG, "view stack index %d (real %" PRIdPTR ") bos %" PRIdPTR " tos %" PRIdPTR, idx, offset, bos, tos);
   vm_assert(offset >= bos, "stack index out of bounds");
   vm_assert(offset < tos, "stack index out of bounds");
   return (const candy_wrap_t *)candy_vector_data(&self->s) + offset;

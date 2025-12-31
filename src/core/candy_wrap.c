@@ -16,7 +16,6 @@
 #include "core/candy_wrap.h"
 #include "core/candy_lib.h"
 #include "core/candy_gc.h"
-#include <inttypes.h>
 
 const candy_wrap_t CANDY_WRAP_NULL = {0};
 
