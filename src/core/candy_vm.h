@@ -36,7 +36,6 @@ struct candy_callinfo {
 };
 
 struct candy_vm {
-  candy_excep_t ctx;
   candy_vector_t s;
   candy_callinfo_t base_ci;
   candy_callinfo_t *ci;
@@ -47,13 +46,13 @@ candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc, candy_excep_t *ctx);
 
 candy_err_t candy_vm_deinit(candy_vm_t *self);
 
-candy_err_t candy_vm_call(candy_vm_t *self, int narg, int nres, candy_state_t *co, candy_object_t **out);
+candy_err_t candy_vm_call(candy_vm_t *self, candy_excep_t *ctx, int narg, int nres, candy_state_t *co, candy_object_t **out);
 
-candy_err_t candy_vm_pop(candy_vm_t *self, size_t n);
+candy_err_t candy_vm_pop(candy_vm_t *self, candy_excep_t *ctx, size_t n);
 
-candy_err_t candy_vm_push(candy_vm_t *self, const candy_wrap_t *wrap, size_t n);
+candy_err_t candy_vm_push(candy_vm_t *self, candy_excep_t *ctx, const candy_wrap_t *wrap, size_t n);
 
-const candy_wrap_t *candy_vm_view(candy_vm_t *self, int idx);
+const candy_wrap_t *candy_vm_view(candy_vm_t *self, candy_excep_t *ctx, int idx);
 
 #ifdef __cplusplus
 }

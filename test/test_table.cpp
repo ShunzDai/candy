@@ -16,8 +16,9 @@
 #include "test.h"
 
 static candy_err_t _event_handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
-  if (candy_object_mask(self) & MASK_ARRAY)
+  if (candy_object_mask(self) & MASK_ARRAY) {
     return candy_array_handler((candy_array_t *)self, gc, evt, arg);
+  }
   switch (candy_object_type(self)) {
     case CANDY_TYPE_CCLOS: return candy_cclosure_handler((candy_cclosure_t *)self, gc, evt, arg);
     case CANDY_TYPE_SCLOS: return candy_sclosure_handler((candy_sclosure_t *)self, gc, evt, arg);
@@ -42,7 +43,7 @@ TEST(table, fill) {
     candy_wrap_set_integer(&val, v[idx]);
     candy_table_set(self, &gc, nullptr, &key, &val);
   }
-  candy_table_fprint(self, stdout);
+  candy_table_fprint(self, &gc, stdout);
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     candy_wrap_set_integer(&key, k[idx]);
@@ -69,7 +70,7 @@ TEST(table, reset) {
       k[idx] = 0;
     }
   }
-  candy_table_fprint(self, stdout);
+  candy_table_fprint(self, &gc, stdout);
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     if (k[idx] == 0)
@@ -96,7 +97,7 @@ TEST(table, key_obj) {
     candy_wrap_set_integer(&val, v[idx]);
     candy_table_set(self, &gc, nullptr, &key, &val);
   }
-  candy_table_fprint(self, stdout);
+  candy_table_fprint(self, &gc, stdout);
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     candy_wrap_set_object(&key, k[idx]);

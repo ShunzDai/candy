@@ -45,7 +45,7 @@ extern const candy_wrap_t CANDY_WRAP_NULL;
 
 candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc);
 
-int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align);
+int candy_wrap_fprint(const candy_wrap_t *self, candy_gc_t *gc, FILE *out);
 
 static inline void *candy_wrap_data(const candy_wrap_t *self) {
   return (void *)&self->data;

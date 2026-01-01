@@ -123,15 +123,15 @@ candy_err_t candy_table_handler(candy_table_t *self, candy_gc_t *gc, candy_event
   }
 }
 
-candy_err_t candy_table_fprint(const candy_table_t *self, FILE *out) {
+candy_err_t candy_table_fprint(const candy_table_t *self, candy_gc_t *gc, FILE *out) {
   fprintf(out, "\033[1;35m>>> table %p head\033[0m\n", self);
   fprintf(out, "pos  key-type         key-val  val-type         val-val\n");
   for (candy_pair_t *pos = self->data; pos < self->data + capacity_to_size(self->cap); ++pos) {
     fprintf(out, "%3" PRIdPTR, pos - (candy_pair_t *)self->data);
     fprintf(out, "%10s", candy_type_str(candy_wrap_type(&pos->key)));
-    candy_wrap_fprint(&pos->key, out, 16);
+    candy_wrap_fprint(&pos->key, gc, out);
     fprintf(out, "%10s", candy_type_str(candy_wrap_type(&pos->val)));
-    candy_wrap_fprint(&pos->val, out, 16);
+    candy_wrap_fprint(&pos->val, gc, out);
     fprintf(out, "\n");
   }
   fprintf(out, "\033[1;35m<<< table %p tail\033[0m\n", self);

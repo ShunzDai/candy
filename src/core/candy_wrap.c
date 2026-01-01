@@ -21,36 +21,40 @@ const candy_wrap_t CANDY_WRAP_NULL = {0};
 
 candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc) {
   candy_hash_t hash = 0;
-  if (candy_wrap_mask(self) & MASK_ARRAY) {
+  if (candy_wrap_mask(self) & MASK_OBJECT) {
     candy_gc_event_handler(gc)(candy_wrap_get_object(self), gc, EVT_HASH, &hash);
   }
   else {
-    switch (candy_wrap_type(self)) {
-      case CANDY_TYPE_NULL:
-      case CANDY_TYPE_BOOLEAN:
-      case CANDY_TYPE_INTEGER:
-      case CANDY_TYPE_FLOAT:
-      case CANDY_TYPE_CHAR:
-        hash = *(candy_hash_t *)candy_wrap_data(self);
-        break;
-      default:
-        break;
-    }
+    hash = *(candy_hash_t *)candy_wrap_data(self);
   }
   return hash;
 }
 
-int candy_wrap_fprint(const candy_wrap_t *self, FILE *out, int align) {
-  switch (candy_wrap_type(self)) {
-    case CANDY_TYPE_NULL:
-      return fprintf(out, "%*s", align, "null");
-    case CANDY_TYPE_INTEGER:
-      return fprintf(out, "%*" PRId64, align, candy_wrap_get_integer(self));
-    case CANDY_TYPE_FLOAT:
-      return fprintf(out, "%*f", align, candy_wrap_get_float(self));
-    case CANDY_TYPE_CHAR:
-      return fprintf(out, "%*p", align, candy_wrap_get_object(self));
-    default:
-      return fprintf(out, "%*s", align, "NA");
+candy_err_t candy_wrap_fprint(const candy_wrap_t *self, candy_gc_t *gc, FILE *out) {
+  if (candy_wrap_mask(self) & MASK_OBJECT) {
+    candy_gc_event_handler(gc)(candy_wrap_get_object(self), gc, EVT_FORMAT, out);
   }
+  else {
+    switch (candy_wrap_type(self)) {
+      case CANDY_TYPE_NULL:
+        fprintf(out, "%s", "null");
+        break;
+      case CANDY_TYPE_INTEGER:
+        fprintf(out, "%" PRId64, candy_wrap_get_integer(self));
+        break;
+      case CANDY_TYPE_FLOAT:
+        fprintf(out, "%f", candy_wrap_get_float(self));
+        break;
+      case CANDY_TYPE_CHAR:
+        fprintf(out, "%p", candy_wrap_get_object(self));
+        break;
+      case CANDY_TYPE_BOOLEAN:
+        fprintf(out, "%s", candy_wrap_get_boolean(self) ? "true" : "false");
+        break;
+      default:
+        fprintf(out, "%s", "NA");
+        break;
+    }
+  }
+  return CANDY_OK;
 }

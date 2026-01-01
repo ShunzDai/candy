@@ -15,22 +15,21 @@
   */
 #include "candy_utils.h"
 #include "core/candy_state.h"
-#include "core/candy_array.h"
 #include <stdlib.h>
 
-// static int _builtin_exit(candy_state_t *self) {
-//   exit(0);
-//   return 0;
-// }
+static int _builtin_exit(candy_state_t *self) {
+  exit(0);
+  return 0;
+}
 
 static int _builtin_print(candy_state_t *self) {
-  candy_array_t *s = (candy_array_t *)candy_state_to_object(self, 0);
-  fwrite(candy_array_data(s), sizeof(char), candy_array_size(s), stdout);
+  candy_state_fprint(self, 0, stdout);
   fwrite("\n", sizeof(char), sizeof("\n"), stdout);
   return 0;
 }
 
 candy_err_t candy_builtin_entry_utils(candy_state_t *self) {
+  candy_state_setglobal(self, "exit", _builtin_exit);
   candy_state_setglobal(self, "print", _builtin_print);
   return CANDY_OK;
 }

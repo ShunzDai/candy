@@ -95,9 +95,30 @@ static void _funcstate_close(funcstate_t *self, parser_t *prsr) {
   prsr->fs = self->prev;
 }
 
-size_t _add_string(parser_t *self, const candy_array_t *val) {
+size_t _add_meta(parser_t *self, candy_tokens_t token) {
   candy_wrap_t wrap;
-  candy_wrap_set_object(&wrap, (candy_object_t *)val);
+  switch (token) {
+    case TK_INTEGER:
+      candy_wrap_set_integer(&wrap, candy_lexer_next(&self->ls)->i);
+      break;
+    case TK_FLOAT:
+      candy_wrap_set_float(&wrap, candy_lexer_next(&self->ls)->f);
+      break;
+    case TK_STRING:
+      candy_wrap_set_object(&wrap, (candy_object_t *)candy_lexer_next(&self->ls)->s);
+      break;
+    case TK_true:
+      candy_lexer_next(&self->ls);
+      candy_wrap_set_boolean(&wrap, true);
+      break;
+    case TK_false:
+      candy_lexer_next(&self->ls);
+      candy_wrap_set_boolean(&wrap, false);
+      break;
+    default:
+      par_assert(0, "unknwon expr %s", candy_token_str(token));
+      break;
+  }
   return candy_proto_add_const(self->fs->proto, self->ls.gc, self->ls.ctx, &wrap);
 }
 
@@ -231,7 +252,7 @@ static candy_err_t _body(parser_t *self, expdesc_t *args) {
 
 static candy_err_t _expr_prefixed(parser_t *self, expdesc_t *e) {
   candy_err_t err = CANDY_OK;
-  size_t pos = _add_string(self, candy_lexer_next(&self->ls)->s);
+  size_t pos = _add_meta(self, TK_STRING);
   _add_iax(self, OP_LOADG, pos);
   return err;
 }
@@ -242,7 +263,7 @@ static candy_err_t _expr_funccall(parser_t *self, expdesc_t *e) {
   /* skip '(' */
   candy_lexer_next(&self->ls);
   if (!_test_next(self, ')')) {
-    size_t pos = _add_string(self, candy_lexer_next(&self->ls)->s);
+    size_t pos = _add_meta(self, candy_lexer_lookahead(&self->ls));
     _add_iax(self, OP_LOADC, pos);
     _check_next(self, ')');
   }

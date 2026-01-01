@@ -104,24 +104,19 @@ static void _del_node(candy_gc_t *self, candy_object_t **pos) {
   candy_object_t *obj = *pos;
   candy_logd(TAG, "del %s at %p", candy_type_str(candy_object_type(obj)), obj);
   *pos = *candy_object_next(obj);
-  int res = candy_gc_event_handler(self)(obj, self, EVT_DELETE, NULL);
-  assert(res >= 0);
+  candy_gc_event_handler(self)(obj, self, EVT_DELETE, NULL);
 }
 
 static candy_err_t _fsm_begin(candy_gc_t *self) {
   candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
-  int res = candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_COLOR, NULL);
-  assert(res >= 0);
-  return CANDY_OK;
+  return candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_COLOR, NULL);
 }
 
 static candy_err_t _fsm_diffuse(candy_gc_t *self) {
   candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
   candy_object_t *obj = self->gray;
   /* remove from 'gray' list */
-  int res = candy_gc_event_handler(self)(obj, self, EVT_DIFFUSE, NULL);
-  assert(res >= 0);
-  return CANDY_OK;
+  return candy_gc_event_handler(self)(obj, self, EVT_DIFFUSE, NULL);
 }
 
 static candy_err_t _fsm_end(candy_gc_t *self) {

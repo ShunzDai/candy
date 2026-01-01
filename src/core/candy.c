@@ -34,8 +34,9 @@ static void *_default_allocator(void *prev, size_t prev_size, size_t next_size, 
 }
 
 static candy_err_t _event_handler(candy_object_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {
-  if (candy_object_mask(self) & MASK_ARRAY)
+  if (candy_object_mask(self) & MASK_ARRAY) {
     return candy_array_handler((candy_array_t *)self, gc, evt, arg);
+  }
   switch (candy_object_type(self)) {
     case CANDY_TYPE_CCLOS: return candy_cclosure_handler((candy_cclosure_t *)self, gc, evt, arg);
     case CANDY_TYPE_SCLOS: return candy_sclosure_handler((candy_sclosure_t *)self, gc, evt, arg);

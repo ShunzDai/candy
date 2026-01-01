@@ -94,9 +94,15 @@ static candy_err_t _array_compare(candy_array_t *self, candy_gc_t *gc, void *arg
   return CANDY_OK;
 }
 
+static candy_err_t _array_format(candy_array_t *self, candy_gc_t *gc, void *arg) {
+  assert(candy_object_type((candy_object_t *)self) == CANDY_TYPE_CHAR);
+  fprintf(arg, "%.*s", (int)candy_array_size(self), (char *)candy_array_data(self));
+  return CANDY_OK;
+}
+
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type) {
   candy_dynamic_t *self = (candy_dynamic_t *)candy_gc_add(gc, ctx, type, sizeof(candy_dynamic_t));
-  candy_object_set_mask((candy_object_t *)self, MASK_ARRAY);
+  candy_object_set_mask((candy_object_t *)self, candy_object_mask((candy_object_t *)self) | MASK_ARRAY);
   self->arr.hash = 0;
   self->arr.gray = NULL;
   candy_vector_init(&((candy_dynamic_t *)self)->vec);
@@ -110,7 +116,7 @@ candy_array_t *candy_array_create_const(candy_gc_t *gc, candy_excep_t *ctx, cand
   if (self == NULL) {
     self = (candy_static_t *)candy_gc_add_pool(gc, ctx, type, sizeof(candy_static_t) + len + candy_type_size(type), hash);
   }
-  candy_object_set_mask((candy_object_t *)self, MASK_ARRAY | MASK_CONST);
+  candy_object_set_mask((candy_object_t *)self, candy_object_mask((candy_object_t *)self) | MASK_ARRAY | MASK_CONST);
   memcpy(self->data, data, len);
   memset(self->data + len, 0, candy_type_size(type));
   self->size = size;
@@ -145,6 +151,7 @@ candy_err_t candy_array_handler(candy_array_t *self, candy_gc_t *gc, candy_event
     case EVT_DIFFUSE: return _array_diffuse(self, gc, arg);
     case EVT_HASH:    return _array_hash(self, gc, arg);
     case EVT_COMPARE: return _array_compare(self, gc, arg);
+    case EVT_FORMAT:  return _array_format(self, gc, arg);
     default:          return CANDY_ERR;
   }
 }
