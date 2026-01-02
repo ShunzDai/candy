@@ -29,7 +29,8 @@ extern "C" {
 
 typedef enum candy_tokens {
   TK_ERR = -1,
-  TK_EOS = 0,
+  TK_NONE = 0,
+  TK_EOS,
   TK_IDENT,
   TK_INTEGER,
   TK_FLOAT,
@@ -42,6 +43,7 @@ typedef enum candy_tokens {
 
 static inline const char *candy_token_str(candy_tokens_t token) {
   switch (token) {
+    case TK_NONE:    return "none";
     case TK_EOS:     return "EOS";
     case TK_IDENT:   return "ident";
     case TK_INTEGER: return "integer";

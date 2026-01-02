@@ -348,7 +348,7 @@ candy_err_t candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t 
   candy_buffer_init(&self->buff, reader, arg);
   self->dbg.line = 1;
   self->dbg.column = 1;
-  self->lookahead.token = TK_EOS;
+  self->lookahead.token = TK_NONE;
   self->ctx = ctx;
   self->gc = gc;
   return CANDY_OK;
@@ -360,7 +360,7 @@ candy_err_t candy_lexer_deinit(candy_lexer_t *self) {
 }
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
-  if (self->lookahead.token == TK_EOS) {
+  if (self->lookahead.token == TK_NONE) {
     self->lookahead.meta = (candy_meta_t){};
     self->lookahead.token = _lexer(self, &self->lookahead.meta);
   }
@@ -369,7 +369,7 @@ candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self) {
 }
 
 const candy_meta_t *candy_lexer_next(candy_lexer_t *self) {
-  lex_assert(self->lookahead.token != TK_EOS, "not lookahead yet");
-  self->lookahead.token = TK_EOS;
+  lex_assert(self->lookahead.token != TK_NONE, "not lookahead yet");
+  self->lookahead.token = TK_NONE;
   return &self->lookahead.meta;
 }

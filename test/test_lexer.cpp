@@ -20,7 +20,7 @@
 TEST(lexer, unique_name(_name)) { tast_body<_token>(_exp __VA_OPT__(,) __VA_ARGS__); }
 
 #define TEST_ASSERT(_name, _exp, ...) \
-TEST_BODY(_name, TK_EOS, _exp __VA_OPT__(,) __VA_ARGS__)
+TEST_BODY(_name, TK_NONE, _exp __VA_OPT__(,) __VA_ARGS__)
 
 #define TEST_NORMAL(_name, _token, _exp, ...) \
 TEST_BODY(_name, _token, _exp __VA_OPT__(,) __VA_ARGS__)
