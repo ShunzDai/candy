@@ -118,6 +118,7 @@ static void _skip_line(candy_lexer_t *self) {
     switch (_view(self, 0)) {
       case '\r': case '\n':
         _handle_newline(self, _skip);
+        /* fall through */
       case '\0':
         return;
       default:
@@ -148,6 +149,34 @@ static void _save_oct(candy_lexer_t *self) {
 static void _save_hex(candy_lexer_t *self) {
   lex_assert(is_hex(_view(self, 0)) && is_hex(_view(self, 1)), "invalid hexadecimal escape");
   _save_char(self, chtonum(_read(self)) << 4 | chtonum(_read(self)));
+}
+
+static void _handle_backslash(candy_lexer_t *self) {
+  switch (_view(self, 0)) {
+    case  'a': _skip(self); _save_char(self,      '\a'); break;
+    case  'b': _skip(self); _save_char(self,      '\b'); break;
+    case  't': _skip(self); _save_char(self,      '\t'); break;
+    case  'n': _skip(self); _save_char(self,      '\n'); break;
+    case  'v': _skip(self); _save_char(self,      '\v'); break;
+    case  'f': _skip(self); _save_char(self,      '\f'); break;
+    case  'r': _skip(self); _save_char(self,      '\r'); break;
+    case '\\': _skip(self); _save_char(self,      '\\'); break;
+    case '\'': _skip(self); _save_char(self,      '\''); break;
+    case  '"': _skip(self); _save_char(self,       '"'); break;
+    case  'x': _skip(self); _save_hex(self);             break;
+    case  'u': lex_assert(false, "unsupported unicode"); break;
+    default:
+      /* is octal escape */
+      if (_check_next(self, is_oct, _save_oct))
+        break;
+      /* is line-continuation */
+      if (_check_dual(self, "\r\n", _skip_line))
+        break;
+      /* neither of them */
+      _save_char(self, '\\');
+      _save(self);
+      break;
+  }
 }
 
 static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
@@ -220,31 +249,7 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta) {
         break;
       case '\\':
         _skip(self);
-        switch (_view(self, 0)) {
-          case  'a': _skip(self); _save_char(self,      '\a'); break;
-          case  'b': _skip(self); _save_char(self,      '\b'); break;
-          case  't': _skip(self); _save_char(self,      '\t'); break;
-          case  'n': _skip(self); _save_char(self,      '\n'); break;
-          case  'v': _skip(self); _save_char(self,      '\v'); break;
-          case  'f': _skip(self); _save_char(self,      '\f'); break;
-          case  'r': _skip(self); _save_char(self,      '\r'); break;
-          case '\\': _skip(self); _save_char(self,      '\\'); break;
-          case '\'': _skip(self); _save_char(self,      '\''); break;
-          case  '"': _skip(self); _save_char(self,       '"'); break;
-          case  'x': _skip(self); _save_hex(self);             break;
-          case  'u': lex_assert(false, "unsupported unicode"); break;
-          default:
-            /* is octal escape */
-            if (_check_next(self, is_oct, _save_oct))
-              break;
-            /* is line-continuation */
-            if (_check_dual(self, "\r\n", _skip_line))
-              break;
-            /* neither of them */
-            _save_char(self, '\\');
-            _save(self);
-            break;
-        }
+        _handle_backslash(self);
         break;
       /* normal character */
       default:

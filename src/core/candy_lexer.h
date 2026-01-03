@@ -48,9 +48,11 @@ struct candy_lexer {
 };
 
 candy_err_t candy_lexer_init(candy_lexer_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg);
+
 candy_err_t candy_lexer_deinit(candy_lexer_t *self);
 
 candy_tokens_t candy_lexer_lookahead(candy_lexer_t *self);
+
 const candy_meta_t *candy_lexer_next(candy_lexer_t *self);
 
 #ifdef __cplusplus
