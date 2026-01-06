@@ -113,10 +113,11 @@ static void _execute_sclosure(vmll_t *self, const candy_wrap_t *fn, candy_state_
   --ci->bos;
 }
 
-static candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, int narg, candy_state_t *co) {
+static candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, candy_excep_t *ctx, int narg, candy_state_t *co) {
   candy_err_t err = CANDY_OK;
   _callinfo_init(&self->ci, vm->ci, narg);
   vm->ci = &self->ci;
+  self->ctx = ctx;
   self->vm = vm;
   self->co = co;
   return err;
@@ -168,7 +169,7 @@ candy_err_t candy_vm_deinit(candy_vm_t *self) {
 
 candy_err_t candy_vm_call(candy_vm_t *self, candy_excep_t *ctx, int narg, int nres, candy_state_t *co, candy_object_t **out) {
   vmll_t vmll;
-  _vmll_init(&vmll, self, narg, co);
+  _vmll_init(&vmll, self, ctx, narg, co);
   candy_err_t err = candy_excep_try(ctx, (candy_excep_cb_t)_call, &vmll, out);
   _vmll_deinit(&vmll, nres);
   return err;
