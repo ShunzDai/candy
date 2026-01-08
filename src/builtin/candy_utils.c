@@ -24,7 +24,8 @@ static int _builtin_exit(candy_state_t *self) {
 
 static int _builtin_print(candy_state_t *self) {
   candy_state_fprint(self, 0, stdout);
-  fwrite("\n", sizeof(char), sizeof("\n"), stdout);
+  fprintf(stdout, "\n");
+  fflush(stdout);
   return 0;
 }
 

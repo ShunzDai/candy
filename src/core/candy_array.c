@@ -96,7 +96,7 @@ static candy_err_t _array_compare(candy_array_t *self, candy_gc_t *gc, void *arg
 
 static candy_err_t _array_format(candy_array_t *self, candy_gc_t *gc, void *arg) {
   assert(candy_object_type((candy_object_t *)self) == CANDY_TYPE_CHAR);
-  fprintf(arg, "%.*s", (int)candy_array_size(self), (char *)candy_array_data(self));
+  fwrite(candy_array_data(self), sizeof(char), candy_array_size(self), arg);
   return CANDY_OK;
 }
 
