@@ -28,9 +28,11 @@ extern "C" {
 #ifdef __GNUC__
 #define CANDY_NORETURN                    __attribute__((noreturn))
 #define CANDY_FORMAT(fmtarg, firstvararg) __attribute__((format(printf, fmtarg, firstvararg)))
+#define CANDY_FORCE_INLINE                inline __attribute__((always_inline))
 #else
 #define CANDY_NORETURN
 #define CANDY_FORMAT(fmtarg, firstvararg)
+#define CANDY_FORCE_INLINE                inline
 #endif
 
 #define candy_assert(_self, _gc, _condition, _err, _format, ...) \

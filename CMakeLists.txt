@@ -3,12 +3,13 @@ cmake_minimum_required(VERSION 3.5.1)
 project(candy)
 
 set(CANDY_CONFIG_MEMORY_ALIGNMENT   false)
+set(CANDY_CONFIG_VM_USE_JMPTABLE    true)
 
 set(CANDY_CONFIG_INTEGER_TYPE       int64_t)
 set(CANDY_CONFIG_FLOAT_TYPE         double)
 set(CANDY_CONFIG_BOOLEAN_TYPE       bool)
 
-set(CANDY_CONFIG_LOG_LEVEL          CANDY_LOG_LEVEL_V)
+set(CANDY_CONFIG_LOG_LEVEL          CANDY_LOG_LEVEL_N)
 set(CANDY_CONFIG_LOG_COLOR          true)
 
 set(CANDY_CONFIG_BUFFER_EXPAND_SIZE 64)

@@ -17,3 +17,8 @@ set_target_properties(
   C_EXTENSIONS OFF
   COMPILE_OPTIONS "-Wall;-Wextra;-Werror;-Wfatal-errors;-Wno-unused-parameter"
 )
+
+if (CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
+  target_compile_options(${CANDY_TARGET_CORE} PRIVATE -O3 -DNDEBUG)
+  target_compile_options(${CANDY_TARGET_BUILTIN} PRIVATE -O3 -DNDEBUG)
+endif()
