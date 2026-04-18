@@ -39,6 +39,9 @@ candy_err_t candy_wrap_fprint(const candy_wrap_t *self, candy_gc_t *gc, FILE *ou
       case CANDY_TYPE_NULL:
         fprintf(out, "%s", "null");
         break;
+      case CANDY_TYPE_NONE:
+        fprintf(out, "%s", "none");
+        break;
       case CANDY_TYPE_INTEGER:
         fprintf(out, "%" PRId64, candy_wrap_get_integer(self));
         break;

@@ -110,6 +110,15 @@ static CANDY_FORCE_INLINE void _op_loadc(vmll_t *self, const candy_inst_t *pc, c
   _vm_push(self->vm, self->ctx, val, 1);
 }
 
+static CANDY_FORCE_INLINE void _op_setg(vmll_t *self, const candy_inst_t *pc, const candy_vector_t *cst) {
+  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
+  const candy_wrap_t *key = (const candy_wrap_t *)candy_vector_data(cst) + pc->iax.a;
+  const candy_wrap_t *val = _vm_view(self->vm, self->ctx, -1);
+  candy_err_t err = candy_table_set(candy_gc_global(self->vm->gc), self->vm->gc, self->ctx, key, val);
+  candy_assert(self->ctx, self->vm->gc, err == CANDY_OK, CANDY_ERR_VM, "set global failed");
+  _vm_pop(self->vm, self->ctx, 1);
+}
+
 static CANDY_FORCE_INLINE void _op_call(vmll_t *self, const candy_inst_t *pc, candy_state_t *co) {
   candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
   vmll_t vmll;

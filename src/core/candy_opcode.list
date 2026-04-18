@@ -49,6 +49,10 @@ CANDY_OPCODE(LOADC,
   _op_loadc(self, it, cst);
 )
 
+CANDY_OPCODE(SETG,
+  _op_setg(self, it, cst);
+)
+
 CANDY_OPCODE(CALL,
   _op_call(self, it, co);
 )
