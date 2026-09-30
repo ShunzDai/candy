@@ -62,6 +62,8 @@ static candy_err_t _array_delete(candy_array_t *self, candy_gc_t *gc, void *arg)
 
 static candy_err_t _array_color(candy_array_t *self, candy_gc_t *gc, void *arg) {
   switch (candy_object_type((candy_object_t *)self)) {
+    case CANDY_TYPE_CCLOS:
+    case CANDY_TYPE_SCLOS:
     case CANDY_TYPE_TABLE:
     case CANDY_TYPE_PROTO:
     case CANDY_TYPE_STATE:
@@ -77,10 +79,13 @@ static candy_err_t _array_color(candy_array_t *self, candy_gc_t *gc, void *arg) 
 static candy_err_t _array_diffuse(candy_array_t *self, candy_gc_t *gc, void *arg) {
   candy_gc_gray_swap(gc, self->gray);
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  /* traverse objects */
-  candy_object_t *tail = (candy_object_t *)candy_array_data(self) + candy_array_size(self);
-  for (candy_object_t *it = (candy_object_t *)candy_array_data(self); it < tail; ++it) {
-    candy_gc_event_handler(gc)(it, gc, EVT_COLOR, arg);
+  const uint8_t *data = (const uint8_t *)candy_array_data(self);
+  for (size_t index = 0; index < candy_array_size(self); ++index) {
+    candy_object_t *object;
+    memcpy(&object, data + index * sizeof(object), sizeof(object));
+    candy_err_t err = candy_gc_mark(gc, object);
+    if (err != CANDY_OK)
+      return err;
   }
   return CANDY_OK;
 }

@@ -35,6 +35,7 @@ static candy_err_t _cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc, void
 }
 
 static candy_err_t _cclosure_color(candy_cclosure_t *self, candy_gc_t *gc, void *arg) {
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   return CANDY_OK;
 }
 
@@ -48,11 +49,15 @@ static candy_err_t _sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc, void
 }
 
 static candy_err_t _sclosure_color(candy_sclosure_t *self, candy_gc_t *gc, void *arg) {
+  self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
+  candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
   return CANDY_OK;
 }
 
 static candy_err_t _sclosure_diffuse(candy_sclosure_t *self, candy_gc_t *gc, void *arg) {
-  return CANDY_OK;
+  candy_gc_gray_swap(gc, self->gray);
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  return candy_gc_mark(gc, (candy_object_t *)self->proto);
 }
 
 candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_cfunc_t cfunc) {

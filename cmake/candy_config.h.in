@@ -47,6 +47,8 @@ extern "C" {
 
 #define CANDY_CONFIG_VM_STACK_SIZE      ${CANDY_CONFIG_VM_STACK_SIZE}
 
+#define CANDY_CONFIG_GC_THRESHOLD       ${CANDY_CONFIG_GC_THRESHOLD}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

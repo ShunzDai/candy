@@ -16,34 +16,34 @@
 #include "test.h"
 #include <string>
 
-#define TEST_BODY(_name, _token, _exp, ...) \
-TEST(lexer, unique_name(_name)) { tast_body<_token>(_exp __VA_OPT__(,) __VA_ARGS__); }
+#define TEST_BODY(_name, _token, ...) \
+TEST(lexer, unique_name(_name)) { tast_body<_token>(__VA_ARGS__); }
 
-#define TEST_ASSERT(_name, _exp, ...) \
-TEST_BODY(_name, TK_NONE, _exp __VA_OPT__(,) __VA_ARGS__)
+#define TEST_ASSERT(_name, ...) \
+TEST_BODY(_name, TK_NONE, __VA_ARGS__)
 
-#define TEST_NORMAL(_name, _token, _exp, ...) \
-TEST_BODY(_name, _token, _exp __VA_OPT__(,) __VA_ARGS__)
+#define TEST_NORMAL(_name, _token, ...) \
+TEST_BODY(_name, _token, __VA_ARGS__)
 
 using namespace std;
 
 template <typename supposed>
 static void test_assert(const candy_array_t *err, const supposed &val) {
-  (void)err;
+  ASSERT_NE(err, nullptr);
   if constexpr (std::is_same<supposed, std::string_view>::value) {
-    printf("exp [%.*s] act [%.*s]\n", (int)val.size(), val.data(), (int)candy_array_size(err), (char*)candy_array_data(err));
-    EXPECT_EQ(candy_array_size(err), val.size());
+    ASSERT_EQ(candy_array_size(err), val.size());
     EXPECT_MEMEQ(candy_array_data(err), val.data(), val.size());
   }
   else {
-    assert(0);
+    FAIL() << "unsupported expected error type";
   }
 }
 
 template <typename supposed>
 static void test_normal(const candy_meta_t &meta, const supposed &val) {
   if constexpr (std::is_same<supposed, std::string_view>::value) {
-    EXPECT_EQ(candy_array_size(meta.s), val.size());
+    ASSERT_NE(meta.s, nullptr);
+    ASSERT_EQ(candy_array_size(meta.s), val.size());
     EXPECT_MEMEQ(candy_array_data(meta.s), val.data(), val.size());
   }
   else if constexpr (std::is_integral<supposed>::value) {
@@ -71,22 +71,29 @@ static void tast_body(const char exp[], const supposed & ... value) {
   candy_gc_init(&gc, nullptr, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
   candy_lexer_init(&cinfo.ls, &gc, &ctx, string_reader, &info);
   candy_object_t *msg = nullptr;
-  auto err = candy_excep_try(&ctx, (candy_excep_cb_t)+[](catch_info *self) {
+  auto err = candy_excep_try(&ctx, +[](void *arg) {
+    auto *self = static_cast<catch_info *>(arg);
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), token);
     if constexpr (token != TK_EOS)
       self->next = *candy_lexer_next(&self->ls);
     EXPECT_EQ(candy_lexer_lookahead(&self->ls), TK_EOS);
   }, &cinfo, &msg);
   candy_lexer_deinit(&cinfo.ls);
-  if constexpr(sizeof...(value)) {
-    if (err != CANDY_OK)
-      test_assert((candy_array_t *)msg, value ...);
-    else
-      test_normal(cinfo.next, value ...);
-  }
-  else {
-    (void)err;
-    (void)msg;
+  if constexpr (token == TK_NONE) {
+    EXPECT_EQ(err, CANDY_ERR_LEXICAL);
+    if constexpr (sizeof...(value)) {
+      if (err != CANDY_OK) {
+        test_assert(reinterpret_cast<candy_array_t *>(msg), value ...);
+      }
+    }
+  } else {
+    EXPECT_EQ(err, CANDY_OK);
+    EXPECT_EQ(msg, nullptr);
+    if constexpr (sizeof...(value)) {
+      if (err == CANDY_OK) {
+        test_normal(cinfo.next, value ...);
+      }
+    }
   }
   candy_gc_deinit(&gc);
   candy_excep_deinit(&ctx);
@@ -99,8 +106,9 @@ TEST_NORMAL(comment, TK_EOS, "#")
 TEST_NORMAL(comment, TK_EOS, "# hello world\r\n")
 
 TEST_NORMAL(comment, TK_EOS,
-  "# hello world\n"
-  "# hi\n"
+  R"(# hello world
+# hi
+)"
 )
 
 TEST_NORMAL(string, TK_STRING,
@@ -144,11 +152,14 @@ TEST_NORMAL(string_multiline, TK_STRING,
 )
 
 TEST_NORMAL(string_multiline, TK_STRING,
-  "'''\n"
-  "hello\n"
-  "world\n"
-  "'''",
-  "\nhello\nworld\n"sv
+  R"('''
+hello
+world
+''')",
+  R"(
+hello
+world
+)"sv
 )
 
 TEST_NORMAL(string_chinese, TK_STRING,
@@ -157,7 +168,8 @@ TEST_NORMAL(string_chinese, TK_STRING,
 )
 
 TEST_NORMAL(string_line_continuation, TK_STRING,
-  "\"hello \\\nworld\"",
+  R"("hello \
+world")",
   "hello world"sv
 )
 

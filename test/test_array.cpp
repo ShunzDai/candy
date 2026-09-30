@@ -46,3 +46,35 @@ TEST(array, reuse) {
   EXPECT_EQ(a, b);
   candy_gc_deinit(&gc);
 }
+
+TEST(array, growth_reserve_and_resize_preserve_elements) {
+  candy_gc_t gc{};
+  ASSERT_EQ(candy_gc_init(&gc, nullptr, (candy_handler_t)candy_array_handler,
+                          test_allocator, nullptr), CANDY_OK);
+  auto *self = candy_array_create(&gc, nullptr, CANDY_TYPE_INTEGER);
+  ASSERT_NE(self, nullptr);
+  EXPECT_EQ(candy_array_size(self), 0U);
+  candy_integer_t expected[300];
+  for (size_t index = 0; index < 300; ++index) {
+    expected[index] = static_cast<candy_integer_t>(index) * 3 - 200;
+    ASSERT_EQ(candy_array_append(self, &gc, nullptr, &expected[index], 1), CANDY_OK);
+  }
+  ASSERT_EQ(candy_array_size(self), 300U);
+  EXPECT_GE(candy_array_capacity(self), 300U);
+  EXPECT_MEMEQ(candy_array_data(self), expected, sizeof(expected));
+  candy_array_reserve(self, &gc, nullptr, 600);
+  EXPECT_GE(candy_array_capacity(self), 600U);
+  EXPECT_EQ(candy_array_size(self), 300U);
+  EXPECT_MEMEQ(candy_array_data(self), expected, sizeof(expected));
+  candy_array_resize(self, &gc, nullptr, 10);
+  ASSERT_EQ(candy_array_size(self), 10U);
+  EXPECT_MEMEQ(candy_array_data(self), expected, 10 * sizeof(expected[0]));
+  candy_array_resize(self, &gc, nullptr, 0);
+  ASSERT_EQ(candy_array_append(self, &gc, nullptr, expected, 0), CANDY_OK);
+  EXPECT_EQ(candy_array_size(self), 0U);
+  ASSERT_EQ(candy_array_append(self, &gc, nullptr, expected, 3), CANDY_OK);
+  ASSERT_EQ(candy_array_size(self), 3U);
+  EXPECT_MEMEQ(candy_array_data(self), expected, 3 * sizeof(expected[0]));
+  ASSERT_EQ(candy_gc_deinit(&gc), CANDY_OK);
+  EXPECT_EQ(candy_memory_used(candy_gc_memory(&gc)), 0U);
+}

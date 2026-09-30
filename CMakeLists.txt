@@ -16,6 +16,8 @@ set(CANDY_CONFIG_BUFFER_EXPAND_SIZE 64)
 
 set(CANDY_CONFIG_VM_STACK_SIZE      128)
 
+set(CANDY_CONFIG_GC_THRESHOLD       65536 CACHE STRING "Initial and minimum GC threshold in bytes")
+
 set(CANDY_TARGET_CORE        candy_core)
 set(CANDY_TARGET_BUILTIN     candy_builtin)
 

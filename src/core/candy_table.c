@@ -30,6 +30,7 @@ struct candy_pair {
 
 struct candy_table {
   candy_object_t header;
+  candy_object_t *gray;
   candy_pair_t *data;
   uint8_t cap;
 };
@@ -48,7 +49,7 @@ static bool _is_null(const void *pos) {
 
 static bool _is_tomb(const void *pos) {
   const candy_pair_t *self = (const candy_pair_t *)pos;
-  return candy_wrap_mask(&self->key) & MASK_TOMB;
+  return !(candy_wrap_mask(&self->key) & MASK_HASHABLE);
 }
 
 static bool _comp(const void *pos, const void *key, candy_gc_t *gc) {
@@ -93,10 +94,24 @@ static candy_err_t _table_delete(candy_table_t *self, candy_gc_t *gc, void *arg)
 }
 
 static candy_err_t _table_color(candy_table_t *self, candy_gc_t *gc, void *arg) {
+  self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
+  candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
   return CANDY_OK;
 }
 
 static candy_err_t _table_diffuse(candy_table_t *self, candy_gc_t *gc, void *arg) {
+  candy_gc_gray_swap(gc, self->gray);
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  for (size_t index = 0; index < capacity_to_size(self->cap); ++index) {
+    const candy_pair_t *pair = self->data + index;
+    if (_is_null(pair) || _is_tomb(pair))
+      continue;
+    candy_err_t err = candy_wrap_mark(&pair->key, gc);
+    if (err == CANDY_OK)
+      err = candy_wrap_mark(&pair->val, gc);
+    if (err != CANDY_OK)
+      return err;
+  }
   return CANDY_OK;
 }
 
@@ -166,7 +181,7 @@ candy_err_t candy_table_reset(candy_table_t *self, candy_gc_t *gc, const candy_w
   candy_pair_t *pos = _find(self, gc, key, false);
   if (pos) {
     candy_wrap_set_type(&pos->key, CANDY_TYPE_NONE);
-    candy_wrap_set_mask(&pos->key, MASK_TOMB);
+    candy_wrap_set_mask(&pos->key, MASK_EMPTY);
   }
   return CANDY_OK;
 }

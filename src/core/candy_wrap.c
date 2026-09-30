@@ -19,6 +19,12 @@
 
 const candy_wrap_t CANDY_WRAP_NULL = {0};
 
+candy_err_t candy_wrap_mark(const candy_wrap_t *self, candy_gc_t *gc) {
+  if (!(candy_wrap_mask(self) & MASK_OBJECT))
+    return CANDY_OK;
+  return candy_gc_mark(gc, candy_wrap_get_object(self));
+}
+
 candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc) {
   candy_hash_t hash = 0;
   if (candy_wrap_mask(self) & MASK_OBJECT) {

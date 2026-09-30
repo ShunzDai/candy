@@ -15,24 +15,132 @@
   */
 #include "test.h"
 
-#define PARSER_TEST(_name, _exp) TEST(parser, _name) {test_body(_exp);}
+class parser : public testing::Test {
+protected:
+  candy_state_t *state = nullptr;
+  inline static int checks = 0;
 
-// static void test_body(const char exp[]) {
-//   str_info info = {exp, strlen(exp), 0};
-//   candy_excep_t io;
-//   candy_excep_init(&io);
-//   auto tick = os::tick_ns();
-//   EXPECT_EQ(candy_parse(&io, string_reader, &info) != 0, false);
-//   printf("delta time = %ld ns\n", os::tick_ns() - tick);
-//   candy_excep_deinit(&io);
-// }
+  void SetUp() override {
+    state = candy_new_state_default();
+    ASSERT_NE(state, nullptr);
+    ASSERT_EQ(candy_state_setglobal(state, "verify", +[](candy_state_t *current) -> int {
+      ++checks;
+      EXPECT_EQ(candy_state_get_type(current, 0), CANDY_TYPE_INTEGER);
+      if (candy_state_get_type(current, 0) == CANDY_TYPE_INTEGER) {
+        EXPECT_EQ(candy_state_to_integer(current, 0), candy_state_to_integer(current, 1));
+      }
+      return 0;
+    }), CANDY_OK);
+  }
 
-// PARSER_TEST(exp_add_0, "a = 1 + 2")
-// PARSER_TEST(exp_add_1, "a = (1 + 2)")
-// PARSER_TEST(exp_sub_0, "a = 1 - 2")
-// PARSER_TEST(exp_sub_1, "a = (1 - 2)")
-// PARSER_TEST(exp_mul_0, "a = 1 * 2")
-// PARSER_TEST(exp_mul_1, "a = (1 * 2)")
-// PARSER_TEST(exp_div_0, "a = 1 / 2")
-// PARSER_TEST(exp_div_1, "a = (1 / 2)")
-// PARSER_TEST(exp, "a = (((-0xa + (-2e+3 *+2e-2)/(-4.5e+5 +-1.5e-2))*(6.4 --7.6) + (+8.4 + 9) * 10)/11) - 12")
+  void TearDown() override {
+    if (state) {
+      EXPECT_EQ(candy_close(state), CANDY_OK);
+    }
+  }
+
+  void run(const char *source, int expected_checks) {
+    checks = 0;
+    ASSERT_EQ(candy_dostring(state, source, strlen(source)), CANDY_OK);
+    EXPECT_EQ(checks, expected_checks);
+  }
+};
+
+TEST_F(parser, arithmetic_associativity_and_parentheses) {
+  run(R"(verify(1 + 2, 3)
+verify(10 - 3 - 2, 5)
+verify(10 - (3 - 2), 9)
+verify(1 + 2 - 3 + 4, 4)
+verify((1 + 2) + (3 - 4), 2)
+verify(0 - 1, 0 - 1)
+verify(0x10 + 2, 18)
+)", 7);
+}
+
+TEST_F(parser, comparisons_respect_arithmetic_precedence) {
+  run(R"(result = 0
+if (4 < 2 + 1)
+  result = 1
+end
+verify(result, 0)
+result = 0
+if (1 < 2 - 2)
+  result = 1
+end
+verify(result, 0)
+result = 0
+if (2 + 3 < 6)
+  result = 1
+end
+verify(result, 1)
+)", 3);
+}
+
+TEST_F(parser, arguments_and_function_values) {
+  run(R"(def subtract(first, second)
+  return first - second
+end
+def apply(function, value)
+  return function(value)
+end
+def increment(value)
+  return value + 1
+end
+verify(subtract(10, 3), 7)
+verify(apply(increment, 8), 9)
+verify(subtract(increment(5), increment(2)), 3)
+)", 3);
+}
+
+TEST_F(parser, recursive_calls_and_branch_boundaries) {
+  run(R"(def fibonacci(n)
+  if (n < 2)
+    return n
+  end
+  return fibonacci(n - 2) + fibonacci(n - 1)
+end
+verify(fibonacci(0), 0)
+verify(fibonacci(1), 1)
+verify(fibonacci(2), 1)
+verify(fibonacci(10), 55)
+)", 4);
+}
+
+TEST_F(parser, empty_function_returns_none) {
+  const char source[] = R"(def empty()
+end
+return empty()
+)";
+  ASSERT_EQ(candy_dostring(state, source, sizeof(source) - 1), CANDY_OK);
+  EXPECT_EQ(candy_state_get_type(state, -1), CANDY_TYPE_NONE);
+}
+
+TEST_F(parser, literal_types) {
+  const char floating[] = R"(return 1.25)";
+  ASSERT_EQ(candy_dostring(state, floating, sizeof(floating) - 1), CANDY_OK);
+  ASSERT_EQ(candy_state_get_type(state, -1), CANDY_TYPE_FLOAT);
+  EXPECT_DOUBLE_EQ(candy_state_to_float(state, -1), 1.25);
+  const char boolean[] = R"(return true)";
+  ASSERT_EQ(candy_dostring(state, boolean, sizeof(boolean) - 1), CANDY_OK);
+  EXPECT_EQ(candy_state_get_type(state, -1), CANDY_TYPE_BOOLEAN);
+}
+
+TEST_F(parser, syntax_errors_do_not_execute_or_poison_next_script) {
+  const char *invalid[] = {
+    R"(def incomplete(n)
+return n
+)",
+    R"(verify(1 +, 1))",
+    R"(if (1 < 2)
+verify(1, 1)
+)",
+    R"(value = (1 + 2)"
+  };
+  for (const char *source : invalid) {
+    SCOPED_TRACE(source);
+    checks = 0;
+    EXPECT_NE(candy_dostring(state, source, strlen(source)), CANDY_OK);
+    EXPECT_EQ(checks, 0);
+    run(R"(verify(2 + 3, 5))", 1);
+  }
+}

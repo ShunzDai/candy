@@ -21,6 +21,7 @@
 
 struct candy_proto {
   candy_object_t header;
+  candy_object_t *gray;
   candy_vector_t cst;
   candy_vector_t inst;
 };
@@ -33,11 +34,20 @@ static candy_err_t _proto_delete(candy_proto_t *self, candy_gc_t *gc, void *arg)
 }
 
 static candy_err_t _proto_color(candy_proto_t *self, candy_gc_t *gc, void *arg) {
-  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  self->gray = candy_gc_gray_swap(gc, (candy_object_t *)self);
+  candy_object_set_mark((candy_object_t *)self, MARK_GRAY);
   return CANDY_OK;
 }
 
 static candy_err_t _proto_diffuse(candy_proto_t *self, candy_gc_t *gc, void *arg) {
+  candy_gc_gray_swap(gc, self->gray);
+  candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  const candy_wrap_t *constants = (const candy_wrap_t *)candy_vector_data(&self->cst);
+  for (size_t index = 0; index < candy_vector_size(&self->cst); ++index) {
+    candy_err_t err = candy_wrap_mark(constants + index, gc);
+    if (err != CANDY_OK)
+      return err;
+  }
   return CANDY_OK;
 }
 

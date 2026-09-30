@@ -25,42 +25,36 @@ void *candy_map_find(const candy_map_t *self, candy_gc_t *gc, const void *key, c
   if (self->data == NULL) {
     return NULL;
   }
+  void *vacant = NULL;
   for (size_t idx = 0; list[idx] != INT32_MAX; ++idx) {
     void *pos = self->data + self->cell * ((hash + list[idx]) & (capacity_to_size(self->cap) - 1));
     if (self->is_null(pos)) {
-      /* if it is not expand, determine whether it is a tombstone */
-      if (!expand) {
-        /* if it is a tombstone, keep searching */
-        if (self->is_tomb(pos))
-          continue;
-        /* otherwise, this key does not exist */
-        break;
-      }
-      /* otherwise, it has been found */
+      if (vacant == NULL)
+        vacant = pos;
+      break;
     }
-    else if (!self->comp(pos, key, gc)) {
+    if (self->is_tomb(pos)) {
+      if (vacant == NULL)
+        vacant = pos;
       continue;
     }
-    return pos;
+    if (self->comp(pos, key, gc))
+      return pos;
   }
-  return NULL;
+  return expand ? vacant : NULL;
 }
 
 candy_err_t candy_map_resize(candy_map_t *self, candy_gc_t *gc, candy_excep_t *ctx, uint8_t cap, candy_hash_t (*hash)(const void *key, candy_gc_t *gc)) {
   size_t psize = capacity_to_size(self->cap);
   size_t nsize = capacity_to_size(cap);
-  candy_map_t m;
-  m.is_null = self->is_null;
-  m.is_tomb = self->is_tomb;
-  m.comp = self->comp;
-  m.cell = self->cell;
+  candy_map_t m = *self;
   m.cap = cap;
   m.data = candy_memory_alloc((candy_memory_t *)gc, ctx, self->cell * nsize);
   /** @attention can not longjmp begin */
   memset(m.data, 0, self->cell * nsize);
   for (size_t idx = 0; idx < psize; ++idx) {
     const void *from = self->data + self->cell * idx;
-    if (self->is_null(from))
+    if (self->is_null(from) || self->is_tomb(from))
       continue;
     void *to = candy_map_find(&m, gc, from, hash(from, gc), true);
     memcpy(to, from, self->cell);

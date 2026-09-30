@@ -92,7 +92,10 @@ static void _dostream(void *arg) {
   }
   err = candy_state_push_object(self->co, out);
   err = candy_vm_call(vm, ctx, 0, 1, self->co, &out);
+  if (err != CANDY_OK)
+    candy_excep_throw(ctx, err, out);
   err = candy_gc_full(vm->gc);
+  candy_assert(ctx, vm->gc, err == CANDY_OK, CANDY_ERR_VM, "garbage collection failed");
 }
 
 static candy_err_t _state_delete(candy_state_t *self, candy_gc_t *gc, void *arg) {
@@ -111,6 +114,12 @@ static candy_err_t _state_color(candy_state_t *self, candy_gc_t *gc, void *arg) 
 static candy_err_t _state_diffuse(candy_state_t *self, candy_gc_t *gc, void *arg) {
   candy_gc_gray_swap(gc, self->gray);
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  const candy_wrap_t *stack = (const candy_wrap_t *)candy_vector_data(&self->vm.s);
+  for (ptrdiff_t index = 0; index < self->vm.ci->tos; ++index) {
+    candy_err_t err = candy_wrap_mark(stack + index, gc);
+    if (err != CANDY_OK)
+      return err;
+  }
   return CANDY_OK;
 }
 

@@ -38,7 +38,7 @@ static candy_hash_t _hash(const void *pos, candy_gc_t *gc) {
 
 static bool _is_null(const void *pos) {
   const candy_object_t **self = (const candy_object_t **)pos;
-  return *self == NULL || *self == (candy_object_t *)UINTPTR_MAX;
+  return *self == NULL;
 }
 
 static bool _is_tomb(const void *pos) {
@@ -109,7 +109,8 @@ static void _del_node(candy_gc_t *self, candy_object_t **pos) {
 
 static candy_err_t _fsm_begin(candy_gc_t *self) {
   candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
-  return candy_gc_event_handler(self)((candy_object_t *)self->prim, self, EVT_COLOR, NULL);
+  candy_err_t err = candy_gc_mark(self, self->prim);
+  return err == CANDY_OK ? candy_gc_mark(self, self->glob) : err;
 }
 
 static candy_err_t _fsm_diffuse(candy_gc_t *self) {
@@ -134,11 +135,28 @@ static candy_err_t _fsm_end(candy_gc_t *self) {
         assert(0);
     }
   }
+  for (size_t idx = 0; idx < capacity_to_size(self->pool_cap); ++idx) {
+    candy_object_t **pos = self->pool + idx;
+    if (_is_null(pos) || _is_tomb(pos))
+      continue;
+    if (candy_object_mark(*pos) == MARK_WHITE) {
+      _del_node(self, pos);
+      *pos = (candy_object_t *)UINTPTR_MAX;
+    }
+    else {
+      candy_object_set_mark(*pos, MARK_WHITE);
+    }
+  }
+  if (self->prim)
+    candy_object_set_mark(self->prim, MARK_WHITE);
+  if (self->glob)
+    candy_object_set_mark(self->glob, MARK_WHITE);
   return CANDY_OK;
 }
 
 candy_err_t candy_gc_init(candy_gc_t *self, candy_excep_t *ctx, candy_handler_t handler, candy_allocator_t alloc, void *arg) {
   candy_memory_init(&self->mem, alloc, arg);
+  self->threshold = CANDY_CONFIG_GC_THRESHOLD;
   self->pool = NULL;
   self->pool_cap = 0;
   self->handler = handler;
@@ -146,6 +164,7 @@ candy_err_t candy_gc_init(candy_gc_t *self, candy_excep_t *ctx, candy_handler_t 
   self->list = NULL;
   self->gray = NULL;
   self->prim = NULL;
+  self->glob = NULL;
   return CANDY_OK;
 }
 
@@ -153,7 +172,7 @@ candy_err_t candy_gc_deinit(candy_gc_t *self) {
   /* free constant pool */
   for (size_t idx = 0; idx < capacity_to_size(self->pool_cap); ++idx) {
     candy_object_t **pos = (candy_object_t **)self->pool + idx;
-    if (*pos == NULL || *pos == (candy_object_t *)UINTPTR_MAX)
+    if (_is_null(pos) || _is_tomb(pos))
       continue;
     _del_node(self, pos);
   }
@@ -214,39 +233,46 @@ candy_object_t *candy_gc_find(candy_gc_t *self, candy_types_t type, const void *
   return pos ? *pos : NULL;
 }
 
-candy_err_t candy_gc_sweep(candy_gc_t *self) {
-  // for (candy_object_t *obj = self->root, *next = candy_object_next(obj); obj;) {
-  //   if (candy_object_mark(obj) == MARK_DARK)
-
-  // }
-  return CANDY_OK;
+candy_err_t candy_gc_mark(candy_gc_t *self, candy_object_t *obj) {
+  if (obj == NULL || candy_object_mark(obj) != MARK_WHITE)
+    return CANDY_OK;
+  return candy_gc_event_handler(self)(obj, self, EVT_COLOR, NULL);
 }
 
 candy_err_t candy_gc_step(candy_gc_t *self) {
+  candy_err_t err = CANDY_OK;
   switch (candy_gc_fsm(self)) {
     case GC_FSM_BEGIN:
-      _fsm_begin(self);
-      self->fsm = GC_FSM_DIFFUSE;
-      return CANDY_OK;
+      err = _fsm_begin(self);
+      if (err == CANDY_OK)
+        self->fsm = GC_FSM_DIFFUSE;
+      break;
     case GC_FSM_DIFFUSE:
       if (self->gray)
-        _fsm_diffuse(self);
+        err = _fsm_diffuse(self);
       else
         self->fsm = GC_FSM_END;
-      return CANDY_OK;
+      break;
     case GC_FSM_END:
       _fsm_end(self);
       self->fsm = GC_FSM_BEGIN;
-      return CANDY_OK;
+      break;
     default:
-      return CANDY_ERR;
+      err = CANDY_ERR;
+      break;
   }
+  return err;
 }
 
 candy_err_t candy_gc_full(candy_gc_t *self) {
-  if (candy_gc_fsm(self) == GC_FSM_BEGIN)
-    candy_gc_step(self);
-  while (candy_gc_fsm(self) != GC_FSM_BEGIN)
-    candy_gc_step(self);
+  do {
+    candy_err_t err = candy_gc_step(self);
+    if (err != CANDY_OK)
+      return err;
+  } while (candy_gc_fsm(self) != GC_FSM_BEGIN);
+  size_t used = candy_memory_used(candy_gc_memory(self));
+  self->threshold = used > SIZE_MAX / 2 ? SIZE_MAX : used * 2;
+  if (self->threshold < CANDY_CONFIG_GC_THRESHOLD)
+    self->threshold = CANDY_CONFIG_GC_THRESHOLD;
   return CANDY_OK;
 }

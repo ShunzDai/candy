@@ -34,15 +34,15 @@ candy_assert(self->ctx, self->vm->gc, _condition, CANDY_ERR_VM, _format, ##__VA_
 #endif
 
 #if CANDY_CONFIG_VM_USE_JMPTABLE
-#define vmdispatch(_opcode) goto *dispatch_table[(uint32_t)(_opcode)]; if (0)
+#define vmdispatch(_opcode) _vmll_gc(self); goto *dispatch_table[(uint32_t)(_opcode)]; if (0)
 #define vmcase(_opcode)     L_##_opcode
 #define vmbreak()           do { \
   if (pc >= inst_count) return; \
   it = instructions + pc++; \
-  goto *dispatch_table[(uint32_t)it->op]; \
+  vmdispatch(it->op) {} \
 } while (0)
 #else
-#define vmdispatch(_opcode) switch ((candy_opcodes_t)(_opcode))
+#define vmdispatch(_opcode) _vmll_gc(self); switch ((candy_opcodes_t)(_opcode))
 #define vmcase(_opcode)     case OP_##_opcode
 #define vmbreak()           break
 #endif /* CANDY_CONFIG_VM_USE_JMPTABLE */
@@ -115,6 +115,14 @@ static CANDY_FORCE_INLINE void _vmll_push(vmll_t *self, const candy_wrap_t *wrap
   candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->vm->s);
   vmll_assert(ci->tos < (ptrdiff_t)candy_vector_size(&self->vm->s), "stack overflow");
   stack[ci->tos++] = *wrap;
+}
+
+static CANDY_FORCE_INLINE void _vmll_gc(vmll_t *self) {
+  candy_gc_t *gc = self->vm->gc;
+  if (candy_memory_used(candy_gc_memory(gc)) < gc->threshold)
+    return;
+  candy_err_t err = candy_gc_full(gc);
+  candy_assert(self->ctx, gc, err == CANDY_OK, CANDY_ERR_VM, "garbage collection failed");
 }
 
 static CANDY_FORCE_INLINE void _op_loadg(vmll_t *self, const candy_inst_t *pc, const candy_vector_t *cst) {
@@ -332,8 +340,9 @@ static CANDY_FORCE_INLINE candy_err_t _vmll_init(vmll_t *self, candy_vm_t *vm, c
 static CANDY_FORCE_INLINE candy_err_t _vmll_deinit(vmll_t *self, int nres) {
   candy_err_t err = CANDY_OK;
   candy_vm_t *vm = self->vm;
-  _callinfo_deinit(&self->ci, vm->ci->prev, nres);
-  vm->ci = vm->ci->prev;
+  /* Use the saved parent: longjmp may leave vm->ci pointing to an unwound frame. */
+  _callinfo_deinit(&self->ci, self->ci.prev, nres);
+  vm->ci = self->ci.prev;
   return err;
 }
 

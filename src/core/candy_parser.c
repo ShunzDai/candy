@@ -196,8 +196,7 @@ static candy_err_t _primary(parser_t *self) {
   return CANDY_OK;
 }
 
-static candy_err_t _expr(parser_t *self, int min_prec) {
-  _primary(self);
+static candy_err_t _expr_tail(parser_t *self, int min_prec) {
   while (1) {
     candy_tokens_t token = candy_lexer_lookahead(&self->ls);
     int prec = _precedence(token);
@@ -206,10 +205,16 @@ static candy_err_t _expr(parser_t *self, int min_prec) {
     candy_lexer_next(&self->ls);
     if ((token == TK_MINUS || token == TK_LESS) && candy_lexer_lookahead(&self->ls) == TK_INTEGER) {
       size_t constant = _add_meta(self, TK_INTEGER);
-      _add_iax(self, token == TK_MINUS ? OP_SUBC : OP_LTC, (uint32_t)constant);
-      continue;
+      if (_precedence(candy_lexer_lookahead(&self->ls)) <= prec) {
+        _add_iax(self, token == TK_MINUS ? OP_SUBC : OP_LTC, (uint32_t)constant);
+        continue;
+      }
+      _add_iax(self, OP_LOADC, (uint32_t)constant);
+      _expr_tail(self, prec + 1);
     }
-    _expr(self, prec + 1);
+    else {
+      _expr(self, prec + 1);
+    }
     switch (token) {
       case TK_PLUS:  _add_iax(self, OP_ADD, 0); break;
       case TK_MINUS: _add_iax(self, OP_SUB, 0); break;
@@ -218,6 +223,11 @@ static candy_err_t _expr(parser_t *self, int min_prec) {
     }
   }
   return CANDY_OK;
+}
+
+static candy_err_t _expr(parser_t *self, int min_prec) {
+  _primary(self);
+  return _expr_tail(self, min_prec);
 }
 
 static candy_err_t _block(parser_t *self, bool stop_at_end) {

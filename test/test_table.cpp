@@ -36,18 +36,19 @@ TEST(table, fill) {
   candy_table_t *self = candy_table_create(&gc, nullptr);
   candy_integer_t k[num], v[num];
   for (size_t idx = 0; idx < num; ++idx) {
-    k[idx] = rand();
-    v[idx] = rand();
+    k[idx] = static_cast<candy_integer_t>(idx * 256 + 1);
+    v[idx] = static_cast<candy_integer_t>(idx * 17 + 100);
     candy_wrap_t key{}, val{};
     candy_wrap_set_integer(&key, k[idx]);
     candy_wrap_set_integer(&val, v[idx]);
-    candy_table_set(self, &gc, nullptr, &key, &val);
+    ASSERT_EQ(candy_table_set(self, &gc, nullptr, &key, &val), CANDY_OK);
   }
-  candy_table_fprint(self, &gc, stdout);
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     candy_wrap_set_integer(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
+    const candy_wrap_t *value = candy_table_get(self, &gc, &key);
+    ASSERT_EQ(candy_wrap_type(value), CANDY_TYPE_INTEGER);
+    EXPECT_EQ(candy_wrap_get_integer(value), v[idx]);
   }
   candy_gc_deinit(&gc);
 }
@@ -55,28 +56,45 @@ TEST(table, fill) {
 TEST(table, reset) {
   constexpr int num = 10;
   candy_gc_t gc{};
-  candy_gc_init(&gc, nullptr, (candy_handler_t)candy_table_handler, test_allocator, nullptr);
+  candy_gc_init(&gc, nullptr, _event_handler, test_allocator, nullptr);
   candy_table_t *self = candy_table_create(&gc, nullptr);
   candy_integer_t k[num], v[num];
   for (size_t idx = 0; idx < num; ++idx) {
-    k[idx] = rand();
-    v[idx] = rand();
+    k[idx] = static_cast<candy_integer_t>(idx * 256 + 1);
+    v[idx] = static_cast<candy_integer_t>(idx + 100);
     candy_wrap_t key{}, val{};
     candy_wrap_set_integer(&key, k[idx]);
     candy_wrap_set_integer(&val, v[idx]);
-    candy_table_set(self, &gc, nullptr, &key, &val);
-    if (k[idx] % 3) {
-      candy_table_reset(self, &gc, &key);
-      k[idx] = 0;
-    }
+    ASSERT_EQ(candy_table_set(self, &gc, nullptr, &key, &val), CANDY_OK);
   }
-  candy_table_fprint(self, &gc, stdout);
+  for (size_t idx = 0; idx < num; idx += 2) {
+    candy_wrap_t key{};
+    candy_wrap_set_integer(&key, k[idx]);
+    ASSERT_EQ(candy_table_reset(self, &gc, &key), CANDY_OK);
+  }
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
-    if (k[idx] == 0)
-      continue;
     candy_wrap_set_integer(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
+    const candy_wrap_t *value = candy_table_get(self, &gc, &key);
+    if (idx % 2 == 0) {
+      EXPECT_EQ(candy_wrap_type(value), CANDY_TYPE_NULL);
+    } else {
+      ASSERT_EQ(candy_wrap_type(value), CANDY_TYPE_INTEGER);
+      EXPECT_EQ(candy_wrap_get_integer(value), v[idx]);
+    }
+  }
+  for (size_t idx = 0; idx < num; idx += 2) {
+    candy_wrap_t key{}, value{};
+    candy_wrap_set_integer(&key, k[idx]);
+    candy_wrap_set_integer(&value, -v[idx]);
+    ASSERT_EQ(candy_table_set(self, &gc, nullptr, &key, &value), CANDY_OK);
+  }
+  for (size_t idx = 0; idx < num; ++idx) {
+    candy_wrap_t key{};
+    candy_wrap_set_integer(&key, k[idx]);
+    const candy_wrap_t *value = candy_table_get(self, &gc, &key);
+    ASSERT_EQ(candy_wrap_type(value), CANDY_TYPE_INTEGER);
+    EXPECT_EQ(candy_wrap_get_integer(value), idx % 2 == 0 ? -v[idx] : v[idx]);
   }
   candy_gc_deinit(&gc);
 }
@@ -84,24 +102,67 @@ TEST(table, reset) {
 TEST(table, key_obj) {
   constexpr int num = 10;
   candy_gc_t gc{};
-  candy_gc_init(&gc, nullptr, (candy_handler_t)_event_handler, test_allocator, nullptr);
+  candy_gc_init(&gc, nullptr, _event_handler, test_allocator, nullptr);
   candy_table_t *self = candy_table_create(&gc, nullptr);
   candy_object_t *k[num];
   candy_integer_t v[num];
   for (size_t idx = 0; idx < num; ++idx) {
-    auto s = std::to_string(rand());
+    auto s = std::string("key_") + std::to_string(idx);
     k[idx] = (candy_object_t *)candy_array_create_const(&gc, nullptr, CANDY_TYPE_CHAR, s.data(), s.size());
-    v[idx] = rand();
+    v[idx] = static_cast<candy_integer_t>(idx + 200);
     candy_wrap_t key{}, val{};
     candy_wrap_set_object(&key, k[idx]);
     candy_wrap_set_integer(&val, v[idx]);
-    candy_table_set(self, &gc, nullptr, &key, &val);
+    ASSERT_EQ(candy_table_set(self, &gc, nullptr, &key, &val), CANDY_OK);
   }
-  candy_table_fprint(self, &gc, stdout);
   for (size_t idx = 0; idx < num; ++idx) {
     candy_wrap_t key{};
     candy_wrap_set_object(&key, k[idx]);
-    EXPECT_EQ(candy_wrap_get_integer(candy_table_get(self, &gc, &key)), v[idx]);
+    const candy_wrap_t *value = candy_table_get(self, &gc, &key);
+    ASSERT_EQ(candy_wrap_type(value), CANDY_TYPE_INTEGER);
+    EXPECT_EQ(candy_wrap_get_integer(value), v[idx]);
   }
+  candy_gc_deinit(&gc);
+}
+
+TEST(table, overwrite_and_missing_keys) {
+  candy_gc_t gc{};
+  ASSERT_EQ(candy_gc_init(&gc, nullptr, _event_handler, test_allocator, nullptr), CANDY_OK);
+  candy_table_t *self = candy_table_create(&gc, nullptr);
+  candy_wrap_t key{}, value{};
+  candy_wrap_set_integer(&key, 42);
+  EXPECT_EQ(candy_wrap_type(candy_table_get(self, &gc, &key)), CANDY_TYPE_NULL);
+  EXPECT_EQ(candy_table_reset(self, &gc, &key), CANDY_OK);
+  for (candy_integer_t expected : {10, 20, -30}) {
+    candy_wrap_set_integer(&value, expected);
+    ASSERT_EQ(candy_table_set(self, &gc, nullptr, &key, &value), CANDY_OK);
+    const candy_wrap_t *actual = candy_table_get(self, &gc, &key);
+    ASSERT_EQ(candy_wrap_type(actual), CANDY_TYPE_INTEGER);
+    EXPECT_EQ(candy_wrap_get_integer(actual), expected);
+  }
+  EXPECT_EQ(candy_table_reset(self, &gc, &key), CANDY_OK);
+  EXPECT_EQ(candy_table_reset(self, &gc, &key), CANDY_OK);
+  EXPECT_EQ(candy_wrap_type(candy_table_get(self, &gc, &key)), CANDY_TYPE_NULL);
+  candy_gc_deinit(&gc);
+}
+
+TEST(table, overwrite_beyond_tombstone_does_not_duplicate_key) {
+  candy_gc_t gc{};
+  ASSERT_EQ(candy_gc_init(&gc, nullptr, _event_handler, test_allocator, nullptr), CANDY_OK);
+  auto *self = candy_table_create(&gc, nullptr);
+  candy_wrap_t first{}, second{}, value{};
+  candy_wrap_set_integer(&first, 1);
+  candy_wrap_set_integer(&second, 257);
+  candy_wrap_set_integer(&value, 10);
+  ASSERT_EQ(candy_table_set(self, &gc, nullptr, &first, &value), CANDY_OK);
+  ASSERT_EQ(candy_table_set(self, &gc, nullptr, &second, &value), CANDY_OK);
+  ASSERT_EQ(candy_table_reset(self, &gc, &first), CANDY_OK);
+  candy_wrap_set_integer(&value, 20);
+  ASSERT_EQ(candy_table_set(self, &gc, nullptr, &second, &value), CANDY_OK);
+  const candy_wrap_t *actual = candy_table_get(self, &gc, &second);
+  ASSERT_EQ(candy_wrap_type(actual), CANDY_TYPE_INTEGER);
+  EXPECT_EQ(candy_wrap_get_integer(actual), 20);
+  ASSERT_EQ(candy_table_reset(self, &gc, &second), CANDY_OK);
+  EXPECT_EQ(candy_wrap_type(candy_table_get(self, &gc, &second)), CANDY_TYPE_NULL);
   candy_gc_deinit(&gc);
 }

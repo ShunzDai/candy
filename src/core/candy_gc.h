@@ -38,6 +38,7 @@ struct candy_gc {
   candy_object_t *glob;
   candy_object_t *prim;
   candy_gc_fsm_t fsm;
+  size_t threshold;
   uint8_t pool_cap;
 };
 
@@ -54,6 +55,8 @@ candy_state_t *candy_gc_add_primary(candy_gc_t *self, candy_excep_t *ctx, size_t
 candy_table_t *candy_gc_add_global(candy_gc_t *self, candy_excep_t *ctx, size_t size);
 
 candy_object_t *candy_gc_find(candy_gc_t *self, candy_types_t type, const void *data, size_t size, candy_hash_t hash);
+
+candy_err_t candy_gc_mark(candy_gc_t *self, candy_object_t *obj);
 
 candy_err_t candy_gc_step(candy_gc_t *self);
 
