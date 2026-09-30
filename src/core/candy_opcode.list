@@ -49,11 +49,64 @@ CANDY_OPCODE(LOADC,
   _op_loadc(self, it, cst);
 )
 
+CANDY_OPCODE(LOADL,
+  _op_loadl(self, it);
+)
+
 CANDY_OPCODE(SETG,
   _op_setg(self, it, cst);
 )
 
 CANDY_OPCODE(CALL,
   _op_call(self, it, co);
+)
+
+CANDY_OPCODE(CALLS,
+  _op_calls(self, it, co, true);
+)
+
+CANDY_OPCODE(CALLSELF,
+  _op_calls(self, it, co, false);
+)
+
+CANDY_OPCODE(ADD,
+  _op_add(self);
+)
+
+CANDY_OPCODE(SUB,
+  _op_sub(self);
+)
+
+CANDY_OPCODE(SUBC,
+  _op_subc(self, it, cst);
+)
+
+CANDY_OPCODE(LT,
+  _op_lt(self);
+)
+
+CANDY_OPCODE(LTC,
+  _op_ltc(self, it, cst);
+)
+
+CANDY_OPCODE(JMPF,
+  _op_jmpf(self, it, &pc);
+)
+
+CANDY_OPCODE(RETURN,
+  _op_return(self, it);
+  return;
+)
+
+CANDY_OPCODE(POP,
+  _vm_pop(self->vm, self->ctx, 1);
+)
+
+CANDY_OPCODE(SUBLC,
+  _op_localc(self, it, cst, false);
+)
+
+CANDY_OPCODE(LTLC,
+  _op_localc(self, it, cst, true);
 )
 #endif /* CANDY_OPCODE */

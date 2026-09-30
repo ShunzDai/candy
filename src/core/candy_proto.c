@@ -69,6 +69,10 @@ size_t candy_proto_add_inst(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *
   return pos;
 }
 
+void candy_proto_set_inst(candy_proto_t *self, size_t pos, candy_inst_t inst) {
+  ((candy_inst_t *)candy_vector_data(&self->inst))[pos] = inst;
+}
+
 const candy_vector_t *candy_proto_get_const(const candy_proto_t *self) {
   return &self->cst;
 }

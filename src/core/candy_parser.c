@@ -22,172 +22,272 @@
 #include "core/candy_array.h"
 #include "core/candy_lexer.h"
 
-/**
- * @brief  parser for candy language.
- * @EBNF
- *  ;
- *  entry ::= statement
- *  ;
- *  funcname ::= name
- *  expr ::= "false" | "true" | integer | float ｜ string
- *  exprlist ::= expr {"," expr}
- *  prefixed ::= funcname
- *  funccall ::= prefixed "(" [exprlist] ")"
- *  assignment ::= name "=" expr
- *  statement ::= funccall | assignment
- *  ;
- *  letter ::= "a" | "b" | ... | "Z"
- *  digit ::= "0" | "1" | ... | "9"
- *  name ::= letter {letter | digit | "_"}
- *  integer ::= ["-"] digit {digit}
- *  float ::= ["-"] (digit {digit} "." digit {digit} | "." digit {digit})
- */
-
 #define par_assert(_condition, _format, ...) \
 candy_assert(self->ls.ctx, self->ls.gc, _condition, CANDY_ERR_SYNTAX, \
-"line %zu col %zu: " _format, self->ls.dbg.line, self->ls.dbg.column, ##__VA_ARGS__)
+  "line %zu col %zu: " _format, self->ls.dbg.line, self->ls.dbg.column, ##__VA_ARGS__)
 
-typedef struct expdesc expdesc_t;
-typedef struct lh_assign lh_assign_t;
 typedef struct funcstate funcstate_t;
 typedef struct parser parser_t;
-
-typedef enum exptype {
-  EXP_TYPE_NONE,
-  EXP_TYPE_CALL,
-  EXP_TYPE_VOID,
-} exptype_t;
-
-struct expdesc {
-  exptype_t type;
-  candy_array_t *s;
-};
-
-struct lh_assign {
-  lh_assign_t *prev;
-  expdesc_t v;
-};
 
 struct funcstate {
   funcstate_t *prev;
   candy_proto_t *proto;
+  const candy_array_t *name;
+  const candy_array_t *locals[UINT8_MAX];
+  uint8_t nlocal;
 };
 
 struct parser {
-  /* lexical state */
   candy_lexer_t ls;
   funcstate_t *fs;
 };
 
-static const char TAG[] = "parser";
-
-static candy_err_t _statement(parser_t *self);
-
-static size_t _add_name_const(parser_t *self, const candy_array_t *name) {
-  candy_wrap_t wrap;
-  candy_wrap_set_object(&wrap, (candy_object_t *)name);
-  return candy_proto_add_const(self->fs->proto, self->ls.gc, self->ls.ctx, &wrap);
-}
-
 static void _funcstate_open(funcstate_t *self, parser_t *prsr) {
-  candy_logd(TAG, "open funcstate, prev %p, next %p", prsr->fs, self);
   self->prev = prsr->fs;
   self->proto = candy_proto_create(prsr->ls.gc, prsr->ls.ctx);
+  self->name = NULL;
+  self->nlocal = 0;
   prsr->fs = self;
 }
 
 static void _funcstate_close(funcstate_t *self, parser_t *prsr) {
-  candy_logd(TAG, "close funcstate, prev %p, next %p", prsr->fs, self->prev);
   prsr->fs = self->prev;
 }
 
-size_t _add_meta(parser_t *self, candy_tokens_t token) {
+static size_t _add_const(parser_t *self, candy_wrap_t *wrap) {
+  return candy_proto_add_const(self->fs->proto, self->ls.gc, self->ls.ctx, wrap);
+}
+
+static size_t _add_name_const(parser_t *self, const candy_array_t *name) {
+  candy_wrap_t wrap;
+  candy_wrap_set_object(&wrap, (const candy_object_t *)name);
+  return _add_const(self, &wrap);
+}
+
+static size_t _add_meta(parser_t *self, candy_tokens_t token) {
   candy_wrap_t wrap;
   switch (token) {
-    case TK_INTEGER:
-      candy_wrap_set_integer(&wrap, candy_lexer_next(&self->ls)->i);
-      break;
-    case TK_FLOAT:
-      candy_wrap_set_float(&wrap, candy_lexer_next(&self->ls)->f);
-      break;
-    case TK_STRING:
-      candy_wrap_set_object(&wrap, (candy_object_t *)candy_lexer_next(&self->ls)->s);
-      break;
-    case TK_true:
-      candy_lexer_next(&self->ls);
-      candy_wrap_set_boolean(&wrap, true);
-      break;
-    case TK_false:
-      candy_lexer_next(&self->ls);
-      candy_wrap_set_boolean(&wrap, false);
-      break;
+    case TK_INTEGER: candy_wrap_set_integer(&wrap, candy_lexer_next(&self->ls)->i); break;
+    case TK_FLOAT:   candy_wrap_set_float(&wrap, candy_lexer_next(&self->ls)->f); break;
+    case TK_STRING:  candy_wrap_set_object(&wrap, (const candy_object_t *)candy_lexer_next(&self->ls)->s); break;
+    case TK_true:    candy_lexer_next(&self->ls); candy_wrap_set_boolean(&wrap, true); break;
+    case TK_false:   candy_lexer_next(&self->ls); candy_wrap_set_boolean(&wrap, false); break;
     case TK_none:
       candy_lexer_next(&self->ls);
       candy_wrap_set_type(&wrap, CANDY_TYPE_NONE);
       candy_wrap_set_mask(&wrap, MASK_CONST);
       break;
     default:
-      par_assert(0, "unknwon expr %s", candy_token_str(token));
-      break;
+      par_assert(false, "unknown expression %s", candy_token_str(token));
+      return 0;
   }
-  return candy_proto_add_const(self->fs->proto, self->ls.gc, self->ls.ctx, &wrap);
+  return _add_const(self, &wrap);
 }
 
-size_t _add_iax(parser_t *self, candy_opcodes_t op, uint32_t a) {
+static size_t _add_none(parser_t *self) {
+  candy_wrap_t wrap;
+  candy_wrap_set_type(&wrap, CANDY_TYPE_NONE);
+  candy_wrap_set_mask(&wrap, MASK_CONST);
+  return _add_const(self, &wrap);
+}
+
+static size_t _add_iax(parser_t *self, candy_opcodes_t op, uint32_t a) {
+  if ((op == OP_SUBC || op == OP_LTC) && a < (1U << 18)) {
+    const candy_vector_t *inst = candy_proto_get_inst(self->fs->proto);
+    size_t count = candy_vector_size(inst);
+    if (count > 0) {
+      const candy_inst_t *previous = (const candy_inst_t *)candy_vector_data(inst) + count - 1;
+      if (previous->op == OP_LOADL && previous->iax.a <= UINT8_MAX) {
+        candy_proto_set_inst(self->fs->proto, count - 1, (candy_inst_t) {
+          .iabx = {.op = op == OP_SUBC ? OP_SUBLC : OP_LTLC, .a = previous->iax.a, .b = a},
+        });
+        return count - 1;
+      }
+    }
+  }
   return candy_proto_add_inst(self->fs->proto, self->ls.gc, self->ls.ctx, (candy_inst_t) {
-    .iax = {
-      .op = (uint32_t)op,
-      .a = a,
-    },
+    .iax = {.op = (uint32_t)op, .a = a},
   });
 }
 
-size_t _add_iabx(parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b) {
+static size_t _add_iabx(parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b) {
   return candy_proto_add_inst(self->fs->proto, self->ls.gc, self->ls.ctx, (candy_inst_t) {
-    .iabx = {
-      .op = (uint32_t)op,
-      .a = a,
-      .b = b,
-    },
+    .iabx = {.op = (uint32_t)op, .a = a, .b = b},
   });
 }
 
-size_t _add_iabc(parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
-  return candy_proto_add_inst(self->fs->proto, self->ls.gc, self->ls.ctx, (candy_inst_t) {
-    .iabc = {
-      .op = (uint32_t)op,
-      .a = a,
-      .b = b,
-      .c = c,
-    },
-  });
+static int _local(parser_t *self, const candy_array_t *name) {
+  if (self->fs->name == name)
+    return 0;
+  for (uint8_t i = 0; i < self->fs->nlocal; ++i)
+    if (self->fs->locals[i] == name)
+      return (int)i + 1;
+  return -1;
 }
 
-// static int _search_local(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
-//   return -1;
-// }
+static void _check(parser_t *self, candy_tokens_t token) {
+  par_assert(candy_lexer_lookahead(&self->ls) == token, "unexpected token %s, expected %s",
+    candy_token_str(candy_lexer_lookahead(&self->ls)), candy_token_str(token));
+}
 
-// static int _search_upvalue(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
-//   return -1;
-// }
+static const candy_meta_t *_next(parser_t *self, candy_tokens_t token) {
+  _check(self, token);
+  return candy_lexer_next(&self->ls);
+}
 
-// static void _var_single_aux(funcstate_t *self, const candy_array_t *id, expdesc_t *e) {
-//   if (self) {
-//     int idx = _search_local(self, id, e);
-//     if (idx < 0) {
-//       idx = _search_upvalue(self, id, e);
-//       if (idx < 0) {
-//         _var_single_aux(self->prev, id, e);
-//       }
-//     }
-//     else {
+static bool _test(parser_t *self, candy_tokens_t token) {
+  if (candy_lexer_lookahead(&self->ls) == token) {
+    candy_lexer_next(&self->ls);
+    return true;
+  }
+  return false;
+}
 
-//     }
-//   }
-//   else {
-//     e->type = EXP_TYPE_NONE;
-//   }
-// }
+static int _precedence(candy_tokens_t token) {
+  switch (token) {
+    case TK_LESS: case TK_GREATER: case TK_LEQUAL: case TK_GEQUAL: case TK_EQUAL: case TK_NEQUAL: return 10;
+    case TK_PLUS: case TK_MINUS: return 20;
+    case TK_ASTE: case TK_SLASH: case TK_PERCENT: return 30;
+    default: return -1;
+  }
+}
+
+static candy_err_t _expr(parser_t *self, int min_prec);
+
+static void _name_expr(parser_t *self, const candy_array_t *name) {
+  int local = _local(self, name);
+  bool call = _test(self, '(');
+  if (!call || local != 0) {
+    if (local >= 0)
+      _add_iax(self, OP_LOADL, (uint32_t)local);
+    else
+      _add_iax(self, OP_LOADG, (uint32_t)_add_name_const(self, name));
+  }
+  if (call) {
+    uint32_t narg = 0;
+    if (!_test(self, ')')) {
+      do {
+        _expr(self, 0);
+        ++narg;
+      } while (_test(self, ','));
+      _next(self, ')');
+    }
+    _add_iabx(self, local == 0 ? OP_CALLSELF : OP_CALL, narg, 1);
+  }
+}
+
+static candy_err_t _primary(parser_t *self) {
+  candy_tokens_t token = candy_lexer_lookahead(&self->ls);
+  if (token == '(') {
+    candy_lexer_next(&self->ls);
+    _expr(self, 0);
+    _next(self, ')');
+    return CANDY_OK;
+  }
+  if (token == TK_IDENT) {
+    const candy_array_t *name = _next(self, TK_IDENT)->s;
+    _name_expr(self, name);
+    return CANDY_OK;
+  }
+  par_assert(token == TK_INTEGER || token == TK_FLOAT || token == TK_STRING ||
+    token == TK_true || token == TK_false || token == TK_none,
+    "unexpected token %s in expression", candy_token_str(token));
+  _add_iax(self, OP_LOADC, (uint32_t)_add_meta(self, token));
+  return CANDY_OK;
+}
+
+static candy_err_t _expr(parser_t *self, int min_prec) {
+  _primary(self);
+  while (1) {
+    candy_tokens_t token = candy_lexer_lookahead(&self->ls);
+    int prec = _precedence(token);
+    if (prec < min_prec)
+      break;
+    candy_lexer_next(&self->ls);
+    if ((token == TK_MINUS || token == TK_LESS) && candy_lexer_lookahead(&self->ls) == TK_INTEGER) {
+      size_t constant = _add_meta(self, TK_INTEGER);
+      _add_iax(self, token == TK_MINUS ? OP_SUBC : OP_LTC, (uint32_t)constant);
+      continue;
+    }
+    _expr(self, prec + 1);
+    switch (token) {
+      case TK_PLUS:  _add_iax(self, OP_ADD, 0); break;
+      case TK_MINUS: _add_iax(self, OP_SUB, 0); break;
+      case TK_LESS:  _add_iax(self, OP_LT, 0); break;
+      default:       par_assert(false, "operator %s is not supported", candy_token_str(token));
+    }
+  }
+  return CANDY_OK;
+}
+
+static candy_err_t _block(parser_t *self, bool stop_at_end) {
+  while (1) {
+    candy_tokens_t token = candy_lexer_lookahead(&self->ls);
+    if (token == TK_EOS || (stop_at_end && token == TK_end))
+      break;
+    switch (token) {
+      case TK_def: {
+        candy_lexer_next(&self->ls);
+        const candy_array_t *name = _next(self, TK_IDENT)->s;
+        funcstate_t fs;
+        _funcstate_open(&fs, self);
+        fs.name = name;
+        _next(self, '(');
+        if (!_test(self, ')')) {
+          do {
+            par_assert(self->fs->nlocal < UINT8_MAX, "too many parameters");
+            self->fs->locals[self->fs->nlocal++] = _next(self, TK_IDENT)->s;
+          } while (_test(self, ','));
+          _next(self, ')');
+        }
+        _block(self, true);
+        _next(self, TK_end);
+        size_t none = _add_none(self);
+        _add_iax(self, OP_LOADC, (uint32_t)none);
+        _add_iax(self, OP_RETURN, 1);
+        candy_proto_t *proto = fs.proto;
+        _funcstate_close(&fs, self);
+        candy_sclosure_t *closure = candy_sclosure_create(self->ls.gc, self->ls.ctx, proto);
+        candy_wrap_t wrap;
+        candy_wrap_set_object(&wrap, (candy_object_t *)closure);
+        size_t pos = _add_const(self, &wrap);
+        _add_iax(self, OP_LOADC, (uint32_t)pos);
+        _add_iax(self, OP_SETG, (uint32_t)_add_name_const(self, name));
+      } break;
+      case TK_if: {
+        candy_lexer_next(&self->ls);
+        _next(self, '(');
+        _expr(self, 0);
+        _next(self, ')');
+        size_t jump = _add_iax(self, OP_JMPF, 0);
+        _block(self, true);
+        _next(self, TK_end);
+        candy_proto_set_inst(self->fs->proto, jump, (candy_inst_t) {
+          .iax = {.op = OP_JMPF, .a = (uint32_t)candy_vector_size(candy_proto_get_inst(self->fs->proto))},
+        });
+      } break;
+      case TK_return:
+        candy_lexer_next(&self->ls);
+        _expr(self, 0);
+        _add_iax(self, OP_RETURN, 1);
+        break;
+      case TK_IDENT: {
+        const candy_array_t *name = _next(self, TK_IDENT)->s;
+        if (_test(self, '=')) {
+          _expr(self, 0);
+          _add_iax(self, OP_SETG, (uint32_t)_add_name_const(self, name));
+        }
+        else {
+          _name_expr(self, name);
+          _add_iax(self, OP_POP, 0);
+        }
+      } break;
+      default:
+        par_assert(false, "unexpected token %s in statement", candy_token_str(token));
+    }
+  }
+  return CANDY_OK;
+}
 
 static void _parser_init(parser_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
   self->fs = NULL;
@@ -199,170 +299,13 @@ static void _parser_deinit(parser_t *self) {
   self->fs = NULL;
 }
 
-static void _check(parser_t *self, candy_tokens_t token) {
-  par_assert(candy_lexer_lookahead(&self->ls) == token, "unexpected token");
-}
-
-static const candy_meta_t *_check_next(parser_t *self, candy_tokens_t token) {
-  _check(self, token);
-  return candy_lexer_next(&self->ls);
-}
-
-static bool _test_next(parser_t *self, candy_tokens_t token) {
-  if (candy_lexer_lookahead(&self->ls) == token) {
-    candy_lexer_next(&self->ls);
-    return true;
-  }
-  return false;
-}
-
-// static void _check_match(parser_t *self, candy_tokens_t begin, candy_tokens_t end, size_t at) {
-//   bool res = _test_next(self, end);
-//   par_assert(res, "%s was never closed with %s", candy_token_str(begin), candy_token_str(end));
-// }
-
-// static const candy_array_t *_check_ident(parser_t *self) {
-//   _check(self, TK_IDENT);
-//   const candy_array_t *id = candy_lexer_next(&self->ls)->s;
-//   candy_lexer_lookahead(&self->ls);
-//   return id;
-// }
-
-/* param list -> [param {',' param}] */
-static candy_err_t _param_list(parser_t *self) {
-  candy_err_t err = CANDY_OK;
-  while (1) {
-    switch (candy_lexer_lookahead(&self->ls)) {
-      case TK_IDENT:
-        break;
-      default:
-        break;
-    }
-  }
-  return err;
-}
-
-static candy_err_t _block(parser_t *self) {
-  candy_err_t err = CANDY_OK;
-  _statement(self);
-  return err;
-}
-
-/* '(' param list ')' */
-static candy_err_t _body(parser_t *self, expdesc_t *args) {
-  candy_err_t err = CANDY_OK;
-  funcstate_t fs;
-  _funcstate_open(&fs, self);
-  _check_next(self, '(');
-  _param_list(self);
-  _check_next(self, ')');
-  _block(self);
-  _funcstate_close(&fs, self);
-  return err;
-}
-
-static candy_err_t _expr(parser_t *self) {
-  candy_err_t err = CANDY_OK;
-  candy_tokens_t token = candy_lexer_lookahead(&self->ls);
-  switch (token) {
-    case TK_IDENT: {
-      const candy_array_t *name = _check_next(self, TK_IDENT)->s;
-      size_t pos = _add_name_const(self, name);
-      _add_iax(self, OP_LOADG, pos);
-    } break;
-    default: {
-      size_t pos = _add_meta(self, token);
-      _add_iax(self, OP_LOADC, pos);
-    } break;
-  }
-  return err;
-}
-
-static candy_err_t _expr_prefixed(parser_t *self, expdesc_t *e) {
-  candy_err_t err = CANDY_OK;
-  e->type = EXP_TYPE_NONE;
-  e->s = (candy_array_t *)_check_next(self, TK_IDENT)->s;
-  return err;
-}
-
-static candy_err_t _expr_funccall(parser_t *self, expdesc_t *e) {
-  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
-  candy_err_t err = CANDY_OK;
-  size_t name_pos = _add_name_const(self, e->s);
-  _add_iax(self, OP_LOADG, name_pos);
-  /* skip '(' */
-  candy_lexer_next(&self->ls);
-  uint32_t narg = 0;
-  if (!_test_next(self, ')')) {
-    _expr(self);
-    ++narg;
-    while (_test_next(self, ',')) {
-      _expr(self);
-      ++narg;
-    }
-    _check_next(self, ')');
-  }
-  err = _add_iabx(self, OP_CALL, narg, 0);
-  return err;
-}
-
-static candy_err_t _expr_assignment(parser_t *self, expdesc_t *e) {
-  candy_err_t err = CANDY_OK;
-  size_t name_pos = _add_name_const(self, e->s);
-  _check_next(self, '=');
-  _expr(self);
-  _add_iax(self, OP_SETG, name_pos);
-  return err;
-}
-
-static candy_err_t _stat_def(parser_t *self) {
-  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
-  candy_err_t err = CANDY_OK;
-  expdesc_t args;
-  /* skip 'def' */
-  candy_lexer_next(&self->ls);
-  _body(self, &args);
-  return err;
-}
-
-/**
-  * @brief  if '(' expr ')' block { elif '(' expr ')' block } [ else block ] end
-  * @param  self  parser handle.
-  */
-static candy_err_t _stat_if(parser_t *self) {
-  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
-  candy_err_t err = CANDY_OK;
-  /* if '(' expr ')' block */
-  /* { elif '(' expr ')' block } */
-  /* [ else block ] end */
-  return err;
-}
-
-/** @brief statement -> funccall | assignment */
-static candy_err_t _stat_expr(parser_t *self) {
-  candy_logd(TAG, "into %s %s:%d", __FUNCTION__, __FILE__, __LINE__);
-  lh_assign_t v;
-  _expr_prefixed(self, &v.v);
-  switch (candy_lexer_lookahead(&self->ls)) {
-    case '(': return _expr_funccall(self, &v.v);
-    case '=': return _expr_assignment(self, &v.v);
-    default:  return CANDY_ERR;
-  }
-}
-
-static candy_err_t _statement(parser_t *self) {
-  switch (candy_lexer_lookahead(&self->ls)) {
-    case TK_def:   return _stat_def(self);
-    case TK_if:    return _stat_if(self);
-    case TK_IDENT: return _stat_expr(self);
-    default:       return CANDY_ERR;
-  }
-}
-
 static void _entry(void *arg) {
   parser_t *self = (parser_t *)arg;
-  while (_statement(self) != CANDY_ERR);
+  _block(self, false);
   _check(self, TK_EOS);
+  size_t none = _add_none(self);
+  _add_iax(self, OP_LOADC, (uint32_t)none);
+  _add_iax(self, OP_RETURN, 1);
 }
 
 candy_err_t candy_parse(candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg, candy_object_t **out) {
@@ -373,7 +316,6 @@ candy_err_t candy_parse(candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reade
   candy_err_t err = candy_excep_try(ctx, _entry, &prsr, out);
   _funcstate_close(&fs, &prsr);
   _parser_deinit(&prsr);
-  candy_logw(TAG, "parse ret %s", candy_err_str(err));
   if (err == CANDY_OK)
     *out = (candy_object_t *)candy_sclosure_create(gc, ctx, fs.proto);
   return err;
