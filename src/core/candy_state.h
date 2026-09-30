@@ -53,7 +53,7 @@ candy_cfunc_t candy_state_to_cfunc(candy_state_t *self, int idx);
 
 candy_types_t candy_state_get_type(candy_state_t *self, int idx);
 
-candy_err_t candy_state_fprint(candy_state_t *self, int idx, FILE *out);
+int candy_state_fprint(candy_state_t *self, int idx, FILE *out);
 
 bool candy_state_is_primary(candy_state_t *self);
 

@@ -30,34 +30,35 @@ candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc) {
   return hash;
 }
 
-candy_err_t candy_wrap_fprint(const candy_wrap_t *self, candy_gc_t *gc, FILE *out) {
+int candy_wrap_fprint(const candy_wrap_t *self, candy_gc_t *gc, FILE *out) {
+  int res = 0;
   if (candy_wrap_mask(self) & MASK_OBJECT) {
-    candy_gc_event_handler(gc)(candy_wrap_get_object(self), gc, EVT_FORMAT, out);
+    res = candy_gc_event_handler(gc)(candy_wrap_get_object(self), gc, EVT_FORMAT, out);
   }
   else {
     switch (candy_wrap_type(self)) {
       case CANDY_TYPE_NULL:
-        fprintf(out, "%s", "null");
+        res = fprintf(out, "%s", "null");
         break;
       case CANDY_TYPE_NONE:
-        fprintf(out, "%s", "none");
+        res = fprintf(out, "%s", "none");
         break;
       case CANDY_TYPE_INTEGER:
-        fprintf(out, "%" PRId64, candy_wrap_get_integer(self));
+        res = fprintf(out, "%" PRId64, candy_wrap_get_integer(self));
         break;
       case CANDY_TYPE_FLOAT:
-        fprintf(out, "%f", candy_wrap_get_float(self));
+        res = fprintf(out, "%f", candy_wrap_get_float(self));
         break;
       case CANDY_TYPE_CHAR:
-        fprintf(out, "%p", candy_wrap_get_object(self));
+        res = fprintf(out, "%p", candy_wrap_get_object(self));
         break;
       case CANDY_TYPE_BOOLEAN:
-        fprintf(out, "%s", candy_wrap_get_boolean(self) ? "true" : "false");
+        res = fprintf(out, "%s", candy_wrap_get_boolean(self) ? "true" : "false");
         break;
       default:
-        fprintf(out, "%s", "NA");
+        res = fprintf(out, "%s", "NA");
         break;
     }
   }
-  return CANDY_OK;
+  return res;
 }
