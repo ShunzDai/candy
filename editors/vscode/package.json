@@ -1,0 +1,122 @@
+{
+  "name": "candy-language",
+  "displayName": "Candy Language",
+  "description": "Syntax highlighting, snippets and script execution for Candy.",
+  "version": "0.1.1",
+  "publisher": "ShunzDai",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ShunzDai/candy.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0",
+    "node": ">=22"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "candy"
+  ],
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onCommand:candy.runFile"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Highlighting and snippets work without trust; running scripts requires a trusted workspace.",
+      "restrictedConfigurations": [
+        "candy.executablePath"
+      ]
+    },
+    "virtualWorkspaces": {
+      "supported": "limited",
+      "description": "Only files on the extension host's filesystem can be executed."
+    }
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "candy",
+        "aliases": [
+          "Candy",
+          "candy"
+        ],
+        "extensions": [
+          ".candy"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "candy",
+        "scopeName": "source.candy",
+        "path": "./syntaxes/candy.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "candy",
+        "path": "./snippets/candy.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "candy.runFile",
+        "title": "Candy: Run Current File",
+        "icon": "$(play)",
+        "enablement": "editorLangId == candy && isWorkspaceTrusted && resourceScheme == file"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "candy.runFile",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r",
+        "when": "editorTextFocus && editorLangId == candy && isWorkspaceTrusted && resourceScheme == file"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "candy.runFile",
+          "when": "resourceLangId == candy && isWorkspaceTrusted && resourceScheme == file",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "candy.runFile",
+          "when": "editorLangId == candy && isWorkspaceTrusted && resourceScheme == file",
+          "group": "candy"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Candy",
+      "properties": {
+        "candy.executablePath": {
+          "type": "string",
+          "default": "candy",
+          "scope": "machine-overridable",
+          "description": "Interpreter executable, not a shell command. Use 'candy' from PATH, an absolute path, or a path relative to the containing workspace folder (for example build/shell/candy). Without a workspace, relative paths resolve from the script directory."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "check": "node --check src/extension.js && node --check src/run-file.js",
+    "test": "npm run check && node --test",
+    "vscode:prepublish": "node -e \"require('node:fs').copyFileSync('../../LICENSE', 'LICENSE')\"",
+    "package": "npm test && vsce package"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^4.1.1",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.2.0"
+  }
+}

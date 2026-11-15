@@ -1,0 +1,37 @@
+{
+  "Function": {
+    "prefix": "def",
+    "body": ["def ${1:name}(${2:args})", "  $0", "end"],
+    "description": "Define a Candy function"
+  },
+  "If": {
+    "prefix": "if",
+    "body": ["if (${1:condition})", "  $0", "end"],
+    "description": "Conditional block"
+  },
+  "If / else": {
+    "prefix": "ifelse",
+    "body": ["if (${1:condition})", "  ${2}", "else", "  $0", "end"],
+    "description": "Conditional block with an alternative"
+  },
+  "Else if": {
+    "prefix": "elif",
+    "body": ["elif (${1:condition})", "  $0"],
+    "description": "Additional conditional branch"
+  },
+  "While": {
+    "prefix": "while",
+    "body": ["while (${1:condition})", "  $0", "end"],
+    "description": "While loop"
+  },
+  "For each": {
+    "prefix": "for",
+    "body": ["for (${1:item} : ${2:items})", "  $0", "end"],
+    "description": "Iterate over an array"
+  },
+  "Print": {
+    "prefix": "print",
+    "body": "print($0)",
+    "description": "Print values"
+  }
+}

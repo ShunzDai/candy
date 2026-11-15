@@ -1,0 +1,90 @@
+{
+  "name": "Candy",
+  "scopeName": "source.candy",
+  "patterns": [
+    {"include": "#comments"},
+    {"include": "#strings"},
+    {
+      "match": "\\b(def)\\s+([A-Za-z_][A-Za-z_0-9]*)",
+      "captures": {
+        "1": {"name": "keyword.control.candy"},
+        "2": {"name": "entity.name.function.candy"}
+      }
+    },
+    {
+      "name": "keyword.control.candy",
+      "match": "\\b(?:def|return|end|import|if|elif|else|while|for|break|continue)\\b"
+    },
+    {
+      "name": "constant.language.candy",
+      "match": "\\b(?:true|false|null)\\b"
+    },
+    {
+      "name": "constant.numeric.candy",
+      "match": "\\b(?:0[xX][0-9a-fA-F]+|0[bB][01]+|[0-9]+(?:\\.[0-9]*)?(?:[eE][+-]?[0-9]+)?)(?![A-Za-z_0-9])"
+    },
+    {
+      "name": "support.function.builtin.candy",
+      "match": "\\b(?:print|exit)\\b"
+    },
+    {
+      "name": "entity.name.function.call.candy",
+      "match": "\\b[A-Za-z_][A-Za-z_0-9]*(?=\\s*\\()"
+    },
+    {
+      "name": "keyword.operator.candy",
+      "match": "\\.\\.\\.|<<|>>|&&|\\|\\||[!<>=+*/%&|^\\-]=?|~"
+    },
+    {
+      "name": "punctuation.separator.candy",
+      "match": "[,:;.]"
+    },
+    {
+      "name": "punctuation.section.brackets.candy",
+      "match": "[()\\[\\]{}]"
+    },
+    {
+      "name": "variable.other.candy",
+      "match": "\\b[A-Za-z_][A-Za-z_0-9]*\\b"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.line.number-sign.candy",
+      "begin": "#",
+      "end": "$"
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.triple.double.candy",
+          "begin": "\"\"\"",
+          "end": "\"\"\"",
+          "patterns": [{"include": "#escapes"}]
+        },
+        {
+          "name": "string.quoted.triple.single.candy",
+          "begin": "'''",
+          "end": "'''",
+          "patterns": [{"include": "#escapes"}]
+        },
+        {
+          "name": "string.quoted.double.candy",
+          "begin": "\"",
+          "end": "\"|(?<!\\\\)(?:\\\\\\\\)*(?=\\r?\\n)",
+          "patterns": [{"include": "#escapes"}]
+        },
+        {
+          "name": "string.quoted.single.candy",
+          "begin": "'",
+          "end": "'|(?<!\\\\)(?:\\\\\\\\)*(?=\\r?\\n)",
+          "patterns": [{"include": "#escapes"}]
+        }
+      ]
+    },
+    "escapes": {
+      "name": "constant.character.escape.candy",
+      "match": "\\\\(?:[abtnvfr\\\\'\"]|x[0-9a-fA-F]{2}|[0-7]{1,3}|$)"
+    }
+  }
+}
