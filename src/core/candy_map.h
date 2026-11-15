@@ -24,7 +24,7 @@ extern "C" {
 typedef struct candy_map candy_map_t;
 
 struct candy_map {
-  bool (*is_null)(const void *pos);
+  bool (*is_empty)(const void *pos);
   bool (*is_tomb)(const void *pos);
   bool (*comp)(const void *pos, const void *key, candy_gc_t *gc);
   void *data;

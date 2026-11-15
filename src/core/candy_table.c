@@ -41,9 +41,9 @@ static candy_hash_t _hash(const void *pos, candy_gc_t *gc) {
   return candy_wrap_hash(&self->key, gc);
 }
 
-static bool _is_null(const void *pos) {
+static bool _is_empty(const void *pos) {
   const candy_pair_t *self = (const candy_pair_t *)pos;
-  return candy_wrap_type(&self->key) == CANDY_TYPE_NULL;
+  return candy_wrap_type(&self->key) == CANDY_TYPE_NONE;
 }
 
 static bool _is_tomb(const void *pos) {
@@ -59,7 +59,7 @@ static bool _comp(const void *pos, const void *key, candy_gc_t *gc) {
 
 static candy_err_t _map_init(candy_map_t *self, void *data, uint8_t cap) {
   candy_err_t err = CANDY_OK;
-  self->is_null = _is_null;
+  self->is_empty = _is_empty;
   self->is_tomb = _is_tomb;
   self->comp = _comp;
   self->cell = sizeof(candy_pair_t);

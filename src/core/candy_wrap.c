@@ -17,7 +17,7 @@
 #include "core/candy_lib.h"
 #include "core/candy_gc.h"
 
-const candy_wrap_t CANDY_WRAP_NULL = {0};
+const candy_wrap_t CANDY_WRAP_NULL = { .type = CANDY_TYPE_NULL, .mask = MASK_NONE };
 
 candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc) {
   candy_hash_t hash = 0;

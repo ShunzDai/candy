@@ -36,27 +36,27 @@ static candy_hash_t _hash(const void *pos, candy_gc_t *gc) {
   return hash;
 }
 
-static bool _is_null(const void *pos) {
-  const candy_object_t **self = (const candy_object_t **)pos;
+static bool _is_empty(const void *cell) {
+  const candy_object_t *const *self = (const candy_object_t *const *)cell;
   return *self == NULL || *self == (candy_object_t *)UINTPTR_MAX;
 }
 
-static bool _is_tomb(const void *pos) {
-  const candy_object_t **self = (const candy_object_t **)pos;
+static bool _is_tomb(const void *cell) {
+  const candy_object_t *const *self = (const candy_object_t *const *)cell;
   return *self == (candy_object_t *)UINTPTR_MAX;
 }
 
-static bool _comp(const void *pos, const void *key, candy_gc_t *gc) {
-  candy_object_t **self = (candy_object_t **)pos;
+static bool _comp(const void *cell, const void *key, candy_gc_t *gc) {
+  const candy_object_t *const *self = (const candy_object_t *const *)cell;
   struct map_key *k = (struct map_key *)key;
   bool val = true;
   if (candy_object_type(*self) != k->type) {
     val = false;
   }
-  else if (_hash(self, gc) != k->hash) {
+  else if (_hash(cell, gc) != k->hash) {
     val = false;
   }
-  else if (candy_gc_event_handler(gc)(*self, gc, EVT_COMPARE, k) != CANDY_OK) {
+  else if (candy_gc_event_handler(gc)((candy_object_t *)*self, gc, EVT_COMPARE, k) != CANDY_OK) {
     val = false;
   }
   return val;
@@ -64,7 +64,7 @@ static bool _comp(const void *pos, const void *key, candy_gc_t *gc) {
 
 static candy_err_t _map_init(candy_map_t *self, void *data, uint8_t cap) {
   candy_err_t err = CANDY_OK;
-  self->is_null = _is_null;
+  self->is_empty = _is_empty;
   self->is_tomb = _is_tomb;
   self->comp = _comp;
   self->cell = sizeof(candy_object_t *);

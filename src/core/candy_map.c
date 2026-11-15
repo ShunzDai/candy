@@ -27,7 +27,7 @@ void *candy_map_find(const candy_map_t *self, candy_gc_t *gc, const void *key, c
   }
   for (size_t idx = 0; list[idx] != INT32_MAX; ++idx) {
     void *pos = self->data + self->cell * ((hash + list[idx]) & (capacity_to_size(self->cap) - 1));
-    if (self->is_null(pos)) {
+    if (self->is_empty(pos)) {
       /* if it is not expand, determine whether it is a tombstone */
       if (!expand) {
         /* if it is a tombstone, keep searching */
@@ -50,7 +50,7 @@ candy_err_t candy_map_resize(candy_map_t *self, candy_gc_t *gc, candy_excep_t *c
   size_t psize = capacity_to_size(self->cap);
   size_t nsize = capacity_to_size(cap);
   candy_map_t m;
-  m.is_null = self->is_null;
+  m.is_empty = self->is_empty;
   m.is_tomb = self->is_tomb;
   m.comp = self->comp;
   m.cell = self->cell;
@@ -60,7 +60,7 @@ candy_err_t candy_map_resize(candy_map_t *self, candy_gc_t *gc, candy_excep_t *c
   memset(m.data, 0, self->cell * nsize);
   for (size_t idx = 0; idx < psize; ++idx) {
     const void *from = self->data + self->cell * idx;
-    if (self->is_null(from))
+    if (self->is_empty(from))
       continue;
     void *to = candy_map_find(&m, gc, from, hash(from, gc), true);
     memcpy(to, from, self->cell);

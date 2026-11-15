@@ -1,7 +1,7 @@
 keywords = [
   ["true", 0],
   ["false", 0],
-  ["none", 0],
+  ["null", 0],
   ["def", 0],
   ["return", 0],
   ["end", 0],
