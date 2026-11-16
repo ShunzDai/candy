@@ -134,7 +134,7 @@ static candy_err_t _fsm_end(candy_gc_t *self) {
   return CANDY_OK;
 }
 
-candy_err_t candy_gc_init(candy_gc_t *self, candy_excep_t *ctx, candy_handler_t handler, candy_allocator_t alloc, void *arg) {
+candy_err_t candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg) {
   candy_memory_init(&self->mem, alloc, arg);
   self->pool = NULL;
   self->pool_cap = 0;

@@ -41,7 +41,7 @@ struct candy_gc {
   uint8_t pool_cap;
 };
 
-candy_err_t candy_gc_init(candy_gc_t *self, candy_excep_t *ctx, candy_handler_t handler, candy_allocator_t alloc, void *arg);
+candy_err_t candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg);
 
 candy_err_t candy_gc_deinit(candy_gc_t *self);
 
