@@ -14,7 +14,7 @@
   * limitations under the License.
   */
 #include "core/candy_gc.h"
-#include "core/candy_map.h"
+#include "core/candy_hashmap.h"
 #include "core/candy_lib.h"
 #include "core/candy_object.h"
 #include <string.h>
@@ -46,7 +46,7 @@ static bool _is_tomb(const void *cell) {
   return *self == (candy_object_t *)UINTPTR_MAX;
 }
 
-static bool _comp(const void *cell, const void *key, candy_gc_t *gc) {
+static bool _is_equal(const void *cell, const void *key, candy_gc_t *gc) {
   const candy_object_t *const *self = (const candy_object_t *const *)cell;
   struct map_key *k = (struct map_key *)key;
   bool val = true;
@@ -62,31 +62,28 @@ static bool _comp(const void *cell, const void *key, candy_gc_t *gc) {
   return val;
 }
 
-static candy_err_t _map_init(candy_map_t *self, void *data, uint8_t cap) {
-  candy_err_t err = CANDY_OK;
-  self->is_empty = _is_empty;
-  self->is_tomb = _is_tomb;
-  self->comp = _comp;
-  self->cell = sizeof(candy_object_t *);
-  self->cap = cap;
-  self->data = data;
-  return err;
-}
+static const candy_hash_ops_t _ops = {
+  .is_empty = _is_empty,
+  .is_tomb = _is_tomb,
+  .is_equal = _is_equal,
+  .hash = _hash,
+};
 
 static candy_object_t **_find(candy_gc_t *self, const struct map_key *key, candy_hash_t hash, bool expand) {
-  candy_map_t map;
-  _map_init(&map, self->pool, self->pool_cap);
-  return (candy_object_t **)candy_map_find(&map, self, key, hash, expand);
+  return (candy_object_t **)candy_hashmap_find(self->pool, capacity_to_size(self->pool_cap),
+    sizeof(candy_object_t *), &_ops, key, hash, expand, self);
 }
 
 static candy_err_t _resize(candy_gc_t *self, candy_excep_t *ctx, size_t cap) {
-  candy_err_t err = CANDY_OK;
-  candy_map_t map;
-  _map_init(&map, self->pool, self->pool_cap);
-  err = candy_map_resize(&map, self, ctx, cap, _hash);
-  self->pool_cap = map.cap;
-  self->pool = (candy_object_t **)map.data;
-  return err;
+  size_t old_size = capacity_to_size(self->pool_cap);
+  size_t new_size = capacity_to_size(cap);
+  void *pool = candy_hashmap_resize(self->pool, old_size, new_size,
+    sizeof(candy_object_t *), &_ops, candy_gc_memory(self), self, ctx);
+  if (pool == NULL)
+    return CANDY_ERR_MEMORY;
+  self->pool_cap = (uint8_t)cap;
+  self->pool = (candy_object_t **)pool;
+  return CANDY_OK;
 }
 
 static candy_object_t *_add_node(candy_gc_t *self, candy_excep_t *ctx, candy_object_t **pos, candy_types_t type, size_t size) {
@@ -157,7 +154,7 @@ candy_err_t candy_gc_deinit(candy_gc_t *self) {
       continue;
     _del_node(self, pos);
   }
-  candy_memory_free(candy_gc_memory(self), self->pool, sizeof(candy_object_t *) * capacity_to_size(self->pool_cap));
+  candy_hashmap_deinit(self->pool, capacity_to_size(self->pool_cap), sizeof(candy_object_t *), candy_gc_memory(self));
   /* free object list */
   while (self->list)
     _del_node(self, &self->list);

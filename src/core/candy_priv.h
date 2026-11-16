@@ -46,9 +46,10 @@ typedef enum candy_masks {
   MASK_ARRAY    = (uint8_t)(1 << 1),
   MASK_CONST    = (uint8_t)(1 << 2),
   MASK_HASHABLE = (uint8_t)(MASK_CONST),
-  /** @brief since the actual key must contain the hashable bits, when the key in the table is reset,
-    the slot will be filled with a mask that does not contain the hashable bits as a tombstone */
-  MASK_TOMB     = (uint8_t)(~MASK_HASHABLE),
+  /** @brief tombstone marker: a NONE-typed slot carrying MASK_OBJECT. A live
+    key that carries MASK_OBJECT is always an object with a real type, so this
+    type/mask pair never describes a real key; an unused slot has mask NONE. */
+  MASK_TOMB     = (uint8_t)(MASK_NONE | MASK_OBJECT),
 } candy_masks_t;
 
 typedef enum candy_events {

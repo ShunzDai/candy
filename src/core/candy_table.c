@@ -15,7 +15,7 @@
   */
 #include "core/candy_table.h"
 #include "core/candy_lib.h"
-#include "core/candy_map.h"
+#include "core/candy_hashmap.h"
 #include "core/candy_object.h"
 #include "core/candy_gc.h"
 #include "core/candy_wrap.h"
@@ -31,63 +31,60 @@ struct candy_pair {
 struct candy_table {
   candy_object_t header;
   candy_pair_t *data;
+  size_t used;
   uint8_t cap;
 };
 
 // static const char TAG[] = "table";
 
-static candy_hash_t _hash(const void *pos, candy_gc_t *gc) {
-  const candy_pair_t *self = (const candy_pair_t *)pos;
+static candy_hash_t _hash(const void *cell, candy_gc_t *gc) {
+  const candy_pair_t *self = (const candy_pair_t *)cell;
   return candy_wrap_hash(&self->key, gc);
 }
 
-static bool _is_empty(const void *pos) {
-  const candy_pair_t *self = (const candy_pair_t *)pos;
-  return candy_wrap_type(&self->key) == CANDY_TYPE_NONE;
+static bool _is_empty(const void *cell) {
+  const candy_pair_t *self = (const candy_pair_t *)cell;
+  /* A slot that was never written: zeroed, so type NONE and mask NONE. */
+  return candy_wrap_type(&self->key) == CANDY_TYPE_NONE && candy_wrap_mask(&self->key) == MASK_NONE;
 }
 
-static bool _is_tomb(const void *pos) {
-  const candy_pair_t *self = (const candy_pair_t *)pos;
-  return candy_wrap_mask(&self->key) & MASK_TOMB;
+static bool _is_tomb(const void *cell) {
+  const candy_pair_t *self = (const candy_pair_t *)cell;
+  return candy_wrap_type(&self->key) == CANDY_TYPE_NONE && candy_wrap_mask(&self->key) == MASK_TOMB;
 }
 
-static bool _comp(const void *pos, const void *key, candy_gc_t *gc) {
-  const candy_pair_t *self = (const candy_pair_t *)pos;
+static bool _is_equal(const void *cell, const void *key, candy_gc_t *gc) {
+  const candy_pair_t *self = (const candy_pair_t *)cell;
   const candy_wrap_t *k = (const candy_wrap_t *)key;
   return candy_wrap_hash(&self->key, gc) == candy_wrap_hash(k, gc);
 }
 
-static candy_err_t _map_init(candy_map_t *self, void *data, uint8_t cap) {
-  candy_err_t err = CANDY_OK;
-  self->is_empty = _is_empty;
-  self->is_tomb = _is_tomb;
-  self->comp = _comp;
-  self->cell = sizeof(candy_pair_t);
-  self->cap = cap;
-  self->data = data;
-  return err;
-}
+static const candy_hash_ops_t _ops = {
+  .is_empty = _is_empty,
+  .is_tomb = _is_tomb,
+  .is_equal = _is_equal,
+  .hash = _hash,
+};
 
-static candy_pair_t *_find(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, bool expand) {
-  candy_hash_t hash = candy_wrap_hash(key, gc);
-  candy_map_t map;
-  _map_init(&map, self->data, self->cap);
-  candy_pair_t *val = (candy_pair_t *)candy_map_find(&map, gc, key, hash, expand);
-  return val;
+static candy_pair_t *_find(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, candy_hash_t hash, bool expand) {
+  return (candy_pair_t *)candy_hashmap_find(self->data, capacity_to_size(self->cap),
+    sizeof(candy_pair_t), &_ops, key, hash, expand, gc);
 }
 
 static candy_err_t _resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap) {
-  candy_err_t err = CANDY_OK;
-  candy_map_t map;
-  _map_init(&map, self->data, self->cap);
-  err = candy_map_resize(&map, gc, ctx, cap, _hash);
-  self->cap = map.cap;
-  self->data = (candy_pair_t *)map.data;
-  return err;
+  size_t old_size = capacity_to_size(self->cap);
+  size_t new_size = capacity_to_size(cap);
+  void *data = candy_hashmap_resize(self->data, old_size, new_size,
+    sizeof(candy_pair_t), &_ops, candy_gc_memory(gc), gc, ctx);
+  if (data == NULL)
+    return CANDY_ERR_MEMORY;
+  self->cap = (uint8_t)cap;
+  self->data = (candy_pair_t *)data;
+  return CANDY_OK;
 }
 
 static candy_err_t _table_delete(candy_table_t *self, candy_gc_t *gc, void *arg) {
-  candy_gc_free(gc, self->data, sizeof(candy_pair_t) * capacity_to_size(self->cap));
+  candy_hashmap_deinit(self->data, capacity_to_size(self->cap), sizeof(candy_pair_t), candy_gc_memory(gc));
   candy_gc_free(gc, self, sizeof(candy_table_t));
   return CANDY_OK;
 }
@@ -103,6 +100,7 @@ static candy_err_t _table_diffuse(candy_table_t *self, candy_gc_t *gc, void *arg
 candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_table_t *self = (candy_table_t *)candy_gc_add(gc, ctx, CANDY_TYPE_TABLE, sizeof(candy_table_t));
   self->data = NULL;
+  self->used = 0;
   self->cap = 0;
   return self;
 }
@@ -110,6 +108,7 @@ candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
 candy_table_t *candy_table_create_global(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_table_t *self = (candy_table_t *)candy_gc_add_global(gc, ctx, sizeof(candy_table_t));
   self->data = NULL;
+  self->used = 0;
   self->cap = 0;
   return self;
 }
@@ -143,30 +142,41 @@ candy_err_t candy_table_resize(candy_table_t *self, candy_gc_t *gc, candy_excep_
 }
 
 const candy_wrap_t *candy_table_get(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key) {
-  const candy_pair_t *pos = _find(self, gc, key, false);
+  const candy_pair_t *pos = _find(self, gc, key, candy_wrap_hash(key, gc), false);
   return pos ? &pos->val : &CANDY_WRAP_NULL;
 }
 
 candy_err_t candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
-  while (1) {
-    candy_pair_t *pos = _find(self, gc, key, true);
-    if (pos) {
-      pos->key = *key;
-      pos->val = *val;
-      return CANDY_OK;
-    }
-    else if (self->cap + 1 == 32) {
-      return CANDY_ERR_LIMITED;
-    }
-    _resize(self, gc, ctx, self->cap + 1);
+  candy_hash_t hash = candy_wrap_hash(key, gc);
+  candy_pair_t *pos = _find(self, gc, key, hash, false);
+  if (pos) {
+    pos->val = *val;
+    return CANDY_OK;
   }
+  if (candy_hashmap_grow(self->used, capacity_to_size(self->cap))) {
+    if (self->cap + 1 == 32)
+      return CANDY_ERR_LIMITED;
+    candy_err_t err = _resize(self, gc, ctx, self->cap + 1);
+    if (err != CANDY_OK)
+      return err;
+  }
+  pos = _find(self, gc, key, hash, true);
+  if (pos == NULL)
+    return CANDY_ERR_LIMITED;
+  pos->key = *key;
+  pos->val = *val;
+  ++self->used;
+  return CANDY_OK;
 }
 
 candy_err_t candy_table_reset(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key) {
-  candy_pair_t *pos = _find(self, gc, key, false);
+  candy_pair_t *pos = _find(self, gc, key, candy_wrap_hash(key, gc), false);
   if (pos) {
+    /* Mark the slot as a tombstone: still NONE-typed, but with MASK_OBJECT set
+     * so it differs from both an unused slot and a live object key. */
     candy_wrap_set_type(&pos->key, CANDY_TYPE_NONE);
     candy_wrap_set_mask(&pos->key, MASK_TOMB);
+    --self->used;
   }
   return CANDY_OK;
 }
