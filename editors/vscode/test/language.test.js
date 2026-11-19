@@ -40,6 +40,23 @@ function assertScope(line, text, scope, state = INITIAL) {
   return result.ruleStack;
 }
 
+// Representative script used by the tokenizer tests (kept inline so the
+// extension tests do not depend on files outside the extension directory).
+const SAMPLE = [
+  '# 数独求解（回溯）',
+  'def solve(grid)',
+  '  if (solved(grid))',
+  '    return true',
+  '  end',
+  '  for (cell : grid)',
+  '    while (!cell)',
+  '      print("try", cell)',
+  '    end',
+  '  end',
+  '  return false',
+  'end'
+].join('\n');
+
 test('highlights definitions, calls, builtins, literals and all lexer keywords', () => {
   assertScope('def solve(g, r)', 'def', 'keyword.control.candy');
   assertScope('def solve(g, r)', 'solve', 'entity.name.function.candy');
@@ -102,10 +119,9 @@ test('single-line strings recover at newline and accept escaped newline', () => 
   assertScope('if (true)', 'if', 'keyword.control.candy', escapedSlash);
 });
 
-test('tokenizes actual sudoku example and recognizes function names', () => {
-  const example = fs.readFileSync(path.resolve(root, '../../examples/sudoku.cdy'), 'utf8');
+test('tokenizes a representative script and recognizes function names', () => {
   let state = INITIAL;
-  for (const line of example.split(/\r?\n/)) {
+  for (const line of SAMPLE.split(/\r?\n/)) {
     if (/^def /.test(line)) {
       assertScope(line, line.match(/^def (\w+)/)[1], 'entity.name.function.candy', state);
     }
@@ -161,8 +177,7 @@ test('language configuration covers comments, block indentation and folding', ()
     assert.ok(!regionStart.test(line), line);
     assert.ok(!regionEnd.test(line), line);
   }
-  const example = fs.readFileSync(path.resolve(root, '../../examples/sudoku.cdy'), 'utf8');
-  for (const line of example.split(/\r?\n/)) {
+  for (const line of SAMPLE.split(/\r?\n/)) {
     assert.ok(!regionStart.test(line), `Ordinary code must not become a minimap region header: ${line}`);
   }
 });

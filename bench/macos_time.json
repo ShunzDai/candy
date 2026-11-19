@@ -1,0 +1,2347 @@
+{
+  "env": {
+    "timestamp": "2026-11-19T14:24:13.676011+00:00",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "processor": "arm",
+    "python": "3.14.7",
+    "cpu_count": 8,
+    "candy": "/private/tmp/wt-cur/shell/candy",
+    "lua": "~/workspace/scripts/candy/build/lua-matched/lua-5.4.7/src/lua",
+    "lua_version": "Lua 5.4.7  Copyright (C) 1994-2024 Lua.org, PUC-Rio",
+    "candy_bin_bytes": 34136,
+    "lua_bin_bytes": 383088,
+    "candy_sha256": "35c94307cad008899c3f4d98b7f33f5c28caddaae07e2b7d1b64eb9faa04f07f",
+    "lua_sha256": "3704fbb6eaf73d5e384effda76caa5759db5a454f98c21c0abeb6471d8c506d0",
+    "cpu_brand": "Apple M2",
+    "os": "26.6.2"
+  },
+  "measurement": {
+    "warmup_passes": 2,
+    "reps_override": null,
+    "elapsed_s": 17.493770667002536,
+    "startup_median_ms": {
+      "candy": 2.505,
+      "lua": 2.397542
+    },
+    "scope": "end-to-end including startup, parse/codegen, execution and cleanup; hot loops are not precompiled execution",
+    "primary_ratio": "ratio_median; net ratios are startup-subtracted estimates only"
+  },
+  "rows": [
+    {
+      "name": "empty",
+      "group": "startup",
+      "work": 0,
+      "unit": "",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 0,
+        "lua": 0
+      },
+      "candy": {
+        "n": 31,
+        "min_ms": 2.251458,
+        "p10_ms": 2.288042,
+        "median_ms": 2.505,
+        "mean_ms": 2.5383884838709676,
+        "p90_ms": 2.820416,
+        "max_ms": 3.152292,
+        "stdev_ms": 0.21305213432864661
+      },
+      "lua": {
+        "n": 31,
+        "min_ms": 2.308708,
+        "p10_ms": 2.321083,
+        "median_ms": 2.397542,
+        "mean_ms": 2.5410067741935487,
+        "p90_ms": 2.877584,
+        "max_ms": 3.3015,
+        "stdev_ms": 0.25839832976910887
+      },
+      "net_candy_ms": 1e-09,
+      "net_lua_ms": 1e-09,
+      "ratio_median": 1.0448200698882437,
+      "ratio_net": 1.0
+    },
+    {
+      "name": "fib_28",
+      "group": "fib",
+      "work": 0,
+      "unit": "",
+      "measurement_kind": "hot_loop",
+      "binding": "asymmetric",
+      "binding_note": "Candy global self function; Lua local self function.",
+      "source_bytes": {
+        "candy": 95,
+        "lua": 103
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 11.845125,
+        "p10_ms": 11.942167,
+        "median_ms": 12.325,
+        "mean_ms": 12.255928090909093,
+        "p90_ms": 12.449,
+        "max_ms": 12.568709,
+        "stdev_ms": 0.21130877952093732
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 13.52575,
+        "p10_ms": 13.818416,
+        "median_ms": 13.963208,
+        "mean_ms": 14.920060545454545,
+        "p90_ms": 14.334083,
+        "max_ms": 24.765875,
+        "stdev_ms": 3.1194408218730008
+      },
+      "net_candy_ms": 9.82,
+      "net_lua_ms": 11.565666,
+      "ratio_median": 0.8826768175336211,
+      "ratio_net": 0.8490648095838147
+    },
+    {
+      "name": "fib_30",
+      "group": "fib",
+      "work": 0,
+      "unit": "",
+      "measurement_kind": "hot_loop",
+      "binding": "asymmetric",
+      "binding_note": "Candy global self function; Lua local self function.",
+      "source_bytes": {
+        "candy": 95,
+        "lua": 103
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 27.049458,
+        "p10_ms": 27.184,
+        "median_ms": 27.530833,
+        "mean_ms": 27.510371,
+        "p90_ms": 27.734625,
+        "max_ms": 27.953167,
+        "stdev_ms": 0.24551493724859555
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 31.783042,
+        "p10_ms": 31.795625,
+        "median_ms": 32.289333,
+        "mean_ms": 32.24623481818182,
+        "p90_ms": 32.887417,
+        "max_ms": 32.918417,
+        "stdev_ms": 0.3882823047197907
+      },
+      "net_candy_ms": 25.025833000000002,
+      "net_lua_ms": 29.891790999999998,
+      "ratio_median": 0.8526293497608018,
+      "ratio_net": 0.8372142371796994
+    },
+    {
+      "name": "fib_32",
+      "group": "fib",
+      "work": 0,
+      "unit": "",
+      "measurement_kind": "hot_loop",
+      "binding": "asymmetric",
+      "binding_note": "Candy global self function; Lua local self function.",
+      "source_bytes": {
+        "candy": 95,
+        "lua": 103
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 66.501166,
+        "p10_ms": 67.156208,
+        "median_ms": 67.633167,
+        "mean_ms": 67.586265,
+        "p90_ms": 68.052958,
+        "max_ms": 68.117458,
+        "stdev_ms": 0.4467583134608282
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 78.873209,
+        "p10_ms": 79.103292,
+        "median_ms": 79.913375,
+        "mean_ms": 80.07700754545455,
+        "p90_ms": 81.377708,
+        "max_ms": 81.76475,
+        "stdev_ms": 0.8318686215648766
+      },
+      "net_candy_ms": 65.128167,
+      "net_lua_ms": 77.515833,
+      "ratio_median": 0.8463310052916674,
+      "ratio_net": 0.8401917966875232
+    },
+    {
+      "name": "fib_34",
+      "group": "fib",
+      "work": 0,
+      "unit": "",
+      "measurement_kind": "hot_loop",
+      "binding": "asymmetric",
+      "binding_note": "Candy global self function; Lua local self function.",
+      "source_bytes": {
+        "candy": 95,
+        "lua": 103
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 170.838416,
+        "p10_ms": 171.087042,
+        "median_ms": 171.539541,
+        "mean_ms": 171.85472354545453,
+        "p90_ms": 172.742209,
+        "max_ms": 173.123459,
+        "stdev_ms": 0.7663101210903589
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 200.926292,
+        "p10_ms": 201.750167,
+        "median_ms": 203.500416,
+        "mean_ms": 203.83886354545453,
+        "p90_ms": 205.727167,
+        "max_ms": 208.630708,
+        "stdev_ms": 2.194105287873453
+      },
+      "net_candy_ms": 169.03454100000002,
+      "net_lua_ms": 201.102874,
+      "ratio_median": 0.8429444242512016,
+      "ratio_net": 0.8405376692925831
+    },
+    {
+      "name": "fib_global_32",
+      "group": "fib",
+      "work": 0,
+      "unit": "",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 95,
+        "lua": 97
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 67.465667,
+        "p10_ms": 67.614834,
+        "median_ms": 67.9535,
+        "mean_ms": 68.00489018181818,
+        "p90_ms": 68.284833,
+        "max_ms": 68.664167,
+        "stdev_ms": 0.31278831826792386
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 88.596209,
+        "p10_ms": 90.765791,
+        "median_ms": 91.75775,
+        "mean_ms": 92.00900390909091,
+        "p90_ms": 94.17575,
+        "max_ms": 94.242459,
+        "stdev_ms": 1.580284430130363
+      },
+      "net_candy_ms": 65.44850000000001,
+      "net_lua_ms": 89.360208,
+      "ratio_median": 0.7405750467944126,
+      "ratio_net": 0.7324121268831425
+    },
+    {
+      "name": "fib_alias_30",
+      "group": "fib",
+      "work": 0,
+      "unit": "",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 108,
+        "lua": 110
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 36.793667,
+        "p10_ms": 37.0085,
+        "median_ms": 37.147834,
+        "mean_ms": 40.707314545454544,
+        "p90_ms": 37.736292,
+        "max_ms": 75.499292,
+        "stdev_ms": 11.005060686115971
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 35.876083,
+        "p10_ms": 36.222458,
+        "median_ms": 36.945125,
+        "mean_ms": 36.84096963636363,
+        "p90_ms": 37.48,
+        "max_ms": 37.684708,
+        "stdev_ms": 0.5662224999765427
+      },
+      "net_candy_ms": 34.642834,
+      "net_lua_ms": 34.547582999999996,
+      "ratio_median": 1.0054867590784984,
+      "ratio_net": 1.0027570959160879
+    },
+    {
+      "name": "calls_100k",
+      "group": "calls",
+      "work": 100001,
+      "unit": "calls",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 600038,
+        "lua": 600043
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 10.589458,
+        "p10_ms": 10.756958,
+        "median_ms": 11.021917,
+        "mean_ms": 11.114223545454545,
+        "p90_ms": 11.223209,
+        "max_ms": 12.472917,
+        "stdev_ms": 0.4673793895367044
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 12.186333,
+        "p10_ms": 12.2885,
+        "median_ms": 12.633041,
+        "mean_ms": 12.727125,
+        "p90_ms": 12.919959,
+        "max_ms": 14.033542,
+        "stdev_ms": 0.4657951523493797
+      },
+      "net_candy_ms": 8.516917,
+      "net_lua_ms": 10.235499,
+      "ratio_median": 0.8724674446952242,
+      "ratio_net": 0.8320959241948046,
+      "candy_ops_per_s": 11741455.27072766,
+      "lua_ops_per_s": 9770017.074888093,
+      "candy_end_to_end_ops_per_s": 9072922.614096984,
+      "candy_end_to_end_ns_per_op": 110.2180678193218,
+      "lua_end_to_end_ops_per_s": 7915829.60903871,
+      "lua_end_to_end_ns_per_op": 126.32914670853292
+    },
+    {
+      "name": "calls_200k",
+      "group": "calls",
+      "work": 200001,
+      "unit": "calls",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 1200038,
+        "lua": 1200043
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 18.447375,
+        "p10_ms": 18.453208,
+        "median_ms": 18.569417,
+        "mean_ms": 18.69592054545455,
+        "p90_ms": 19.006042,
+        "max_ms": 19.272084,
+        "stdev_ms": 0.27705282052816493
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 21.49325,
+        "p10_ms": 21.636125,
+        "median_ms": 21.868667,
+        "mean_ms": 22.09709090909091,
+        "p90_ms": 22.811708,
+        "max_ms": 23.467792,
+        "stdev_ms": 0.5540287687742733
+      },
+      "net_candy_ms": 16.064417000000002,
+      "net_lua_ms": 19.471124999999997,
+      "ratio_median": 0.8491334657023221,
+      "ratio_net": 0.8250379472167122,
+      "candy_ops_per_s": 12449938.270402217,
+      "lua_ops_per_s": 10271671.513587428,
+      "candy_end_to_end_ops_per_s": 10770451.220951093,
+      "candy_end_to_end_ns_per_op": 92.84662076689617,
+      "lua_end_to_end_ops_per_s": 9145550.572424008,
+      "lua_end_to_end_ns_per_op": 109.34278828605856
+    },
+    {
+      "name": "calls_400k",
+      "group": "calls",
+      "work": 400001,
+      "unit": "calls",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 2400038,
+        "lua": 2400043
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 34.008833,
+        "p10_ms": 34.008833,
+        "median_ms": 34.468292,
+        "mean_ms": 34.51999428571428,
+        "p90_ms": 34.812292,
+        "max_ms": 35.198417,
+        "stdev_ms": 0.37048467003554536
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 40.615666,
+        "p10_ms": 40.615666,
+        "median_ms": 41.044166,
+        "mean_ms": 41.027940428571426,
+        "p90_ms": 41.091334,
+        "max_ms": 41.579834,
+        "stdev_ms": 0.2757069270407345
+      },
+      "net_candy_ms": 31.963292,
+      "net_lua_ms": 38.646623999999996,
+      "ratio_median": 0.839785415544806,
+      "ratio_net": 0.8270655672278128,
+      "candy_ops_per_s": 12514386.815976277,
+      "lua_ops_per_s": 10350218.430463681,
+      "candy_end_to_end_ops_per_s": 11604897.625910794,
+      "candy_end_to_end_ns_per_op": 86.17051457371356,
+      "lua_end_to_end_ops_per_s": 9745623.775130428,
+      "lua_end_to_end_ns_per_op": 102.61015847460381
+    },
+    {
+      "name": "calls_local_200k",
+      "group": "calls",
+      "work": 200001,
+      "unit": "calls",
+      "measurement_kind": "end_to_end",
+      "binding": "asymmetric",
+      "binding_note": "Legacy: Candy top-level global id; Lua chunk-local id. See calls_nested_local_200k for aligned function locals.",
+      "source_bytes": {
+        "candy": 1200038,
+        "lua": 1200049
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 18.427917,
+        "p10_ms": 18.543125,
+        "median_ms": 18.909042,
+        "mean_ms": 18.88489390909091,
+        "p90_ms": 19.162416,
+        "max_ms": 19.338916,
+        "stdev_ms": 0.28815181738718426
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 19.813375,
+        "p10_ms": 19.828958,
+        "median_ms": 20.019375,
+        "mean_ms": 20.038348363636363,
+        "p90_ms": 20.308833,
+        "max_ms": 20.310791,
+        "stdev_ms": 0.18500027715373477
+      },
+      "net_candy_ms": 16.404042,
+      "net_lua_ms": 17.621833,
+      "ratio_median": 0.9445370797040367,
+      "ratio_net": 0.9308930574929408,
+      "candy_ops_per_s": 12192178.001007313,
+      "lua_ops_per_s": 11349613.856855867,
+      "candy_end_to_end_ops_per_s": 10577003.319364354,
+      "candy_end_to_end_ns_per_op": 94.54473727631361,
+      "lua_end_to_end_ops_per_s": 9990371.827292312,
+      "lua_end_to_end_ns_per_op": 100.0963745181274
+    },
+    {
+      "name": "mutual_10k",
+      "group": "calls",
+      "work": 410001,
+      "unit": "calls",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 90152,
+        "lua": 90156
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 11.74575,
+        "p10_ms": 11.74575,
+        "median_ms": 12.061917,
+        "mean_ms": 12.12007757142857,
+        "p90_ms": 12.325917,
+        "max_ms": 12.719792,
+        "stdev_ms": 0.2949320772433918
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 9.666042,
+        "p10_ms": 9.666042,
+        "median_ms": 10.656291,
+        "mean_ms": 10.58705957142857,
+        "p90_ms": 11.128917,
+        "max_ms": 11.200125,
+        "stdev_ms": 0.5239289682133467
+      },
+      "net_candy_ms": 9.556916999999999,
+      "net_lua_ms": 8.258749,
+      "ratio_median": 1.1319057446910936,
+      "ratio_net": 1.1571870025351296,
+      "candy_ops_per_s": 42900969.00496259,
+      "lua_ops_per_s": 49644443.72870516,
+      "candy_end_to_end_ops_per_s": 33991363.064428315,
+      "candy_end_to_end_ns_per_op": 29.41923800185853,
+      "lua_end_to_end_ops_per_s": 38475019.12250707,
+      "lua_end_to_end_ns_per_op": 25.9908902661213
+    },
+    {
+      "name": "globals_100k",
+      "group": "globals",
+      "work": 100000,
+      "unit": "ops",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 1000021,
+        "lua": 1000021
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 12.511833,
+        "p10_ms": 12.568916,
+        "median_ms": 12.869334,
+        "mean_ms": 12.821776454545455,
+        "p90_ms": 13.009917,
+        "max_ms": 13.123125,
+        "stdev_ms": 0.1850436684772561
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 16.619667,
+        "p10_ms": 16.730583,
+        "median_ms": 16.963125,
+        "mean_ms": 16.980913,
+        "p90_ms": 17.198125,
+        "max_ms": 17.32175,
+        "stdev_ms": 0.19246066228145994
+      },
+      "net_candy_ms": 10.364334,
+      "net_lua_ms": 14.565583000000002,
+      "ratio_median": 0.758665281308721,
+      "ratio_net": 0.7115632789981697,
+      "candy_ops_per_s": 9648473.312419303,
+      "lua_ops_per_s": 6865499.307511412,
+      "candy_end_to_end_ops_per_s": 7770409.875134176,
+      "candy_end_to_end_ns_per_op": 128.69334,
+      "lua_end_to_end_ops_per_s": 5895140.193802733,
+      "lua_end_to_end_ns_per_op": 169.63125
+    },
+    {
+      "name": "globals_200k",
+      "group": "globals",
+      "work": 200000,
+      "unit": "ops",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 2000021,
+        "lua": 2000021
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 22.411875,
+        "p10_ms": 22.5155,
+        "median_ms": 23.105542,
+        "mean_ms": 23.281446818181816,
+        "p90_ms": 23.612667,
+        "max_ms": 26.125041,
+        "stdev_ms": 0.9765696027642156
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 31.206875,
+        "p10_ms": 31.342167,
+        "median_ms": 31.686875,
+        "mean_ms": 34.71403036363637,
+        "p90_ms": 31.764583,
+        "max_ms": 66.211125,
+        "stdev_ms": 9.961854774088264
+      },
+      "net_candy_ms": 20.600542,
+      "net_lua_ms": 29.289333,
+      "ratio_median": 0.7291833606185526,
+      "ratio_net": 0.7033462318858542,
+      "candy_ops_per_s": 9708482.42730701,
+      "lua_ops_per_s": 6828424.532576416,
+      "candy_end_to_end_ops_per_s": 8655931.983763896,
+      "candy_end_to_end_ns_per_op": 115.52771,
+      "lua_end_to_end_ops_per_s": 6311761.573206572,
+      "lua_end_to_end_ns_per_op": 158.434375
+    },
+    {
+      "name": "globals_400k",
+      "group": "globals",
+      "work": 400000,
+      "unit": "ops",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 4000021,
+        "lua": 4000021
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 42.045541,
+        "p10_ms": 42.045541,
+        "median_ms": 42.919416,
+        "mean_ms": 43.11716071428572,
+        "p90_ms": 43.221209,
+        "max_ms": 46.098667,
+        "stdev_ms": 1.2877001461980542
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 59.035042,
+        "p10_ms": 59.035042,
+        "median_ms": 59.9625,
+        "mean_ms": 59.98458914285714,
+        "p90_ms": 60.318416,
+        "max_ms": 60.71575,
+        "stdev_ms": 0.4845013205013491
+      },
+      "net_candy_ms": 40.414415999999996,
+      "net_lua_ms": 57.564958,
+      "ratio_median": 0.71577095684803,
+      "ratio_net": 0.7020662813651318,
+      "candy_ops_per_s": 9897458.372279834,
+      "lua_ops_per_s": 6948671.794392693,
+      "candy_end_to_end_ops_per_s": 9319791.303777294,
+      "candy_end_to_end_ns_per_op": 107.29854,
+      "lua_end_to_end_ops_per_s": 6670835.9391286215,
+      "lua_end_to_end_ns_per_op": 149.90625
+    },
+    {
+      "name": "arith_100k",
+      "group": "arith",
+      "work": 100000,
+      "unit": "adds",
+      "measurement_kind": "end_to_end",
+      "binding": "asymmetric",
+      "binding_note": "Candy global f; Lua chunk-local f; arithmetic parameters aligned.",
+      "source_bytes": {
+        "candy": 200034,
+        "lua": 200045
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 6.756792,
+        "p10_ms": 6.80525,
+        "median_ms": 7.0195,
+        "mean_ms": 7.100333363636364,
+        "p90_ms": 7.485416,
+        "max_ms": 7.724625,
+        "stdev_ms": 0.3058415935885387
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 8.795833,
+        "p10_ms": 8.972375,
+        "median_ms": 9.390833,
+        "mean_ms": 9.315776545454545,
+        "p90_ms": 9.717958,
+        "max_ms": 10.034542,
+        "stdev_ms": 0.33960401865792395
+      },
+      "net_candy_ms": 4.5145,
+      "net_lua_ms": 6.993291000000001,
+      "ratio_median": 0.7474842753566163,
+      "ratio_net": 0.6455472823882202,
+      "candy_ops_per_s": 22150847.269908074,
+      "lua_ops_per_s": 14299419.257685686,
+      "candy_end_to_end_ops_per_s": 14246028.919438707,
+      "candy_end_to_end_ns_per_op": 70.195,
+      "lua_end_to_end_ops_per_s": 10648682.60355604,
+      "lua_end_to_end_ns_per_op": 93.90833
+    },
+    {
+      "name": "arith_200k",
+      "group": "arith",
+      "work": 200000,
+      "unit": "adds",
+      "measurement_kind": "end_to_end",
+      "binding": "asymmetric",
+      "binding_note": "Candy global f; Lua chunk-local f; arithmetic parameters aligned.",
+      "source_bytes": {
+        "candy": 400034,
+        "lua": 400045
+      },
+      "candy": {
+        "n": 11,
+        "min_ms": 10.298333,
+        "p10_ms": 10.300667,
+        "median_ms": 10.882209,
+        "mean_ms": 10.714719727272726,
+        "p90_ms": 11.021416,
+        "max_ms": 11.076084,
+        "stdev_ms": 0.31281302386484977
+      },
+      "lua": {
+        "n": 11,
+        "min_ms": 14.712334,
+        "p10_ms": 14.904625,
+        "median_ms": 14.992375,
+        "mean_ms": 15.025375,
+        "p90_ms": 15.196792,
+        "max_ms": 15.280709,
+        "stdev_ms": 0.14591180881677063
+      },
+      "net_candy_ms": 8.377209,
+      "net_lua_ms": 12.594833,
+      "ratio_median": 0.7258495735332128,
+      "ratio_net": 0.665130613482529,
+      "candy_ops_per_s": 23874299.90107684,
+      "lua_ops_per_s": 15879527.739669116,
+      "candy_end_to_end_ops_per_s": 18378621.47290132,
+      "candy_end_to_end_ns_per_op": 54.411045,
+      "lua_end_to_end_ops_per_s": 13340114.55823377,
+      "lua_end_to_end_ns_per_op": 74.961875
+    },
+    {
+      "name": "arith_400k",
+      "group": "arith",
+      "work": 400000,
+      "unit": "adds",
+      "measurement_kind": "end_to_end",
+      "binding": "asymmetric",
+      "binding_note": "Candy global f; Lua chunk-local f; arithmetic parameters aligned.",
+      "source_bytes": {
+        "candy": 800034,
+        "lua": 800045
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 18.314875,
+        "p10_ms": 18.314875,
+        "median_ms": 18.750041,
+        "mean_ms": 18.79989271428571,
+        "p90_ms": 19.123583,
+        "max_ms": 19.173583,
+        "stdev_ms": 0.32385454560373866
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 27.078083,
+        "p10_ms": 27.078083,
+        "median_ms": 27.440458,
+        "mean_ms": 27.60966642857143,
+        "p90_ms": 28.014542,
+        "max_ms": 28.289083,
+        "stdev_ms": 0.41364454678792484
+      },
+      "net_candy_ms": 16.245041,
+      "net_lua_ms": 25.042915999999998,
+      "ratio_median": 0.6832991271501372,
+      "ratio_net": 0.648688076101042,
+      "candy_ops_per_s": 24622898.766460482,
+      "lua_ops_per_s": 15972580.82884597,
+      "candy_end_to_end_ops_per_s": 21333286.684546452,
+      "candy_end_to_end_ns_per_op": 46.8751025,
+      "lua_end_to_end_ops_per_s": 14577016.170794234,
+      "lua_end_to_end_ns_per_op": 68.601145
+    },
+    {
+      "name": "compile_50k",
+      "group": "compile",
+      "work": 50000,
+      "unit": "lines",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 688917,
+        "lua": 688920
+      },
+      "candy": {
+        "n": 9,
+        "min_ms": 9.598041,
+        "p10_ms": 9.598041,
+        "median_ms": 10.146125,
+        "mean_ms": 10.193773222222221,
+        "p90_ms": 10.593792,
+        "max_ms": 10.836,
+        "stdev_ms": 0.40202300914908334
+      },
+      "lua": {
+        "n": 9,
+        "min_ms": 11.668666,
+        "p10_ms": 11.668666,
+        "median_ms": 12.289542,
+        "mean_ms": 12.283268444444444,
+        "p90_ms": 12.448291,
+        "max_ms": 12.7905,
+        "stdev_ms": 0.2837246736554887
+      },
+      "net_candy_ms": 7.641125,
+      "net_lua_ms": 9.892000000000001,
+      "ratio_median": 0.825590164385296,
+      "ratio_net": 0.7724550141528507,
+      "candy_ops_per_s": 6543539.073107691,
+      "lua_ops_per_s": 5054589.567327132,
+      "candy_end_to_end_ops_per_s": 4927989.749781321,
+      "candy_end_to_end_ns_per_op": 202.9225,
+      "lua_end_to_end_ops_per_s": 4068499.8676110143,
+      "lua_end_to_end_ns_per_op": 245.79084
+    },
+    {
+      "name": "compile_100k",
+      "group": "compile",
+      "work": 100000,
+      "unit": "lines",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 1388917,
+        "lua": 1388920
+      },
+      "candy": {
+        "n": 9,
+        "min_ms": 17.306167,
+        "p10_ms": 17.306167,
+        "median_ms": 17.630791,
+        "mean_ms": 18.241999888888888,
+        "p90_ms": 18.207666,
+        "max_ms": 23.471375,
+        "stdev_ms": 1.865592085952842
+      },
+      "lua": {
+        "n": 9,
+        "min_ms": 20.796791,
+        "p10_ms": 20.796791,
+        "median_ms": 21.404459,
+        "mean_ms": 21.549101777777775,
+        "p90_ms": 22.290917,
+        "max_ms": 22.5585,
+        "stdev_ms": 0.5249218596635287
+      },
+      "net_candy_ms": 15.125791,
+      "net_lua_ms": 19.006916999999998,
+      "ratio_median": 0.8236971090930165,
+      "ratio_net": 0.7958045484178208,
+      "candy_ops_per_s": 6611224.497284142,
+      "lua_ops_per_s": 5261242.525550041,
+      "candy_end_to_end_ops_per_s": 5671895.265504537,
+      "candy_end_to_end_ns_per_op": 176.30791,
+      "lua_end_to_end_ops_per_s": 4671923.733274454,
+      "lua_end_to_end_ns_per_op": 214.04459
+    },
+    {
+      "name": "compile_200k",
+      "group": "compile",
+      "work": 200000,
+      "unit": "lines",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 2888917,
+        "lua": 2888920
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 32.792542,
+        "p10_ms": 32.792542,
+        "median_ms": 34.332666,
+        "mean_ms": 41.032244142857145,
+        "p90_ms": 40.217209,
+        "max_ms": 77.771084,
+        "stdev_ms": 15.185112423768217
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 40.869125,
+        "p10_ms": 40.869125,
+        "median_ms": 41.013458,
+        "mean_ms": 41.14840471428572,
+        "p90_ms": 41.40875,
+        "max_ms": 41.472042,
+        "stdev_ms": 0.22980319689167217
+      },
+      "net_candy_ms": 31.827666000000004,
+      "net_lua_ms": 38.615916,
+      "ratio_median": 0.8371073221867809,
+      "ratio_net": 0.8242110843622098,
+      "candy_ops_per_s": 6283841.234226851,
+      "lua_ops_per_s": 5179211.597622079,
+      "candy_end_to_end_ops_per_s": 5825355.945267984,
+      "candy_end_to_end_ns_per_op": 171.66333,
+      "lua_end_to_end_ops_per_s": 4876448.116128125,
+      "lua_end_to_end_ns_per_op": 205.06729
+    },
+    {
+      "name": "deep_60",
+      "group": "depth",
+      "work": 0,
+      "unit": "",
+      "measurement_kind": "hot_loop",
+      "binding": "asymmetric",
+      "binding_note": "Candy global f; Lua chunk-local f.",
+      "source_bytes": {
+        "candy": 80,
+        "lua": 88
+      },
+      "candy": {
+        "n": 5,
+        "min_ms": 2.729875,
+        "p10_ms": 2.729875,
+        "median_ms": 3.152333,
+        "mean_ms": 3.4757332,
+        "p90_ms": 3.308375,
+        "max_ms": 5.142958,
+        "stdev_ms": 0.8548640671611832
+      },
+      "lua": {
+        "n": 5,
+        "min_ms": 2.671625,
+        "p10_ms": 2.671625,
+        "median_ms": 3.439083,
+        "mean_ms": 3.2660997999999997,
+        "p90_ms": 3.537833,
+        "max_ms": 3.559708,
+        "stdev_ms": 0.33587525879909647
+      },
+      "net_candy_ms": 0.6473330000000002,
+      "net_lua_ms": 1.041541,
+      "ratio_median": 0.9166202153306564,
+      "ratio_net": 0.6215146595285257
+    },
+    {
+      "name": "closures_100k",
+      "group": "alloc",
+      "work": 100000,
+      "unit": "defs",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "",
+      "source_bytes": {
+        "candy": 3177796,
+        "lua": 3477796
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 58.524,
+        "p10_ms": 58.524,
+        "median_ms": 60.599708,
+        "mean_ms": 60.366857,
+        "p90_ms": 61.167167,
+        "max_ms": 61.946083,
+        "stdev_ms": 1.0568404250779098
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 80.98475,
+        "p10_ms": 80.98475,
+        "median_ms": 83.004041,
+        "mean_ms": 83.88127971428571,
+        "p90_ms": 87.311083,
+        "max_ms": 88.143875,
+        "stdev_ms": 2.6183729472481687
+      },
+      "net_candy_ms": 58.094708,
+      "net_lua_ms": 80.606499,
+      "ratio_median": 0.7300814185661153,
+      "ratio_net": 0.7207199012575897,
+      "candy_ops_per_s": 1721327.1818149083,
+      "lua_ops_per_s": 1240594.7565096458,
+      "candy_end_to_end_ops_per_s": 1650172.967830142,
+      "candy_end_to_end_ns_per_op": 605.99708,
+      "lua_end_to_end_ops_per_s": 1204760.6212328868,
+      "lua_end_to_end_ns_per_op": 830.04041
+    },
+    {
+      "name": "calls_nested_local_200k",
+      "group": "calls",
+      "work": 200001,
+      "unit": "calls",
+      "measurement_kind": "end_to_end",
+      "binding": "aligned",
+      "binding_note": "Both id bindings are nested locals; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 1600073,
+        "lua": 1600095
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 18.214042,
+        "p10_ms": 18.214042,
+        "median_ms": 18.930375,
+        "mean_ms": 18.85967271428571,
+        "p90_ms": 19.333833,
+        "max_ms": 19.589667,
+        "stdev_ms": 0.46720308858712284
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 20.702625,
+        "p10_ms": 20.702625,
+        "median_ms": 20.937875,
+        "mean_ms": 21.106137142857143,
+        "p90_ms": 21.410042,
+        "max_ms": 21.635209,
+        "stdev_ms": 0.32617458947161965
+      },
+      "net_candy_ms": 16.425375000000003,
+      "net_lua_ms": 18.540332999999997,
+      "ratio_median": 0.9041211202187425,
+      "ratio_net": 0.8859266443596242,
+      "candy_ops_per_s": 12176343.005867444,
+      "lua_ops_per_s": 10787346.699759927,
+      "candy_end_to_end_ops_per_s": 10565083.892949821,
+      "candy_end_to_end_ns_per_op": 94.65140174299128,
+      "lua_end_to_end_ops_per_s": 9552115.484498786,
+      "lua_end_to_end_ns_per_op": 104.68885155574222
+    },
+    {
+      "name": "while_global_1m",
+      "group": "loops",
+      "work": 1000000,
+      "unit": "iterations",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 77,
+        "lua": 78
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 21.416542,
+        "p10_ms": 21.416542,
+        "median_ms": 21.614333,
+        "mean_ms": 21.666226285714288,
+        "p90_ms": 21.776125,
+        "max_ms": 22.258125,
+        "stdev_ms": 0.26544698453079063
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 21.912291,
+        "p10_ms": 21.912291,
+        "median_ms": 22.896625,
+        "mean_ms": 23.165381,
+        "p90_ms": 24.144125,
+        "max_ms": 25.110375,
+        "stdev_ms": 1.0152793091661314
+      },
+      "net_candy_ms": 19.109333,
+      "net_lua_ms": 20.499083,
+      "ratio_median": 0.943996462360719,
+      "ratio_net": 0.9322042844550656,
+      "candy_ops_per_s": 52330450.25695036,
+      "lua_ops_per_s": 48782669.93699182,
+      "candy_end_to_end_ops_per_s": 46265596.07460476,
+      "candy_end_to_end_ns_per_op": 21.614333,
+      "lua_end_to_end_ops_per_s": 43674559.02343686,
+      "lua_end_to_end_ns_per_op": 22.896625
+    },
+    {
+      "name": "while_local_1m",
+      "group": "loops",
+      "work": 1000000,
+      "unit": "iterations",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 104,
+        "lua": 128
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 6.949708,
+        "p10_ms": 6.949708,
+        "median_ms": 7.331209,
+        "mean_ms": 7.262309571428572,
+        "p90_ms": 7.462708,
+        "max_ms": 7.562792,
+        "stdev_ms": 0.23029215897876776
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 6.83675,
+        "p10_ms": 6.83675,
+        "median_ms": 7.388208,
+        "mean_ms": 7.2732918571428575,
+        "p90_ms": 7.54675,
+        "max_ms": 7.552584,
+        "stdev_ms": 0.27808810287462526
+      },
+      "net_candy_ms": 4.826209,
+      "net_lua_ms": 4.990665999999999,
+      "ratio_median": 0.9922851386966908,
+      "ratio_net": 0.9670470834954696,
+      "candy_ops_per_s": 207201967.42412105,
+      "lua_ops_per_s": 200374058.29201958,
+      "candy_end_to_end_ops_per_s": 136403149.8760982,
+      "candy_end_to_end_ns_per_op": 7.331209,
+      "lua_end_to_end_ops_per_s": 135350818.4934696,
+      "lua_end_to_end_ns_per_op": 7.388208
+    },
+    {
+      "name": "for_local_500k",
+      "group": "loops",
+      "work": 500000,
+      "unit": "iterations",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 117,
+        "lua": 127
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 4.700083,
+        "p10_ms": 4.700083,
+        "median_ms": 4.875209,
+        "mean_ms": 4.9109938571428575,
+        "p90_ms": 5.150916,
+        "max_ms": 5.270875,
+        "stdev_ms": 0.20280883312577075
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 4.680833,
+        "p10_ms": 4.680833,
+        "median_ms": 4.842334,
+        "mean_ms": 4.897083428571428,
+        "p90_ms": 5.071875,
+        "max_ms": 5.22025,
+        "stdev_ms": 0.18079974354505923
+      },
+      "net_candy_ms": 2.370209,
+      "net_lua_ms": 2.444792,
+      "ratio_median": 1.0067890814636082,
+      "ratio_net": 0.9694931102523241,
+      "candy_ops_per_s": 210951861.20717627,
+      "lua_ops_per_s": 204516376.0352619,
+      "candy_end_to_end_ops_per_s": 102559705.64544001,
+      "candy_end_to_end_ns_per_op": 9.750418,
+      "lua_end_to_end_ops_per_s": 103255991.8419506,
+      "lua_end_to_end_ns_per_op": 9.684668
+    },
+    {
+      "name": "for_range_100k",
+      "group": "loops",
+      "work": 50000,
+      "unit": "iterations",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 288990,
+        "lua": 289017
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 3.690166,
+        "p10_ms": 3.690166,
+        "median_ms": 4.12775,
+        "mean_ms": 4.076994,
+        "p90_ms": 4.369208,
+        "max_ms": 4.379917,
+        "stdev_ms": 0.23604400076983226
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 4.541709,
+        "p10_ms": 4.541709,
+        "median_ms": 4.929542,
+        "mean_ms": 4.871571428571428,
+        "p90_ms": 5.110958,
+        "max_ms": 5.180708,
+        "stdev_ms": 0.23536490692955733
+      },
+      "net_candy_ms": 1.62275,
+      "net_lua_ms": 2.5319999999999996,
+      "ratio_median": 0.8373495955608047,
+      "ratio_net": 0.640896524486572,
+      "candy_ops_per_s": 30811893.39084887,
+      "lua_ops_per_s": 19747235.387045816,
+      "candy_end_to_end_ops_per_s": 12113136.696747625,
+      "candy_end_to_end_ns_per_op": 82.555,
+      "lua_end_to_end_ops_per_s": 10142930.113994364,
+      "lua_end_to_end_ns_per_op": 98.59084
+    },
+    {
+      "name": "calls_hot_global_500k",
+      "group": "calls",
+      "work": 500000,
+      "unit": "calls",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 132,
+        "lua": 161
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 9.904208,
+        "p10_ms": 9.904208,
+        "median_ms": 10.079917,
+        "mean_ms": 10.208035714285714,
+        "p90_ms": 10.386083,
+        "max_ms": 10.711125,
+        "stdev_ms": 0.26995886801337204
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 9.083041,
+        "p10_ms": 9.083041,
+        "median_ms": 9.2385,
+        "mean_ms": 9.424250142857144,
+        "p90_ms": 9.756459,
+        "max_ms": 10.110959,
+        "stdev_ms": 0.3460093528019267
+      },
+      "net_candy_ms": 7.574917,
+      "net_lua_ms": 6.8409580000000005,
+      "ratio_median": 1.0910772311522434,
+      "ratio_net": 1.1072889206453247,
+      "candy_ops_per_s": 66007323.9086316,
+      "lua_ops_per_s": 73089178.44547503,
+      "candy_end_to_end_ops_per_s": 49603583.04537626,
+      "candy_end_to_end_ns_per_op": 20.159834,
+      "lua_end_to_end_ops_per_s": 54121340.044379495,
+      "lua_end_to_end_ns_per_op": 18.477
+    },
+    {
+      "name": "calls_hot_local_500k",
+      "group": "calls",
+      "work": 500000,
+      "unit": "calls",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 132,
+        "lua": 167
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 9.22025,
+        "p10_ms": 9.22025,
+        "median_ms": 9.544417,
+        "mean_ms": 9.53030357142857,
+        "p90_ms": 9.72125,
+        "max_ms": 9.9675,
+        "stdev_ms": 0.24486166322281833
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 8.385458,
+        "p10_ms": 8.385458,
+        "median_ms": 8.783875,
+        "mean_ms": 8.717172571428572,
+        "p90_ms": 8.871875,
+        "max_ms": 8.960125,
+        "stdev_ms": 0.1864801300827342
+      },
+      "net_candy_ms": 7.039416999999999,
+      "net_lua_ms": 6.3863330000000005,
+      "ratio_median": 1.0865838823981442,
+      "ratio_net": 1.1022627539152747,
+      "candy_ops_per_s": 71028609.32943738,
+      "lua_ops_per_s": 78292190.52623783,
+      "candy_end_to_end_ops_per_s": 52386646.55997323,
+      "candy_end_to_end_ns_per_op": 19.088834,
+      "lua_end_to_end_ops_per_s": 56922485.8049551,
+      "lua_end_to_end_ns_per_op": 17.56775
+    },
+    {
+      "name": "calls_hot_parameter_500k",
+      "group": "calls",
+      "work": 500000,
+      "unit": "calls",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 144,
+        "lua": 173
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 9.204625,
+        "p10_ms": 9.204625,
+        "median_ms": 9.523,
+        "mean_ms": 9.539101285714285,
+        "p90_ms": 9.825667,
+        "max_ms": 9.90875,
+        "stdev_ms": 0.25970998980165455
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 8.34725,
+        "p10_ms": 8.34725,
+        "median_ms": 8.780625,
+        "mean_ms": 8.753238142857144,
+        "p90_ms": 8.933417,
+        "max_ms": 9.011291,
+        "stdev_ms": 0.21586718039071323
+      },
+      "net_candy_ms": 7.018,
+      "net_lua_ms": 6.383083000000001,
+      "ratio_median": 1.0845469428429069,
+      "ratio_net": 1.0994687050129222,
+      "candy_ops_per_s": 71245369.05101168,
+      "lua_ops_per_s": 78332053.64868355,
+      "candy_end_to_end_ops_per_s": 52504462.87934475,
+      "candy_end_to_end_ns_per_op": 19.046,
+      "lua_end_to_end_ops_per_s": 56943554.70140223,
+      "lua_end_to_end_ns_per_op": 17.56125
+    },
+    {
+      "name": "branch_chain_500k",
+      "group": "branches",
+      "work": 500000,
+      "unit": "iterations",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 192,
+        "lua": 224
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 6.867916,
+        "p10_ms": 6.867916,
+        "median_ms": 7.210125,
+        "mean_ms": 7.182833285714286,
+        "p90_ms": 7.422583,
+        "max_ms": 7.443042,
+        "stdev_ms": 0.21033497600508866
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 8.580917,
+        "p10_ms": 8.580917,
+        "median_ms": 8.775916,
+        "mean_ms": 8.830035714285714,
+        "p90_ms": 9.089416,
+        "max_ms": 9.100459,
+        "stdev_ms": 0.19872666521324084
+      },
+      "net_candy_ms": 4.705125,
+      "net_lua_ms": 6.378374000000001,
+      "ratio_median": 0.8215809039193173,
+      "ratio_net": 0.7376684089079755,
+      "candy_ops_per_s": 106267102.36178635,
+      "lua_ops_per_s": 78389884.3184799,
+      "candy_end_to_end_ops_per_s": 69346925.33069815,
+      "candy_end_to_end_ns_per_op": 14.42025,
+      "lua_end_to_end_ops_per_s": 56974109.59722039,
+      "lua_end_to_end_ns_per_op": 17.551832
+    },
+    {
+      "name": "break_continue_500k",
+      "group": "loops",
+      "work": 333334,
+      "unit": "iterations",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 188,
+        "lua": 239
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 5.120375,
+        "p10_ms": 5.120375,
+        "median_ms": 5.325125,
+        "mean_ms": 5.378131,
+        "p90_ms": 5.669917,
+        "max_ms": 5.749125,
+        "stdev_ms": 0.22682245330465603
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 5.267,
+        "p10_ms": 5.267,
+        "median_ms": 5.38225,
+        "mean_ms": 5.550274,
+        "p90_ms": 5.928167,
+        "max_ms": 5.997125,
+        "stdev_ms": 0.28357671116396604
+      },
+      "net_candy_ms": 2.820125,
+      "net_lua_ms": 2.984708,
+      "ratio_median": 0.9893864090296809,
+      "ratio_net": 0.9448579224500353,
+      "candy_ops_per_s": 118198306.81264128,
+      "lua_ops_per_s": 111680606.6121041,
+      "candy_end_to_end_ops_per_s": 62596464.871716626,
+      "candy_end_to_end_ns_per_op": 15.975343049313901,
+      "lua_end_to_end_ops_per_s": 61932091.59738028,
+      "lua_end_to_end_ns_per_op": 16.146717706564587
+    },
+    {
+      "name": "tail_self_100k",
+      "group": "calls",
+      "work": 100001,
+      "unit": "calls",
+      "measurement_kind": "hot_loop",
+      "binding": "aligned",
+      "binding_note": "Measured body bindings aligned; outer run is Candy global/Lua local.",
+      "source_bytes": {
+        "candy": 158,
+        "lua": 183
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 3.09625,
+        "p10_ms": 3.09625,
+        "median_ms": 3.274458,
+        "mean_ms": 3.3171844285714287,
+        "p90_ms": 3.394333,
+        "max_ms": 3.797583,
+        "stdev_ms": 0.22737479359409915
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 3.341667,
+        "p10_ms": 3.341667,
+        "median_ms": 3.477,
+        "mean_ms": 3.55953,
+        "p90_ms": 3.645209,
+        "max_ms": 3.929334,
+        "stdev_ms": 0.1819296789594422
+      },
+      "net_candy_ms": 0.7694580000000002,
+      "net_lua_ms": 1.0794579999999998,
+      "ratio_median": 0.9417480586712684,
+      "ratio_net": 0.7128188405662845,
+      "candy_ops_per_s": 129962908.95669416,
+      "lua_ops_per_s": 92640010.07913233,
+      "candy_end_to_end_ops_per_s": 30539710.69410571,
+      "candy_end_to_end_ns_per_op": 32.744252557474425,
+      "lua_end_to_end_ops_per_s": 28760713.258556224,
+      "lua_end_to_end_ns_per_op": 34.76965230347697
+    },
+    {
+      "name": "nested_functions_1k",
+      "group": "alloc",
+      "work": 1000,
+      "unit": "defs",
+      "measurement_kind": "hot_loop",
+      "binding": "asymmetric",
+      "binding_note": "Repeated def binding: Candy reuses a compile-time closure; Lua creates a closure at runtime. Not equivalent allocation pressure.",
+      "source_bytes": {
+        "candy": 164,
+        "lua": 199
+      },
+      "candy": {
+        "n": 7,
+        "min_ms": 2.345292,
+        "p10_ms": 2.345292,
+        "median_ms": 2.575541,
+        "mean_ms": 2.748226142857143,
+        "p90_ms": 3.224792,
+        "max_ms": 3.364333,
+        "stdev_ms": 0.3732708899022373
+      },
+      "lua": {
+        "n": 7,
+        "min_ms": 2.281375,
+        "p10_ms": 2.281375,
+        "median_ms": 2.478917,
+        "mean_ms": 2.6846725714285715,
+        "p90_ms": 3.1335,
+        "max_ms": 3.1905,
+        "stdev_ms": 0.336874090161234
+      },
+      "net_candy_ms": 0.07054099999999996,
+      "net_lua_ms": 0.08137499999999998,
+      "ratio_median": 1.0389783118999143,
+      "ratio_net": 0.8668632872503839,
+      "candy_ops_per_s": 14176152.87563262,
+      "lua_ops_per_s": 12288786.482334873,
+      "candy_end_to_end_ops_per_s": 388267.94059966435,
+      "candy_end_to_end_ns_per_op": 2575.541,
+      "lua_end_to_end_ops_per_s": 403401.9694890954,
+      "lua_end_to_end_ns_per_op": 2478.917
+    }
+  ],
+  "raw_ns": {
+    "empty": {
+      "candy": [
+        2645792,
+        2605000,
+        2565750,
+        2299250,
+        2329708,
+        2361791,
+        2622042,
+        2495292,
+        2814000,
+        2546542,
+        2685667,
+        3152292,
+        2820416,
+        2288042,
+        2475625,
+        2444584,
+        2335250,
+        2490000,
+        2949417,
+        2505250,
+        2266708,
+        2831959,
+        2505000,
+        2279042,
+        2493791,
+        2557958,
+        2507000,
+        2370209,
+        2766541,
+        2428667,
+        2251458
+      ],
+      "lua": [
+        2663041,
+        2592000,
+        2524584,
+        2473417,
+        2877584,
+        2351292,
+        2390500,
+        2397542,
+        2620958,
+        2782167,
+        3005875,
+        2798417,
+        2377250,
+        2386708,
+        2391875,
+        3175208,
+        2382917,
+        2326708,
+        2560792,
+        2313583,
+        2387334,
+        2388875,
+        2354083,
+        2308708,
+        2435083,
+        3301500,
+        2321083,
+        2309709,
+        2751375,
+        2362584,
+        2458458
+      ]
+    },
+    "fib_28": {
+      "candy": [
+        12385375,
+        12325000,
+        12354000,
+        11845125,
+        12306958,
+        12379000,
+        11942167,
+        12194000,
+        12449000,
+        12065875,
+        12568709
+      ],
+      "lua": [
+        14003542,
+        14334083,
+        13818416,
+        13825542,
+        13525750,
+        13998833,
+        14126542,
+        13854958,
+        13963208,
+        13903917,
+        24765875
+      ]
+    },
+    "fib_30": {
+      "candy": [
+        27049458,
+        27571666,
+        27184000,
+        27734625,
+        27511000,
+        27709500,
+        27953167,
+        27530833,
+        27376041,
+        27363666,
+        27630125
+      ],
+      "lua": [
+        32303000,
+        32427666,
+        31819583,
+        31867500,
+        32289333,
+        32887417,
+        32918417,
+        31795625,
+        32366083,
+        31783042,
+        32250917
+      ]
+    },
+    "fib_32": {
+      "candy": [
+        67583833,
+        67292083,
+        67677000,
+        66501166,
+        68028209,
+        67621500,
+        68052958,
+        67785333,
+        68117458,
+        67156208,
+        67633167
+      ],
+      "lua": [
+        79913375,
+        79389334,
+        80306041,
+        78873209,
+        79103292,
+        80141208,
+        81377708,
+        80245500,
+        81764750,
+        79889833,
+        79842833
+      ]
+    },
+    "fib_34": {
+      "candy": [
+        171087042,
+        171539541,
+        171119583,
+        170838416,
+        172036917,
+        172668042,
+        171295917,
+        172593541,
+        173123459,
+        171357292,
+        172742209
+      ],
+      "lua": [
+        202138541,
+        200926292,
+        201750167,
+        205727167,
+        201945250,
+        203939333,
+        205364917,
+        202659875,
+        203500416,
+        208630708,
+        205644833
+      ]
+    },
+    "fib_global_32": {
+      "candy": [
+        67856417,
+        68173333,
+        67867250,
+        67465667,
+        68086458,
+        68284833,
+        67904708,
+        67953500,
+        68182625,
+        67614834,
+        68664167
+      ],
+      "lua": [
+        94175750,
+        91509167,
+        91757750,
+        90765791,
+        92031584,
+        91494208,
+        91743208,
+        91798792,
+        94242459,
+        88596209,
+        93984125
+      ]
+    },
+    "fib_alias_30": {
+      "candy": [
+        37236958,
+        37570750,
+        37127667,
+        36793667,
+        37123000,
+        37008500,
+        37428875,
+        75499292,
+        37147834,
+        37736292,
+        37107625
+      ],
+      "lua": [
+        37073208,
+        36715417,
+        36326792,
+        37480000,
+        36945125,
+        36323417,
+        35876083,
+        37468291,
+        37684708,
+        36222458,
+        37135167
+      ]
+    },
+    "calls_100k": {
+      "candy": [
+        11185667,
+        11122167,
+        11108083,
+        11021917,
+        10589458,
+        11223209,
+        10975666,
+        12472917,
+        10806917,
+        10756958,
+        10993500
+      ],
+      "lua": [
+        12590375,
+        12659958,
+        12909958,
+        12288500,
+        12749875,
+        12529334,
+        12186333,
+        14033542,
+        12633041,
+        12497500,
+        12919959
+      ]
+    },
+    "calls_200k": {
+      "candy": [
+        18569417,
+        19006042,
+        18455958,
+        18453208,
+        19272084,
+        18487167,
+        18471958,
+        18898792,
+        18447375,
+        18979292,
+        18613833
+      ],
+      "lua": [
+        22811708,
+        22119375,
+        22032333,
+        21636125,
+        21825875,
+        21868667,
+        22304958,
+        23467792,
+        21772667,
+        21735250,
+        21493250
+      ]
+    },
+    "calls_400k": {
+      "candy": [
+        34468292,
+        34812292,
+        34585417,
+        34008833,
+        35198417,
+        34151292,
+        34415417
+      ],
+      "lua": [
+        41091334,
+        41054291,
+        41011000,
+        41044166,
+        40615666,
+        41579834,
+        40799292
+      ]
+    },
+    "calls_local_200k": {
+      "candy": [
+        19162416,
+        19112167,
+        18909042,
+        18427917,
+        19150125,
+        18543125,
+        19010708,
+        19338916,
+        18572625,
+        18622917,
+        18883875
+      ],
+      "lua": [
+        20019375,
+        20287083,
+        19890792,
+        19828958,
+        19881458,
+        20135458,
+        19909584,
+        19813375,
+        20036125,
+        20308833,
+        20310791
+      ]
+    },
+    "mutual_10k": {
+      "candy": [
+        12325917,
+        12719792,
+        12061917,
+        11970750,
+        11745750,
+        11918667,
+        12097750
+      ],
+      "lua": [
+        11128917,
+        10656291,
+        10831917,
+        9666042,
+        11200125,
+        10005750,
+        10620375
+      ]
+    },
+    "globals_100k": {
+      "candy": [
+        13009917,
+        12979208,
+        12620917,
+        12826166,
+        12568916,
+        12919083,
+        12886250,
+        12511833,
+        13123125,
+        12869334,
+        12724792
+      ],
+      "lua": [
+        17321750,
+        16832084,
+        16952125,
+        16619667,
+        17045209,
+        16730583,
+        17051375,
+        17198125,
+        17115542,
+        16963125,
+        16960458
+      ]
+    },
+    "globals_200k": {
+      "candy": [
+        23105542,
+        22606708,
+        23596166,
+        22515500,
+        26125041,
+        22411875,
+        23133125,
+        23244416,
+        22938750,
+        22806125,
+        23612667
+      ],
+      "lua": [
+        31549875,
+        31206875,
+        31735375,
+        31764583,
+        66211125,
+        31752917,
+        31342167,
+        31717167,
+        31461584,
+        31425791,
+        31686875
+      ]
+    },
+    "globals_400k": {
+      "candy": [
+        42045541,
+        43016334,
+        42397541,
+        43221209,
+        46098667,
+        42919416,
+        42121417
+      ],
+      "lua": [
+        59759375,
+        59035042,
+        59962500,
+        59917083,
+        60715750,
+        60183958,
+        60318416
+      ]
+    },
+    "arith_100k": {
+      "candy": [
+        7019500,
+        7397167,
+        7485416,
+        7118917,
+        6813000,
+        7724625,
+        6756792,
+        6885167,
+        6880583,
+        6805250,
+        7217250
+      ],
+      "lua": [
+        10034542,
+        9717958,
+        9405542,
+        9083042,
+        9390833,
+        8795833,
+        9441875,
+        9140042,
+        9442667,
+        9048833,
+        8972375
+      ]
+    },
+    "arith_200k": {
+      "candy": [
+        11021416,
+        11076084,
+        11010000,
+        10921292,
+        10882209,
+        10896083,
+        10341291,
+        10305209,
+        10809333,
+        10300667,
+        10298333
+      ],
+      "lua": [
+        15280709,
+        15196792,
+        14904625,
+        14712334,
+        14992375,
+        15100666,
+        15136250,
+        14991458,
+        14954083,
+        15026333,
+        14983500
+      ]
+    },
+    "arith_400k": {
+      "candy": [
+        19123583,
+        18408250,
+        19173583,
+        18724208,
+        19104709,
+        18314875,
+        18750041
+      ],
+      "lua": [
+        27264291,
+        27325125,
+        28289083,
+        27856083,
+        27078083,
+        28014542,
+        27440458
+      ]
+    },
+    "compile_50k": {
+      "candy": [
+        10593792,
+        10836000,
+        10586333,
+        9598041,
+        10146125,
+        9719625,
+        10349084,
+        9885875,
+        10029084
+      ],
+      "lua": [
+        12336042,
+        12790500,
+        12448291,
+        12289542,
+        12125584,
+        12430958,
+        12289292,
+        12170541,
+        11668666
+      ]
+    },
+    "compile_100k": {
+      "candy": [
+        17657583,
+        18207666,
+        23471375,
+        17435125,
+        17377292,
+        17451500,
+        17306167,
+        17640500,
+        17630791
+      ],
+      "lua": [
+        21236250,
+        22558500,
+        21494917,
+        22290917,
+        20796791,
+        21353916,
+        21136375,
+        21404459,
+        21669791
+      ]
+    },
+    "compile_200k": {
+      "candy": [
+        34332666,
+        77771084,
+        40217209,
+        33410333,
+        32792542,
+        35684458,
+        33017417
+      ],
+      "lua": [
+        41408750,
+        41472042,
+        40869125,
+        41013458,
+        40932875,
+        41334750,
+        41007833
+      ]
+    },
+    "deep_60": {
+      "candy": [
+        3045125,
+        5142958,
+        3308375,
+        3152333,
+        2729875
+      ],
+      "lua": [
+        3537833,
+        3439083,
+        3122250,
+        2671625,
+        3559708
+      ]
+    },
+    "closures_100k": {
+      "candy": [
+        59655458,
+        60599708,
+        58524000,
+        60940208,
+        59735375,
+        61167167,
+        61946083
+      ],
+      "lua": [
+        83004041,
+        87311083,
+        80984750,
+        88143875,
+        81504500,
+        84125417,
+        82095292
+      ]
+    },
+    "calls_nested_local_200k": {
+      "candy": [
+        18354958,
+        18930375,
+        18214042,
+        19589667,
+        18590167,
+        19004667,
+        19333833
+      ],
+      "lua": [
+        21334000,
+        20791584,
+        20931625,
+        20937875,
+        21635209,
+        20702625,
+        21410042
+      ]
+    },
+    "while_global_1m": {
+      "candy": [
+        21623208,
+        22258125,
+        21614333,
+        21776125,
+        21416542,
+        21479542,
+        21495709
+      ],
+      "lua": [
+        22967542,
+        22747917,
+        22378792,
+        24144125,
+        25110375,
+        22896625,
+        21912291
+      ]
+    },
+    "while_local_1m": {
+      "candy": [
+        7562792,
+        7453208,
+        7462708,
+        7331209,
+        6949708,
+        7065625,
+        7010917
+      ],
+      "lua": [
+        7388208,
+        7459167,
+        6886917,
+        6836750,
+        7552584,
+        7242667,
+        7546750
+      ]
+    },
+    "for_local_500k": {
+      "candy": [
+        5150916,
+        4878541,
+        4786833,
+        4714500,
+        5270875,
+        4875209,
+        4700083
+      ],
+      "lua": [
+        4842334,
+        4955250,
+        4680833,
+        5220250,
+        4758875,
+        4750167,
+        5071875
+      ]
+    },
+    "for_range_100k": {
+      "candy": [
+        4144167,
+        4369208,
+        3875625,
+        3952125,
+        4127750,
+        4379917,
+        3690166
+      ],
+      "lua": [
+        5110958,
+        4929542,
+        5033875,
+        5180708,
+        4541709,
+        4646583,
+        4657625
+      ]
+    },
+    "calls_hot_global_500k": {
+      "candy": [
+        9904208,
+        10711125,
+        9967833,
+        10375125,
+        10079917,
+        10031959,
+        10386083
+      ],
+      "lua": [
+        10110959,
+        9083041,
+        9238500,
+        9167042,
+        9756459,
+        9382667,
+        9231083
+      ]
+    },
+    "calls_hot_local_500k": {
+      "candy": [
+        9551250,
+        9967500,
+        9721250,
+        9225333,
+        9544417,
+        9482125,
+        9220250
+      ],
+      "lua": [
+        8960125,
+        8783875,
+        8688584,
+        8806125,
+        8524166,
+        8385458,
+        8871875
+      ]
+    },
+    "calls_hot_parameter_500k": {
+      "candy": [
+        9908750,
+        9396208,
+        9523000,
+        9689667,
+        9225792,
+        9204625,
+        9825667
+      ],
+      "lua": [
+        8780625,
+        8933417,
+        8347250,
+        8588625,
+        9011291,
+        8926042,
+        8685417
+      ]
+    },
+    "branch_chain_500k": {
+      "candy": [
+        7204917,
+        7443042,
+        6897375,
+        6867916,
+        7422583,
+        7233875,
+        7210125
+      ],
+      "lua": [
+        9100459,
+        8775916,
+        8766125,
+        9089416,
+        8580917,
+        8584792,
+        8912625
+      ]
+    },
+    "break_continue_500k": {
+      "candy": [
+        5669917,
+        5325125,
+        5749125,
+        5393250,
+        5120375,
+        5178875,
+        5210250
+      ],
+      "lua": [
+        5634042,
+        5997125,
+        5267000,
+        5336084,
+        5307250,
+        5928167,
+        5382250
+      ]
+    },
+    "tail_self_100k": {
+      "candy": [
+        3394333,
+        3274458,
+        3099792,
+        3389250,
+        3168625,
+        3096250,
+        3797583
+      ],
+      "lua": [
+        3637667,
+        3645209,
+        3341667,
+        3440208,
+        3929334,
+        3477000,
+        3445625
+      ]
+    },
+    "nested_functions_1k": {
+      "candy": [
+        3364333,
+        2815500,
+        2431625,
+        2480500,
+        2345292,
+        3224792,
+        2575541
+      ],
+      "lua": [
+        2816375,
+        3133500,
+        3190500,
+        2281375,
+        2425500,
+        2466541,
+        2478917
+      ]
+    }
+  }
+}

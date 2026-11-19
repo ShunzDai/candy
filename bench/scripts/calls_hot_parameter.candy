@@ -1,0 +1,13 @@
+def id(n)
+  return n
+end
+def run(callee)
+i = 0
+sum = 0
+while (i < $k)
+  sum = sum + callee(i)
+  i = i + 1
+end
+return sum
+end
+print(run(id))

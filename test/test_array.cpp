@@ -46,3 +46,66 @@ TEST(array, reuse) {
   EXPECT_EQ(a, b);
   candy_gc_deinit(&gc);
 }
+
+TEST(array, growth_reserve_and_resize_preserve_elements) {
+  candy_gc_t gc{};
+  ASSERT_EQ(candy_gc_init(&gc, (candy_handler_t)candy_array_handler,
+                          test_allocator, nullptr), CANDY_OK);
+  auto *self = candy_array_create(&gc, nullptr, CANDY_TYPE_INTEGER);
+  ASSERT_NE(self, nullptr);
+  EXPECT_EQ(candy_array_size(self), 0U);
+  candy_integer_t expected[300];
+  for (size_t index = 0; index < 300; ++index) {
+    expected[index] = static_cast<candy_integer_t>(index) * 3 - 200;
+    ASSERT_EQ(candy_array_append(self, &gc, nullptr, &expected[index], 1), CANDY_OK);
+  }
+  ASSERT_EQ(candy_array_size(self), 300U);
+  EXPECT_GE(candy_array_capacity(self), 300U);
+  EXPECT_MEMEQ(candy_array_data(self), expected, sizeof(expected));
+  candy_array_reserve(self, &gc, nullptr, 600);
+  EXPECT_GE(candy_array_capacity(self), 600U);
+  EXPECT_EQ(candy_array_size(self), 300U);
+  EXPECT_MEMEQ(candy_array_data(self), expected, sizeof(expected));
+  candy_array_resize(self, &gc, nullptr, 10);
+  ASSERT_EQ(candy_array_size(self), 10U);
+  EXPECT_MEMEQ(candy_array_data(self), expected, 10 * sizeof(expected[0]));
+  candy_array_resize(self, &gc, nullptr, 0);
+  ASSERT_EQ(candy_array_append(self, &gc, nullptr, expected, 0), CANDY_OK);
+  EXPECT_EQ(candy_array_size(self), 0U);
+  ASSERT_EQ(candy_array_append(self, &gc, nullptr, expected, 3), CANDY_OK);
+  ASSERT_EQ(candy_array_size(self), 3U);
+  EXPECT_MEMEQ(candy_array_data(self), expected, 3 * sizeof(expected[0]));
+  ASSERT_EQ(candy_gc_deinit(&gc), CANDY_OK);
+  EXPECT_EQ(candy_memory_used(candy_gc_memory(&gc)), 0U);
+}
+
+TEST(array, value_append_get_set) {
+  candy_gc_t gc{};
+  candy_gc_init(&gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
+  candy_array_t *self = candy_array_create(&gc, nullptr, CANDY_TYPE_WRAP);
+  candy_wrap_t value{};
+  for (candy_integer_t index = 0; index < 3; ++index) {
+    candy_wrap_set_integer(&value, index * 10);
+    ASSERT_EQ(candy_array_append(self, &gc, nullptr, &value, 1), CANDY_OK);
+  }
+  EXPECT_EQ(candy_array_size(self), 3U);
+  EXPECT_EQ(candy_wrap_get_integer(candy_array_get(self, 1)), 10);
+  candy_wrap_set_integer(&value, 99);
+  ASSERT_EQ(candy_array_set(self, &gc, nullptr, 1, &value), CANDY_OK);
+  EXPECT_EQ(candy_wrap_get_integer(candy_array_get(self, 1)), 99);
+  /* Dense only: an index past the end is rejected instead of growing holes. */
+  EXPECT_NE(candy_array_set(self, &gc, nullptr, 5, &value), CANDY_OK);
+  EXPECT_EQ(candy_wrap_type(candy_array_get(self, 5)), CANDY_TYPE_NULL);
+  candy_gc_deinit(&gc);
+}
+
+TEST(array, literal_is_a_value_array) {
+  candy_state_t *state = candy_new_state_default();
+  ASSERT_NE(state, nullptr);
+  const char source[] = R"(a = [1, "two", 3.5]
+return a[1]
+)";
+  ASSERT_EQ(candy_dostring(state, source, sizeof(source) - 1), CANDY_OK);
+  EXPECT_EQ(candy_state_get_type(state, -1), CANDY_TYPE_CHAR);
+  candy_state_close(state);
+}

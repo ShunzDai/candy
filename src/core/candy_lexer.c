@@ -40,14 +40,18 @@ static inline void _reset(candy_lexer_t *self) {
 
 static inline char _view(candy_lexer_t *self, size_t ahead) {
   char ch = 0;
-  int res = candy_buffer_view(&self->buff, candy_gc_memory(self->gc), self->ctx, &ch, ahead);
-  lex_assert(res >= 0, "abnormal input stream");
+  if (!candy_buffer_peek(&self->buff, ahead, &ch)) {
+    int res = candy_buffer_view(&self->buff, candy_gc_memory(self->gc), self->ctx, &ch, ahead);
+    lex_assert(res >= 0, "abnormal input stream");
+  }
   return ch;
 }
 
 static inline void _readn(candy_lexer_t *self, char str[], size_t size) {
-  int res = candy_buffer_read(&self->buff, candy_gc_memory(self->gc), self->ctx, str, size);
-  lex_assert(res >= 0, "abnormal input stream");
+  if (!candy_buffer_take(&self->buff, size, str)) {
+    int res = candy_buffer_read(&self->buff, candy_gc_memory(self->gc), self->ctx, str, size);
+    lex_assert(res >= 0, "abnormal input stream");
+  }
   self->dbg.column += size;
 }
 
@@ -94,7 +98,8 @@ static inline bool _check_next(candy_lexer_t *self, bool (*check)(char), void (*
  * @retval boolean
  */
 static inline bool _check_dual(candy_lexer_t *self, const char str[], void (*pred)(candy_lexer_t *)) {
-  return (_view(self, 0) == str[0] || _view(self, 0) == str[1]) ? pred(self), true : false;
+  char ch = _view(self, 0);
+  return (ch == str[0] || ch == str[1]) ? pred(self), true : false;
 }
 
 /**
@@ -183,6 +188,9 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
   char first = _view(self, 0);
   candy_tokens_t token = TK_INTEGER;
   bool(*check)(char) = is_dec;
+  /* Digits are accumulated as they are scanned, so a decimal integer does not
+   * have to be parsed out of the token text a second time. */
+  uint64_t value = (uint64_t)(first - '0');
   _save(self);
   if (first == '0') {
     if (_check_dual(self, "Xx", _skip)) {
@@ -195,19 +203,22 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
     }
   }
   while (1) {
-    if (check(_view(self, 0)))
+    char ch = _view(self, 0);
+    if (check(ch)) {
+      value = value * 10 + (uint64_t)(ch - '0');
       _save(self);
+    }
     else if (_check_dual(self, "Ee", _save)) {
       lex_assert(check == is_dec, "invalid float number");
       _check_dual(self, "+-", _save);
       token = TK_FLOAT;
     }
-    else if (_view(self, 0) == '.') {
+    else if (ch == '.') {
       lex_assert(check == is_dec, "invalid float number");
       _save(self);
       token = TK_FLOAT;
     }
-    else if (!is_alpha(_view(self, 0))) {
+    else if (!is_alpha(ch)) {
       break;
     }
     else {
@@ -217,7 +228,13 @@ static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
   char *end = NULL;
   if (token == TK_INTEGER) {
     int base = check == is_dec ? first == '0' ? 8 : 10 : check == is_hex ? 16 : 2;
-    meta->i = (candy_integer_t)strntol(_head(self), _size(self), &end, base);
+    if (base == 10 && _size(self) <= 19 && value <= (uint64_t)INT64_MAX) {
+      meta->i = (candy_integer_t)value;
+      end = (char *)_head(self) + _size(self);
+    }
+    else {
+      meta->i = (candy_integer_t)strntol(_head(self), _size(self), &end, base);
+    }
   }
   else {
     meta->f = (candy_float_t)strntod(_head(self), _size(self), &end);
@@ -239,7 +256,8 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta) {
   /* skip " or ' */
   _skipn(self, multiline ? 3 : 1);
   while (1) {
-    switch (_view(self, 0)) {
+    char ch = _view(self, 0);
+    switch (ch) {
       case '\0':
         lex_assert(false, "unexpected end of string");
         return TK_ERR;
@@ -253,7 +271,7 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta) {
         break;
       /* normal character */
       default:
-        if (_view(self, 0) == del && (!multiline || (_view(self, 1) == del && _view(self, 2) == del)))
+        if (ch == del && (!multiline || (_view(self, 1) == del && _view(self, 2) == del)))
           goto exit;
         _save(self);
         break;
@@ -285,7 +303,8 @@ static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_meta_t *m
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
   _reset(self);
   while (1) {
-    switch (_view(self, 0)) {
+    char ch = _view(self, 0);
+    switch (ch) {
       case '\0':
         return TK_EOS;
       case '\r': case '\n':
@@ -295,8 +314,9 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
         _skip(self);
         break;
       case '!':
-        lex_assert(_view(self, 1) == '=', "unknown character '%c'(0x%02X)", _view(self, 1), _view(self, 1));
-        goto op2;
+        if (_view(self, 1) == '=')
+          goto op2;
+        goto op1;
       /* 'o', 'o=', 'oo' */
       case '>': case '<':
         /* 'oo' */
@@ -304,10 +324,15 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
           goto op2;
         /* fall through */
       /* 'o', 'o=' */
-      case '=': case '&': case '|': case '^':
+      case '=': case '^':
       case '+': case '-': case '*': case '/': case '%':
         /* 'o=' */
         if (_view(self, 1) == '=')
+          goto op2;
+        /* fall through */
+      /* '&', '&=', '&&' ; '|', '|=', '||' */
+      case '&': case '|':
+        if (_view(self, 1) == '=' || _view(self, 1) == _view(self, 0))
           goto op2;
         /* fall through */
       /* 'o' */
@@ -333,9 +358,9 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
           break;
         lex_assert(false, "unexpected character after line continuation character");
       default:
-        if (is_dec(_view(self, 0)))
+        if (is_dec(ch))
           return _get_number(self, meta);
-        else if (is_alpha(_view(self, 0)))
+        else if (is_alpha(ch))
           return _get_ident_or_keyword(self, meta);
         lex_assert(false, "unrecognized token");
     }

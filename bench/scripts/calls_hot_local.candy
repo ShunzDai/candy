@@ -1,0 +1,13 @@
+def run()
+def id(n)
+  return n
+end
+i = 0
+sum = 0
+while (i < $k)
+  sum = sum + id(i)
+  i = i + 1
+end
+return sum
+end
+print(run())

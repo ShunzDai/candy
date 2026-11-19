@@ -95,7 +95,7 @@ Remote SSH / Dev Containers 中需要在远程扩展宿主上安装 Candy。
 
 ```sh
 npm ci && npm test &&
-  code --extensionDevelopmentPath="$PWD" ../../examples/sudoku.cdy
+  code --extensionDevelopmentPath="$PWD" path/to/your.candy
 ```
 
 测试覆盖真实 TextMate 分词、语言配置、片段和运行命令（保存失败、信任限制、

@@ -36,10 +36,16 @@ struct candy_gc {
   candy_object_t *list;
   candy_object_t *gray;
   candy_object_t *glob;
-  candy_object_t *prim;
   candy_gc_fsm_t fsm;
+  size_t threshold;
+  size_t pool_used;
   uint8_t pool_cap;
 };
+
+/* Opaque lookup key handed to an interned object's EVT_COMPARE handler: it
+ * describes the payload (in bytes) the caller is looking for. `data` is NULL
+ * when the caller only needs a free slot, so nothing can compare equal. */
+typedef struct candy_gc_key candy_gc_key_t;
 
 candy_err_t candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_allocator_t alloc, void *arg);
 
@@ -55,7 +61,13 @@ candy_table_t *candy_gc_add_global(candy_gc_t *self, candy_excep_t *ctx, size_t 
 
 candy_object_t *candy_gc_find(candy_gc_t *self, candy_types_t type, const void *data, size_t size, candy_hash_t hash);
 
+candy_err_t candy_gc_mark(candy_gc_t *self, candy_object_t *obj);
+
 candy_err_t candy_gc_step(candy_gc_t *self);
+
+const void *candy_gc_key_data(const candy_gc_key_t *self);
+
+size_t candy_gc_key_size(const candy_gc_key_t *self);
 
 candy_err_t candy_gc_full(candy_gc_t *self);
 
@@ -71,10 +83,6 @@ static inline candy_object_t *candy_gc_gray_swap(candy_gc_t *self, candy_object_
   candy_object_t *gray = self->gray;
   self->gray = obj;
   return gray;
-}
-
-static inline candy_state_t *candy_gc_primary(const candy_gc_t *self) {
-  return (candy_state_t *)self->prim;
 }
 
 static inline candy_table_t *candy_gc_global(const candy_gc_t *self) {

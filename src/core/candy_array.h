@@ -44,6 +44,11 @@ void candy_array_resize(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx,
 
 candy_err_t candy_array_append(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, const void *data, size_t size);
 
+/* Value arrays (`CANDY_TYPE_WRAP`): dense sequence, index is the key. */
+const candy_wrap_t *candy_array_get(const candy_array_t *self, size_t index);
+
+candy_err_t candy_array_set(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t index, const candy_wrap_t *value);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

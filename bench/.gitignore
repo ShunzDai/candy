@@ -1,0 +1,10 @@
+cases/
+__pycache__/
+*.pyc
+
+# intermediate benchmark results; keep only the final charts' inputs
+*.json
+*.csv
+!macos_time.json
+!macos_time.csv
+!macos_memory.json

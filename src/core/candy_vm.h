@@ -32,12 +32,14 @@ struct candy_callinfo {
   candy_callinfo_t *next;
   ptrdiff_t bos;
   ptrdiff_t tos;
-  candy_inst_t *pc;
+  size_t pc;
+  const candy_vector_t *inst;
+  const candy_wrap_t *constants;
 };
 
 struct candy_vm {
   candy_vector_t s;
-  candy_callinfo_t base_ci;
+  candy_callinfo_t base;
   candy_callinfo_t *ci;
   candy_gc_t *gc;
 };
@@ -47,8 +49,6 @@ candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc, candy_excep_t *ctx);
 candy_err_t candy_vm_deinit(candy_vm_t *self);
 
 candy_err_t candy_vm_call(candy_vm_t *self, candy_excep_t *ctx, int narg, int nres, candy_state_t *co, candy_object_t **out);
-
-candy_err_t candy_vm_pop(candy_vm_t *self, candy_excep_t *ctx, size_t n);
 
 candy_err_t candy_vm_push(candy_vm_t *self, candy_excep_t *ctx, const candy_wrap_t *wrap, size_t n);
 

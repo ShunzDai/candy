@@ -69,22 +69,38 @@ static inline candy_err_t candy_vector_deinit(candy_vector_t *self, candy_memory
   return CANDY_OK;
 }
 
+static inline size_t candy_vector_next_capacity(size_t cap, size_t need) {
+  if (need <= cap)
+    return cap;
+  size_t next = cap ? cap : 1;
+  while (next < need) {
+    size_t step = next >> 1;
+    if (step == 0)
+      step = 1;
+    if (next > SIZE_MAX - step)
+      return need;
+    next += step;
+  }
+  return next;
+}
+
 static inline void candy_vector_reserve(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, size_t capacity, size_t cell) {
   size_t cap = candy_vector_capacity(self);
   if (capacity <= cap)
     return;
+  size_t next = candy_vector_next_capacity(cap, capacity);
   candy_vector_set_data(self, candy_memory_realloc(mem, ctx, candy_vector_data(self),
     cell * cap,
-    cell * capacity
+    cell * next
   ));
-  candy_vector_set_capacity(self, capacity);
+  candy_vector_set_capacity(self, next);
 }
 
 static inline candy_err_t candy_vector_append(candy_vector_t *self, candy_memory_t *mem, candy_excep_t *ctx, const void *data, size_t size, size_t cell) {
   size_t cap = candy_vector_capacity(self);
   size_t sz = candy_vector_size(self);
   if (cap < size + sz) {
-    candy_vector_reserve(self, mem, ctx, cap + size, cell);
+    candy_vector_reserve(self, mem, ctx, sz + size, cell);
   }
   if (size && data) {
     memcpy((uint8_t *)candy_vector_data(self) + cell * sz, data, cell * size);

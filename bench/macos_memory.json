@@ -1,0 +1,503 @@
+{
+  "empty": {
+    "candy": {
+      "rss_bytes": 1523712,
+      "peak_bytes": 950560,
+      "samples": [
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1523712,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1523712,
+          "peak_bytes": 950560
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 1671168,
+      "peak_bytes": 950560,
+      "samples": [
+        {
+          "rss_bytes": 1671168,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1671168,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1671168,
+          "peak_bytes": 950560
+        }
+      ]
+    }
+  },
+  "fib_34": {
+    "candy": {
+      "rss_bytes": 1556480,
+      "peak_bytes": 950560,
+      "samples": [
+        {
+          "rss_bytes": 1556480,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1556480,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1589248,
+          "peak_bytes": 966944
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 1703936,
+      "peak_bytes": 983328,
+      "samples": [
+        {
+          "rss_bytes": 1703936,
+          "peak_bytes": 983328
+        },
+        {
+          "rss_bytes": 1720320,
+          "peak_bytes": 999712
+        },
+        {
+          "rss_bytes": 1703936,
+          "peak_bytes": 983328
+        }
+      ]
+    }
+  },
+  "arith_400k": {
+    "candy": {
+      "rss_bytes": 3293184,
+      "peak_bytes": 2670880,
+      "samples": [
+        {
+          "rss_bytes": 3293184,
+          "peak_bytes": 2670880
+        },
+        {
+          "rss_bytes": 3293184,
+          "peak_bytes": 2670880
+        },
+        {
+          "rss_bytes": 3293184,
+          "peak_bytes": 2670880
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 8404992,
+      "peak_bytes": 7717200,
+      "samples": [
+        {
+          "rss_bytes": 8404992,
+          "peak_bytes": 7717200
+        },
+        {
+          "rss_bytes": 8355840,
+          "peak_bytes": 7668048
+        },
+        {
+          "rss_bytes": 8404992,
+          "peak_bytes": 7717200
+        }
+      ]
+    }
+  },
+  "globals_400k": {
+    "candy": {
+      "rss_bytes": 8388608,
+      "peak_bytes": 7782712,
+      "samples": [
+        {
+          "rss_bytes": 8388608,
+          "peak_bytes": 7782712
+        },
+        {
+          "rss_bytes": 8388608,
+          "peak_bytes": 7782712
+        },
+        {
+          "rss_bytes": 8388608,
+          "peak_bytes": 7782712
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 11894784,
+      "peak_bytes": 11206992,
+      "samples": [
+        {
+          "rss_bytes": 11894784,
+          "peak_bytes": 11206992
+        },
+        {
+          "rss_bytes": 11894784,
+          "peak_bytes": 11206992
+        },
+        {
+          "rss_bytes": 11845632,
+          "peak_bytes": 11157840
+        }
+      ]
+    }
+  },
+  "calls_400k": {
+    "candy": {
+      "rss_bytes": 8388608,
+      "peak_bytes": 7782712,
+      "samples": [
+        {
+          "rss_bytes": 8372224,
+          "peak_bytes": 7766328
+        },
+        {
+          "rss_bytes": 8388608,
+          "peak_bytes": 7782712
+        },
+        {
+          "rss_bytes": 8404992,
+          "peak_bytes": 7799096
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 10256384,
+      "peak_bytes": 9568592,
+      "samples": [
+        {
+          "rss_bytes": 10190848,
+          "peak_bytes": 9503056
+        },
+        {
+          "rss_bytes": 10256384,
+          "peak_bytes": 9568592
+        },
+        {
+          "rss_bytes": 10256384,
+          "peak_bytes": 9568592
+        }
+      ]
+    }
+  },
+  "compile_200k": {
+    "candy": {
+      "rss_bytes": 39567360,
+      "peak_bytes": 38994256,
+      "samples": [
+        {
+          "rss_bytes": 39567360,
+          "peak_bytes": 38994256
+        },
+        {
+          "rss_bytes": 39567360,
+          "peak_bytes": 38994256
+        },
+        {
+          "rss_bytes": 39583744,
+          "peak_bytes": 39010640
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 27377664,
+      "peak_bytes": 26689872,
+      "samples": [
+        {
+          "rss_bytes": 27377664,
+          "peak_bytes": 26689872
+        },
+        {
+          "rss_bytes": 27394048,
+          "peak_bytes": 26706256
+        },
+        {
+          "rss_bytes": 27377664,
+          "peak_bytes": 26689872
+        }
+      ]
+    }
+  },
+  "closures_100k": {
+    "candy": {
+      "rss_bytes": 46514176,
+      "peak_bytes": 45941096,
+      "samples": [
+        {
+          "rss_bytes": 46514176,
+          "peak_bytes": 45924688
+        },
+        {
+          "rss_bytes": 46563328,
+          "peak_bytes": 45990248
+        },
+        {
+          "rss_bytes": 46514176,
+          "peak_bytes": 45941096
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 44908544,
+      "peak_bytes": 44237184,
+      "samples": [
+        {
+          "rss_bytes": 44859392,
+          "peak_bytes": 44171624
+        },
+        {
+          "rss_bytes": 44908544,
+          "peak_bytes": 44237184
+        },
+        {
+          "rss_bytes": 44941312,
+          "peak_bytes": 44253544
+        }
+      ]
+    }
+  },
+  "calls_nested_local_200k": {
+    "candy": {
+      "rss_bytes": 5996544,
+      "peak_bytes": 5390648,
+      "samples": [
+        {
+          "rss_bytes": 5996544,
+          "peak_bytes": 5390648
+        },
+        {
+          "rss_bytes": 5996544,
+          "peak_bytes": 5390648
+        },
+        {
+          "rss_bytes": 5996544,
+          "peak_bytes": 5390648
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 7323648,
+      "peak_bytes": 6635856,
+      "samples": [
+        {
+          "rss_bytes": 7340032,
+          "peak_bytes": 6652240
+        },
+        {
+          "rss_bytes": 7323648,
+          "peak_bytes": 6635856
+        },
+        {
+          "rss_bytes": 7323648,
+          "peak_bytes": 6635856
+        }
+      ]
+    }
+  },
+  "while_local_1m": {
+    "candy": {
+      "rss_bytes": 1540096,
+      "peak_bytes": 950560,
+      "samples": [
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 1687552,
+      "peak_bytes": 966944,
+      "samples": [
+        {
+          "rss_bytes": 1687552,
+          "peak_bytes": 966944
+        },
+        {
+          "rss_bytes": 1687552,
+          "peak_bytes": 966944
+        },
+        {
+          "rss_bytes": 1687552,
+          "peak_bytes": 966944
+        }
+      ]
+    }
+  },
+  "calls_hot_local_500k": {
+    "candy": {
+      "rss_bytes": 1540096,
+      "peak_bytes": 950560,
+      "samples": [
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1556480,
+          "peak_bytes": 950560
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 1687552,
+      "peak_bytes": 966944,
+      "samples": [
+        {
+          "rss_bytes": 1671168,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1687552,
+          "peak_bytes": 966944
+        },
+        {
+          "rss_bytes": 1703936,
+          "peak_bytes": 983328
+        }
+      ]
+    }
+  },
+  "branch_chain_500k": {
+    "candy": {
+      "rss_bytes": 1540096,
+      "peak_bytes": 950560,
+      "samples": [
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 1703936,
+      "peak_bytes": 983328,
+      "samples": [
+        {
+          "rss_bytes": 1703936,
+          "peak_bytes": 983328
+        },
+        {
+          "rss_bytes": 1671168,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1703936,
+          "peak_bytes": 983328
+        }
+      ]
+    }
+  },
+  "nested_functions_1k": {
+    "candy": {
+      "rss_bytes": 1540096,
+      "peak_bytes": 950560,
+      "samples": [
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        },
+        {
+          "rss_bytes": 1540096,
+          "peak_bytes": 950560
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 1703936,
+      "peak_bytes": 983328,
+      "samples": [
+        {
+          "rss_bytes": 1703936,
+          "peak_bytes": 983328
+        },
+        {
+          "rss_bytes": 1687552,
+          "peak_bytes": 966944
+        },
+        {
+          "rss_bytes": 1720320,
+          "peak_bytes": 999712
+        }
+      ]
+    }
+  },
+  "_sizes": {
+    "candy_bin": 34136,
+    "lua_bin": 383088
+  },
+  "_metadata": {
+    "timestamp": "2026-11-19T14:24:17.942543+00:00",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "binaries": {
+      "candy": {
+        "path": "/private/tmp/wt-cur/shell/candy",
+        "sha256": "35c94307cad008899c3f4d98b7f33f5c28caddaae07e2b7d1b64eb9faa04f07f",
+        "size_bytes": 34136
+      },
+      "lua": {
+        "path": "~/workspace/scripts/candy/build/lua-matched/lua-5.4.7/src/lua",
+        "sha256": "3704fbb6eaf73d5e384effda76caa5759db5a454f98c21c0abeb6471d8c506d0",
+        "size_bytes": 383088
+      }
+    },
+    "config": {
+      "reps": 3,
+      "warmup": 1,
+      "timeout": 120.0,
+      "cases": [
+        "empty",
+        "fib_34",
+        "arith_400k",
+        "globals_400k",
+        "calls_400k",
+        "compile_200k",
+        "closures_100k",
+        "calls_nested_local_200k",
+        "while_local_1m",
+        "calls_hot_local_500k",
+        "branch_chain_500k",
+        "nested_functions_1k"
+      ],
+      "out": "~/workspace/scripts/candy/bench/memory_register.json",
+      "cases_dir": "~/workspace/scripts/candy/bench/cases",
+      "time": "/usr/bin/time",
+      "statistic": "median of per-process peaks",
+      "units": "bytes",
+      "order": "alternating candy/lua by case and pass"
+    }
+  }
+}

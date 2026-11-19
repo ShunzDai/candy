@@ -1,0 +1,10 @@
+def run()
+  def count(n, total)
+    if (n < 1)
+      return total
+    end
+    return count(n - 1, total + n)
+  end
+  return count($k, 0)
+end
+print(run())

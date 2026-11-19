@@ -36,6 +36,9 @@ struct candy_object {
   uint8_t type : 4;
   uint8_t mask : 4;
   uint8_t mark : 4;
+  /* Content hash for objects that hash by value (interned arrays). Objects
+   * hashed by identity leave it zero and never read it. */
+  candy_hash_t hash;
 };
 
 static inline candy_object_t **candy_object_next(candy_object_t *self) {
@@ -60,6 +63,14 @@ static inline uint8_t candy_object_mask(const candy_object_t *self) {
 
 static inline void candy_object_set_mask(candy_object_t *self, uint8_t mask) {
   self->mask = mask;
+}
+
+static inline candy_hash_t candy_object_hash(const candy_object_t *self) {
+  return self->hash;
+}
+
+static inline void candy_object_set_hash(candy_object_t *self, candy_hash_t hash) {
+  self->hash = hash;
 }
 
 static inline candy_marks_t candy_object_mark(const candy_object_t *self) {

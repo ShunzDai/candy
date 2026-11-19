@@ -48,6 +48,25 @@ const void *candy_buffer_head(candy_buffer_t *self);
 
 size_t candy_buffer_size(candy_buffer_t *self);
 
+/* The lexer touches one byte at a time, and almost always from bytes that are
+ * already buffered: these let it copy/advance inline and only fall back to the
+ * refilling path when the read cursor reaches the end of the buffered window. */
+static inline bool candy_buffer_peek(candy_buffer_t *self, size_t ahead, char *ch) {
+  if (self->r + ahead >= candy_vector_size(&self->vec))
+    return false;
+  *ch = ((const char *)candy_vector_data(&self->vec))[self->r + ahead];
+  return true;
+}
+
+static inline bool candy_buffer_take(candy_buffer_t *self, size_t size, char *data) {
+  if (self->r + size >= candy_vector_size(&self->vec))
+    return false;
+  if (data)
+    memcpy(data, (const char *)candy_vector_data(&self->vec) + self->r, size);
+  self->r += size;
+  return true;
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

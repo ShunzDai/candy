@@ -43,7 +43,13 @@ struct candy_wrap {
 
 extern const candy_wrap_t CANDY_WRAP_NULL;
 
-candy_hash_t candy_wrap_hash(const candy_wrap_t *self, candy_gc_t *gc);
+CANDY_LTO_INLINE_DECL candy_hash_t candy_wrap_hash(const candy_wrap_t *self);
+
+CANDY_LTO_INLINE_DECL bool candy_wrap_equal(const candy_wrap_t *self, const candy_wrap_t *other);
+
+candy_err_t candy_wrap_mark(const candy_wrap_t *self, candy_gc_t *gc);
+
+int candy_wrap_format(const candy_wrap_t *self, candy_gc_t *gc, const candy_format_t *fmt);
 
 int candy_wrap_fprint(const candy_wrap_t *self, candy_gc_t *gc, FILE *out);
 
@@ -73,6 +79,13 @@ static inline candy_integer_t candy_wrap_get_integer(const candy_wrap_t *self) {
   return *(candy_integer_t *)candy_wrap_data(self);
 }
 
+/* Clearing a frame slot only needs the tag: the payload of a none value is
+ * never read, so writing 1 byte beats copying the whole 9-byte constant. */
+static inline void candy_wrap_set_none(candy_wrap_t *self) {
+  self->type = CANDY_TYPE_NONE;
+  self->mask = MASK_CONST;
+}
+
 static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t val) {
   candy_wrap_set_type(self, CANDY_TYPE_INTEGER);
   candy_wrap_set_mask(self, MASK_CONST);
@@ -89,6 +102,10 @@ static inline void candy_wrap_set_float(candy_wrap_t *self, const candy_float_t 
   candy_wrap_set_type(self, CANDY_TYPE_FLOAT);
   candy_wrap_set_mask(self, MASK_CONST);
   *(candy_float_t *)candy_wrap_data(self) = val;
+}
+
+static inline candy_float_t candy_wrap_to_float(const candy_wrap_t *self) {
+  return candy_wrap_type(self) == CANDY_TYPE_FLOAT ? candy_wrap_get_float(self) : (candy_float_t)candy_wrap_get_integer(self);
 }
 
 static inline candy_boolean_t candy_wrap_get_boolean(const candy_wrap_t *self) {

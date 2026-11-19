@@ -1,0 +1,16 @@
+def run()
+i = 0
+sum = 0
+while (i < $k)
+  if (i < $first)
+    sum = sum + 1
+  elif (i < $second)
+    sum = sum + 2
+  else
+    sum = sum + 3
+  end
+  i = i + 1
+end
+return sum
+end
+print(run())

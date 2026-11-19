@@ -48,23 +48,29 @@ union candy_inst {
   } iabc;
 };
 
-typedef struct candy_proto_config candy_proto_config_t;
-
-struct candy_proto_config {
-  const candy_vector_t *inst;
-};
-
 candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx);
 
 candy_err_t candy_proto_handler(candy_proto_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
 size_t candy_proto_add_const(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *wrap);
 
+size_t candy_proto_add_const_unique(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *wrap);
+
 size_t candy_proto_add_inst(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_inst_t inst);
+
+void candy_proto_set_inst(candy_proto_t *self, size_t pos, candy_inst_t inst);
 
 const candy_vector_t *candy_proto_get_const(const candy_proto_t *self);
 
 const candy_vector_t *candy_proto_get_inst(const candy_proto_t *self);
+
+void candy_proto_set_layout(candy_proto_t *self, uint8_t nparams, uint8_t nreg, uint8_t nlocal);
+
+uint8_t candy_proto_get_nparams(const candy_proto_t *self);
+
+uint8_t candy_proto_get_nreg(const candy_proto_t *self);
+
+uint8_t candy_proto_get_nlocal(const candy_proto_t *self);
 
 #ifdef __cplusplus
 }
