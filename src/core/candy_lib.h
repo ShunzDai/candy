@@ -34,6 +34,19 @@ static inline candy_hash_t hash_djb(const void *data, size_t size) {
   return hash & 0x7FFFFFFF;
 }
 
+/* djb2 alone clusters for short keys that differ only in the suffix
+ * (`g1`, `g2`, ...): their hashes are consecutive, so linear probing degrades
+ * to quadratic. Interning and every table key derived from it use this mix. */
+static inline candy_hash_t hash_mix(candy_hash_t value) {
+  uint32_t hash = (uint32_t)value;
+  hash ^= hash >> 16;
+  hash *= 0x7feb352d;
+  hash ^= hash >> 15;
+  hash *= 0x846ca68b;
+  hash ^= hash >> 16;
+  return (candy_hash_t)(hash & 0x7FFFFFFF);
+}
+
 static inline size_t capacity_to_size(size_t cap) {
   return cap ? 1 << cap : 0;
 }
@@ -41,28 +54,6 @@ static inline size_t capacity_to_size(size_t cap) {
 static inline bool is_power2(size_t n) {
   return (n & (n - 1)) == 0;
 }
-
-// static inline size_t next_power2(size_t n) {
-//   --n;
-//   n |= n >> 1;
-//   n |= n >> 2;
-//   n |= n >> 4;
-//   n |= n >> 8;
-//   n |= n >> 16;
-//   n |= n >> 32;
-//   return ++n;
-// }
-
-// static inline size_t ceillog2(size_t n) {
-//   size_t result = 0;
-//   if (n & 0xFFFFFFFF00000000LU) { result += 32; n >>= 32; }
-//   if (n & 0x00000000FFFF0000LU) { result += 16; n >>= 16; }
-//   if (n & 0x000000000000FF00LU) { result +=  8; n >>=  8; }
-//   if (n & 0x00000000000000F0LU) { result +=  4; n >>=  4; }
-//   if (n & 0x000000000000000CLU) { result +=  2; n >>=  2; }
-//   if (n & 0x0000000000000002LU) { result +=  1; n >>=  1; }
-//   return result;
-// }
 
 static inline bool is_upper(char ch) {
   return isupper(ch);

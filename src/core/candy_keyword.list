@@ -40,7 +40,7 @@
 #ifdef CANDY_KW
 CANDY_KW(    true, 0x7C9E9FE5U)
 CANDY_KW(   false, 0x0F6BCEF0U)
-CANDY_KW(    none, 0x7C9B47F5U)
+CANDY_KW(    null, 0x7C9B6140U)
 CANDY_KW(     def, 0x0B8869B4U)
 CANDY_KW(  return, 0x19306425U)
 CANDY_KW(     end, 0x0B886F1CU)

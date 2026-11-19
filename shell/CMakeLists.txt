@@ -10,6 +10,12 @@ target_link_libraries(candy
   ${CANDY_TARGET_BUILTIN}
 )
 
+if (APPLE)
+  set_property(TARGET candy APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-dead_strip")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set_property(TARGET candy APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--gc-sections")
+endif()
+
 set_target_properties(candy PROPERTIES
   C_STANDARD 11
   C_STANDARD_REQUIRED ON

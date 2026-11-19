@@ -55,9 +55,9 @@ int main(int argc, const char *argv[]) {
     return -1;
   candy_builtin_entry_utils(state);
   if (argc > 1) {
-    candy_dofile(state, argv[1]);
-    candy_close(state);
-    return 0;
+    candy_err_t err = candy_dofile(state, argv[1]);
+    candy_err_t close_err = candy_close(state);
+    return err == CANDY_OK && close_err == CANDY_OK ? EXIT_SUCCESS : EXIT_FAILURE;
   }
   fcntl(fileno(stdin), F_SETFL, O_NONBLOCK);
   signal(SIGINT, handle_sig);

@@ -27,15 +27,15 @@ candy_table_t *candy_table_create_global(candy_gc_t *gc, candy_excep_t *ctx);
 
 candy_err_t candy_table_handler(candy_table_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
-candy_err_t candy_table_fprint(const candy_table_t *self, candy_gc_t *gc, FILE *out);
-
 candy_err_t candy_table_resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap);
 
-const candy_wrap_t *candy_table_get(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key);
+CANDY_LTO_INLINE_DECL const candy_wrap_t *candy_table_get(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key);
 
-candy_err_t candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val);
+CANDY_LTO_INLINE_DECL candy_err_t candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val);
 
 candy_err_t candy_table_reset(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key);
+
+size_t candy_table_size(const candy_table_t *self, candy_gc_t *gc);
 
 #ifdef __cplusplus
 }

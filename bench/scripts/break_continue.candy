@@ -1,0 +1,17 @@
+def run()
+sum = 0
+i = 0
+while (i < $k)
+  if (i < $skip)
+    i = i + 1
+    continue
+  end
+  if ($stop < i)
+    break
+  end
+  sum = sum + i
+  i = i + 1
+end
+return sum
+end
+print(run())

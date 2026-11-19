@@ -1,0 +1,10 @@
+cases/
+__pycache__/
+*.pyc
+
+# intermediate benchmark results; keep only the final charts' inputs
+*.json
+*.csv
+!final_register.json
+!final_register.csv
+!memory_register.json

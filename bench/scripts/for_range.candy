@@ -1,0 +1,9 @@
+def run()
+  arr = [$elems]
+  sum = 0
+  for (x : arr)
+    sum = sum + x
+  end
+  return sum
+end
+print(run())

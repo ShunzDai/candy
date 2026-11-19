@@ -27,12 +27,30 @@ extern "C" {
 
 #ifdef __GNUC__
 #define CANDY_NORETURN                    __attribute__((noreturn))
+#define CANDY_HOT                         __attribute__((hot))
+#define CANDY_NOINLINE                    __attribute__((noinline))
+#define CANDY_LIKELY(_x)                  __builtin_expect(!!(_x), 1)
+#define CANDY_UNLIKELY(_x)                __builtin_expect(!!(_x), 0)
 #define CANDY_FORMAT(fmtarg, firstvararg) __attribute__((format(printf, fmtarg, firstvararg)))
 #define CANDY_FORCE_INLINE                inline __attribute__((always_inline))
+#define CANDY_ALWAYS_INLINE               __attribute__((always_inline))
+#if defined(__clang__)
+#define CANDY_LTO_INLINE_DECL             CANDY_ALWAYS_INLINE
+#define CANDY_LARGE_LTO_INLINE            CANDY_ALWAYS_INLINE
+#else
+/* GCC cannot enforce always_inline from a declaration without the body.
+ * Keep large helpers out of the VM dispatch loop; small helper definitions
+ * are still forced inline during LTO. */
+#define CANDY_LTO_INLINE_DECL
+#define CANDY_LARGE_LTO_INLINE
+#endif
 #else
 #define CANDY_NORETURN
 #define CANDY_FORMAT(fmtarg, firstvararg)
 #define CANDY_FORCE_INLINE                inline
+#define CANDY_ALWAYS_INLINE
+#define CANDY_LTO_INLINE_DECL
+#define CANDY_LARGE_LTO_INLINE
 #endif
 
 #define candy_assert(_self, _gc, _condition, _err, _format, ...) \
@@ -43,8 +61,9 @@ extern "C" {
 typedef enum candy_masks {
   MASK_NONE     = (uint8_t)(0),
   MASK_OBJECT   = (uint8_t)(1 << 0),
-  MASK_ARRAY    = (uint8_t)(1 << 1),
-  MASK_CONST    = (uint8_t)(1 << 2),
+  MASK_CONST    = (uint8_t)(1 << 1),
+  MASK_ARRAY    = (uint8_t)(1 << 2),
+  MASK_ROOT     = (uint8_t)(1 << 3),
   MASK_HASHABLE = (uint8_t)(MASK_CONST),
   /** @brief tombstone marker: a NONE-typed slot carrying MASK_OBJECT. A live
     key that carries MASK_OBJECT is always an object with a real type, so this
@@ -56,7 +75,6 @@ typedef enum candy_events {
   EVT_DELETE,
   EVT_COLOR,
   EVT_DIFFUSE,
-  EVT_HASH,
   EVT_COMPARE,
   EVT_FORMAT,
 } candy_events_t;
@@ -81,6 +99,14 @@ typedef struct candy_excep candy_excep_t;
 
 typedef union candy_inst candy_inst_t;
 
+/* Output context for EVT_FORMAT. `quoted` asks strings to be emitted as JSON
+ * string literals (quoted and escaped) instead of raw text. */
+typedef struct candy_format {
+  FILE *out;
+  bool quoted;
+  size_t level;
+} candy_format_t;
+
 typedef candy_err_t (*candy_handler_t)(candy_object_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
 static inline const char *candy_event_str(candy_events_t val) {
@@ -88,15 +114,10 @@ static inline const char *candy_event_str(candy_events_t val) {
     case EVT_DELETE:  return "deleting";
     case EVT_COLOR:   return "coloring";
     case EVT_DIFFUSE: return "diffusing";
+    case EVT_COMPARE: return "comparing";
+    case EVT_FORMAT:  return "formatting";
     default:          return "unknown";
   }
-}
-
-static inline size_t candy_type_size(candy_types_t val) {
-  return (size_t[]) {
-    #define CANDY_TYPE_SIZE
-    #include "core/candy_type.list"
-  }[val];
 }
 
 #ifdef __cplusplus

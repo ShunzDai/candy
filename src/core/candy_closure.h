@@ -35,10 +35,6 @@ candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, cand
 
 candy_err_t candy_sclosure_handler(candy_sclosure_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 
-candy_err_t candy_sclosure_color(candy_sclosure_t *self, candy_gc_t *gc);
-
-candy_err_t candy_sclosure_diffuse(candy_sclosure_t *self, candy_gc_t *gc);
-
 const candy_proto_t *candy_sclosure_get_proto(candy_sclosure_t *self);
 
 #ifdef __cplusplus

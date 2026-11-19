@@ -35,25 +35,240 @@
 #define CANDY_OPCODE(_opcode, ...) &&L_##_opcode,
 #endif /* CANDY_OPCODE_LABEL */
 
-#ifdef CANDY_OPCODE_STR
+#if defined(CANDY_OPCODE_STR)
 #undef CANDY_OPCODE_STR
 #define CANDY_OPCODE(_opcode, ...) #_opcode,
 #endif /* CANDY_OPCODE_STR */
 
 #ifdef CANDY_OPCODE
-CANDY_OPCODE(LOADG,
-  _op_loadg(self, it, cst);
+CANDY_OPCODE(ADD,
+  _op_add(it, base);
 )
 
-CANDY_OPCODE(LOADC,
-  _op_loadc(self, it, cst);
+CANDY_OPCODE(ADDK,
+  _op_addk(self, it, base, constants);
 )
 
-CANDY_OPCODE(SETG,
-  _op_setg(self, it, cst);
+CANDY_OPCODE(SUB,
+  _op_sub(self, it, base);
+)
+
+CANDY_OPCODE(SUBK,
+  _op_subk(self, it, base, constants);
+)
+
+CANDY_OPCODE(MUL,
+  _op_mul(self, it, base);
+)
+
+CANDY_OPCODE(MULK,
+  _op_mulk(self, it, base, constants);
+)
+
+CANDY_OPCODE(DIV,
+  _op_div(self, it, base);
+)
+
+CANDY_OPCODE(DIVK,
+  _op_divk(self, it, base, constants);
+)
+
+CANDY_OPCODE(MOD,
+  _op_mod(self, it, base);
+)
+
+CANDY_OPCODE(MODK,
+  _op_modk(self, it, base, constants);
+)
+
+CANDY_OPCODE(LT,
+  _op_lt(self, it, base);
+)
+
+CANDY_OPCODE(LTK,
+  _op_ltk(self, it, base, constants);
+)
+
+CANDY_OPCODE(EQ,
+  _op_eq(it, base);
+)
+
+CANDY_OPCODE(EQK,
+  _op_eqk(it, base, constants);
+)
+
+CANDY_OPCODE(NEQ,
+  _op_neq(it, base);
+)
+
+CANDY_OPCODE(NEQK,
+  _op_neqk(it, base, constants);
+)
+
+CANDY_OPCODE(BOOL,
+  _op_bool(it, base);
+)
+
+CANDY_OPCODE(NOT,
+  _op_not(it, base);
+)
+
+CANDY_OPCODE(LE,
+  _op_le(it, base);
+)
+
+CANDY_OPCODE(LEK,
+  _op_lek(it, base, constants);
+)
+
+CANDY_OPCODE(GT,
+  _op_gt(it, base);
+)
+
+CANDY_OPCODE(GTK,
+  _op_gtk(it, base, constants);
+)
+
+CANDY_OPCODE(GE,
+  _op_ge(it, base);
+)
+
+CANDY_OPCODE(GEK,
+  _op_gek(it, base, constants);
+)
+
+CANDY_OPCODE(BAND,
+  _op_band(self, it, base);
+)
+
+CANDY_OPCODE(BANDK,
+  _op_bandk(self, it, base, constants);
+)
+
+CANDY_OPCODE(BOR,
+  _op_bor(self, it, base);
+)
+
+CANDY_OPCODE(BORK,
+  _op_bork(self, it, base, constants);
+)
+
+CANDY_OPCODE(BXOR,
+  _op_bxor(self, it, base);
+)
+
+CANDY_OPCODE(BXORK,
+  _op_bxork(self, it, base, constants);
+)
+
+CANDY_OPCODE(SHL,
+  _op_shl(self, it, base);
+)
+
+CANDY_OPCODE(SHLK,
+  _op_shlk(self, it, base, constants);
+)
+
+CANDY_OPCODE(SHR,
+  _op_shr(self, it, base);
+)
+
+CANDY_OPCODE(SHRK,
+  _op_shrk(self, it, base, constants);
+)
+
+CANDY_OPCODE(JMP,
+  _op_jmp(self, it, &pc);
+)
+
+CANDY_OPCODE(JMPF,
+  _op_jmpf(self, it, base, &pc);
+)
+
+CANDY_OPCODE(JMPT,
+  _op_jmpt(self, it, base, &pc);
+)
+
+CANDY_OPCODE(MOVE,
+  _op_move(self, it, base);
 )
 
 CANDY_OPCODE(CALL,
-  _op_call(self, it, co);
+  if (_op_call(self, it, base, &pc))
+    goto reload;
 )
+
+CANDY_OPCODE(RETURN,
+  if (_op_return(self, it, base, &pc))
+    goto reload;
+  return;
+)
+
+CANDY_OPCODE(LOADK,
+  _op_loadk(self, it, base, constants);
+)
+
+CANDY_OPCODE(LOADG,
+  _op_loadg(self, it, base, constants);
+)
+
+CANDY_OPCODE(SETG,
+  _op_setg(self, it, base, constants);
+)
+
+CANDY_OPCODE(TABLE,
+  _op_table(self, it, base);
+)
+
+CANDY_OPCODE(ARRAY,
+  _op_array(self, it, base);
+)
+
+CANDY_OPCODE(GETTABLE,
+  _op_gettable(self, it, base);
+)
+
+CANDY_OPCODE(SETTABLE,
+  _op_settable(self, it, base);
+)
+
+CANDY_OPCODE(SETLIST,
+  _op_setlist(self, it, base, constants);
+)
+
+CANDY_OPCODE(LEN,
+  _op_len(self, it, base);
+)
+
+CANDY_OPCODE(FORLOOP,
+  _op_forloop(self, it, base, &pc);
+)
+
+CANDY_OPCODE(TAILCALL,
+  if (_op_tailcall(self, it, base, &pc))
+    goto reload;
+  return;
+)
+
+/* Keep specialized opcodes at the end so existing opcode values and their
+ * computed-goto layout remain stable. */
+CANDY_OPCODE(CALLSELF,
+  _op_callself(self, it, &pc);
+  goto reload;
+)
+
+CANDY_OPCODE(TAILCALLSELF,
+  _op_tailcallself(self, it, base, &pc);
+  goto reload;
+)
+
+/* `global = global + operand`: one instruction for read-modify-write. */
+CANDY_OPCODE(ADDG,
+  _op_addg(self, it, base, constants);
+)
+
+CANDY_OPCODE(ADDGK,
+  _op_addgk(self, it, constants);
+)
+
 #endif /* CANDY_OPCODE */

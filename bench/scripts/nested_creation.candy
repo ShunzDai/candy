@@ -1,0 +1,13 @@
+def run()
+  i = 0
+  sum = 0
+  while (i < $k)
+    def helper(n)
+      return n
+    end
+    sum = sum + helper(i)
+    i = i + 1
+  end
+  return sum
+end
+print(run())

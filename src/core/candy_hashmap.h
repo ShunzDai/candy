@@ -26,6 +26,8 @@ extern "C" {
 /* Open addressing shared by the table and the GC string pool.
  * The cell layout stays typed; only empty/tomb/is_equal/hash are supplied by the
  * caller through a compile-time constant ops table. */
+#define CANDY_HASHMAP_LINEAR_MAX 8
+
 typedef struct candy_hash_ops {
   bool (*is_empty)(const void *cell);
   bool (*is_tomb)(const void *cell);
@@ -37,6 +39,21 @@ static CANDY_FORCE_INLINE bool candy_hashmap_grow(size_t used, size_t size) {
   return size == 0 || (used + 1) * 2 > size;
 }
 
+/* Probe linearly for the first few slots (they share cache lines, which is what
+ * most lookups need), then continue with a stride derived from the hash and kept
+ * odd. The stride part is a bijection over a power-of-two table, so it still
+ * covers every slot; it just leaves the long runs that small integers build
+ * (they hash to themselves) in a step or two. */
+static CANDY_FORCE_INLINE size_t candy_hashmap_step(candy_hash_t hash, size_t step, size_t mask) {
+  if (step <= CANDY_HASHMAP_LINEAR_MAX)
+    return (size_t)(((uint64_t)(uint32_t)hash + step) & mask);
+  /* Odd stride: the tail is one arithmetic progression over a power-of-two
+   * table, so it still visits every slot. */
+  uint32_t stride = ((uint32_t)hash * 0x9E3779B1u) | 1u;
+  uint64_t k = step - CANDY_HASHMAP_LINEAR_MAX;
+  return (size_t)(((uint64_t)(uint32_t)hash + CANDY_HASHMAP_LINEAR_MAX + k * stride) & mask);
+}
+
 static CANDY_FORCE_INLINE void *candy_hashmap_find(void *data, size_t size, size_t cell, const candy_hash_ops_t *ops, const void *key, candy_hash_t hash, bool expand, candy_gc_t *gc) {
   if (data == NULL || size == 0)
     return NULL;
@@ -44,7 +61,7 @@ static CANDY_FORCE_INLINE void *candy_hashmap_find(void *data, size_t size, size
   uint8_t *base = (uint8_t *)data;
   void *vacant = NULL;
   for (size_t step = 0; step < size; ++step) {
-    void *pos = base + cell * ((hash + step) & mask);
+    void *pos = base + cell * candy_hashmap_step(hash, step, mask);
     if (ops->is_empty(pos)) {
       if (vacant == NULL)
         vacant = pos;
@@ -70,7 +87,7 @@ static CANDY_FORCE_INLINE void *candy_hashmap_resize(void *data, size_t old_size
       continue;
     candy_hash_t hash = ops->hash(from, gc);
     for (size_t step = 0; ; ++step) {
-      void *to = (uint8_t *)next + cell * ((hash + step) & (new_size - 1));
+      void *to = (uint8_t *)next + cell * candy_hashmap_step(hash, step, new_size - 1);
       if (ops->is_empty(to)) {
         memcpy(to, from, cell);
         break;
