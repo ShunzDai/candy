@@ -169,7 +169,7 @@ TEST_F(gc, preserves_constants_through_closure_and_prototype) {
   candy_wrap_t value{};
   candy_wrap_set_object(&value, reinterpret_cast<candy_object_t *>(constant));
   candy_proto_add_const(proto, &collector, &context, &value);
-  auto *closure = candy_sclosure_create(&collector, &context, proto);
+  auto *closure = candy_sclosure_create(&collector, &context, proto, 0);
   retain(reinterpret_cast<candy_object_t *>(closure));
   ASSERT_EQ(candy_gc_full(&collector), CANDY_OK);
   EXPECT_EQ(objects(), 2U);
@@ -312,7 +312,7 @@ TEST_F(gc, object_arrays_trace_prototypes_and_closures) {
     } else {
       auto *proto = candy_proto_create(&collector, &context);
       child = type == CANDY_TYPE_PROTO ? reinterpret_cast<candy_object_t *>(proto)
-        : reinterpret_cast<candy_object_t *>(candy_sclosure_create(&collector, &context, proto));
+        : reinterpret_cast<candy_object_t *>(candy_sclosure_create(&collector, &context, proto, 0));
     }
     auto *array = candy_array_create(&collector, &context, type);
     ASSERT_EQ(candy_array_append(array, &collector, &context, &child, 1), CANDY_OK);

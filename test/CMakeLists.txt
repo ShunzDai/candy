@@ -26,7 +26,7 @@ set_target_properties(
   COMPILE_DEFINITIONS "CANDY_TEST=true"
 )
 
-foreach(suite array catch gc lexer parser scope state table)
+foreach(suite array catch gc lexer modules parser scope state table)
   add_test(NAME ${suite} COMMAND test --gtest_filter=${suite}.*)
   set_tests_properties(${suite} PROPERTIES TIMEOUT 30)
 endforeach()

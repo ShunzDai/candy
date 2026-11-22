@@ -104,7 +104,11 @@ static candy_err_t _fsm_begin(candy_gc_t *self) {
     if (err != CANDY_OK)
       return err;
   }
-  return candy_gc_mark(self, self->glob);
+  candy_err_t err = candy_gc_mark(self, self->glob);
+  if (err != CANDY_OK)
+    return err;
+  err = candy_gc_mark(self, (candy_object_t *)self->modules);
+  return err;
 }
 
 static candy_err_t _fsm_diffuse(candy_gc_t *self) {
@@ -158,6 +162,7 @@ candy_err_t candy_gc_init(candy_gc_t *self, candy_handler_t handler, candy_alloc
   self->list = NULL;
   self->gray = NULL;
   self->glob = NULL;
+  self->modules = NULL;
   return CANDY_OK;
 }
 

@@ -21,6 +21,7 @@
 #include "core/candy_table.h"
 #include "core/candy_proto.h"
 #include "core/candy_closure.h"
+#include "core/candy_upvalue.h"
 #include "core/candy_userdef.h"
 #include "core/candy_state.h"
 #include <stdlib.h>
@@ -40,6 +41,7 @@ static candy_err_t _event_handler(candy_object_t *self, candy_gc_t *gc, candy_ev
   switch (candy_object_type(self)) {
     case CANDY_TYPE_CCLOS: return candy_cclosure_handler((candy_cclosure_t *)self, gc, evt, arg);
     case CANDY_TYPE_SCLOS: return candy_sclosure_handler((candy_sclosure_t *)self, gc, evt, arg);
+    case CANDY_TYPE_UPVAL: return candy_upvalue_handler((candy_upvalue_t *)self, gc, evt, arg);
     case CANDY_TYPE_TABLE: return candy_table_handler((candy_table_t *)self, gc, evt, arg);;
     case CANDY_TYPE_PROTO: return candy_proto_handler((candy_proto_t *)self, gc, evt, arg);
     case CANDY_TYPE_STATE: return candy_state_handler((candy_state_t *)self, gc, evt, arg);
@@ -76,9 +78,9 @@ candy_err_t candy_dostring(candy_state_t *self, const char exp[], size_t size) {
 candy_err_t candy_dofile(candy_state_t *self, const char name[]) {
   FILE *f = fopen(name, "r");
   if (f == NULL)
-    return perror(NULL), -1;
-  struct file_info info = {f};
-  int res = candy_dostream(self, file_reader, &info);
+    return perror(NULL), CANDY_ERR;
+  struct file_info info = {f, name};
+  candy_err_t err = candy_dostream(self, file_reader, &info);
   fclose(f);
-  return res;
+  return err;
 }

@@ -8,3 +8,6 @@ __pycache__/
 !macos_time.json
 !macos_time.csv
 !macos_memory.json
+!wsl_time.json
+!wsl_time.csv
+!wsl_memory.json

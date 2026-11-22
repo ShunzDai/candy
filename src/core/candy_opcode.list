@@ -271,4 +271,24 @@ CANDY_OPCODE(ADDGK,
   _op_addgk(self, it, constants);
 )
 
+CANDY_OPCODE(CLOSURE,
+  _op_closure(self, it, base, constants);
+)
+
+CANDY_OPCODE(GETUPVAL,
+  _op_getupval(self, it, base);
+)
+
+CANDY_OPCODE(SETUPVAL,
+  _op_setupval(self, it, base);
+)
+
+CANDY_OPCODE(CALLMETHOD,
+  size_t next_pc = pc;
+  bool refresh = _op_callmethod(self, it, base, &next_pc);
+  pc = next_pc;
+  if (refresh)
+    goto reload;
+)
+
 #endif /* CANDY_OPCODE */

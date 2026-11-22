@@ -29,6 +29,7 @@ struct str_info {
 
 struct file_info {
   FILE *f;
+  const char *path;
 };
 
 int string_reader(void *buffer, size_t max_len, void *arg);

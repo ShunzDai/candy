@@ -18,7 +18,7 @@ LAYERS = [
     ["candy_hashmap", "candy_vector"],
     ["candy_buffer", "candy_gc"],
     ["candy_closure", "candy_userdef", "candy_wrap"],
-    ["candy_array", "candy_table"],
+    ["candy_array", "candy_table", "candy_upvalue"],
     ["candy_lexer", "candy_proto"],
     ["candy_parser", "candy_vm"],
     ["candy_state"],

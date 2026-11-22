@@ -22,6 +22,7 @@ extern "C" {
 #include "core/candy_exception.h"
 #include "core/candy_vector.h"
 #include "core/candy_priv.h"
+#include "core/candy_wrap.h"
 
 typedef struct candy_callinfo candy_callinfo_t;
 
@@ -35,6 +36,8 @@ struct candy_callinfo {
   size_t pc;
   const candy_vector_t *inst;
   const candy_wrap_t *constants;
+  bool constructor;
+  candy_wrap_t instance;
 };
 
 struct candy_vm {
@@ -42,6 +45,7 @@ struct candy_vm {
   candy_callinfo_t base;
   candy_callinfo_t *ci;
   candy_gc_t *gc;
+  candy_upvalue_t *open;
 };
 
 candy_err_t candy_vm_init(candy_vm_t *self, candy_gc_t *gc, candy_excep_t *ctx);

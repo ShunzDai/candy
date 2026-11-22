@@ -1,6 +1,6 @@
 # Candy 性能优化记录（build/ 版本）
 
-> 当前两张图为 **默认栈 VM vs Lua（端到端、non-PGO）**，已扩展到 34 个时间用例和 12 个 RSS 用例；双方现已对齐 static/O3/LTO，最新配置与结论见 [匹配构建](MATCHED_BUILD.md)，负载说明见 [扩展基准](BENCHMARKS.md)，数据为 `final_stack.json` / `memory_stack.json`。本页下方表格保留历史数据，不应与新图数值混用。默认 VM 保持栈式实现。
+> 本页表格为栈 VM 的历史记录，构建背景见 [匹配构建](MATCHED_BUILD.md)。下方两张 macOS 图来自寄存器 VM，不能与历史表格数值混用；最新图表和来源见 [扩展基准](BENCHMARKS.md)。
 >
 > 测量审计补充：本文保留此前实验记录，但其中部分验证与因果解释尚不充分（旧 warmup 计数、输出 strip、shell 错误退出码、PGO raw 文件累计、跨版本 A/B）。请先阅读 [验证约定](VALIDATION.md)。不能把以下所有历史性能差异视为已经隔离变量验证的收益；默认 VM 尚未切换为寄存器式。
 
@@ -34,7 +34,7 @@
 
 ### 1.2 最终相对性能
 
-![Candy vs Lua 运行时间](charts/candy_vs_lua_time.png)
+![macOS：寄存器 VM 版 Candy vs Lua 运行时间](charts/macos_candy_vs_lua_time.png)
 
 ### 1.3 内存
 
@@ -48,7 +48,7 @@
 | 编译 20 万行 | 13.6 MB | 16.5 MB | 0.63× |
 | 定义 10 万个函数 | 118.7 MB | **42.6 MB** | 1.00× |
 
-![Candy vs Lua 内存](charts/candy_vs_lua_memory.png)
+![macOS：寄存器 VM 版 Candy vs Lua 内存](charts/macos_candy_vs_lua_memory.png)
 
 调用/全局密集程序的内存从 Lua 的约 3 倍降到 **0.70–0.84 倍**；“10 万个函数”也从 118.7 MB 降到 **42.6 MB**，与 Lua 的 42.7 MB 基本持平。P1 的算术融合让加法用例进一步降到 3.1 MB；编译 20 万行的内存为 16.5 MB，仍是常量 interning 表的代价，但只有 Lua 的 0.63 倍。
 
@@ -381,7 +381,6 @@ cmake --build build -j8
 cd bench
 python3 run_bench.py --warmup 2 --out final.json
 CANDY_BIN=../build/shell/candy python3 measure_mem.py
-python3 make_charts.py       # 只生成 Candy vs Lua 的时间/内存对比图
 ```
 
 数据：`bench/baseline.json`（优化前）、`bench/final.json`（优化后）、`bench/memory.json`（优化后内存）、`bench/results.csv`（历史基线）。

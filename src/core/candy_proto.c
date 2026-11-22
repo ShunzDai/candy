@@ -28,7 +28,10 @@ struct candy_proto {
   candy_object_t *gray;
   candy_vector_t cst;
   candy_vector_t inst;
+  candy_vector_t upvals;
   candy_table_t *map;
+  candy_table_t *globals;
+  candy_array_t *initializers;
   uint8_t nparams;
   uint8_t nreg;
   uint8_t nlocal;
@@ -44,6 +47,8 @@ static bool _internable(const candy_wrap_t *wrap) {
 static candy_err_t _proto_delete(candy_proto_t *self, candy_gc_t *gc, void *arg) {
   candy_vector_deinit(&self->inst, candy_gc_memory(gc), sizeof(candy_inst_t));
   candy_vector_deinit(&self->cst, candy_gc_memory(gc), sizeof(candy_wrap_t));
+  if (candy_vector_data(&self->upvals))
+    candy_vector_deinit(&self->upvals, candy_gc_memory(gc), sizeof(uint16_t));
   candy_gc_free(gc, self, sizeof(candy_proto_t));
   return CANDY_OK;
 }
@@ -57,6 +62,16 @@ static candy_err_t _proto_color(candy_proto_t *self, candy_gc_t *gc, void *arg) 
 static candy_err_t _proto_diffuse(candy_proto_t *self, candy_gc_t *gc, void *arg) {
   candy_gc_gray_swap(gc, self->gray);
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
+  if (self->globals) {
+    candy_err_t err = candy_gc_mark(gc, (candy_object_t *)self->globals);
+    if (err != CANDY_OK)
+      return err;
+  }
+  if (self->initializers) {
+    candy_err_t err = candy_gc_mark(gc, (candy_object_t *)self->initializers);
+    if (err != CANDY_OK)
+      return err;
+  }
   if (self->map) {
     candy_err_t err = candy_gc_mark(gc, (candy_object_t *)self->map);
     if (err != CANDY_OK)
@@ -75,7 +90,10 @@ candy_proto_t *candy_proto_create(candy_gc_t *gc, candy_excep_t *ctx) {
   candy_proto_t *self = (candy_proto_t *)candy_gc_add(gc, ctx, CANDY_TYPE_PROTO, sizeof(candy_proto_t));
   candy_vector_init(&self->cst);
   candy_vector_init(&self->inst);
+  candy_vector_init(&self->upvals);
   self->map = NULL;
+  self->globals = NULL;
+  self->initializers = NULL;
   self->nparams = 0;
   self->nreg = 0;
   self->nlocal = 0;
@@ -127,6 +145,21 @@ size_t candy_proto_add_inst(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *
   return pos;
 }
 
+void candy_proto_add_upval(candy_proto_t *self, candy_gc_t *gc, candy_excep_t *ctx, uint8_t kind, uint8_t index) {
+  uint16_t packed = (uint16_t)((kind << 8) | index);
+  candy_vector_append(&self->upvals, candy_gc_memory(gc), ctx, &packed, 1, sizeof(uint16_t));
+}
+
+uint8_t candy_proto_get_nupvals(const candy_proto_t *self) {
+  return (uint8_t)candy_vector_size(&self->upvals);
+}
+
+void candy_proto_get_upval(const candy_proto_t *self, uint8_t index, uint8_t *kind, uint8_t *operand) {
+  const uint16_t *packed = (const uint16_t *)candy_vector_data(&self->upvals);
+  *kind = (uint8_t)(packed[index] >> 8);
+  *operand = (uint8_t)(packed[index] & 0xFF);
+}
+
 void candy_proto_set_inst(candy_proto_t *self, size_t pos, candy_inst_t inst) {
   ((candy_inst_t *)candy_vector_data(&self->inst))[pos] = inst;
 }
@@ -158,4 +191,20 @@ uint8_t candy_proto_get_nreg(const candy_proto_t *self) {
 
 uint8_t candy_proto_get_nlocal(const candy_proto_t *self) {
   return self->nlocal;
+}
+
+void candy_proto_set_globals(candy_proto_t *self, candy_table_t *globals) {
+  self->globals = globals;
+}
+
+candy_table_t *candy_proto_get_globals(const candy_proto_t *self) {
+  return self->globals;
+}
+
+void candy_proto_set_initializers(candy_proto_t *self, candy_array_t *initializers) {
+  self->initializers = initializers;
+}
+
+const candy_array_t *candy_proto_get_initializers(const candy_proto_t *self) {
+  return self->initializers;
 }

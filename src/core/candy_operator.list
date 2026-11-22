@@ -71,5 +71,6 @@ CANDY_OP( LSHIFT, '<', '<')
 CANDY_OP( RSHIFT, '>', '>')
 CANDY_OP( LEQUAL, '<', '=')
 CANDY_OP( GEQUAL, '>', '=')
+CANDY_OP(  SCOPE, ':', ':')
 CANDY_OP( VARARG, '.', '.', '.')
 #endif /* CANDY_OP */

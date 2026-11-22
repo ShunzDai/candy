@@ -31,7 +31,11 @@ candy_err_t candy_cclosure_handler(candy_cclosure_t *self, candy_gc_t *gc, candy
 /**
   * @brief  create a new script-closure
   */
-candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_proto_t *proto);
+candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_proto_t *proto, uint8_t nupvals);
+
+void candy_sclosure_set_upval(candy_sclosure_t *self, uint8_t index, candy_upvalue_t *upval);
+
+candy_upvalue_t *candy_sclosure_get_upval(candy_sclosure_t *self, uint8_t index);
 
 candy_err_t candy_sclosure_handler(candy_sclosure_t *self, candy_gc_t *gc, candy_events_t evt, void *arg);
 

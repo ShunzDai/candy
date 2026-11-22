@@ -27,6 +27,8 @@ struct candy_sclosure {
   candy_object_t header;
   candy_object_t *gray;
   candy_proto_t *proto;
+  uint8_t nupvals;
+  candy_upvalue_t *upvals[];
 };
 
 static candy_err_t _cclosure_delete(candy_cclosure_t *self, candy_gc_t *gc, void *arg) {
@@ -44,7 +46,7 @@ static candy_err_t _cclosure_diffuse(candy_cclosure_t *self, candy_gc_t *gc, voi
 }
 
 static candy_err_t _sclosure_delete(candy_sclosure_t *self, candy_gc_t *gc, void *arg) {
-  candy_gc_free(gc, self, sizeof(candy_sclosure_t));
+  candy_gc_free(gc, self, sizeof(candy_sclosure_t) + sizeof(candy_upvalue_t *) * self->nupvals);
   return CANDY_OK;
 }
 
@@ -57,7 +59,15 @@ static candy_err_t _sclosure_color(candy_sclosure_t *self, candy_gc_t *gc, void 
 static candy_err_t _sclosure_diffuse(candy_sclosure_t *self, candy_gc_t *gc, void *arg) {
   candy_gc_gray_swap(gc, self->gray);
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
-  return candy_gc_mark(gc, (candy_object_t *)self->proto);
+  candy_err_t err = candy_gc_mark(gc, (candy_object_t *)self->proto);
+  if (err != CANDY_OK)
+    return err;
+  for (uint8_t i = 0; i < self->nupvals; ++i) {
+    err = candy_gc_mark(gc, (candy_object_t *)self->upvals[i]);
+    if (err != CANDY_OK)
+      return err;
+  }
+  return CANDY_OK;
 }
 
 candy_cclosure_t *candy_cclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_cfunc_t cfunc) {
@@ -76,11 +86,23 @@ candy_err_t candy_cclosure_handler(candy_cclosure_t *self, candy_gc_t *gc, candy
   }
 }
 
-candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_proto_t *proto) {
-  candy_sclosure_t *self = (candy_sclosure_t *)candy_gc_add(gc, ctx, CANDY_TYPE_SCLOS, sizeof(candy_sclosure_t));
+candy_sclosure_t *candy_sclosure_create(candy_gc_t *gc, candy_excep_t *ctx, candy_proto_t *proto, uint8_t nupvals) {
+  size_t size = sizeof(candy_sclosure_t) + sizeof(candy_upvalue_t *) * nupvals;
+  candy_sclosure_t *self = (candy_sclosure_t *)candy_gc_add(gc, ctx, CANDY_TYPE_SCLOS, size);
   self->gray = NULL;
   self->proto = proto;
+  self->nupvals = nupvals;
+  for (uint8_t i = 0; i < nupvals; ++i)
+    self->upvals[i] = NULL;
   return self;
+}
+
+void candy_sclosure_set_upval(candy_sclosure_t *self, uint8_t index, candy_upvalue_t *upval) {
+  self->upvals[index] = upval;
+}
+
+candy_upvalue_t *candy_sclosure_get_upval(candy_sclosure_t *self, uint8_t index) {
+  return self->upvals[index];
 }
 
 candy_err_t candy_sclosure_handler(candy_sclosure_t *self, candy_gc_t *gc, candy_events_t evt, void *arg) {

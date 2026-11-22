@@ -94,6 +94,8 @@ typedef struct candy_userdef candy_userdef_t;
 typedef struct candy_cclosure candy_cclosure_t;
 /* script-closure */
 typedef struct candy_sclosure candy_sclosure_t;
+/* captured variable shared between a frame and its closures */
+typedef struct candy_upvalue candy_upvalue_t;
 
 typedef struct candy_excep candy_excep_t;
 

@@ -15,6 +15,9 @@
   */
 #include "test.h"
 #include <string>
+#include <filesystem>
+#include <fstream>
+#include <random>
 
 class parser : public testing::Test {
 protected:
@@ -792,6 +795,61 @@ verify(check(), 2)
 )", 1);
 }
 
+TEST_F(parser, local_assignment_updates_hot_loop_registers_directly) {
+  const char source[] = R"(def accumulate(i, sum)
+  while (i < 100)
+    sum = sum + i
+    i = i + 1
+  end
+  return sum
+end
+return accumulate
+)";
+  ASSERT_EQ(candy_dostring(state, source, sizeof(source) - 1), CANDY_OK);
+  ASSERT_EQ(candy_state_get_type(state, -1), CANDY_TYPE_SCLOS);
+  auto *closure = reinterpret_cast<candy_sclosure_t *>(candy_state_to_object(state, -1));
+  const auto *inst = candy_proto_get_inst(candy_sclosure_get_proto(closure));
+  const auto *code = static_cast<const candy_inst_t *>(candy_vector_data(inst));
+  const candy_opcodes_t expected[] = {OP_LTK, OP_JMPF, OP_ADD, OP_ADDK, OP_JMP, OP_RETURN};
+  ASSERT_EQ(candy_vector_size(inst), sizeof(expected) / sizeof(expected[0]));
+  for (size_t i = 0; i < candy_vector_size(inst); ++i)
+    EXPECT_EQ(code[i].op, expected[i]) << "instruction " << i;
+  EXPECT_EQ(code[2].iabc.a, code[2].iabc.b);
+  EXPECT_EQ(code[3].iabc.a, code[3].iabc.b);
+}
+
+TEST_F(parser, plain_global_assignment_skips_unused_lhs_load) {
+  const auto handler = +[](candy_object_t *obj, candy_gc_t *gc, candy_events_t evt, void *arg) -> candy_err_t {
+    if (candy_object_mask(obj) & MASK_ARRAY)
+      return candy_array_handler(reinterpret_cast<candy_array_t *>(obj), gc, evt, arg);
+    if (candy_object_type(obj) == CANDY_TYPE_SCLOS)
+      return candy_sclosure_handler(reinterpret_cast<candy_sclosure_t *>(obj), gc, evt, arg);
+    if (candy_object_type(obj) == CANDY_TYPE_PROTO)
+      return candy_proto_handler(reinterpret_cast<candy_proto_t *>(obj), gc, evt, arg);
+    return CANDY_ERR;
+  };
+  candy_gc_t gc{};
+  candy_excep_t ctx{};
+  ASSERT_EQ(candy_gc_init(&gc, handler, test_allocator, nullptr), CANDY_OK);
+  EXPECT_EQ(candy_excep_init(&ctx), CANDY_OK);
+  const char source[] = "total = 0\ntotal = total + 1\nreturn total";
+  str_info reader{source, sizeof(source) - 1, 0};
+  candy_object_t *entry = nullptr;
+  EXPECT_EQ(candy_parse(&gc, &ctx, string_reader, &reader, &entry), CANDY_OK);
+  EXPECT_NE(entry, nullptr);
+  if (entry != nullptr) {
+    const auto *inst = candy_proto_get_inst(candy_sclosure_get_proto(reinterpret_cast<candy_sclosure_t *>(entry)));
+    const auto *code = static_cast<const candy_inst_t *>(candy_vector_data(inst));
+    const candy_opcodes_t expected[] = {OP_LOADK, OP_SETG, OP_ADDGK, OP_LOADG, OP_RETURN};
+    const size_t count = sizeof(expected) / sizeof(expected[0]);
+    EXPECT_EQ(candy_vector_size(inst), count);
+    for (size_t i = 0; i < count && i < candy_vector_size(inst); ++i)
+      EXPECT_EQ(code[i].op, expected[i]) << "instruction " << i;
+  }
+  EXPECT_EQ(candy_excep_deinit(&ctx), CANDY_OK);
+  EXPECT_EQ(candy_gc_deinit(&gc), CANDY_OK);
+}
+
 TEST_F(parser, range_for_reuses_existing_function_local) {
   run(R"(def count()
   x = 10
@@ -859,4 +917,424 @@ def sum_to(n)
 end
 verify(sum_to(3), 14)
 )", 3);
+}
+TEST_F(parser, lambda_captures_by_value_and_reference) {
+  run(R"(def scope()
+  a = 1
+  b = 10
+  copy = def [=]()
+    return a
+  end
+  shared = def [&b]()
+    b = b + 1
+    return b
+  end
+  a = 2
+  verify(copy(), 1)
+  verify(shared(), 11)
+  verify(b, 11)
+  return shared()
+end
+verify(scope(), 12)
+)", 4);
+}
+
+TEST_F(parser, lambda_capture_list_forms) {
+  run(R"(def scope()
+  a = 1
+  b = 2
+  neither = def []()
+    return 0
+  end
+  all_ref = def [&]()
+    a = a + 1
+    return a + b
+  end
+  mixed = def [a, &b]()
+    return a + b
+  end
+  verify(neither(), 0)
+  verify(all_ref(), 4)
+  a = 10
+  b = 20
+  verify(mixed(), 21)
+  return all_ref()
+end
+verify(scope(), 31)
+)", 4);
+}
+
+TEST_F(parser, lambda_closes_upvalues_when_the_frame_returns) {
+  run(R"(def make(start)
+  value = start
+  return def [&value]()
+    value = value + 1
+    return value
+  end
+end
+first = make(40)
+verify(first(), 41)
+verify(first(), 42)
+second = make(0)
+verify(second(), 1)
+verify(first(), 43)
+)", 4);
+}
+
+TEST_F(parser, open_upvalue_survives_collection_without_a_live_closure) {
+  ASSERT_EQ(candy_state_setglobal(state, "collect", +[](candy_state_t *current) -> int {
+    const char script[] = "return 0";
+    EXPECT_EQ(candy_dostring(current, script, sizeof(script) - 1), CANDY_OK);
+    return 0;
+  }), CANDY_OK);
+  run(R"(def make()
+  x = 41
+  f = def [&x]() return x end
+  f = null
+  collect()
+  return def [&x]() return x + 1 end
+end
+answer = make()
+verify(answer(), 42)
+)", 1);
+}
+
+TEST_F(parser, lambda_mutates_only_its_own_by_value_copy) {
+  run(R"(def scope()
+  x = 5
+  counter = def [=]()
+    x = x + 1
+    return x
+  end
+  verify(counter(), 6)
+  verify(counter(), 7)
+  verify(x, 5)
+  return 0
+end
+verify(scope(), 0)
+)", 4);
+}
+
+TEST_F(parser, lambda_captures_through_nested_lambdas) {
+  run(R"(def scope()
+  x = 1
+  outer = def [&]()
+    return def [&]()
+      return x + 10
+    end
+  end
+  inner = outer()
+  return inner()
+end
+verify(scope(), 11)
+)", 1);
+}
+
+TEST_F(parser, lambda_value_passes_as_argument) {
+  run(R"(def apply(function, value)
+  return function(value)
+end
+verify(apply(def (value)
+  return value + 1
+end, 41), 42)
+verify(apply(def [](value)
+  return value - 1
+end, 41), 40)
+)", 2);
+}
+
+TEST_F(parser, lambda_rejects_uncaptured_enclosing_local) {
+  reject_without_execution(R"(def scope()
+  x = 1
+  return def []()
+    return x
+  end
+end)");
+}
+
+TEST_F(parser, lambda_rejects_unknown_named_capture) {
+  reject_without_execution(R"(def scope()
+  return def [missing]()
+    return 1
+  end
+end)");
+}
+TEST_F(parser, calls_values_from_index_expressions) {
+  run(R"(def double(value)
+  return value + value
+end
+handlers = [double]
+verify(handlers[0](21), 42)
+table = {"double": double}
+verify(table["double"](3), 6)
+)", 2);
+}
+
+TEST_F(parser, calls_results_of_calls) {
+  run(R"(def make()
+  return def (value)
+    return value + 1
+  end
+end
+verify(make()(41), 42)
+)", 1);
+}
+
+TEST_F(parser, statement_calls_through_index) {
+  run(R"(box = [0]
+setter = def ()
+  box[0] = 7
+end
+handlers = [setter]
+handlers[0]()
+verify(box[0], 7)
+)", 1);
+}
+
+TEST_F(parser, index_assignment_still_works_beside_calls) {
+  run(R"(table = [0, 0]
+table[0] = 5
+table[1] += 4
+verify(table[0], 5)
+verify(table[1], 4)
+)", 2);
+}
+
+
+
+TEST_F(parser, class_table_instances_and_dot_methods) {
+  run(R"(class Point
+  def move(self, dx, dy)
+    self.x = self.x + dx
+    self.y = self.y + dy
+  end
+  def length(self)
+    return self.x + self.y
+  end
+end
+p = {"__class__": Point, "x": 1, "y": 2}
+p.move(3, 4)
+verify(p.length(), 10)
+verify(p.x, 4)
+verify(p.y, 6)
+)", 3);
+}
+
+
+TEST_F(parser, class_call_constructs_instance_and_runs_init) {
+  run(R"(class Point
+  def __init__(self, x, y)
+    self.x = x
+    self.y = y
+  end
+  def length(self)
+    return self.x + self.y
+  end
+end
+p = Point(1, 2)
+verify(p.length(), 3)
+verify(p.x, 1)
+verify(p.y, 2)
+)", 3);
+}
+
+
+class modules : public parser {
+protected:
+  std::filesystem::path files;
+
+  void SetUp() override {
+    parser::SetUp();
+    auto base = std::filesystem::temp_directory_path();
+    std::random_device random;
+    for (int i = 0; i < 16; ++i) {
+      auto candidate = base / ("candy-modules-" + std::to_string(random()));
+      if (std::filesystem::create_directory(candidate)) {
+        files = std::move(candidate);
+        return;
+      }
+    }
+    FAIL() << "could not create temporary test directory";
+  }
+
+  void TearDown() override {
+    parser::TearDown();
+    if (!files.empty()) {
+      std::error_code err;
+      std::filesystem::remove_all(files, err);
+      EXPECT_FALSE(err);
+    }
+  }
+
+  void write(const char *name, const char *source) {
+    auto filename = files / name;
+    std::filesystem::create_directories(filename.parent_path());
+    std::ofstream stream(filename);
+    ASSERT_TRUE(stream << source);
+    stream.close();
+    ASSERT_TRUE(stream);
+  }
+
+  candy_err_t run_file(const char *name) {
+    return candy_dofile(state, (files / name).string().c_str());
+  }
+};
+
+TEST_F(modules, exports_are_ordinary_table_fields_and_private_names_stay_private) {
+  ASSERT_NO_FATAL_FAILURE(write("lib/math.candy", R"(
+    offset = 40
+    def secret(n) return n + offset end
+    export def add(x, y) return secret(x) + y end
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("main.candy", R"(
+    import "lib/math.candy" as math;
+    verify(math::add(2, 3), 45)
+    verify(math["add"](1, 2), 43)
+    if (math.secret == null && secret == null && offset == null)
+      verify(1, 1)
+    end
+    math.value = 5
+    verify(math.value, 5)
+  )"));
+  checks = 0;
+  ASSERT_EQ(run_file("main.candy"), CANDY_OK);
+  EXPECT_EQ(checks, 4);
+  const char invalid_call[] = "math.secret()";
+  EXPECT_EQ(candy_dostring(state, invalid_call, sizeof(invalid_call) - 1), CANDY_ERR_VM);
+}
+
+TEST_F(modules, loads_nested_relative_paths_and_reuses_exports_across_chunks) {
+  ASSERT_NO_FATAL_FAILURE(write("nested/inner/sibling.candy", "export def number() return 42 end"));
+  ASSERT_NO_FATAL_FAILURE(write("nested/outer.candy", R"(
+    import "inner/sibling.candy" as sibling
+    initialized()
+    export def number()
+      return sibling.number()
+    end
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("first.candy", R"(
+    import "nested/outer.candy" as outer
+    outer.saved = 7
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("second.candy", R"(
+    import "nested/inner/../outer.candy" as another
+    verify(another.saved, 7)
+    verify(another.number(), 42)
+  )"));
+  initializations = 0;
+  ASSERT_EQ(candy_state_setglobal(state, "initialized", +[](candy_state_t *) -> int {
+    ++initializations;
+    return 0;
+  }), CANDY_OK);
+  ASSERT_EQ(run_file("first.candy"), CANDY_OK);
+  checks = 0;
+  ASSERT_EQ(run_file("second.candy"), CANDY_OK);
+  EXPECT_EQ(initializations, 1);
+  EXPECT_EQ(checks, 2);
+}
+
+TEST_F(modules, rejects_cycles_and_can_retry_failed_loads) {
+  ASSERT_NO_FATAL_FAILURE(write("main.candy", "import \"a.candy\" as a"));
+  EXPECT_EQ(run_file("main.candy"), CANDY_ERR_VM);
+  ASSERT_NO_FATAL_FAILURE(write("a.candy", "import \"b.candy\" as b"));
+  ASSERT_NO_FATAL_FAILURE(write("b.candy", "import \"./a.candy\" as a"));
+  EXPECT_EQ(run_file("main.candy"), CANDY_ERR_VM);
+  ASSERT_NO_FATAL_FAILURE(write("b.candy", "export def wrong("));
+  EXPECT_EQ(run_file("main.candy"), CANDY_ERR_SYNTAX);
+  ASSERT_NO_FATAL_FAILURE(write("a.candy", "missing_function()"));
+  EXPECT_EQ(run_file("main.candy"), CANDY_ERR_VM);
+  ASSERT_NO_FATAL_FAILURE(write("a.candy", "export def number() return 10 end"));
+  ASSERT_EQ(run_file("main.candy"), CANDY_OK);
+  run("verify(a.number(), 10)", 1);
+}
+
+TEST_F(modules, compiles_the_entire_graph_before_running_any_code) {
+  ASSERT_NO_FATAL_FAILURE(write("first.candy", "verify(1, 1)"));
+  ASSERT_NO_FATAL_FAILURE(write("main.candy", R"(
+    verify(2, 2)
+    import "first.candy" as first
+    import "broken.candy" as broken
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("broken.candy", "import \"leaf.candy\" as leaf"));
+  ASSERT_NO_FATAL_FAILURE(write("leaf.candy", "export def broken("));
+  checks = 0;
+  EXPECT_EQ(run_file("main.candy"), CANDY_ERR_SYNTAX);
+  EXPECT_EQ(checks, 0);
+  ASSERT_NO_FATAL_FAILURE(write("leaf.candy", "verify(3, 3)"));
+  ASSERT_EQ(run_file("main.candy"), CANDY_OK);
+  EXPECT_EQ(checks, 3);
+}
+
+TEST_F(modules, initializes_dependencies_before_the_entry) {
+  ASSERT_NO_FATAL_FAILURE(write("leaf.candy", R"(
+    value = 41
+    export def number() return value end
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("middle.candy", R"(
+    import "leaf.candy" as leaf
+    value = leaf.number() + 1
+    export def number() return value end
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("main.candy", R"(
+    verify(middle.number(), 42)
+    import "middle.candy" as middle
+  )"));
+  checks = 0;
+  ASSERT_EQ(run_file("main.candy"), CANDY_OK);
+  EXPECT_EQ(checks, 1);
+}
+
+TEST_F(modules, resolves_imports_from_a_relative_entry_path) {
+  ASSERT_NO_FATAL_FAILURE(write("lib/value.candy", "export def get() return 42 end"));
+  ASSERT_NO_FATAL_FAILURE(write("main.candy", R"(
+    import "lib/value.candy" as value
+    verify(value.get(), 42)
+  )"));
+  std::error_code error;
+  const auto entry = std::filesystem::relative(files / "main.candy", std::filesystem::current_path(), error);
+  if (error || entry.empty() || entry.is_absolute())
+    GTEST_SKIP() << "temporary directory cannot be addressed relative to CWD";
+  checks = 0;
+  ASSERT_EQ(candy_dofile(state, entry.string().c_str()), CANDY_OK);
+  EXPECT_EQ(checks, 1);
+}
+
+TEST_F(modules, rejects_reentrant_initialization) {
+  ASSERT_NO_FATAL_FAILURE(write("main.candy", "import \"one.candy\" as one"));
+  ASSERT_NO_FATAL_FAILURE(write("one.candy", R"(
+    reenter()
+    export def answer() return 42 end
+  )"));
+  static std::string entry;
+  entry = (files / "main.candy").string();
+  initializations = 0;
+  ASSERT_EQ(candy_state_setglobal(state, "reenter", +[](candy_state_t *current) -> int {
+    ++initializations;
+    if (initializations == 1) {
+      EXPECT_EQ(candy_dofile(current, entry.c_str()), CANDY_ERR_VM);
+    }
+    return 0;
+  }), CANDY_OK);
+  ASSERT_EQ(run_file("main.candy"), CANDY_OK);
+  run("verify(one.answer(), 42)", 1);
+}
+
+TEST_F(parser, chained_scope_and_member_assignments) {
+  run(R"(value = {"branch": {"leaf": 1}}
+value::branch::leaf = 3
+verify(value::branch::leaf, 3)
+value::branch::leaf += 4
+verify(value::branch::leaf, 7)
+value.branch.leaf = 8
+verify(value.branch.leaf, 8)
+)", 3);
+}
+
+TEST_F(modules, imports_are_file_scope_declarations) {
+  reject_without_execution(R"(def f()
+    import "missing.candy" as missing
+  end)");
+  reject_without_execution(R"(if (false)
+    import "missing.candy" as missing
+  end)");
 }

@@ -36,6 +36,7 @@ struct candy_gc {
   candy_object_t *list;
   candy_object_t *gray;
   candy_object_t *glob;
+  candy_table_t *modules;
   candy_gc_fsm_t fsm;
   size_t threshold;
   size_t pool_used;

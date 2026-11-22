@@ -20,7 +20,9 @@
 #include "core/candy_proto.h"
 #include "core/candy_closure.h"
 #include "core/candy_array.h"
+#include "core/candy_table.h"
 #include "core/candy_lexer.h"
+#include "core/candy_reader.h"
 #include <string.h>
 
 #define par_assert(_condition, _format, ...) \
@@ -39,21 +41,46 @@ struct loopstate {
 };
 
 struct parser_local { const candy_array_t *name; uint8_t reg; };
+struct parser_capture { const candy_array_t *name; int8_t mode; };
+
 struct funcstate {
   funcstate_t *prev;
   candy_proto_t *proto;
   const candy_array_t *name;
   candy_vector_t locals;
+  candy_vector_t captures;
+  candy_vector_t upvals;
   uint8_t nlocal;
   uint8_t freereg;
   uint8_t local_hwm;
   uint8_t nreg;
   loopstate_t *loop;
+  bool lambda;
+  int8_t capture_default;
+  uint8_t ncaptures;
+  uint8_t nupvals;
+};
+
+struct parse_graph {
+  candy_array_t *plan;
+  candy_array_t *pending;
+  candy_array_t *aliases;
+  candy_table_t *compiled;
 };
 
 struct parser {
   candy_lexer_t ls;
   funcstate_t *fs;
+  candy_table_t *globals;
+  candy_table_t *exports;
+  const char *path;
+  const parser_t *parent;
+  struct parse_graph *graph;
+};
+
+struct parse_module {
+  parser_t parser;
+  candy_object_t *entry;
 };
 
 static int _expr(parser_t *self, int pref, int min_prec);
@@ -62,19 +89,30 @@ static bool _block(parser_t *self, bool stop_at_end);
 static void _funcstate_open(funcstate_t *self, parser_t *prsr) {
   self->prev = prsr->fs;
   self->proto = candy_proto_create(prsr->ls.gc, prsr->ls.ctx);
+  candy_proto_set_globals(self->proto, prsr->globals);
   self->name = NULL;
   candy_vector_init(&self->locals);
+  candy_vector_init(&self->captures);
+  candy_vector_init(&self->upvals);
   self->nlocal = 0;
   self->freereg = 1;
   self->local_hwm = 1;
   self->nreg = 1;
   self->loop = NULL;
+  self->lambda = false;
+  self->capture_default = -1;
+  self->ncaptures = 0;
+  self->nupvals = 0;
   prsr->fs = self;
 }
 
 static void _funcstate_close(funcstate_t *self, parser_t *prsr) {
   if (candy_vector_data(&self->locals))
     candy_vector_deinit(&self->locals, candy_gc_memory(prsr->ls.gc), sizeof(struct parser_local));
+  if (candy_vector_data(&self->captures))
+    candy_vector_deinit(&self->captures, candy_gc_memory(prsr->ls.gc), sizeof(struct parser_capture));
+  if (candy_vector_data(&self->upvals))
+    candy_vector_deinit(&self->upvals, candy_gc_memory(prsr->ls.gc), sizeof(const candy_array_t *));
   prsr->fs = self->prev;
 }
 
@@ -177,11 +215,96 @@ static bool _is_local(parser_t *self, int reg) {
 static int _declare_local(parser_t *self, const candy_array_t *name) {
   par_assert(self->fs->nlocal < UINT8_MAX, "too many locals");
   int reg = _newreg(self);
-  candy_vector_append(&self->fs->locals, candy_gc_memory(self->ls.gc), self->ls.ctx,
-    &(struct parser_local){name, (uint8_t)reg}, 1, sizeof(struct parser_local));
+  candy_vector_append(&self->fs->locals, self->ls.gc ? candy_gc_memory(self->ls.gc) : NULL, self->ls.ctx, &(struct parser_local){name, (uint8_t)reg}, 1, sizeof(struct parser_local));
   self->fs->nlocal++;
   self->fs->local_hwm = self->fs->freereg;
   return reg;
+}
+
+/* Does `name` name a local (or the function itself) at `fs` or above? */
+static bool _scope_has(parser_t *self, funcstate_t *fs, const candy_array_t *name) {
+  (void)self;
+  for (; fs != NULL; fs = fs->prev) {
+    if (fs->name == name)
+      return true;
+    for (uint8_t i = 0; i < fs->nlocal; ++i)
+      if (((struct parser_local *)candy_vector_data(&fs->locals))[i].name == name)
+        return true;
+    for (uint8_t i = 0; i < fs->nupvals; ++i)
+      if (((const candy_array_t **)candy_vector_data(&fs->upvals))[i] == name)
+        return true;
+  }
+  return false;
+}
+
+/* Register an upvalue of `fs` for `name`, captured from its parent frame.
+ * Intermediate functions capture on demand (always by reference) so a nested
+ * lambda can reach variables of its grand-parents. */
+static int _upvalue_ensure(parser_t *self, funcstate_t *fs, const candy_array_t *name, bool by_ref) {
+  for (uint8_t i = 0; i < fs->nupvals; ++i)
+    if (((const candy_array_t **)candy_vector_data(&fs->upvals))[i] == name)
+      return i;
+  par_assert(fs->nupvals < UINT8_MAX, "too many upvalues");
+  funcstate_t *parent = fs->prev;
+  par_assert(parent != NULL, "upvalue without an enclosing function");
+  int reg = -1;
+  for (uint8_t i = 0; i < parent->nlocal; ++i)
+    if (((struct parser_local *)candy_vector_data(&parent->locals))[i].name == name) {
+      reg = ((struct parser_local *)candy_vector_data(&parent->locals))[i].reg;
+      break;
+    }
+  if (reg < 0 && parent->name == name)
+    reg = 0;
+  int from = -1;
+  if (reg < 0) {
+    for (uint8_t i = 0; i < parent->nupvals; ++i)
+      if (((const candy_array_t **)candy_vector_data(&parent->upvals))[i] == name) {
+        from = i;
+        break;
+      }
+    if (from < 0) {
+      if (!_scope_has(self, parent, name))
+        return -1;
+      from = _upvalue_ensure(self, parent, name, true);
+      if (from < 0)
+        return -1;
+    }
+  }
+  uint8_t kind = reg >= 0 ? (by_ref ? 0 : 2) : (by_ref ? 1 : 3);
+  uint8_t index = (uint8_t)(reg >= 0 ? reg : from);
+  candy_proto_add_upval(fs->proto, self->ls.gc, self->ls.ctx, kind, index);
+  candy_vector_append(&fs->upvals, candy_gc_memory(self->ls.gc), self->ls.ctx, &name, 1, sizeof(name));
+  return fs->nupvals++;
+}
+
+/* Resolve `name` as an upvalue of the current lambda: -1 when it is not a
+ * captured variable (globals and named functions fall through), otherwise the
+ * upvalue index, creating the capture when needed. */
+static int _upvalue_resolve(parser_t *self, const candy_array_t *name) {
+  if (!self->fs->lambda)
+    return -1;
+  for (uint8_t i = 0; i < self->fs->nupvals; ++i)
+    if (((const candy_array_t **)candy_vector_data(&self->fs->upvals))[i] == name)
+      return i;
+  bool named = false;
+  int8_t mode = self->fs->capture_default;
+  for (uint8_t i = 0; i < self->fs->ncaptures; ++i)
+    if (((struct parser_capture *)candy_vector_data(&self->fs->captures))[i].name == name) {
+      mode = ((struct parser_capture *)candy_vector_data(&self->fs->captures))[i].mode;
+      named = true;
+      break;
+    }
+  if (mode < 0) {
+    /* C++ rule: an enclosing variable used by a lambda must be captured. */
+    par_assert(!_scope_has(self, self->fs->prev, name), "name is not captured: %.*s",
+      (int)candy_array_size(name), (char *)candy_array_data(name));
+    return -1;
+  }
+  int index = _upvalue_ensure(self, self->fs, name, mode == 1);
+  /* A default capture only applies to variables that are actually in scope. */
+  par_assert(!named || index >= 0, "cannot capture: %.*s",
+    (int)candy_array_size(name), (char *)candy_array_data(name));
+  return index;
 }
 
 static void _bind_name(parser_t *self, const candy_array_t *name, int reg) {
@@ -190,8 +313,14 @@ static void _bind_name(parser_t *self, const candy_array_t *name, int reg) {
     return;
   }
   int local = _local(self, name);
-  if (local <= 0)
+  if (local <= 0) {
+    int upval = self->fs->lambda ? _upvalue_resolve(self, name) : -1;
+    if (upval >= 0) {
+      _add_iabx(self, OP_SETUPVAL, (uint32_t)reg, (uint32_t)upval);
+      return;
+    }
     local = _declare_local(self, name);
+  }
   if (reg != local)
     _add_iabx(self, OP_MOVE, (uint32_t)local, (uint32_t)reg);
 }
@@ -243,12 +372,15 @@ static uint32_t _call_args(parser_t *self, int base) {
  * otherwise the value is returned in its own register. */
 static int _name_expr(parser_t *self, const candy_array_t *name, int nres) {
   int local = _local(self, name);
+  int upval = local < 0 && self->fs->lambda ? _upvalue_resolve(self, name) : -1;
   bool call = _test(self, '(');
   if (call) {
     /* The callee and arguments live at the top of the current register frame
      * so the callee's own frame starts above them (even for self calls). */
     int func = _newreg(self);
-    if (local < 0)
+    if (local < 0 && upval >= 0)
+      _add_iabx(self, OP_GETUPVAL, (uint32_t)func, (uint32_t)upval);
+    else if (local < 0)
       _add_iabx(self, OP_LOADG, (uint32_t)func, (uint32_t)_add_name_const(self, name));
     else if (local != 0)
       _add_iabx(self, OP_MOVE, (uint32_t)func, (uint32_t)local);
@@ -261,7 +393,10 @@ static int _name_expr(parser_t *self, const candy_array_t *name, int nres) {
   if (local >= 0)
     return local;
   int reg = _newreg(self);
-  _add_iabx(self, OP_LOADG, (uint32_t)reg, (uint32_t)_add_name_const(self, name));
+  if (upval >= 0)
+    _add_iabx(self, OP_GETUPVAL, (uint32_t)reg, (uint32_t)upval);
+  else
+    _add_iabx(self, OP_LOADG, (uint32_t)reg, (uint32_t)_add_name_const(self, name));
   return reg;
 }
 
@@ -331,16 +466,66 @@ static int _table_constructor(parser_t *self) {
 }
 
 /* Postfix subscript access `t[k]`, reading each element into a fresh register. */
-static int _postfix(parser_t *self, int reg) {
-  while (candy_lexer_lookahead(&self->ls) == '[') {
-    candy_lexer_next(&self->ls);
-    int key = _expr(self, -1, 0);
-    _next(self, ']');
-    int dst = _newreg(self);
-    _add_iabc(self, OP_GETTABLE, (uint32_t)dst, (uint32_t)reg, (uint32_t)key);
-    reg = dst;
+/* Call the value already in `reg`; the opening parenthesis is consumed. The
+ * callee is moved to the top of the frame so its arguments follow it. */
+static int _call_value(parser_t *self, int reg) {
+  if (reg != (int)self->fs->freereg - 1) {
+    int moved = _newreg(self);
+    _add_iabx(self, OP_MOVE, (uint32_t)moved, (uint32_t)reg);
+    reg = moved;
   }
+  uint32_t narg = _call_args(self, reg + 1);
+  _add_iabc(self, OP_CALL, (uint32_t)reg, narg, 1);
   return reg;
+}
+
+/* Subscripts and calls chain left to right, so `a[0](x)` and `f()()` both work
+ * on any expression, not just on names. */
+static int _call_method(parser_t *self, int receiver, int key) {
+  int callee = _newreg(self);
+  _add_iabc(self, OP_GETTABLE, (uint32_t)callee, (uint32_t)receiver, (uint32_t)key);
+  int slot = _newreg(self);
+  _add_iabx(self, OP_MOVE, (uint32_t)slot, (uint32_t)receiver);
+  uint32_t narg = _call_args(self, slot + 1);
+  _add_iabc(self, OP_CALLMETHOD, (uint32_t)callee, narg, 1);
+  return callee;
+}
+
+static int _postfix(parser_t *self, int reg) {
+  for (;;) {
+    candy_tokens_t token = candy_lexer_lookahead(&self->ls);
+    if (token == '[') {
+      candy_lexer_next(&self->ls);
+      int key = _expr(self, -1, 0);
+      _next(self, ']');
+      int dst = _newreg(self);
+      _add_iabc(self, OP_GETTABLE, (uint32_t)dst, (uint32_t)reg, (uint32_t)key);
+      reg = dst;
+      continue;
+    }
+    if (token == TK_DOT || token == TK_SCOPE) {
+      candy_lexer_next(&self->ls);
+      const candy_array_t *field = _next(self, TK_IDENT)->s;
+      int key = _newreg(self);
+      _add_iabx(self, OP_LOADK, (uint32_t)key, (uint32_t)_add_name_const(self, field));
+      if (token == TK_DOT && candy_lexer_lookahead(&self->ls) == '(') {
+        candy_lexer_next(&self->ls);
+        reg = _call_method(self, reg, key);
+      }
+      else {
+        int dst = _newreg(self);
+        _add_iabc(self, OP_GETTABLE, (uint32_t)dst, (uint32_t)reg, (uint32_t)key);
+        reg = dst;
+      }
+      continue;
+    }
+    if (token == '(') {
+      candy_lexer_next(&self->ls);
+      reg = _call_value(self, reg);
+      continue;
+    }
+    return reg;
+  }
 }
 
 static size_t _pc(parser_t *self) {
@@ -567,6 +752,97 @@ static int _array_constructor(parser_t *self) {
   return array;
 }
 
+/* Parse one capture-list entry, a name or `&name`. */
+static void _capture_entry(parser_t *self, funcstate_t *fs) {
+  int8_t mode = _test(self, '&') ? 1 : 0;
+  const candy_array_t *name = _next(self, TK_IDENT)->s;
+  par_assert(fs->ncaptures < UINT8_MAX, "too many captures");
+  candy_vector_append(&fs->captures, candy_gc_memory(self->ls.gc), self->ls.ctx,
+    &(struct parser_capture){name, mode}, 1, sizeof(struct parser_capture));
+  fs->ncaptures++;
+}
+
+/* Parse `name[&name, ...]` entries separated by commas. */
+static void _capture_entries(parser_t *self, funcstate_t *fs) {
+  do {
+    _capture_entry(self, fs);
+  } while (_test(self, ','));
+}
+
+/* A lambda expression: `def [captures](params) body end`. The capture list may
+ * be omitted, which captures nothing. */
+static int _def_expr(parser_t *self) {
+  _next(self, TK_def);
+  funcstate_t fs;
+  _funcstate_open(&fs, self);
+  fs.lambda = true;
+  if (_test(self, '[')) {
+    if (_test(self, '=')) {
+      fs.capture_default = 0;
+      if (!_test(self, ']')) {
+        _next(self, ',');
+        _capture_entries(self, &fs);
+        _next(self, ']');
+      }
+    }
+    else if (_test(self, '&')) {
+      if (_test(self, ']')) {
+        fs.capture_default = 1;
+      }
+      else if (candy_lexer_lookahead(&self->ls) == ',') {
+        fs.capture_default = 1;
+        _next(self, ',');
+        _capture_entries(self, &fs);
+        _next(self, ']');
+      }
+      else {
+        /* `[&x, ...]`: explicit entries, the first one captured by reference. */
+        const candy_array_t *first_capture = _next(self, TK_IDENT)->s;
+        candy_vector_append(&fs.captures, candy_gc_memory(self->ls.gc), self->ls.ctx,
+          &(struct parser_capture){first_capture, 1}, 1, sizeof(struct parser_capture));
+        fs.ncaptures++;
+        while (_test(self, ','))
+          _capture_entry(self, &fs);
+        _next(self, ']');
+      }
+    }
+    else if (!_test(self, ']')) {
+      _capture_entries(self, &fs);
+      _next(self, ']');
+    }
+  }
+  /* Every explicitly listed capture must name an enclosing variable. */
+  for (uint8_t i = 0; i < fs.ncaptures; ++i)
+    par_assert(_scope_has(self, fs.prev, ((struct parser_capture *)candy_vector_data(&fs.captures))[i].name), "cannot capture: %.*s",
+      (int)candy_array_size(((struct parser_capture *)candy_vector_data(&fs.captures))[i].name), (char *)candy_array_data(((struct parser_capture *)candy_vector_data(&fs.captures))[i].name));
+  _next(self, '(');
+  if (!_test(self, ')')) {
+    do {
+      const candy_array_t *param = _next(self, TK_IDENT)->s;
+      par_assert(_local(self, param) <= 0, "duplicate parameter");
+      _declare_local(self, param);
+    } while (_test(self, ','));
+    _next(self, ')');
+  }
+  uint32_t nparams = fs.nlocal;
+  fs.local_hwm = fs.freereg;
+  bool returns = _block(self, true);
+  _next(self, TK_end);
+  if (!returns) {
+    int null = fs.local_hwm > 1 ? (int)fs.local_hwm - 1 : _newreg(self);
+    _add_iabx(self, OP_LOADK, (uint32_t)null, (uint32_t)_add_null(self));
+    _add_iax(self, OP_RETURN, (uint32_t)null);
+  }
+  candy_proto_set_layout(fs.proto, (uint8_t)nparams, fs.nreg, fs.local_hwm);
+  candy_proto_t *proto = fs.proto;
+  _funcstate_close(&fs, self);
+  candy_wrap_t wrap;
+  candy_wrap_set_object(&wrap, (candy_object_t *)proto);
+  int reg = _newreg(self);
+  _add_iabx(self, OP_CLOSURE, (uint32_t)reg, (uint32_t)_add_const(self, &wrap));
+  return reg;
+}
+
 static int _primary(parser_t *self) {
   candy_tokens_t token = candy_lexer_lookahead(&self->ls);
   if (token == TK_MINUS) {
@@ -597,6 +873,9 @@ static int _primary(parser_t *self) {
   }
   if (token == '[') {
     return _array_constructor(self);
+  }
+  if (token == TK_def) {
+    return _def_expr(self);
   }
   if (token == TK_IDENT) {
     const candy_array_t *name = _next(self, TK_IDENT)->s;
@@ -709,7 +988,7 @@ static bool _fuse_global_add(parser_t *self, const candy_array_t *name) {
     return false;
   const candy_array_t *operand_name = _next(self, TK_IDENT)->s;
   candy_tokens_t after = candy_lexer_lookahead(&self->ls);
-  if (after != '(' && after != '[' && _precedence(after) < 0) {
+  if (after != '(' && after != '[' && after != TK_DOT && after != TK_SCOPE && _precedence(after) < 0) {
     int operand = _name_expr(self, operand_name, 1);
     if ((uint32_t)operand < (1U << 9)) {
       _add_iabc(self, OP_ADDG, 0, (uint32_t)key, (uint32_t)operand);
@@ -725,72 +1004,150 @@ static bool _fuse_global_add(parser_t *self, const candy_array_t *name) {
   return _finish_global_add(self, name, key, sum);
 }
 
+static int _name_value(parser_t *self, const candy_array_t *name) {
+  int local = _local(self, name);
+  if (local >= 0) return local;
+  int reg = _newreg(self);
+  _add_iabx(self, OP_LOADG, (uint32_t)reg, (uint32_t)_add_name_const(self, name));
+  return reg;
+}
+
 static void _name_stmt(parser_t *self) {
   const candy_array_t *name = _next(self, TK_IDENT)->s;
-  if (candy_lexer_lookahead(&self->ls) == '[') {
-    /* subscript assignment `t[k] = v` or `t[k] op= v` */
-    int table = _name_expr(self, name, 1);
-    candy_lexer_next(&self->ls);
-    int key = _expr(self, -1, 0);
-    _next(self, ']');
-    candy_opcodes_t op;
-    if (_compound_op(self, candy_lexer_lookahead(&self->ls), &op)) {
-      candy_lexer_next(&self->ls);
-      int val = _expr(self, -1, 0);
-      int t = _newreg(self);
-      _add_iabc(self, OP_GETTABLE, (uint32_t)t, (uint32_t)table, (uint32_t)key);
-      _add_iabc(self, op, (uint32_t)t, (uint32_t)t, (uint32_t)val);
-      _add_iabc(self, OP_SETTABLE, (uint32_t)table, (uint32_t)key, (uint32_t)t);
-      return;
+  candy_tokens_t token = candy_lexer_lookahead(&self->ls);
+
+  /* A statement postfix chain keeps its final table/key pair so assignment
+   * writes the container instead of writing back to a temporary register. */
+  if (token == TK_DOT || token == TK_SCOPE || token == '[') {
+    int current = _name_value(self, name);
+    for (;;) {
+      bool method = token == TK_DOT;
+      int key = _newreg(self);
+      if (token == TK_DOT || token == TK_SCOPE) {
+        candy_lexer_next(&self->ls);
+        const candy_array_t *field = _next(self, TK_IDENT)->s;
+        _add_iabx(self, OP_LOADK, (uint32_t)key, (uint32_t)_add_name_const(self, field));
+      }
+      else {
+        candy_lexer_next(&self->ls);
+        _expr(self, key, 0);
+        _next(self, ']');
+      }
+      token = candy_lexer_lookahead(&self->ls);
+      candy_opcodes_t op;
+      if (token == '=' || _compound_op(self, token, &op)) {
+        if (token == '=') {
+          candy_lexer_next(&self->ls);
+        }
+        else {
+          candy_lexer_next(&self->ls);
+          int value = _expr(self, -1, 0);
+          int old = _newreg(self);
+          _add_iabc(self, OP_GETTABLE, (uint32_t)old, (uint32_t)current, (uint32_t)key);
+          _add_iabc(self, op, (uint32_t)old, (uint32_t)old, (uint32_t)value);
+          _add_iabc(self, OP_SETTABLE, (uint32_t)current, (uint32_t)key, (uint32_t)old);
+          return;
+        }
+        int value = _expr(self, -1, 0);
+        _add_iabc(self, OP_SETTABLE, (uint32_t)current, (uint32_t)key, (uint32_t)value);
+        return;
+      }
+      if (token == '(') {
+        candy_lexer_next(&self->ls);
+        if (method)
+          _call_method(self, current, key);
+        else {
+          int callee = _newreg(self);
+          _add_iabc(self, OP_GETTABLE, (uint32_t)callee, (uint32_t)current, (uint32_t)key);
+          _call_value(self, callee);
+        }
+        return;
+      }
+      int next = _newreg(self);
+      _add_iabc(self, OP_GETTABLE, (uint32_t)next, (uint32_t)current, (uint32_t)key);
+      current = next;
+      token = candy_lexer_lookahead(&self->ls);
+      if (token != TK_DOT && token != TK_SCOPE && token != '[')
+        return;
     }
-    _next(self, '=');
-    int val = _expr(self, -1, 0);
-    _add_iabc(self, OP_SETTABLE, (uint32_t)table, (uint32_t)key, (uint32_t)val);
-    return;
   }
+
   candy_opcodes_t op;
-  if (_compound_op(self, candy_lexer_lookahead(&self->ls), &op)) {
+  if (_compound_op(self, token, &op)) {
+    int current = _name_value(self, name);
     candy_lexer_next(&self->ls);
-    int target = _name_expr(self, name, 1);
-    int val = _expr(self, -1, 0);
-    _add_iabc(self, op, (uint32_t)target, (uint32_t)target, (uint32_t)val);
+    int value = _expr(self, -1, 0);
+    _add_iabc(self, op, (uint32_t)current, (uint32_t)current, (uint32_t)value);
     if (_local(self, name) < 0)
-      _add_iabx(self, OP_SETG, (uint32_t)target, (uint32_t)_add_name_const(self, name));
+      _add_iabx(self, OP_SETG, (uint32_t)current, (uint32_t)_add_name_const(self, name));
     return;
   }
-  if (!_test(self, '=')) {
+  if (token != '=') {
     _name_expr(self, name, 0);
     return;
   }
-  int local = _local(self, name);
-  if (local > 0) {
-    _expr(self, local, 0);
-    return;
+  candy_lexer_next(&self->ls);
+  if (self->fs->prev != NULL) {
+    /* Existing locals can receive the final RHS result directly. New locals
+     * and captures still go through _bind_name after evaluating the RHS. */
+    int local = _local(self, name);
+    if (local > 0) {
+      _expr(self, local, 0);
+      return;
+    }
   }
-  /* Only the main chunk assigns globals directly; inside a function the first
-   * assignment must bind a local, so fusion there would change the binding. */
-  if (local < 0 && !self->fs->prev && candy_lexer_lookahead(&self->ls) == TK_IDENT) {
+  else if (candy_lexer_lookahead(&self->ls) == TK_IDENT) {
     const candy_array_t *first = _next(self, TK_IDENT)->s;
     if (first == name && _test(self, '+')) {
       if (_fuse_global_add(self, name))
         return;
-      /* Not fused: we consumed `x +`, so parse the right operand from here. */
-      int current = _name_expr(self, first, 1);
-      int operand = _expr(self, -1, 21);
+      int lhs = _name_expr(self, first, 1);
+      int rhs = _expr(self, -1, 21);
       int sum = _newreg(self);
-      _add_iabc(self, OP_ADD, (uint32_t)sum, (uint32_t)current, (uint32_t)operand);
+      _add_iabc(self, OP_ADD, (uint32_t)sum, (uint32_t)lhs, (uint32_t)rhs);
       _bind_name(self, name, _expr_tail(self, sum, -1, 0));
       return;
     }
-    /* Not fused: the identifier we consumed is the head of the right operand. */
     _bind_name(self, name, _expr_tail(self, _postfix(self, _name_expr(self, first, 1)), -1, 0));
     return;
   }
-  int reg = _expr(self, -1, 0);
-  _bind_name(self, name, reg);
+  _bind_name(self, name, _expr(self, -1, 0));
 }
 
-static void _def_stmt(parser_t *self) {
+static void _class_stmt(parser_t *self) {
+  _next(self, TK_class);
+  const candy_array_t *name = _next(self, TK_IDENT)->s;
+  int table = _newreg(self);
+  _add_iax(self, OP_TABLE, (uint32_t)table);
+  _add_iabx(self, OP_SETG, (uint32_t)table, (uint32_t)_add_name_const(self, name));
+  while (candy_lexer_lookahead(&self->ls) != TK_end) {
+    _next(self, TK_def);
+    const candy_array_t *method = _next(self, TK_IDENT)->s;
+    /* Methods are compiled as ordinary named functions, then installed in the
+     * class table. The name is temporary and does not affect explicit self. */
+    funcstate_t fs;
+    _funcstate_open(&fs, self);
+    fs.name = method;
+    _next(self, '(');
+    if (!_test(self, ')')) {
+      do { const candy_array_t *param = _next(self, TK_IDENT)->s; _declare_local(self, param); } while (_test(self, ','));
+      _next(self, ')');
+    }
+    uint32_t nparams = fs.nlocal; fs.local_hwm = fs.freereg;
+    bool returns = _block(self, true); _next(self, TK_end);
+    if (!returns) { int nul = fs.local_hwm > 1 ? fs.local_hwm - 1 : _newreg(self); _add_iabx(self, OP_LOADK, nul, _add_null(self)); _add_iax(self, OP_RETURN, nul); }
+    candy_proto_set_layout(fs.proto, (uint8_t)nparams, fs.nreg, fs.local_hwm);
+    candy_proto_t *proto = fs.proto; _funcstate_close(&fs, self);
+    candy_sclosure_t *closure = candy_sclosure_create(self->ls.gc, self->ls.ctx, proto, 0);
+    candy_wrap_t wrap; candy_wrap_set_object(&wrap, (candy_object_t *)closure);
+    int val = _newreg(self); _add_iabx(self, OP_LOADK, val, _add_const(self, &wrap));
+    int key = _newreg(self); _add_iabx(self, OP_LOADK, key, _add_name_const(self, method));
+    _add_iabc(self, OP_SETTABLE, table, key, val);
+  }
+  _next(self, TK_end);
+}
+
+static void _def_stmt(parser_t *self, bool exported) {
   _next(self, TK_def);
   const candy_array_t *name = _next(self, TK_IDENT)->s;
   funcstate_t fs;
@@ -820,12 +1177,242 @@ static void _def_stmt(parser_t *self) {
 
   candy_proto_t *proto = fs.proto;
   _funcstate_close(&fs, self);
-  candy_sclosure_t *closure = candy_sclosure_create(self->ls.gc, self->ls.ctx, proto);
+  candy_sclosure_t *closure = candy_sclosure_create(self->ls.gc, self->ls.ctx, proto, 0);
   candy_wrap_t wrap;
   candy_wrap_set_object(&wrap, (candy_object_t *)closure);
   int reg = _newreg(self);
   _add_iabx(self, OP_LOADK, (uint32_t)reg, (uint32_t)_add_const(self, &wrap));
   _bind_name(self, name, reg);
+  if (exported && self->exports != NULL) {
+    candy_wrap_t key;
+    candy_wrap_set_object(&key, (const candy_object_t *)name);
+    candy_err_t err = candy_table_set(self->exports, self->ls.gc, self->ls.ctx, &key, &wrap);
+    par_assert(err == CANDY_OK, "could not export function");
+  }
+}
+
+static void _entry(void *arg) {
+  parser_t *self = (parser_t *)arg;
+  bool returns = _block(self, false);
+  _check(self, TK_EOS);
+  if (!returns) {
+    int null = self->fs->local_hwm > 1 ? (int)self->fs->local_hwm - 1 : _newreg(self);
+    _add_iabx(self, OP_LOADK, (uint32_t)null, (uint32_t)_add_null(self));
+    _add_iax(self, OP_RETURN, (uint32_t)null);
+  }
+  candy_proto_set_layout(self->fs->proto, 0, self->fs->nreg, self->fs->local_hwm);
+}
+
+static candy_err_t _parse_chunk(parser_t *self, candy_object_t **entry, candy_object_t **out) {
+  candy_gc_t *gc = self->ls.gc;
+  candy_excep_t *ctx = self->ls.ctx;
+  funcstate_t fs;
+  _funcstate_open(&fs, self);
+  candy_err_t err = candy_excep_try(ctx, _entry, self, out);
+  _funcstate_close(&fs, self);
+  if (err == CANDY_OK)
+    *entry = (candy_object_t *)candy_sclosure_create(gc, ctx, fs.proto, 0);
+  return err;
+}
+
+static void _compile_module(void *arg) {
+  struct parse_module *module = (struct parse_module *)arg;
+  parser_t *self = &module->parser;
+  candy_gc_t *gc = self->ls.gc;
+  candy_excep_t *ctx = self->ls.ctx;
+  self->globals = candy_table_create(gc, ctx);
+  self->exports = candy_table_create(gc, ctx);
+  candy_object_t *out = NULL;
+  candy_err_t err = _parse_chunk(self, &module->entry, &out);
+  if (err != CANDY_OK)
+    candy_excep_throw(ctx, err, out);
+}
+
+static void _module_set(parser_t *self, candy_table_t *table, const candy_wrap_t *key, const candy_wrap_t *value) {
+  candy_err_t err = candy_table_set(table, self->ls.gc, self->ls.ctx, key, value);
+  par_assert(err == CANDY_OK, "could not bind module");
+}
+
+static bool _path_sep(char ch) {
+#if defined(_WIN32)
+  return ch == '/' || ch == '\\';
+#else
+  return ch == '/';
+#endif
+}
+
+/* Fold lexical aliases without querying the filesystem. Preserve leading
+ * relative '..' components and never rewind past the path root. */
+static void _normalize_path(char *path) {
+  char *read = path;
+#if defined(_WIN32)
+  if (path[0] && path[1] == ':')
+    read += 2;
+#endif
+  char *write = read;
+  bool rooted = _path_sep(*read);
+  if (rooted) {
+    *write++ = '/';
+    ++read;
+#if defined(_WIN32)
+    /* The server and share are the root of a UNC path. */
+    if (read == path + 1 && _path_sep(*read)) {
+      *write++ = '/';
+      ++read;
+      for (int i = 0; i < 2; ++i) {
+        while (_path_sep(*read))
+          ++read;
+        while (*read && !_path_sep(*read))
+          *write++ = *read++;
+        if (_path_sep(*read)) {
+          *write++ = '/';
+          ++read;
+        }
+      }
+    }
+#endif
+  }
+  char *start = write;
+  char *floor = start;
+  while (*read) {
+    while (_path_sep(*read))
+      ++read;
+    char *part = read;
+    while (*read && !_path_sep(*read))
+      ++read;
+    size_t size = (size_t)(read - part);
+    if (size == 0 || (size == 1 && part[0] == '.'))
+      continue;
+    bool parent = size == 2 && part[0] == '.' && part[1] == '.';
+    if (parent && write > floor) {
+      while (write > floor && write[-1] != '/')
+        --write;
+      if (write > floor)
+        --write;
+      continue;
+    }
+    if (parent && rooted)
+      continue;
+    if (write > start)
+      *write++ = '/';
+    memmove(write, part, size);
+    write += size;
+    if (parent)
+      floor = write;
+  }
+  if (write == path)
+    *write++ = '.';
+  *write = '\0';
+}
+
+static const candy_array_t *_import_path(parser_t *self, const char *source, size_t prefix,
+    const char *relative, size_t size) {
+  candy_gc_t *gc = self->ls.gc;
+  candy_excep_t *ctx = self->ls.ctx;
+  candy_assert(ctx, gc, prefix < SIZE_MAX - size, CANDY_ERR_VM, "import path is too long");
+  candy_array_t *buffer = candy_array_create(gc, ctx, CANDY_TYPE_CHAR);
+  candy_array_resize(buffer, gc, ctx, prefix + size + 1);
+  char *joined = (char *)candy_array_data(buffer);
+  memcpy(joined, source, prefix);
+  memcpy(joined + prefix, relative, size);
+  joined[prefix + size] = '\0';
+  _normalize_path(joined);
+  return candy_array_create_const(gc, ctx, CANDY_TYPE_CHAR, joined, strlen(joined));
+}
+
+static void _load_import(parser_t *self, const candy_array_t *path, const candy_array_t *alias) {
+  candy_gc_t *gc = self->ls.gc;
+  candy_excep_t *ctx = self->ls.ctx;
+  struct parse_graph *graph = self->graph;
+  const char *relative = (const char *)candy_array_data(path);
+  size_t size = candy_array_size(path);
+  candy_assert(ctx, gc, size > 0 && memchr(relative, '\0', size) == NULL,
+    CANDY_ERR_VM, "invalid import path");
+  candy_assert(ctx, gc, relative[0] != '/'
+#if defined(_WIN32)
+    && relative[0] != '\\' && (size < 2 || relative[1] != ':')
+#endif
+    , CANDY_ERR_VM, "import requires a relative path");
+
+  /* Normalize the entry lazily: chunks without imports need no path buffer. */
+  if (!self->parent && self->path && !graph->compiled) {
+    const candy_array_t *entry = _import_path(self, "", 0, self->path, strlen(self->path));
+    self->path = (const char *)candy_array_data(entry);
+  }
+  const char *source = self->path ? self->path : "";
+  size_t prefix = 0;
+  for (size_t i = 0; source[i]; ++i)
+    if (_path_sep(source[i]))
+      prefix = i + 1;
+  const candy_array_t *filename = _import_path(self, source, prefix, relative, size);
+  const char *resolved = (const char *)candy_array_data(filename);
+
+  for (const parser_t *it = self; it; it = it->parent)
+    candy_assert(ctx, gc, !it->path || strcmp(it->path, resolved) != 0,
+      CANDY_ERR_VM, "circular import '%s'", resolved);
+
+  if (!graph->compiled) {
+    graph->compiled = candy_table_create(gc, ctx);
+    graph->pending = candy_array_create(gc, ctx, CANDY_TYPE_WRAP);
+    graph->aliases = candy_array_create(gc, ctx, CANDY_TYPE_WRAP);
+    graph->plan = candy_array_create(gc, ctx, CANDY_TYPE_WRAP);
+    candy_wrap_t plan[2];
+    candy_wrap_set_object(&plan[0], (candy_object_t *)graph->pending);
+    candy_wrap_set_object(&plan[1], (candy_object_t *)graph->aliases);
+    candy_array_append(graph->plan, gc, ctx, plan, 2);
+    /* Only the root proto carries the initialization plan. */
+    parser_t const *root = self;
+    while (root->parent)
+      root = root->parent;
+    candy_proto_set_initializers(root->fs->proto, graph->plan);
+  }
+  candy_wrap_t key, exports;
+  candy_wrap_set_object(&key, (const candy_object_t *)filename);
+  exports = gc->modules ? *candy_table_get(gc->modules, gc, &key) : CANDY_WRAP_NULL;
+  candy_assert(ctx, gc, candy_wrap_type(&exports) != CANDY_TYPE_BOOLEAN,
+    CANDY_ERR_VM, "module initialization already in progress: '%s'", resolved);
+  if (candy_wrap_type(&exports) == CANDY_TYPE_NULL)
+    exports = *candy_table_get(graph->compiled, gc, &key);
+  if (candy_wrap_type(&exports) == CANDY_TYPE_NULL) {
+    FILE *file = fopen(resolved, "r");
+    candy_assert(ctx, gc, file != NULL, CANDY_ERR_VM, "cannot open import '%s'", resolved);
+    struct file_info reader = {file, resolved};
+    struct parse_module module = {.parser = {.parent = self, .path = resolved, .graph = graph}};
+    candy_lexer_init(&module.parser.ls, gc, ctx, file_reader, &reader);
+    candy_object_t *out = NULL;
+    candy_err_t err = candy_excep_try(ctx, _compile_module, &module, &out);
+    bool read_failed = ferror(file);
+    candy_lexer_deinit(&module.parser.ls);
+    fclose(file);
+    candy_assert(ctx, gc, !read_failed, CANDY_ERR_VM, "could not read module '%s'", resolved);
+    if (err != CANDY_OK) {
+      const char *message = out ? (const char *)candy_array_data((candy_array_t *)out) : "";
+      int length = out ? (int)candy_array_size((candy_array_t *)out) : 0;
+      candy_assert(ctx, gc, false, err, "in module '%s': %.*s", resolved, length, message);
+    }
+    candy_wrap_set_object(&exports, (candy_object_t *)module.parser.exports);
+    _module_set(self, graph->compiled, &key, &exports);
+    /* Postorder: dependencies are queued before their importer. */
+    candy_wrap_t pending[] = {key, exports, CANDY_WRAP_NULL};
+    candy_wrap_set_object(&pending[2], module.entry);
+    candy_array_append(graph->pending, gc, ctx, pending, 3);
+  }
+  candy_wrap_set_object(&key, (const candy_object_t *)alias);
+  if (self->globals)
+    _module_set(self, self->globals, &key, &exports);
+  else {
+    candy_wrap_t binding[] = {key, exports};
+    candy_array_append(graph->aliases, gc, ctx, binding, 2);
+  }
+}
+
+static void _import_stmt(parser_t *self) {
+  _next(self, TK_import);
+  const candy_array_t *path = _next(self, TK_STRING)->s;
+  _next(self, TK_as);
+  const candy_array_t *name = _next(self, TK_IDENT)->s;
+  _load_import(self, path, name);
+  _test(self, ';');
 }
 
 static void _if_stmt(parser_t *self) {
@@ -960,7 +1547,18 @@ static bool _block(parser_t *self, bool stop_at_end) {
       case TK_end: case TK_elif: case TK_else:
         par_assert(stop_at_end, "unexpected token %s in statement", candy_token_str(token));
         return returns;
-      case TK_def:      _def_stmt(self); break;
+      case TK_class:   _class_stmt(self); break;
+      case TK_def:      _def_stmt(self, false); break;
+      case TK_import:
+        par_assert(!stop_at_end, "import outside top level");
+        _import_stmt(self);
+        break;
+      case TK_export:
+        par_assert(!stop_at_end, "export outside top level");
+        _next(self, TK_export);
+        _def_stmt(self, true);
+        _test(self, ';');
+        break;
       case TK_if:       _if_stmt(self); break;
       case TK_while:    _while_stmt(self); break;
       case TK_for:      _for_stmt(self); break;
@@ -975,37 +1573,15 @@ static bool _block(parser_t *self, bool stop_at_end) {
   }
 }
 
-static void _parser_init(parser_t *self, candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg) {
-  self->fs = NULL;
-  candy_lexer_init(&self->ls, gc, ctx, reader, arg);
-}
-
-static void _parser_deinit(parser_t *self) {
-  candy_lexer_deinit(&self->ls);
-  self->fs = NULL;
-}
-
-static void _entry(void *arg) {
-  parser_t *self = (parser_t *)arg;
-  bool returns = _block(self, false);
-  _check(self, TK_EOS);
-  if (!returns) {
-    int null = self->fs->local_hwm > 1 ? (int)self->fs->local_hwm - 1 : _newreg(self);
-    _add_iabx(self, OP_LOADK, (uint32_t)null, (uint32_t)_add_null(self));
-    _add_iax(self, OP_RETURN, (uint32_t)null);
-  }
-  candy_proto_set_layout(self->fs->proto, 0, self->fs->nreg, self->fs->local_hwm);
-}
-
 candy_err_t candy_parse(candy_gc_t *gc, candy_excep_t *ctx, candy_reader_t reader, void *arg, candy_object_t **out) {
-  parser_t prsr;
-  funcstate_t fs;
-  _parser_init(&prsr, gc, ctx, reader, arg);
-  _funcstate_open(&fs, &prsr);
-  candy_err_t err = candy_excep_try(ctx, _entry, &prsr, out);
-  _funcstate_close(&fs, &prsr);
-  _parser_deinit(&prsr);
-  if (err == CANDY_OK)
-    *out = (candy_object_t *)candy_sclosure_create(gc, ctx, fs.proto);
+  struct parse_graph graph = {0};
+  const char *path = reader == file_reader ? ((const struct file_info *)arg)->path : NULL;
+  parser_t parser = {.path = path, .graph = &graph};
+  candy_lexer_init(&parser.ls, gc, ctx, reader, arg);
+  candy_object_t *entry = NULL;
+  candy_err_t err = _parse_chunk(&parser, &entry, out);
+  candy_lexer_deinit(&parser.ls);
+  if (err == CANDY_OK && out)
+    *out = entry;
   return err;
 }

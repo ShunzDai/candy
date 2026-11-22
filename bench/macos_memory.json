@@ -1,20 +1,20 @@
 {
   "empty": {
     "candy": {
-      "rss_bytes": 1523712,
-      "peak_bytes": 950560,
+      "rss_bytes": 1425408,
+      "peak_bytes": 934176,
       "samples": [
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1425408,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1523712,
-          "peak_bytes": 950560
+          "rss_bytes": 1425408,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1523712,
-          "peak_bytes": 950560
+          "rss_bytes": 1425408,
+          "peak_bytes": 934176
         }
       ]
     },
@@ -31,7 +31,7 @@
           "peak_bytes": 950560
         },
         {
-          "rss_bytes": 1671168,
+          "rss_bytes": 1654784,
           "peak_bytes": 950560
         }
       ]
@@ -39,20 +39,20 @@
   },
   "fib_34": {
     "candy": {
-      "rss_bytes": 1556480,
+      "rss_bytes": 1490944,
       "peak_bytes": 950560,
       "samples": [
         {
-          "rss_bytes": 1556480,
+          "rss_bytes": 1490944,
           "peak_bytes": 950560
         },
         {
-          "rss_bytes": 1556480,
+          "rss_bytes": 1490944,
           "peak_bytes": 950560
         },
         {
-          "rss_bytes": 1589248,
-          "peak_bytes": 966944
+          "rss_bytes": 1490944,
+          "peak_bytes": 950560
         }
       ]
     },
@@ -65,8 +65,8 @@
           "peak_bytes": 983328
         },
         {
-          "rss_bytes": 1720320,
-          "peak_bytes": 999712
+          "rss_bytes": 1703936,
+          "peak_bytes": 983328
         },
         {
           "rss_bytes": 1703936,
@@ -77,72 +77,72 @@
   },
   "arith_400k": {
     "candy": {
-      "rss_bytes": 3293184,
-      "peak_bytes": 2670880,
+      "rss_bytes": 3194880,
+      "peak_bytes": 2654496,
       "samples": [
         {
-          "rss_bytes": 3293184,
-          "peak_bytes": 2670880
+          "rss_bytes": 3194880,
+          "peak_bytes": 2654496
         },
         {
-          "rss_bytes": 3293184,
-          "peak_bytes": 2670880
+          "rss_bytes": 3194880,
+          "peak_bytes": 2654496
         },
         {
-          "rss_bytes": 3293184,
-          "peak_bytes": 2670880
+          "rss_bytes": 3178496,
+          "peak_bytes": 2638112
         }
       ]
     },
     "lua": {
-      "rss_bytes": 8404992,
-      "peak_bytes": 7717200,
+      "rss_bytes": 8355840,
+      "peak_bytes": 7668048,
       "samples": [
-        {
-          "rss_bytes": 8404992,
-          "peak_bytes": 7717200
-        },
         {
           "rss_bytes": 8355840,
           "peak_bytes": 7668048
         },
         {
-          "rss_bytes": 8404992,
-          "peak_bytes": 7717200
+          "rss_bytes": 8339456,
+          "peak_bytes": 7651664
+        },
+        {
+          "rss_bytes": 8355840,
+          "peak_bytes": 7668048
         }
       ]
     }
   },
   "globals_400k": {
     "candy": {
-      "rss_bytes": 8388608,
-      "peak_bytes": 7782712,
+      "rss_bytes": 8290304,
+      "peak_bytes": 7766328,
       "samples": [
         {
-          "rss_bytes": 8388608,
+          "rss_bytes": 8290304,
+          "peak_bytes": 7766328
+        },
+        {
+          "rss_bytes": 8306688,
           "peak_bytes": 7782712
         },
         {
-          "rss_bytes": 8388608,
-          "peak_bytes": 7782712
-        },
-        {
-          "rss_bytes": 8388608,
-          "peak_bytes": 7782712
+          "rss_bytes": 8290304,
+          "peak_bytes": 7766328
         }
       ]
     },
     "lua": {
-      "rss_bytes": 11894784,
-      "peak_bytes": 11206992,
+      "rss_bytes": 11845632,
+      "peak_bytes": 11157840,
       "samples": [
         {
           "rss_bytes": 11894784,
           "peak_bytes": 11206992
         },
         {
-          "rss_bytes": 11894784,
-          "peak_bytes": 11206992
+          "rss_bytes": 11845632,
+          "peak_bytes": 11157840
         },
         {
           "rss_bytes": 11845632,
@@ -153,26 +153,26 @@
   },
   "calls_400k": {
     "candy": {
-      "rss_bytes": 8388608,
-      "peak_bytes": 7782712,
+      "rss_bytes": 8290304,
+      "peak_bytes": 7766328,
       "samples": [
         {
-          "rss_bytes": 8372224,
+          "rss_bytes": 8273920,
+          "peak_bytes": 7749944
+        },
+        {
+          "rss_bytes": 8290304,
           "peak_bytes": 7766328
         },
         {
-          "rss_bytes": 8388608,
-          "peak_bytes": 7782712
-        },
-        {
-          "rss_bytes": 8404992,
-          "peak_bytes": 7799096
+          "rss_bytes": 8290304,
+          "peak_bytes": 7766328
         }
       ]
     },
     "lua": {
-      "rss_bytes": 10256384,
-      "peak_bytes": 9568592,
+      "rss_bytes": 10223616,
+      "peak_bytes": 9535824,
       "samples": [
         {
           "rss_bytes": 10190848,
@@ -183,28 +183,28 @@
           "peak_bytes": 9568592
         },
         {
-          "rss_bytes": 10256384,
-          "peak_bytes": 9568592
+          "rss_bytes": 10223616,
+          "peak_bytes": 9535824
         }
       ]
     }
   },
   "compile_200k": {
     "candy": {
-      "rss_bytes": 39567360,
-      "peak_bytes": 38994256,
+      "rss_bytes": 39452672,
+      "peak_bytes": 38961488,
       "samples": [
         {
-          "rss_bytes": 39567360,
-          "peak_bytes": 38994256
+          "rss_bytes": 39436288,
+          "peak_bytes": 38945104
         },
         {
-          "rss_bytes": 39567360,
-          "peak_bytes": 38994256
+          "rss_bytes": 39469056,
+          "peak_bytes": 38977872
         },
         {
-          "rss_bytes": 39583744,
-          "peak_bytes": 39010640
+          "rss_bytes": 39452672,
+          "peak_bytes": 38961488
         }
       ]
     },
@@ -217,108 +217,108 @@
           "peak_bytes": 26689872
         },
         {
-          "rss_bytes": 27394048,
-          "peak_bytes": 26706256
-        },
-        {
           "rss_bytes": 27377664,
           "peak_bytes": 26689872
+        },
+        {
+          "rss_bytes": 27426816,
+          "peak_bytes": 26739024
         }
       ]
     }
   },
   "closures_100k": {
     "candy": {
-      "rss_bytes": 46514176,
-      "peak_bytes": 45941096,
+      "rss_bytes": 51232768,
+      "peak_bytes": 50741608,
       "samples": [
         {
-          "rss_bytes": 46514176,
-          "peak_bytes": 45924688
+          "rss_bytes": 51249152,
+          "peak_bytes": 50757992
         },
         {
-          "rss_bytes": 46563328,
-          "peak_bytes": 45990248
+          "rss_bytes": 51232768,
+          "peak_bytes": 50741608
         },
         {
-          "rss_bytes": 46514176,
-          "peak_bytes": 45941096
+          "rss_bytes": 51232768,
+          "peak_bytes": 50741608
         }
       ]
     },
     "lua": {
-      "rss_bytes": 44908544,
-      "peak_bytes": 44237184,
+      "rss_bytes": 44957696,
+      "peak_bytes": 44269928,
       "samples": [
         {
-          "rss_bytes": 44859392,
-          "peak_bytes": 44171624
-        },
-        {
-          "rss_bytes": 44908544,
-          "peak_bytes": 44237184
+          "rss_bytes": 44957696,
+          "peak_bytes": 44269928
         },
         {
           "rss_bytes": 44941312,
           "peak_bytes": 44253544
+        },
+        {
+          "rss_bytes": 44957696,
+          "peak_bytes": 44269928
         }
       ]
     }
   },
   "calls_nested_local_200k": {
     "candy": {
-      "rss_bytes": 5996544,
-      "peak_bytes": 5390648,
+      "rss_bytes": 5881856,
+      "peak_bytes": 5357880,
       "samples": [
         {
-          "rss_bytes": 5996544,
-          "peak_bytes": 5390648
+          "rss_bytes": 5898240,
+          "peak_bytes": 5374264
         },
         {
-          "rss_bytes": 5996544,
-          "peak_bytes": 5390648
+          "rss_bytes": 5881856,
+          "peak_bytes": 5357880
         },
         {
-          "rss_bytes": 5996544,
-          "peak_bytes": 5390648
+          "rss_bytes": 5881856,
+          "peak_bytes": 5357880
         }
       ]
     },
     "lua": {
-      "rss_bytes": 7323648,
-      "peak_bytes": 6635856,
+      "rss_bytes": 7340032,
+      "peak_bytes": 6652240,
       "samples": [
+        {
+          "rss_bytes": 7389184,
+          "peak_bytes": 6701392
+        },
         {
           "rss_bytes": 7340032,
           "peak_bytes": 6652240
         },
         {
-          "rss_bytes": 7323648,
-          "peak_bytes": 6635856
-        },
-        {
-          "rss_bytes": 7323648,
-          "peak_bytes": 6635856
+          "rss_bytes": 7307264,
+          "peak_bytes": 6619472
         }
       ]
     }
   },
   "while_local_1m": {
     "candy": {
-      "rss_bytes": 1540096,
-      "peak_bytes": 950560,
+      "rss_bytes": 1458176,
+      "peak_bytes": 934176,
       "samples": [
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         }
       ]
     },
@@ -335,28 +335,28 @@
           "peak_bytes": 966944
         },
         {
-          "rss_bytes": 1687552,
-          "peak_bytes": 966944
+          "rss_bytes": 1671168,
+          "peak_bytes": 950560
         }
       ]
     }
   },
   "calls_hot_local_500k": {
     "candy": {
-      "rss_bytes": 1540096,
-      "peak_bytes": 950560,
+      "rss_bytes": 1458176,
+      "peak_bytes": 934176,
       "samples": [
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1556480,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         }
       ]
     },
@@ -373,66 +373,66 @@
           "peak_bytes": 966944
         },
         {
-          "rss_bytes": 1703936,
-          "peak_bytes": 983328
+          "rss_bytes": 1687552,
+          "peak_bytes": 966944
         }
       ]
     }
   },
   "branch_chain_500k": {
     "candy": {
-      "rss_bytes": 1540096,
-      "peak_bytes": 950560,
+      "rss_bytes": 1458176,
+      "peak_bytes": 934176,
       "samples": [
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         }
       ]
     },
     "lua": {
-      "rss_bytes": 1703936,
-      "peak_bytes": 983328,
+      "rss_bytes": 1687552,
+      "peak_bytes": 966944,
       "samples": [
         {
-          "rss_bytes": 1703936,
-          "peak_bytes": 983328
+          "rss_bytes": 1687552,
+          "peak_bytes": 966944
+        },
+        {
+          "rss_bytes": 1687552,
+          "peak_bytes": 966944
         },
         {
           "rss_bytes": 1671168,
           "peak_bytes": 950560
-        },
-        {
-          "rss_bytes": 1703936,
-          "peak_bytes": 983328
         }
       ]
     }
   },
   "nested_functions_1k": {
     "candy": {
-      "rss_bytes": 1540096,
-      "peak_bytes": 950560,
+      "rss_bytes": 1458176,
+      "peak_bytes": 934176,
       "samples": [
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         },
         {
-          "rss_bytes": 1540096,
-          "peak_bytes": 950560
+          "rss_bytes": 1458176,
+          "peak_bytes": 934176
         }
       ]
     },
@@ -449,24 +449,24 @@
           "peak_bytes": 966944
         },
         {
-          "rss_bytes": 1720320,
-          "peak_bytes": 999712
+          "rss_bytes": 1703936,
+          "peak_bytes": 983328
         }
       ]
     }
   },
   "_sizes": {
-    "candy_bin": 34136,
+    "candy_bin": 153800,
     "lua_bin": 383088
   },
   "_metadata": {
-    "timestamp": "2026-11-19T14:24:17.942543+00:00",
+    "timestamp": "2026-11-22T14:06:34.052669+00:00",
     "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
     "binaries": {
       "candy": {
-        "path": "/private/tmp/wt-cur/shell/candy",
-        "sha256": "35c94307cad008899c3f4d98b7f33f5c28caddaae07e2b7d1b64eb9faa04f07f",
-        "size_bytes": 34136
+        "path": "~/workspace/scripts/candy/build/recovery/opt/shell/candy",
+        "sha256": "cc13d40e32652cac5b47fa51f68e6a6a7eba182b05081bbf7916804bbbae2aa0",
+        "size_bytes": 153800
       },
       "lua": {
         "path": "~/workspace/scripts/candy/build/lua-matched/lua-5.4.7/src/lua",

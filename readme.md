@@ -17,6 +17,92 @@ code --install-extension candy-language-0.1.1.vsix
 
 ## 当前支持语法
 
+### EBNF
+
+引号内是终结符，`[ … ]` 表示可选，`{ … }` 表示重复零次或多次，`|` 表示二选一或多选一。下列产生式描述当前实现，作用域和运行时约束另述。
+
+```ebnf
+program        = { import | export | statement } ;
+block          = { statement } ;
+
+import         = "import", string, "as", identifier, [ ";" ] ;
+export         = "export", function-def, [ ";" ] ;
+statement      = function-def | class-def | if-stmt | while-stmt | for-stmt
+               | "break" | "continue" | "return", expression | name-stmt ;
+function-def   = "def", identifier, parameters, block, "end" ;
+class-def      = "class", identifier, { function-def }, "end" ;
+parameters     = "(", [ identifier, { ",", identifier } ], ")" ;
+
+if-stmt        = "if", condition, block, { "elif", condition, block },
+                 [ "else", block ], "end" ;
+while-stmt     = "while", condition, block, "end" ;
+for-stmt       = "for", "(", identifier, ":", expression, ")", block, "end" ;
+condition      = "(", expression, ")" ;
+
+name-stmt      = identifier, [ arguments | member, ( arguments | "=", expression )
+                            | index, ( arguments, { suffix } | assignment )
+                            | scope-member, ( arguments, { suffix } | "=", expression )
+                            | assignment ] ;
+assignment     = assign-op, expression ;
+assign-op      = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" ;
+
+expression     = disjunction ;
+disjunction    = conjunction, { "||", conjunction } ;
+conjunction    = comparison, { "&&", comparison } ;
+comparison     = bitwise, { ( "<" | "<=" | ">" | ">=" | "==" | "!=" ), bitwise } ;
+bitwise        = sum, { ( "&" | "|" | "^" | "<<" | ">>" ), sum } ;
+sum            = product, { ( "+" | "-" ), product } ;
+product        = { postfix, mul-op }, ( postfix | unary-op, product ) ;
+mul-op         = "*" | "/" | "%" ;
+unary-op       = "-" | "!" ;
+postfix        = primary, { suffix } ;
+suffix         = index | member | scope-member | arguments ;
+index          = "[", expression, "]" ;
+member         = ".", identifier ;
+scope-member   = "::", identifier ;
+arguments      = "(", [ expression-list ], ")" ;
+primary        = literal | identifier | "(", expression, ")" | array | table | lambda ;
+
+array          = "[", [ expression-list ], "]" ;
+table          = "{", [ expression-list | field, { ",", field } ], "}" ;
+field          = string, ":", expression ;
+expression-list = expression, { ",", expression } ;
+
+lambda         = "def", [ captures ], parameters, block, "end" ;
+captures       = "[", [ capture-list | capture-default, [ ",", capture-list ] ], "]" ;
+capture-default = "=" | "&" ;
+capture-list   = capture, { ",", capture } ;
+capture        = [ "&" ], identifier ;
+literal        = integer | float | string | "true" | "false" | "null" ;
+```
+
+主要词法单元：
+
+```ebnf
+identifier     = ( letter | "_" ), { letter | digit | "_" } ;
+integer        = nonzero, { digit } | "0", { octal-digit }
+               | ( "0x" | "0X" ), hex-digit, { hex-digit }
+               | ( "0b" | "0B" ), binary-digit, { binary-digit } ;
+float          = digits, ( ".", { digit }, [ exponent ] | exponent ) ;
+exponent       = ( "e" | "E" ), [ "+" | "-" ], digits ;
+digits         = digit, { digit } ;
+letter         = ? ASCII 字母 A–Z 或 a–z ? ;
+digit          = "0" | nonzero ;
+nonzero        = ? 数字 1–9 ? ;
+octal-digit    = ? 数字 0–7 ? ;
+hex-digit      = digit | ? 十六进制字母 A–F 或 a–f ? ;
+binary-digit   = "0" | "1" ;
+string         = ? 单引号、双引号或三重引号字符串，见下文 ? ;
+```
+
+词法与限制：
+
+- `identifier` 以字母或 `_` 开头，后接任意个字母、数字或 `_`，不能是保留字。`integer` 支持十进制、前导 `0` 的八进制、`0x`/`0X` 十六进制和 `0b`/`0B` 二进制；`float` 从数字开始，可带小数点或 `e`/`E` 指数。负号是运算符，不是字面量的一部分。
+- `string` 用单引号或双引号；三重引号允许跨行。`#` 开始行注释。空白和换行不作为语句分隔符；分号只在上面标出的导入、导出位置可选。参数、元素和字段列表不支持尾随逗号。
+- 二元运算符在同一优先级按左结合；位运算和移位共用一层。当前一元 `-` 和 `!` 的操作数可包含乘、除和取模，例如 `-a * b` 按 `-(a * b)` 解析。表字面量由首项决定是键值表还是序列表；序列表的首项若以字符串字面量开头且后面还有运算，用括号包住该表达式。
+- 后缀链适用于表达式，例如 `make()(x)`；独立语句由标识符起始，成员赋值只支持一级下标或点号，点号赋值只支持 `=`。`break`、`continue` 只能出现在当前函数的循环内。
+- Lambda 省略捕获列表等同于 `[]`，`[=]` 默认按值捕获，`[&]` 默认按引用捕获。类用 `ClassName(...)` 调用 `__init__`；实例的 `obj.method(...)` 自动传入实例，方法声明仍显式写第一个参数 `self`。
+
 ### 类型
 
 整数、浮点、布尔（`true`/`false`）、字符串（`"..."` 或 `'...'`）、`null`。
@@ -78,6 +164,12 @@ end
 
 - 支持嵌套、递归、闭包（函数可作为值/返回值）。
 - 顶层赋值与 `def` 绑定全局；函数内首次赋值绑定局部，之后更新局部槽；未绑定的名字读取回退全局。
+
+### 模块
+
+在文件顶层使用 `import "lib/math.candy" as math`，通过 `math::add(2, 3)` 调用模块导出的函数。`::` 不传入接收者；`.` 用于对象成员，实例方法调用会传入 `self`。模块使用 `export def add(a, b) ... end` 显式导出函数；其他顶层绑定不会进入导出表。
+
+相对路径以声明 `import` 的文件所在目录为基准；没有源文件路径的输入以当前工作目录为基准。依赖在编译期递归解析，全部编译成功后，模块顶层代码按依赖顺序在入口脚本之前初始化。同一运行时按整理后的路径缓存成功初始化的模块：合并多余分隔符并折叠 `.`、`..`，不解析符号链接，也不把相对路径转换成绝对路径。函数和控制流块内不能写 `import`。
 
 ### 内置
 

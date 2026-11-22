@@ -1,8 +1,11 @@
 # 当前扩展基准与图表
 
-当前图表已切换到双方匹配构建：同 AppleClang、static、O3/LTO、non-PGO，Candy Release 对照官方 Lua 5.4.7 源码构建；并已包含局部原地加法融合。完整参数与最新数值见 [匹配构建](MATCHED_BUILD.md)。本页下方“本轮观察”保留此前 Homebrew 动态 stock Lua 的历史结果，不再代表当前图片。
+当前图表比较寄存器 VM 版 Candy 与 Lua 5.4.7，双方使用静态语言核心和 O3/LTO。两张耗时图使用相同的用例顺序、比例尺和版式；柱长为 Candy/Lua 中位数之比，右列为各自的毫秒数。两组数据来自不同机器和编译器，不应把差异仅归因于操作系统。
 
-当前 34 个时间用例（原 23 + 新 11），12 个峰值内存用例（含 empty）。两张图仍只比较 Candy/Lua：时间图按负载类型分组，内存图分为端到端和热循环两个线性刻度面板，跨面板柱高不能直接比较。
+- macOS（Apple M2）：[耗时](charts/macos_candy_vs_lua_time.png)、[峰值内存](charts/macos_candy_vs_lua_memory.png)。保留 `macos_time.json/csv` 和 `macos_memory.json` 的历史测量，只重绘图表。这批数据未记录 Candy 的源码提交，不能视为使用了 WSL 本次重测的修复版本。
+- WSL 2（Intel Core i5-12400、Ubuntu / GCC 13.3.0）：[耗时](charts/wsl_candy_vs_lua_time.png)、[峰值内存](charts/wsl_candy_vs_lua_memory.png)，原始样本和汇总见 `wsl_time.json/csv` 和 `wsl_memory.json`。Candy 使用本提交的源码（含已有局部变量直接写回、按需读取赋值左值的修复）；双方均从源码构建。35 项耗时用例各 3 轮预热、15 次正式测量，按中位数绘图并校验退出码和输出。
+
+两种环境各有一张耗时图、一张峰值内存图，均由同一 Python 脚本绘制。耗时比大于 1× 时标橙，达到 1.5× 时标红。内存测量各含 12 项（含空脚本），每项 1 轮预热、3 次正式测量；macOS 用 BSD `time -l`，WSL 用 GNU `time -f %M`，统一绘制峰值 RSS 的 MiB 中位数。两个环境的对应面板共用刻度；同一张内存图的端到端和热循环面板使用不同刻度，跨面板柱高不能直接比较。下方“本轮观察”和 [匹配构建](MATCHED_BUILD.md) 中的栈 VM 结果为历史记录，不代表当前图表。
 
 ## 用例源码
 
@@ -14,7 +17,7 @@
 |---|---|
 | calls_nested_local_200k | 双方在外层函数中定义局部 id，展开 20 万调用点 |
 | while_global_1m / while_local_1m | 全局/函数局部变量循环计数及校验和 |
-| for_local_500k | C 风格 for 累加，Lua 降为 while，不使用专门 numeric-for 指令 |
+| for_local_500k | 历史用例名；Candy 和 Lua 模板均用 while 进行局部累加 |
 | calls_hot_global/local/parameter_500k | 热循环 while 中进行 50 万次调用并累加返回值 |
 | branch_chain_500k | if/elif/else 走不同路径 |
 | break_continue_500k | for 的 continue 步进和 break；Lua 用 goto label 保持对应控制流 |
@@ -31,7 +34,7 @@
 - 新增源码字节数、负载分类、绑定对称性注记、端到端 ops/s 与 ns/op。不同 unit（call/iteration/def）不能直接相互比较。
 - 历史 `net_*` 和 `ops_per_s` 保留兼容，是扣独立空脚本启动的估计，不用作图表或纯执行结论。
 - 旧 calls_local_200k 仍是 Candy 全局 / Lua 局部，保留历史但标注 asymmetric，图表改用真正双方局部的新用例。
-- 内存为 `/usr/bin/time -l` 每项 1 次预热、3 个进程的 maximum RSS 中位数，保存所有峰值样本；不是精确分项堆用量。
+- 内存为 `/usr/bin/time` 测得的每项 3 个进程的 maximum RSS 中位数，保存所有峰值样本；不是精确分项堆用量。
 
 ## 本轮观察（端到端）
 
@@ -52,15 +55,28 @@
 
 内存方面，端到端局部调用约 5.5 MiB vs 7.0 MiB，热循环/热调用约 1.3 MiB vs 1.6 MiB。定义 10 万函数 Candy 约 44.1 MiB、Lua 42.8 MiB，存在小幅劣势，不能概括为所有内存项目都赢。
 
-## 复现
+## 复现 WSL 测量
+
+把 checkout、构建目录和 Lua 源码放在 WSL 根文件系统（ext4，例如 `/candy-bench.*`；也可用位于该文件系统的 Linux home），不要从 `/mnt/c` 启动跑分。此次重测的可执行文件、生成的测试脚本和结果都在同一 ext4 文件系统，并将测量进程固定在 vCPU 2。数据依然包含本地脚本读取，不包含 Windows 挂载盘的脚本或可执行文件访问。
+
+在该目录备好 `candy/` checkout 和官方 `lua-5.4.7/` 源码后运行。Lua 源码包的 SHA-256 见 [匹配构建](MATCHED_BUILD.md)。
 
 ```bash
-cmake --build build -j4
-build/test/test --gtest_brief=1
-python3 -m unittest discover -s bench -p 'test_*.py'
-python3 bench/run_bench.py --candy build/shell/candy --warmup 2 --out final_stack.json
-python3 bench/measure_mem.py --candy build/shell/candy --reps 3 --warmup 1 --out memory_stack.json
-python3 bench/make_charts.py
+findmnt -T . -no TARGET,SOURCE,FSTYPE
+cmake -S candy -B build -DCMAKE_BUILD_TYPE=Release -DCANDY_STATIC=ON
+cmake --build build --target candy --parallel
+make -C lua-5.4.7/src -j8 lua \
+  'CC=gcc -std=gnu99' \
+  'CFLAGS=-O3 -DNDEBUG -flto -falign-functions=32 -falign-loops=32 -Wall -Wextra -DLUA_COMPAT_5_3 -DLUA_USE_LINUX' \
+  'LDFLAGS=-flto -Wl,--gc-sections' 'LIBS=-lm -ldl'
+taskset -c 2 python3 candy/bench/run_bench.py --candy "$PWD/build/shell/candy" \
+  --lua "$PWD/lua-5.4.7/src/lua" --warmup 3 --reps 15 --out wsl_time.json
+taskset -c 2 python3 candy/bench/measure_mem.py --candy "$PWD/build/shell/candy" \
+  --lua "$PWD/lua-5.4.7/src/lua" --warmup 1 --reps 3 --out wsl_memory.json
 ```
 
-Pillow 需在运行图表脚本的 Python 中可用。数据与图表：`final_stack.json/csv`、`memory_stack.json`、`charts/candy_vs_lua_time.png`、`charts/candy_vs_lua_memory.png`。时间和内存数据应使用同一 Candy 二进制指纹。
+测量完成后才复制 `candy/bench/wsl_time.{json,csv}` 和 `candy/bench/wsl_memory.json` 回仓库。使用带 Pillow 的 Python 从已保存数据统一重绘四张图；`--font` 可指定简体中文字体，要复用本次的字形可指定 Noto Sans SC。
+
+```bash
+python3 bench/make_charts.py
+```

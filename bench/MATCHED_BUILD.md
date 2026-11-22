@@ -1,6 +1,6 @@
 # 对齐构建参数后的 Candy / Lua 对照
 
-当前 `final_stack.json`、`memory_stack.json` 与两张图使用本轮匹配构建，而不是 Homebrew 动态 Lua。
+本页记录历史栈 VM 对照：`final_stack.json` 和 `memory_stack.json` 使用匹配构建，而不是 Homebrew 动态 Lua。当前寄存器 VM 图表和数据见 [扩展基准](BENCHMARKS.md)。
 
 ## 配置
 
@@ -37,7 +37,6 @@ python3 bench/run_bench.py --candy build/matched-candy/shell/candy \
   --lua build/lua-matched/lua-5.4.7/src/lua --warmup 2 --out final_stack.json
 python3 bench/measure_mem.py --candy build/matched-candy/shell/candy \
   --lua build/lua-matched/lua-5.4.7/src/lua --reps 3 --warmup 1 --out memory_stack.json
-python3 bench/make_charts.py
 ```
 
 默认 `build/shell/candy` 不变；当前测量选用 `build/matched-candy/shell/candy`。基准仍是端到端、34 项时间/12 项 RSS，输出严格校验；热循环不是纯执行计时。
@@ -125,7 +124,7 @@ python3 bench/make_charts.py
 - 接近（≤1.1）：fib 1.00–1.03、fib_alias 1.03、globals 1.06–1.09、closures 1.09、mutual 1.09、while_global 1.09、calls_100k 1.11；
 - 仍略慢（1.1–1.3）：calls_200k 1.13、calls_400k 1.14、calls_nested_local 1.22、calls_local_200k 1.27。
 
-结论：算术、所有循环（while/for/branch/break）、热调用、深度递归、编译已快于或持平 Lua；fib 压到 ~1.00；剩余差距只剩普通函数调用（calls 1.1–1.3，帧压弹的固有开销，实测“重新推导”无收益）。图表 `bench/charts/candy_vs_lua_time.png` / `candy_vs_lua_memory.png` 已重建。
+结论：算术、所有循环（while/for/branch/break）、热调用、深度递归、编译已快于或持平 Lua；fib 压到 ~1.00；剩余差距只剩普通函数调用（calls 1.1–1.3，帧压弹的固有开销，实测“重新推导”无收益）。这是栈 VM 的历史结论。
 
 ## 值栈与帧栈动态化
 

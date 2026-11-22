@@ -8,6 +8,7 @@ file(GLOB_RECURSE CANDY_SOURCES_CORE LIST_DIRECTORIES false
   candy_table.c
   candy_proto.c
   candy_closure.c
+  candy_upvalue.c
   candy_userdef.c
   candy_array.c
   candy_lexer.c

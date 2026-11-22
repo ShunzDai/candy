@@ -336,7 +336,11 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
           goto op2;
         /* fall through */
       /* 'o' */
-      case '~': case ',': case ':': case ';': case '@':
+      case ':':
+        if (_view(self, 1) == ':')
+          goto op2;
+        goto op1;
+      case '~': case ',': case ';': case '@':
       case '(': case ')': case '[': case ']': case '{': case '}':
         goto op1;
       case '.':
