@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure median per-process peak RSS using BSD or GNU /usr/bin/time.
+"""Measure median per-process peak RSS using BSD time or GNU time.
 
 Every warmup and measured process must produce the independently generated
 expected stdout, with no diagnostics. Raw peak samples are retained for audits.
@@ -27,7 +27,7 @@ LUA = shutil.which("lua") or "/opt/homebrew/bin/lua"
 CASES = ["empty", "fib_34", "arith_400k", "globals_400k", "calls_400k",
          "compile_200k", "closures_100k", "calls_nested_local_200k", "while_local_1m",
          "calls_hot_local_500k", "branch_chain_500k", "nested_functions_1k"]
-TIME = "/usr/bin/time"
+BSD_TIME = "/usr/bin/time"
 GNU_TIME_FORMAT = "candy_bench_rss_kib=%M"
 GNU_RSS_LINE = re.compile(r"candy_bench_rss_kib=(\d+)")
 # Only known complete time(1) lines may be removed from stderr. A loose numeric
@@ -79,13 +79,35 @@ def executable(value: str, name: str) -> Path:
 def time_args() -> list[str]:
     if sys.platform == "darwin":
         return ["-l"]
-    if sys.platform == "linux":
+    if sys.platform in ("linux", "android"):
         return ["-f", GNU_TIME_FORMAT]
-    raise SystemExit("peak RSS measurement requires macOS or Linux GNU time")
+    raise SystemExit("peak RSS measurement requires macOS, Linux, or Android (Termux)")
+
+
+def time_executable() -> str:
+    if sys.platform == "darwin":
+        return BSD_TIME
+    # Termux installs GNU time under $PREFIX/bin, not /usr/bin.
+    return shutil.which("time") or "time"
+
+
+def check_time() -> None:
+    args = time_args()
+    tool = time_executable()
+    hint = "; install GNU time with `pkg install time`" if sys.platform == "android" else ""
+    # Measure a tiny known command to check both the option and RSS format.
+    try:
+        proc = subprocess.run([tool, *args, sys.executable, "-c", "pass"],
+                              capture_output=True, timeout=10, env={**os.environ, "LC_ALL": "C"})
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ValueError(f"cannot run {tool}: {exc}{hint}") from None
+    stderr = proc.stderr.decode(errors="replace")
+    if proc.returncode != 0 or parse_rss(stderr)[0] <= 0:
+        raise ValueError(f"{tool} did not report peak RSS: {stderr.strip()}{hint}")
 
 
 def parse_rss(stderr: str) -> tuple[int, int]:
-    if sys.platform == "linux":
+    if sys.platform in ("linux", "android"):
         match = GNU_RSS_LINE.fullmatch(stderr.strip())
         # GNU time's %M is in KiB and does not report macOS's memory footprint.
         return (int(match[1]) * 1024, 0) if match else (0, 0)
@@ -109,7 +131,7 @@ def parse_rss(stderr: str) -> tuple[int, int]:
 def peak_rss(argv: list[str], expected: str, timeout: float = 120.0) -> tuple[int, int]:
     """Validate the full process output and parse only complete time-stat lines."""
     try:
-        proc = subprocess.run([TIME, *time_args(), *argv], capture_output=True, timeout=timeout,
+        proc = subprocess.run([time_executable(), *time_args(), *argv], capture_output=True, timeout=timeout,
                               env={**os.environ, "LC_ALL": "C"})
     except subprocess.TimeoutExpired:
         raise SystemExit(sanitize(f"command timed out after {timeout:g}s: {argv!r}")) from None
@@ -188,7 +210,7 @@ def main() -> None:
         "binaries": identities,
         "config": {"reps": args.reps, "warmup": args.warmup, "timeout": args.timeout,
                    "cases": CASES, "out": sanitize(str((ROOT / args.out).resolve())),
-                   "cases_dir": sanitize(str(CASES_DIR)), "time": TIME, "time_args": time_args(),
+                   "cases_dir": sanitize(str(CASES_DIR)), "time": time_executable(), "time_args": time_args(),
                    "statistic": "median of per-process peaks", "units": "bytes",
                    "order": "alternating candy/lua by case and pass"},
     }

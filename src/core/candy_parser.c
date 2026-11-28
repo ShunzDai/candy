@@ -29,6 +29,8 @@
 candy_assert(self->ls.ctx, self->ls.gc, _condition, CANDY_ERR_SYNTAX, \
 "line %zu col %zu: " _format, self->ls.dbg.line, self->ls.dbg.column, ##__VA_ARGS__)
 
+#define CANDY_ABX_LIMIT (1U << 18)
+
 typedef struct loopstate loopstate_t;
 typedef struct funcstate funcstate_t;
 typedef struct parser parser_t;
@@ -134,12 +136,6 @@ static size_t _add_name_const(parser_t *self, const candy_array_t *name) {
   return _add_const(self, &wrap);
 }
 
-static size_t _add_integer(parser_t *self, candy_integer_t val) {
-  candy_wrap_t wrap;
-  candy_wrap_set_integer(&wrap, val);
-  return _add_const(self, &wrap);
-}
-
 static bool _is_literal(candy_tokens_t token) {
   return token == TK_INTEGER || token == TK_FLOAT || token == TK_STRING ||
     token == TK_true || token == TK_false || token == TK_null;
@@ -185,10 +181,20 @@ static size_t _add_iax(parser_t *self, candy_opcodes_t op, uint32_t a) {
 }
 
 static size_t _add_iabx(parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b) {
-  par_assert(a < (1U << 8) && b < (1U << 18), "instruction operand overflow");
+  par_assert(a < (1U << 8) && b < CANDY_ABX_LIMIT, "instruction operand overflow");
   return candy_proto_add_inst(self->fs->proto, self->ls.gc, self->ls.ctx, (candy_inst_t) {
     .iabx = {.op = (uint32_t)op, .a = a, .b = b},
   });
+}
+
+static void _load_integer(parser_t *self, uint32_t reg, candy_integer_t value) {
+  candy_wrap_t wrap;
+  if (value >= 0 && value < CANDY_ABX_LIMIT) {
+    _add_iabx(self, OP_LOADI, reg, (uint32_t)value);
+    return;
+  }
+  candy_wrap_set_integer(&wrap, value);
+  _add_iabx(self, OP_LOADK, reg, (uint32_t)_add_const(self, &wrap));
 }
 
 static size_t _add_iabc(parser_t *self, candy_opcodes_t op, uint32_t a, uint32_t b, uint32_t c) {
@@ -404,7 +410,7 @@ static int _name_expr(parser_t *self, const candy_array_t *name, int nres) {
  * JSON-style object `{"k": v, ...}` (string keys). */
 static void _table_array_entry(parser_t *self, int table, size_t index, int val) {
   int key = _newreg(self);
-  _add_iabx(self, OP_LOADK, (uint32_t)key, (uint32_t)_add_integer(self, (candy_integer_t)index));
+  _load_integer(self, (uint32_t)key, (candy_integer_t)index);
   _add_iabc(self, OP_SETTABLE, (uint32_t)table, (uint32_t)key, (uint32_t)val);
   self->fs->freereg = (uint8_t)(table + 1);
 }
@@ -420,7 +426,7 @@ static void _table_dict_entry(parser_t *self, int table, const candy_array_t *ke
 static int _table_constructor(parser_t *self) {
   _next(self, '{');
   int table = _newreg(self);
-  _add_iax(self, OP_TABLE, (uint32_t)table);
+  _add_iabx(self, OP_NEWCONTAINER, (uint32_t)table, 0);
   if (candy_lexer_lookahead(&self->ls) == '}') {
     _next(self, '}');
     return table;
@@ -543,7 +549,7 @@ static void _patch_jmpf(parser_t *self, size_t pos, size_t target) {
   candy_proto_t *proto = self->fs->proto;
   candy_inst_t *data = (candy_inst_t *)candy_vector_data(candy_proto_get_inst(proto));
   candy_inst_t inst = data[pos];
-  if (target < (1U << 18)) {
+  if (target < CANDY_ABX_LIMIT) {
     inst.iabx.b = (uint32_t)target;
     candy_proto_set_inst(proto, pos, inst);
     return;
@@ -593,8 +599,8 @@ static candy_opcodes_t _binary_op(parser_t *self, candy_tokens_t token, bool con
     case TK_PERCENT: return constant ? OP_MODK : OP_MOD;
     case TK_LESS: return constant ? OP_LTK : OP_LT;
     case TK_LEQUAL: return constant ? OP_LEK : OP_LE;
-    case TK_GREATER: return constant ? OP_GTK : OP_GT;
-    case TK_GEQUAL: return constant ? OP_GEK : OP_GE;
+    case TK_GREATER: return constant ? OP_GTK : OP_LT;
+    case TK_GEQUAL: return constant ? OP_GEK : OP_LE;
     case TK_EQUAL: return constant ? OP_EQK : OP_EQ;
     case TK_NEQUAL: return constant ? OP_NEQK : OP_NEQ;
     case TK_AMPER: return constant ? OP_BANDK : OP_BAND;
@@ -612,6 +618,11 @@ static int _expr_tail(parser_t *self, int lhs, int pref, int min_prec) {
   for (;;) {
     candy_tokens_t token = candy_lexer_lookahead(&self->ls);
     int prec = _precedence(token);
+    uint32_t rhs;
+    bool rhs_is_const = false;
+    bool rhs_is_immediate = false;
+    int result;
+    candy_opcodes_t op;
     if (prec < min_prec)
       break;
     candy_lexer_next(&self->ls);
@@ -637,48 +648,54 @@ static int _expr_tail(parser_t *self, int lhs, int pref, int min_prec) {
       continue;
     }
 
-    int rhs_reg = -1;
-    size_t rhs_const = 0;
-    bool rhs_is_const = false;
     if (candy_lexer_lookahead(&self->ls) == TK_INTEGER) {
-      size_t k = _add_meta(self, TK_INTEGER);
-      if (_precedence(candy_lexer_lookahead(&self->ls)) <= prec) {
-        /* A trailing constant folds into the operand; no higher-precedence
-         * operator follows. A constant index beyond 9 bits is loaded first. */
+      candy_integer_t value = candy_lexer_next(&self->ls)->i;
+      bool trailing = _precedence(candy_lexer_lookahead(&self->ls)) <= prec;
+      /* Subtracting zero is not addition for a floating-point -0. */
+      if (trailing && ((token == TK_PLUS && value < CANDY_ADDI_BIAS) ||
+          (token == TK_MINUS && value > 0 && value <= CANDY_ADDI_BIAS))) {
+        rhs_is_immediate = true;
+        rhs = (uint32_t)(CANDY_ADDI_BIAS + (token == TK_PLUS ? value : -value));
+      }
+      else if (trailing) {
+        candy_wrap_t wrap;
+        size_t k;
+        candy_wrap_set_integer(&wrap, value);
+        k = _add_const(self, &wrap);
         if (k < (1U << 9)) {
           rhs_is_const = true;
-          rhs_const = k;
+          rhs = (uint32_t)k;
         }
         else {
-          rhs_reg = _newreg(self);
-          _add_iabx(self, OP_LOADK, (uint32_t)rhs_reg, (uint32_t)k);
+          rhs = (uint32_t)_newreg(self);
+          _add_iabx(self, OP_LOADK, rhs, (uint32_t)k);
         }
       }
       else {
         /* A higher-precedence operator follows: the constant is only the head
          * of the right operand (e.g. `4 < 2 + 1`). */
         int c = _newreg(self);
-        _add_iabx(self, OP_LOADK, (uint32_t)c, (uint32_t)k);
-        rhs_reg = _expr_tail(self, c, -1, prec + 1);
+        _load_integer(self, (uint32_t)c, value);
+        rhs = (uint32_t)_expr_tail(self, c, -1, prec + 1);
       }
     }
     else {
-      rhs_reg = _expr(self, -1, prec + 1);
+      rhs = (uint32_t)_expr(self, -1, prec + 1);
     }
 
-    bool last = _precedence(candy_lexer_lookahead(&self->ls)) < min_prec;
-    bool dead = lhs == (int)self->fs->freereg - 1 && !_is_local(self, lhs);
-    int result;
-    if (last && pref >= 0)
+    if (pref >= 0 && _precedence(candy_lexer_lookahead(&self->ls)) < min_prec)
       result = pref;
-    else if (dead)
+    else if (lhs == (int)self->fs->freereg - 1 && !_is_local(self, lhs))
       result = lhs;
     else
       result = _newreg(self);
 
-    candy_opcodes_t op = _binary_op(self, token, rhs_is_const);
-    _add_iabc(self, op, (uint32_t)result, (uint32_t)lhs,
-      rhs_is_const ? (uint32_t)rhs_const : (uint32_t)rhs_reg);
+    op = rhs_is_immediate ? OP_ADDI : _binary_op(self, token, rhs_is_const);
+    /* Reverse the comparison's operands after both expressions were evaluated. */
+    if (!rhs_is_const && (token == TK_GREATER || token == TK_GEQUAL))
+      _add_iabc(self, op, (uint32_t)result, rhs, (uint32_t)lhs);
+    else
+      _add_iabc(self, op, (uint32_t)result, (uint32_t)lhs, rhs);
     lhs = result;
   }
   return lhs;
@@ -689,7 +706,7 @@ static int _expr_tail(parser_t *self, int lhs, int pref, int min_prec) {
 static int _array_constructor(parser_t *self) {
   _next(self, '[');
   int array = _newreg(self);
-  _add_iax(self, OP_ARRAY, (uint32_t)array);
+  _add_iabx(self, OP_NEWCONTAINER, (uint32_t)array, 1);
   if (candy_lexer_lookahead(&self->ls) == ']') {
     _next(self, ']');
     return array;
@@ -716,9 +733,9 @@ static int _array_constructor(parser_t *self) {
     ++count;
     if (!_test(self, ',')) {
       int count_reg = _newreg(self);
-      _add_iabx(self, OP_LOADK, (uint32_t)count_reg, (uint32_t)_add_integer(self, (candy_integer_t)count));
+      _load_integer(self, (uint32_t)count_reg, (candy_integer_t)count);
       int start_reg = _newreg(self);
-      _add_iabx(self, OP_LOADK, (uint32_t)start_reg, (uint32_t)_add_integer(self, (candy_integer_t)start));
+      _load_integer(self, (uint32_t)start_reg, (candy_integer_t)start);
       _add_iabc(self, OP_SETLIST, (uint32_t)array, (uint32_t)count_reg, (uint32_t)start_reg);
       _next(self, ']');
       return array;
@@ -845,12 +862,13 @@ static int _def_expr(parser_t *self) {
 
 static int _primary(parser_t *self) {
   candy_tokens_t token = candy_lexer_lookahead(&self->ls);
+  int result;
   if (token == TK_MINUS) {
     /* unary minus `-x` lowers to `0 - x` */
     candy_lexer_next(&self->ls);
     int operand = _expr(self, -1, 30);
     int zero = _newreg(self);
-    _add_iabx(self, OP_LOADK, (uint32_t)zero, (uint32_t)_add_integer(self, 0));
+    _load_integer(self, (uint32_t)zero, 0);
     int reg = _newreg(self);
     _add_iabc(self, OP_SUB, (uint32_t)reg, (uint32_t)zero, (uint32_t)operand);
     return reg;
@@ -881,12 +899,13 @@ static int _primary(parser_t *self) {
     const candy_array_t *name = _next(self, TK_IDENT)->s;
     return _name_expr(self, name, 1);
   }
-  par_assert(token == TK_INTEGER || token == TK_FLOAT || token == TK_STRING ||
-    token == TK_true || token == TK_false || token == TK_null,
-    "unexpected token %s in expression", candy_token_str(token));
-  int reg = _newreg(self);
-  _add_iabx(self, OP_LOADK, (uint32_t)reg, (uint32_t)_add_meta(self, token));
-  return reg;
+  par_assert(_is_literal(token), "unexpected token %s in expression", candy_token_str(token));
+  result = _newreg(self);
+  if (token == TK_INTEGER)
+    _load_integer(self, (uint32_t)result, candy_lexer_next(&self->ls)->i);
+  else
+    _add_iabx(self, OP_LOADK, (uint32_t)result, (uint32_t)_add_meta(self, token));
+  return result;
 }
 
 static int _expr(parser_t *self, int pref, int min_prec) {
@@ -925,12 +944,29 @@ static void _patch_list(parser_t *self, size_t head, size_t target) {
   }
 }
 
-/* Parse a parenthesized condition and emit a jump taken when it is false.
- * Returns the JMPF instruction index for later patching. */
+/* Parse a parenthesized condition and return the false jump to patch. */
 static size_t _condition(parser_t *self) {
+  candy_proto_t *proto = self->fs->proto;
+  size_t start = _pc(self);
+  size_t end;
+  int reg;
+  candy_inst_t inst;
   _next(self, '(');
-  int reg = _expr(self, -1, 0);
+  reg = _expr(self, -1, 0);
   _next(self, ')');
+  end = _pc(self);
+  if (end > start) {
+    inst = ((const candy_inst_t *)candy_vector_data(candy_proto_get_inst(proto)))[end - 1];
+    if (inst.iabc.a == (uint32_t)reg &&
+        (inst.op == OP_LT || inst.op == OP_LTK || inst.op == OP_LE || inst.op == OP_LEK)) {
+      /* Only the branch consumes the result. Keep the following JMP's full
+       * target width instead of materializing a boolean in a register. */
+      inst.iabc.a = inst.op == OP_LTK || inst.op == OP_LEK;
+      inst.iabc.op = (inst.op == OP_LE || inst.op == OP_LEK) ? OP_TESTLE : OP_TESTLT;
+      candy_proto_set_inst(proto, end - 1, inst);
+      return _add_iax(self, OP_JMP, 0);
+    }
+  }
   return _add_iabx(self, OP_JMPF, (uint32_t)reg, 0);
 }
 
@@ -1118,7 +1154,7 @@ static void _class_stmt(parser_t *self) {
   _next(self, TK_class);
   const candy_array_t *name = _next(self, TK_IDENT)->s;
   int table = _newreg(self);
-  _add_iax(self, OP_TABLE, (uint32_t)table);
+  _add_iabx(self, OP_NEWCONTAINER, (uint32_t)table, 0);
   _add_iabx(self, OP_SETG, (uint32_t)table, (uint32_t)_add_name_const(self, name));
   while (candy_lexer_lookahead(&self->ls) != TK_end) {
     _next(self, TK_def);
@@ -1471,7 +1507,7 @@ static void _for_stmt(parser_t *self) {
 
   int idx = _newreg(self);
   int len = _newreg(self);
-  _add_iabx(self, OP_LOADK, (uint32_t)idx, (uint32_t)_add_integer(self, 0));
+  _load_integer(self, (uint32_t)idx, 0);
   _add_iabx(self, OP_LEN, (uint32_t)len, (uint32_t)iter);
   int cmp = _newreg(self);
   self->fs->local_hwm = (uint8_t)(cmp + 1);

@@ -25,6 +25,7 @@ extern "C" {
 #define candy_lengthof(array) ((size_t)(sizeof(array) / sizeof(array[0])))
 
 long strntol(const char nptr[], size_t size, char *endptr[], int base);
+unsigned long long strntoull(const char nptr[], size_t size, char *endptr[], int base);
 double strntod(const char nptr[], size_t size, char *endptr[]);
 
 static inline candy_hash_t hash_djb(const void *data, size_t size) {

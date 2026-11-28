@@ -21,22 +21,28 @@ extern "C" {
 
 #include "core/candy_priv.h"
 #include "core/candy_memory.h"
+#include <assert.h>
 #include <string.h>
 
 /* Open addressing shared by the table and the GC string pool.
- * The cell layout stays typed; only empty/tomb/is_equal/hash are supplied by the
- * caller through a compile-time constant ops table. */
+ * Callers supply slot classification, equality and hashing for their cell layout. */
 #define CANDY_HASHMAP_LINEAR_MAX 8
 
+typedef enum candy_hash_slot {
+  CANDY_HASH_LIVE,
+  CANDY_HASH_EMPTY,
+  CANDY_HASH_TOMB,
+} candy_hash_slot_t;
+
 typedef struct candy_hash_ops {
-  bool (*is_empty)(const void *cell);
-  bool (*is_tomb)(const void *cell);
+  candy_hash_slot_t (*classify)(const void *cell);
   bool (*is_equal)(const void *cell, const void *key, candy_gc_t *gc);
   candy_hash_t (*hash)(const void *cell, candy_gc_t *gc);
 } candy_hash_ops_t;
 
 static CANDY_FORCE_INLINE bool candy_hashmap_grow(size_t used, size_t size) {
-  return size == 0 || (used + 1) * 2 > size;
+  /* Leave room for open-addressed probes without growing at half capacity. */
+  return used + 1 > size - (size + 4) / 5;
 }
 
 /* Probe linearly for the first few slots (they share cache lines, which is what
@@ -45,37 +51,43 @@ static CANDY_FORCE_INLINE bool candy_hashmap_grow(size_t used, size_t size) {
  * covers every slot; it just leaves the long runs that small integers build
  * (they hash to themselves) in a step or two. */
 static CANDY_FORCE_INLINE size_t candy_hashmap_step(candy_hash_t hash, size_t step, size_t mask) {
+  uint32_t stride;
+  uint64_t k;
   if (step <= CANDY_HASHMAP_LINEAR_MAX)
     return (size_t)(((uint64_t)(uint32_t)hash + step) & mask);
-  /* Odd stride: the tail is one arithmetic progression over a power-of-two
-   * table, so it still visits every slot. */
-  uint32_t stride = ((uint32_t)hash * 0x9E3779B1u) | 1u;
-  uint64_t k = step - CANDY_HASHMAP_LINEAR_MAX;
+  stride = ((uint32_t)hash * 0x9E3779B1u) | 1u;
+  k = step - CANDY_HASHMAP_LINEAR_MAX;
   return (size_t)(((uint64_t)(uint32_t)hash + CANDY_HASHMAP_LINEAR_MAX + k * stride) & mask);
 }
 
-static CANDY_FORCE_INLINE void *candy_hashmap_find(void *data, size_t size, size_t cell, const candy_hash_ops_t *ops, const void *key, candy_hash_t hash, bool expand, candy_gc_t *gc) {
+/* Return a matching slot, or a vacant slot on a miss if insert is true.
+ * A NULL key searches for a vacant slot without comparing keys. */
+static CANDY_FORCE_INLINE void *candy_hashmap_find(void *data, size_t size, size_t cell, const candy_hash_ops_t *ops, const void *key, candy_hash_t hash, bool insert, candy_gc_t *gc) {
   if (data == NULL || size == 0)
     return NULL;
   size_t mask = size - 1;
   uint8_t *base = (uint8_t *)data;
+  void *pos = base + cell * ((uint32_t)hash & mask);
   void *vacant = NULL;
-  for (size_t step = 0; step < size; ++step) {
-    void *pos = base + cell * candy_hashmap_step(hash, step, mask);
-    if (ops->is_empty(pos)) {
-      if (vacant == NULL)
+  /* The linear prefix is followed by an odd-stride cycle. If the map has
+   * no empty slots (e.g. after many deletes), allow the entire cycle. */
+  for (size_t step = 1; ; ++step) {
+    candy_hash_slot_t slot = ops->classify(pos);
+    if (slot == CANDY_HASH_EMPTY)
+      return insert ? (vacant ? vacant : pos) : NULL;
+    if (slot == CANDY_HASH_TOMB) {
+      if (key == NULL)
+        return insert ? pos : NULL;
+      if (insert && vacant == NULL)
         vacant = pos;
-      break;
     }
-    if (ops->is_tomb(pos)) {
-      if (vacant == NULL)
-        vacant = pos;
-      continue;
-    }
-    if (ops->is_equal(pos, key, gc))
+    else if (key && ops->is_equal(pos, key, gc)) {
       return pos;
+    }
+    if (step == size + CANDY_HASHMAP_LINEAR_MAX)
+      return vacant;
+    pos = base + cell * candy_hashmap_step(hash, step, mask);
   }
-  return expand ? vacant : NULL;
 }
 
 static CANDY_FORCE_INLINE void *candy_hashmap_resize(void *data, size_t old_size, size_t new_size, size_t cell, const candy_hash_ops_t *ops, candy_memory_t *mem, candy_gc_t *gc, candy_excep_t *ctx) {
@@ -83,16 +95,14 @@ static CANDY_FORCE_INLINE void *candy_hashmap_resize(void *data, size_t old_size
   memset(next, 0, cell * new_size);
   for (size_t index = 0; index < old_size; ++index) {
     const void *from = (const uint8_t *)data + cell * index;
-    if (ops->is_empty(from) || ops->is_tomb(from))
+    candy_hash_t hash;
+    void *to;
+    if (ops->classify(from) != CANDY_HASH_LIVE)
       continue;
-    candy_hash_t hash = ops->hash(from, gc);
-    for (size_t step = 0; ; ++step) {
-      void *to = (uint8_t *)next + cell * candy_hashmap_step(hash, step, new_size - 1);
-      if (ops->is_empty(to)) {
-        memcpy(to, from, cell);
-        break;
-      }
-    }
+    hash = ops->hash(from, gc);
+    to = candy_hashmap_find(next, new_size, cell, ops, NULL, hash, true, gc);
+    assert(to != NULL);
+    memcpy(to, from, cell);
   }
   candy_memory_free(mem, data, cell * old_size);
   return next;

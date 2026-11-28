@@ -18,6 +18,7 @@
 #include "core/candy_exception.h"
 #include "core/candy_gc.h"
 #include "core/candy_array.h"
+#include <limits.h>
 #include <string.h>
 
 #define lex_assert(_condition, _format, ...) \
@@ -184,63 +185,92 @@ static void _handle_backslash(candy_lexer_t *self) {
   }
 }
 
-static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta) {
-  char first = _view(self, 0);
-  candy_tokens_t token = TK_INTEGER;
-  bool(*check)(char) = is_dec;
-  /* Digits are accumulated as they are scanned, so a decimal integer does not
-   * have to be parsed out of the token text a second time. */
+/* Consume only a complete decimal integer already in the input window.
+ * On failure, leave the cursor untouched for the general scanner. */
+static inline bool _take_decimal_integer(candy_lexer_t *self, candy_meta_t *meta, char first) {
+  const char *digits;
+  size_t available = candy_buffer_span(&self->buff, &digits);
+  size_t length = 1;
   uint64_t value = (uint64_t)(first - '0');
-  _save(self);
-  if (first == '0') {
-    if (_check_dual(self, "Xx", _skip)) {
-      lex_assert(is_hex(_view(self, 0)), "invalid hexadecimal number");
-      check = is_hex;
-    }
-    else if (_check_dual(self, "Bb", _skip)) {
-      lex_assert(is_bin(_view(self, 0)), "invalid binary number");
-      check = is_bin;
-    }
+  char next;
+  if (available == 0)
+    return false;
+  /* A leading zero can only take this path if it stands alone. */
+  if (first != '0') {
+    for (; length < available && length < 19 && is_dec(digits[length]); ++length)
+      value = value * 10 + (uint64_t)(digits[length] - '0');
   }
+
+  if (length == available || value > (uint64_t)INT64_MAX)
+    return false;
+  next = digits[length];
+  if (next == '.' || is_alnum(next))
+    return false;
+
+  _skipn(self, length);
+  meta->i = (candy_integer_t)value;
+  return true;
+}
+
+static candy_tokens_t _scan_number(candy_lexer_t *self, candy_meta_t *meta, char first) {
+  int base = first == '0' ? 8 : 10;
+  bool (*is_digit)(char) = is_dec;
+  bool real = false;
+  const char *text;
+  size_t length;
+  char *end = NULL;
+  _save(self);
+  if (first == '0' && _check_dual(self, "Xx", _skip)) {
+    lex_assert(is_hex(_view(self, 0)), "invalid hexadecimal number");
+    base = 16;
+    is_digit = is_hex;
+  }
+  else if (first == '0' && _check_dual(self, "Bb", _skip)) {
+    lex_assert(is_bin(_view(self, 0)), "invalid binary number");
+    base = 2;
+    is_digit = is_bin;
+  }
+
+  /* Collect the spelling first; conversion will reject malformed dots,
+   * exponents and octal digits. */
   while (1) {
     char ch = _view(self, 0);
-    if (check(ch)) {
-      value = value * 10 + (uint64_t)(ch - '0');
+    if (is_digit(ch)) {
       _save(self);
+      continue;
     }
-    else if (_check_dual(self, "Ee", _save)) {
-      lex_assert(check == is_dec, "invalid float number");
-      _check_dual(self, "+-", _save);
-      token = TK_FLOAT;
-    }
-    else if (ch == '.') {
-      lex_assert(check == is_dec, "invalid float number");
-      _save(self);
-      token = TK_FLOAT;
-    }
-    else if (!is_alpha(ch)) {
+    if (ch != '.' && ch != 'e' && ch != 'E') {
+      lex_assert(!is_alpha(ch), "extra text after expected end of number");
       break;
     }
-    else {
-      lex_assert(false, "extra text after expected end of number");
-    }
+    lex_assert(is_digit == is_dec, "invalid float number");
+    _save(self);
+    if (ch != '.')
+      _check_dual(self, "+-", _save);
+    real = true;
   }
-  char *end = NULL;
-  if (token == TK_INTEGER) {
-    int base = check == is_dec ? first == '0' ? 8 : 10 : check == is_hex ? 16 : 2;
-    if (base == 10 && _size(self) <= 19 && value <= (uint64_t)INT64_MAX) {
-      meta->i = (candy_integer_t)value;
-      end = (char *)_head(self) + _size(self);
-    }
-    else {
-      meta->i = (candy_integer_t)strntol(_head(self), _size(self), &end, base);
-    }
+
+  text = _head(self);
+  length = _size(self);
+  if (real) {
+    meta->f = (candy_float_t)strntod(text, length, &end);
   }
   else {
-    meta->f = (candy_float_t)strntod(_head(self), _size(self), &end);
+    /* Signs are separate tokens, so unsigned conversion distinguishes
+     * INT64_MAX from overflow without errno. Preserve the old saturation:
+     * decimal literals get 64 bits, other bases are limited to long. */
+    unsigned long long value = strntoull(text, length, &end, base);
+    unsigned long long limit = base == 10 ? INT64_MAX : LONG_MAX;
+    meta->i = value <= limit ? (candy_integer_t)value : LONG_MAX;
   }
-  lex_assert(_head(self) + _size(self) == end, "malformed number");
-  return token;
+  lex_assert(text + length == end, "malformed number");
+  return real ? TK_FLOAT : TK_INTEGER;
+}
+
+static candy_tokens_t _get_number(candy_lexer_t *self, candy_meta_t *meta, char first) {
+  if (_take_decimal_integer(self, meta, first))
+    return TK_INTEGER;
+  return _scan_number(self, meta, first);
 }
 
 /**
@@ -285,25 +315,38 @@ static candy_tokens_t _get_string(candy_lexer_t *self, candy_meta_t *meta) {
 }
 
 static candy_tokens_t _get_ident_or_keyword(candy_lexer_t *self, candy_meta_t *meta) {
-  /* save alpha */
-  _save(self);
-  /* save alpha or number */
-  while (_check_next(self, is_alnum, _save));
-  /* check keyword */
-  switch (hash_djb(_head(self), _size(self))) {
+  const char *name;
+  size_t size;
+  candy_hash_t hash;
+  do {
+    size_t available = candy_buffer_span(&self->buff, &name);
+    size_t count = 1; /* The first byte has already been classified. */
+    while (count < available && is_alnum(name[count]))
+      ++count;
+    candy_buffer_collect(&self->buff, count);
+    self->dbg.column += count;
+    if (count < available)
+      break;
+  } while (is_alnum(_view(self, 0)));
+
+  name = _head(self);
+  size = _size(self);
+  hash = hash_djb(name, size);
+  switch (hash) {
     #define CANDY_KW_MATCH
     #include "core/candy_keyword.list"
     default:
-      candy_logd(TAG, "ident <%.*s>", (int)_size(self), _head(self));
-      meta->s = candy_array_create_const(self->gc, self->ctx, CANDY_TYPE_CHAR, _head(self), _size(self));
+      candy_logd(TAG, "ident <%.*s>", (int)size, name);
+      meta->s = candy_array_create_const_hashed(self->gc, self->ctx, CANDY_TYPE_CHAR, name, size, hash);
       return TK_IDENT;
   }
 }
 
 static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
+  char ch;
   _reset(self);
   while (1) {
-    char ch = _view(self, 0);
+    ch = _view(self, 0);
     switch (ch) {
       case '\0':
         return TK_EOS;
@@ -363,7 +406,7 @@ static candy_tokens_t _lexer(candy_lexer_t *self, candy_meta_t *meta) {
         lex_assert(false, "unexpected character after line continuation character");
       default:
         if (is_dec(ch))
-          return _get_number(self, meta);
+          return _get_number(self, meta, ch);
         else if (is_alpha(ch))
           return _get_ident_or_keyword(self, meta);
         lex_assert(false, "unrecognized token");

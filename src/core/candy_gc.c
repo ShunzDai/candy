@@ -28,14 +28,11 @@ struct candy_gc_key {
 
 static const char TAG[] = "gc";
 
-static bool _is_empty(const void *cell) {
-  const candy_object_t *const *self = (const candy_object_t *const *)cell;
-  return *self == NULL;
-}
-
-static bool _is_tomb(const void *cell) {
-  const candy_object_t *const *self = (const candy_object_t *const *)cell;
-  return *self == (candy_object_t *)UINTPTR_MAX;
+static candy_hash_slot_t _classify(const void *cell) {
+  const candy_object_t *obj = *(candy_object_t *const *)cell;
+  if (obj == NULL)
+    return CANDY_HASH_EMPTY;
+  return obj == (candy_object_t *)UINTPTR_MAX ? CANDY_HASH_TOMB : CANDY_HASH_LIVE;
 }
 
 static bool _is_equal(const void *cell, const void *key, candy_gc_t *gc) {
@@ -54,16 +51,15 @@ static candy_hash_t _hash(const void *cell, candy_gc_t *gc) {
 }
 
 static const candy_hash_ops_t _ops = {
-  .is_empty = _is_empty,
-  .is_tomb = _is_tomb,
+  .classify = _classify,
   .is_equal = _is_equal,
   .hash = _hash,
 };
 
-static candy_object_t **_find(candy_gc_t *self, const candy_gc_key_t *key, candy_hash_t hash, bool expand) {
+static candy_object_t **_find(candy_gc_t *self, const candy_gc_key_t *key, candy_hash_t hash, bool insert) {
   return (candy_object_t **)candy_hashmap_find(self->pool,
     capacity_to_size(self->pool_cap), sizeof(candy_object_t *),
-    &_ops, key, hash, expand, self
+    &_ops, key, hash, insert, self
   );
 }
 
@@ -135,7 +131,7 @@ static candy_err_t _fsm_end(candy_gc_t *self) {
   }
   for (size_t idx = 0; idx < capacity_to_size(self->pool_cap); ++idx) {
     candy_object_t **pos = self->pool + idx;
-    if (_is_empty(pos) || _is_tomb(pos))
+    if (_classify(pos) != CANDY_HASH_LIVE)
       continue;
     if (candy_object_mark(*pos) == MARK_WHITE) {
       _del_node(self, pos);
@@ -170,7 +166,7 @@ candy_err_t candy_gc_deinit(candy_gc_t *self) {
   /* free constant pool */
   for (size_t idx = 0; idx < capacity_to_size(self->pool_cap); ++idx) {
     candy_object_t **pos = (candy_object_t **)self->pool + idx;
-    if (_is_empty(pos) || _is_tomb(pos))
+    if (_classify(pos) != CANDY_HASH_LIVE)
       continue;
     _del_node(self, pos);
   }
@@ -192,14 +188,7 @@ candy_object_t *candy_gc_add(candy_gc_t *self, candy_excep_t *ctx, candy_types_t
 }
 
 candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_excep_t *ctx, candy_types_t type, size_t size, candy_hash_t hash) {
-  /* Searching for a free slot: there is no payload to compare against. */
-  candy_gc_key_t key = {
-    .type = type,
-    .data = NULL,
-    .size = 0,
-  };
-  size_t pool_size = capacity_to_size(self->pool_cap);
-  if (candy_hashmap_grow(self->pool_used, pool_size)) {
+  if (candy_hashmap_grow(self->pool_used, capacity_to_size(self->pool_cap))) {
     if (self->pool_cap >= 30)
       return NULL;
     /* The pool is append-heavy while parsing: 4x growth cuts rehash count. */
@@ -209,9 +198,8 @@ candy_object_t *candy_gc_add_pool(candy_gc_t *self, candy_excep_t *ctx, candy_ty
     candy_err_t err = _resize(self, ctx, next_cap);
     if (err != CANDY_OK)
       return NULL;
-    pool_size = capacity_to_size(self->pool_cap);
   }
-  candy_object_t **pos = _find(self, &key, hash, true);
+  candy_object_t **pos = _find(self, NULL, hash, true);
   if (pos == NULL)
     return NULL;
   candy_object_t *obj = _add_node(self, ctx, pos, type, size);

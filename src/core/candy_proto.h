@@ -21,6 +21,8 @@ extern "C" {
 
 #include "core/candy_priv.h"
 
+#define CANDY_ADDI_BIAS 256
+
 typedef enum candy_opcodes {
   #define CANDY_OPCODE_ENUM
   #include "core/candy_opcode.list"

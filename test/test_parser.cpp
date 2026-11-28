@@ -75,6 +75,24 @@ verify(0x10 + 2, 18)
 )", 7);
 }
 
+TEST_F(parser, add_immediate_preserves_range_precedence_and_float_operands) {
+  run(R"(verify(5 + 255, 260)
+verify(5 + 256, 261)
+verify(5 - 256, -251)
+verify(5 - 257, -252)
+verify(5 - 0, 5)
+verify(8 + 2 * 3, 14)
+verify(8 - 2 * 3, 2)
+if (1.5 + 1 == 2.5 && 1.5 - 1 == 0.5)
+  verify(1, 1)
+end
+negative_zero = 0.0 * -1.0
+if (1.0 / (negative_zero - 0) < 0.0)
+  verify(1, 1)
+end
+)", 9);
+}
+
 TEST_F(parser, comparisons_respect_arithmetic_precedence) {
   run(R"(result = 0
 if (4 < 2 + 1)
@@ -108,6 +126,23 @@ verify(subtract(10, 3), 7)
 verify(apply(increment, 8), 9)
 verify(subtract(increment(5), increment(2)), 3)
 )", 3);
+}
+
+TEST_F(parser, self_tailcall_after_another_function_clears_missing_arguments) {
+  const char source[] = R"(def leaf()
+  return 0
+end
+def recurse(n, dropped)
+  if (n == 0)
+    return dropped
+  end
+  leaf()
+  return recurse(0)
+end
+return recurse(1, 77)
+)";
+  ASSERT_EQ(candy_dostring(state, source, sizeof(source) - 1), CANDY_OK);
+  EXPECT_EQ(candy_state_get_type(state, -1), CANDY_TYPE_NONE);
 }
 
 TEST_F(parser, direct_local_returns_preserve_values_and_recursive_self_identity) {
@@ -688,6 +723,24 @@ verify(1 << 4 & 7, 0)
 )", 6);
 }
 
+TEST_F(parser, binary_ops_accept_register_and_constant_rhs) {
+  run(R"(a = 10
+b = 3
+verify(a - b, a - 3)
+verify(a * b, a * 3)
+verify(a / b, a / 3)
+verify(a % b, a % 3)
+verify(a & b, a & 3)
+verify(a | b, a | 3)
+verify(a ^ b, a ^ 3)
+verify(a << b, a << 3)
+verify(a >> b, a >> 3)
+if ((a > b) == (a > 3) && (a <= b) == (a <= 3))
+  verify(1, 1)
+end
+)", 10);
+}
+
 TEST_F(parser, logical_and_or_not_short_circuit) {
   probe_calls = 0;
   ASSERT_EQ(candy_state_setglobal(state, "probe", +[](candy_state_t *current) -> int {
@@ -752,6 +805,28 @@ verify(sum, 10)
 )", 1);
 }
 
+TEST_F(parser, global_loop_reads_and_writes_after_host_grows_the_table) {
+  ASSERT_EQ(candy_state_setglobal(state, "grow", +[](candy_state_t *current) -> int {
+    for (int i = 0; i < 500; ++i) {
+      const auto name = "added_" + std::to_string(i);
+      EXPECT_EQ(candy_state_setglobal(current, name.c_str(), +[](candy_state_t *) -> int { return 0; }), CANDY_OK);
+    }
+    return 0;
+  }), CANDY_OK);
+  run(R"(i = 0
+sum = 0
+while (i < 16)
+  if (i == 5)
+    grow()
+  end
+  sum = sum + i
+  i = i + 1
+end
+verify(i, 16)
+verify(sum, 120)
+)", 2);
+}
+
 TEST_F(parser, addition_rhs_uses_shared_precedence_parser) {
   run(R"(a = 2
 verify(1 + a * 3, 7)
@@ -810,12 +885,35 @@ return accumulate
   auto *closure = reinterpret_cast<candy_sclosure_t *>(candy_state_to_object(state, -1));
   const auto *inst = candy_proto_get_inst(candy_sclosure_get_proto(closure));
   const auto *code = static_cast<const candy_inst_t *>(candy_vector_data(inst));
-  const candy_opcodes_t expected[] = {OP_LTK, OP_JMPF, OP_ADD, OP_ADDK, OP_JMP, OP_RETURN};
+  const candy_opcodes_t expected[] = {OP_TESTLT, OP_JMP, OP_ADD, OP_ADDI, OP_JMP, OP_RETURN};
   ASSERT_EQ(candy_vector_size(inst), sizeof(expected) / sizeof(expected[0]));
   for (size_t i = 0; i < candy_vector_size(inst); ++i)
     EXPECT_EQ(code[i].op, expected[i]) << "instruction " << i;
   EXPECT_EQ(code[2].iabc.a, code[2].iabc.b);
   EXPECT_EQ(code[3].iabc.a, code[3].iabc.b);
+}
+
+TEST_F(parser, reversed_register_comparison_fuses_inclusive_loop_branch) {
+  const char source[] = R"(def countdown(i, lo)
+  while (i >= lo)
+    i = i - 1
+  end
+  return i
+end
+return countdown
+)";
+  const candy_opcodes_t expected[] = {OP_TESTLE, OP_JMP, OP_ADDI, OP_JMP, OP_RETURN};
+  ASSERT_EQ(candy_dostring(state, source, sizeof(source) - 1), CANDY_OK);
+  ASSERT_EQ(candy_state_get_type(state, -1), CANDY_TYPE_SCLOS);
+  auto *closure = reinterpret_cast<candy_sclosure_t *>(candy_state_to_object(state, -1));
+  const auto *inst = candy_proto_get_inst(candy_sclosure_get_proto(closure));
+  const auto *code = static_cast<const candy_inst_t *>(candy_vector_data(inst));
+  ASSERT_EQ(candy_vector_size(inst), sizeof(expected) / sizeof(expected[0]));
+  for (size_t i = 0; i < candy_vector_size(inst); ++i)
+    EXPECT_EQ(code[i].op, expected[i]) << "instruction " << i;
+  EXPECT_EQ(code[0].iabc.a, 0u);
+  EXPECT_EQ(code[0].iabc.c, code[2].iabc.a);
+  EXPECT_NE(code[0].iabc.b, code[2].iabc.a);
 }
 
 TEST_F(parser, plain_global_assignment_skips_unused_lhs_load) {
@@ -840,7 +938,7 @@ TEST_F(parser, plain_global_assignment_skips_unused_lhs_load) {
   if (entry != nullptr) {
     const auto *inst = candy_proto_get_inst(candy_sclosure_get_proto(reinterpret_cast<candy_sclosure_t *>(entry)));
     const auto *code = static_cast<const candy_inst_t *>(candy_vector_data(inst));
-    const candy_opcodes_t expected[] = {OP_LOADK, OP_SETG, OP_ADDGK, OP_LOADG, OP_RETURN};
+    const candy_opcodes_t expected[] = {OP_LOADI, OP_SETG, OP_ADDGK, OP_LOADG, OP_RETURN};
     const size_t count = sizeof(expected) / sizeof(expected[0]);
     EXPECT_EQ(candy_vector_size(inst), count);
     for (size_t i = 0; i < count && i < candy_vector_size(inst); ++i)
@@ -848,6 +946,86 @@ TEST_F(parser, plain_global_assignment_skips_unused_lhs_load) {
   }
   EXPECT_EQ(candy_excep_deinit(&ctx), CANDY_OK);
   EXPECT_EQ(candy_gc_deinit(&gc), CANDY_OK);
+}
+
+TEST_F(parser, less_than_branches_and_comparison_values_agree) {
+  run(R"(value = 1.5
+limit = 3
+total = 0
+while (value < limit)
+  value = value + 1
+  total = total + 1
+end
+verify(total, 2)
+if (value < 4)
+  verify(1, 1)
+end
+if (value < 3)
+  verify(0, 1)
+else
+  verify(1, 1)
+end
+result = value < 4
+if (result)
+  verify(1, 1)
+end
+)", 4);
+}
+
+TEST_F(parser, ordered_comparisons_preserve_evaluation_order_and_nan) {
+  steps = 0;
+  ASSERT_EQ(candy_state_setglobal(state, "left", +[](candy_state_t *current) -> int {
+    EXPECT_EQ(steps++, 0);
+    EXPECT_EQ(candy_state_push_integer(current, 3), CANDY_OK);
+    return 1;
+  }), CANDY_OK);
+  ASSERT_EQ(candy_state_setglobal(state, "right", +[](candy_state_t *current) -> int {
+    EXPECT_EQ(steps++, 1);
+    EXPECT_EQ(candy_state_push_integer(current, 2), CANDY_OK);
+    return 1;
+  }), CANDY_OK);
+  run(R"(result = left() > right()
+if (result)
+  verify(1, 1)
+end
+def countdown(i, lo)
+  while (i >= lo)
+    i = i - 1
+  end
+  return i
+end
+verify(countdown(3, 1), 0)
+value = 2.5
+if (value <= 3)
+  verify(1, 1)
+end
+if (value <= 2)
+  verify(0, 1)
+end
+if (value > 2 && value >= 2)
+  verify(1, 1)
+end
+nan = 0.0 / 0.0
+if (nan <= 3 || nan > 3 || nan >= 3)
+  verify(0, 1)
+end
+if (value >= nan)
+  verify(0, 1)
+end
+if (nan <= 3)
+  verify(0, 1)
+end
+)", 4);
+  EXPECT_EQ(steps, 2);
+}
+
+TEST_F(parser, integer_immediate_and_constant_pool_boundary) {
+  run(R"(verify(0, 1 - 1)
+verify(262143, 262144 - 1)
+verify(262144, 262143 + 1)
+verify(-262143, 0 - 262143)
+verify(-262144, 0 - 262144)
+)", 5);
 }
 
 TEST_F(parser, range_for_reuses_existing_function_local) {
@@ -1203,6 +1381,30 @@ TEST_F(modules, exports_are_ordinary_table_fields_and_private_names_stay_private
   EXPECT_EQ(candy_dostring(state, invalid_call, sizeof(invalid_call) - 1), CANDY_ERR_VM);
 }
 
+TEST_F(modules, global_add_reads_host_once_then_updates_module_globals) {
+  run("host_integer = 40\nhost_float = 1.5", 0);
+  ASSERT_NO_FATAL_FAILURE(write("add.candy", R"(
+    host_integer = host_integer + 2
+    host_integer = host_integer + 3
+    delta = 2
+    host_float = host_float + delta
+    host_float = host_float + delta
+    export def integer() return host_integer end
+    export def fraction() return host_float end
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("main.candy", R"(
+    import "add.candy" as add
+    verify(add.integer(), 45)
+    verify(host_integer, 40)
+    if (add.fraction() == 5.5 && host_float == 1.5)
+      verify(1, 1)
+    end
+  )"));
+  checks = 0;
+  ASSERT_EQ(run_file("main.candy"), CANDY_OK);
+  EXPECT_EQ(checks, 3);
+}
+
 TEST_F(modules, loads_nested_relative_paths_and_reuses_exports_across_chunks) {
   ASSERT_NO_FATAL_FAILURE(write("nested/inner/sibling.candy", "export def number() return 42 end"));
   ASSERT_NO_FATAL_FAILURE(write("nested/outer.candy", R"(
@@ -1231,6 +1433,26 @@ TEST_F(modules, loads_nested_relative_paths_and_reuses_exports_across_chunks) {
   ASSERT_EQ(run_file("second.candy"), CANDY_OK);
   EXPECT_EQ(initializations, 1);
   EXPECT_EQ(checks, 2);
+}
+
+TEST_F(modules, globals_follow_prototype_across_calls_and_returns) {
+  ASSERT_NO_FATAL_FAILURE(write("leaf.candy", R"(
+    value = 40
+    export def number() return value end
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("parent.candy", R"(
+    import "leaf.candy" as leaf
+    value = 2
+    export def number() return leaf.number() + value end
+  )"));
+  ASSERT_NO_FATAL_FAILURE(write("main.candy", R"(
+    import "parent.candy" as parent
+    value = 10
+    verify(parent.number() + value, 52)
+  )"));
+  checks = 0;
+  ASSERT_EQ(run_file("main.candy"), CANDY_OK);
+  EXPECT_EQ(checks, 1);
 }
 
 TEST_F(modules, rejects_cycles_and_can_retry_failed_loads) {

@@ -84,6 +84,21 @@ class PeakRssTests(unittest.TestCase):
             self.assertEqual(mem.time_args(), ["-f", "candy_bench_rss_kib=%M"])
             self.assertEqual(self.measure(stderr=b"candy_bench_rss_kib=4242\n"), (4242 * 1024, 0))
 
+    def test_android_uses_gnu_time_from_path(self):
+        tool = '/data/data/com.termux/files/usr/bin/time'
+        with (patch.object(mem.sys, 'platform', 'android'),
+              patch.object(mem.shutil, 'which', return_value=tool)):
+            self.assertEqual(mem.time_executable(), tool)
+            self.assertEqual(mem.time_args(), ['-f', mem.GNU_TIME_FORMAT])
+            self.assertEqual(self.measure(stderr=b'candy_bench_rss_kib=4242\n'), (4242 * 1024, 0))
+
+    def test_check_time_rejects_non_gnu_android_time(self):
+        proc = subprocess.CompletedProcess([], 1, b'', b'time: bad option -f')
+        with (patch.object(mem.sys, 'platform', 'android'),
+              patch.object(mem.subprocess, 'run', return_value=proc),
+              self.assertRaisesRegex(ValueError, 'did not report peak RSS')):
+            mem.check_time()
+
     def test_gnu_time_requires_one_positive_stat_and_no_diagnostics(self):
         line = b"candy_bench_rss_kib=4242\n"
         with patch.object(mem.sys, "platform", "linux"):

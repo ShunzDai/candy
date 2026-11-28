@@ -43,8 +43,8 @@ struct candy_gc {
   uint8_t pool_cap;
 };
 
-/* Opaque lookup key handed to an interned object's EVT_COMPARE handler: it
- * describes the payload (in bytes) the caller is looking for. `data` is NULL
+/* Opaque lookup key handed to an interned object's EVT_COMPARE handler.
+ * The handler interprets size (for arrays: element count). `data` is NULL
  * when the caller only needs a free slot, so nothing can compare equal. */
 typedef struct candy_gc_key candy_gc_key_t;
 

@@ -24,7 +24,11 @@ extern "C" {
 
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type);
 
+/* Intern by element type, count, and byte representation. Do not mutate the returned payload. */
 candy_array_t *candy_array_create_const(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size);
+
+/* As above, with hash_djb already computed over all payload bytes. */
+candy_array_t *candy_array_create_const_hashed(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size, candy_hash_t hash);
 
 candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char format[], va_list args) CANDY_FORMAT(3, 0);
 

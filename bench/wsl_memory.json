@@ -1,19 +1,19 @@
 {
   "empty": {
     "candy": {
-      "rss_bytes": 1773568,
+      "rss_bytes": 1781760,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 1806336,
+          "rss_bytes": 1781760,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 1773568,
+          "rss_bytes": 1781760,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 1748992,
+          "rss_bytes": 1781760,
           "peak_bytes": 0
         }
       ]
@@ -27,7 +27,7 @@
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2105344,
+          "rss_bytes": 2256896,
           "peak_bytes": 0
         },
         {
@@ -39,19 +39,19 @@
   },
   "fib_34": {
     "candy": {
-      "rss_bytes": 2224128,
+      "rss_bytes": 2199552,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 2224128,
+          "rss_bytes": 2142208,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2265088,
+          "rss_bytes": 2199552,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2121728,
+          "rss_bytes": 2289664,
           "peak_bytes": 0
         }
       ]
@@ -61,7 +61,7 @@
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 2445312,
+          "rss_bytes": 2449408,
           "peak_bytes": 0
         },
         {
@@ -69,7 +69,7 @@
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2363392,
+          "rss_bytes": 2387968,
           "peak_bytes": 0
         }
       ]
@@ -77,7 +77,7 @@
   },
   "arith_400k": {
     "candy": {
-      "rss_bytes": 3780608,
+      "rss_bytes": 3735552,
       "peak_bytes": 0,
       "samples": [
         {
@@ -85,7 +85,7 @@
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 3801088,
+          "rss_bytes": 3723264,
           "peak_bytes": 0
         },
         {
@@ -95,19 +95,19 @@
       ]
     },
     "lua": {
-      "rss_bytes": 6381568,
+      "rss_bytes": 6455296,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 6381568,
+          "rss_bytes": 6455296,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 6451200,
+          "rss_bytes": 6438912,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 6373376,
+          "rss_bytes": 6455296,
           "peak_bytes": 0
         }
       ]
@@ -115,29 +115,29 @@
   },
   "globals_400k": {
     "candy": {
-      "rss_bytes": 6877184,
+      "rss_bytes": 6955008,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 6873088,
+          "rss_bytes": 6983680,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 6881280,
+          "rss_bytes": 6955008,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 6877184,
+          "rss_bytes": 6955008,
           "peak_bytes": 0
         }
       ]
     },
     "lua": {
-      "rss_bytes": 10387456,
+      "rss_bytes": 10379264,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 10424320,
+          "rss_bytes": 10379264,
           "peak_bytes": 0
         },
         {
@@ -145,7 +145,7 @@
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 10305536,
+          "rss_bytes": 10309632,
           "peak_bytes": 0
         }
       ]
@@ -153,37 +153,37 @@
   },
   "calls_400k": {
     "candy": {
-      "rss_bytes": 6930432,
+      "rss_bytes": 6938624,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 6881280,
+          "rss_bytes": 6889472,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 6930432,
+          "rss_bytes": 6955008,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 6946816,
+          "rss_bytes": 6938624,
           "peak_bytes": 0
         }
       ]
     },
     "lua": {
-      "rss_bytes": 8450048,
+      "rss_bytes": 8409088,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 8450048,
+          "rss_bytes": 8409088,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 8454144,
+          "rss_bytes": 8458240,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 8355840,
+          "rss_bytes": 8409088,
           "peak_bytes": 0
         }
       ]
@@ -191,37 +191,37 @@
   },
   "compile_200k": {
     "candy": {
-      "rss_bytes": 33046528,
+      "rss_bytes": 5234688,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 33046528,
+          "rss_bytes": 5234688,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 33046528,
+          "rss_bytes": 5185536,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 33030144,
+          "rss_bytes": 5279744,
           "peak_bytes": 0
         }
       ]
     },
     "lua": {
-      "rss_bytes": 15872000,
+      "rss_bytes": 15892480,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 15872000,
+          "rss_bytes": 15876096,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 15835136,
+          "rss_bytes": 15892480,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 15888384,
+          "rss_bytes": 15892480,
           "peak_bytes": 0
         }
       ]
@@ -229,37 +229,37 @@
   },
   "closures_100k": {
     "candy": {
-      "rss_bytes": 55259136,
+      "rss_bytes": 43679744,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 55197696,
+          "rss_bytes": 43671552,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 55259136,
+          "rss_bytes": 43679744,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 55263232,
+          "rss_bytes": 43732992,
           "peak_bytes": 0
         }
       ]
     },
     "lua": {
-      "rss_bytes": 48631808,
+      "rss_bytes": 48611328,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 48631808,
+          "rss_bytes": 48660480,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 48599040,
+          "rss_bytes": 48607232,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 48631808,
+          "rss_bytes": 48611328,
           "peak_bytes": 0
         }
       ]
@@ -267,19 +267,19 @@
   },
   "calls_nested_local_200k": {
     "candy": {
-      "rss_bytes": 4587520,
+      "rss_bytes": 4591616,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 4521984,
+          "rss_bytes": 4591616,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 4587520,
+          "rss_bytes": 4562944,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 4587520,
+          "rss_bytes": 4595712,
           "peak_bytes": 0
         }
       ]
@@ -289,15 +289,15 @@
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 5382144,
-          "peak_bytes": 0
-        },
-        {
           "rss_bytes": 5406720,
           "peak_bytes": 0
         },
         {
           "rss_bytes": 5406720,
+          "peak_bytes": 0
+        },
+        {
+          "rss_bytes": 5402624,
           "peak_bytes": 0
         }
       ]
@@ -305,19 +305,19 @@
   },
   "while_local_1m": {
     "candy": {
-      "rss_bytes": 2093056,
+      "rss_bytes": 2076672,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 2093056,
+          "rss_bytes": 2076672,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2093056,
+          "rss_bytes": 2101248,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2093056,
+          "rss_bytes": 2039808,
           "peak_bytes": 0
         }
       ]
@@ -331,7 +331,7 @@
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2387968,
+          "rss_bytes": 2318336,
           "peak_bytes": 0
         },
         {
@@ -343,37 +343,37 @@
   },
   "calls_hot_local_500k": {
     "candy": {
-      "rss_bytes": 2134016,
+      "rss_bytes": 2039808,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 2134016,
+          "rss_bytes": 2162688,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2158592,
+          "rss_bytes": 2039808,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2093056,
+          "rss_bytes": 2039808,
           "peak_bytes": 0
         }
       ]
     },
     "lua": {
-      "rss_bytes": 2453504,
+      "rss_bytes": 2428928,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 2453504,
+          "rss_bytes": 2428928,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2453504,
+          "rss_bytes": 2449408,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2437120,
+          "rss_bytes": 2387968,
           "peak_bytes": 0
         }
       ]
@@ -381,57 +381,19 @@
   },
   "branch_chain_500k": {
     "candy": {
-      "rss_bytes": 2031616,
+      "rss_bytes": 2101248,
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 2027520,
+          "rss_bytes": 2166784,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2068480,
+          "rss_bytes": 2101248,
           "peak_bytes": 0
         },
         {
-          "rss_bytes": 2031616,
-          "peak_bytes": 0
-        }
-      ]
-    },
-    "lua": {
-      "rss_bytes": 2453504,
-      "peak_bytes": 0,
-      "samples": [
-        {
-          "rss_bytes": 2387968,
-          "peak_bytes": 0
-        },
-        {
-          "rss_bytes": 2453504,
-          "peak_bytes": 0
-        },
-        {
-          "rss_bytes": 2453504,
-          "peak_bytes": 0
-        }
-      ]
-    }
-  },
-  "nested_functions_1k": {
-    "candy": {
-      "rss_bytes": 2064384,
-      "peak_bytes": 0,
-      "samples": [
-        {
-          "rss_bytes": 2064384,
-          "peak_bytes": 0
-        },
-        {
-          "rss_bytes": 2023424,
-          "peak_bytes": 0
-        },
-        {
-          "rss_bytes": 2134016,
+          "rss_bytes": 2019328,
           "peak_bytes": 0
         }
       ]
@@ -441,7 +403,45 @@
       "peak_bytes": 0,
       "samples": [
         {
-          "rss_bytes": 2314240,
+          "rss_bytes": 2387968,
+          "peak_bytes": 0
+        },
+        {
+          "rss_bytes": 2363392,
+          "peak_bytes": 0
+        },
+        {
+          "rss_bytes": 2437120,
+          "peak_bytes": 0
+        }
+      ]
+    }
+  },
+  "nested_functions_1k": {
+    "candy": {
+      "rss_bytes": 2142208,
+      "peak_bytes": 0,
+      "samples": [
+        {
+          "rss_bytes": 2142208,
+          "peak_bytes": 0
+        },
+        {
+          "rss_bytes": 2142208,
+          "peak_bytes": 0
+        },
+        {
+          "rss_bytes": 2039808,
+          "peak_bytes": 0
+        }
+      ]
+    },
+    "lua": {
+      "rss_bytes": 2441216,
+      "peak_bytes": 0,
+      "samples": [
+        {
+          "rss_bytes": 2441216,
           "peak_bytes": 0
         },
         {
@@ -456,20 +456,20 @@
     }
   },
   "_sizes": {
-    "candy_bin": 116784,
+    "candy_bin": 125992,
     "lua_bin": 369616
   },
   "_metadata": {
-    "timestamp": "2026-11-26T11:06:33.865973+00:00",
+    "timestamp": "2026-11-27T11:03:21.232822+00:00",
     "platform": "Linux-6.18.58.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
     "binaries": {
       "candy": {
-        "path": "/candy-bench.LMi3nUle/assignment-fix.osy61bAy/build/shell/candy",
-        "sha256": "ea81042d3dd449c4dd9c853b45c4e32c2ed494494fcb01cd332a31454e9c5028",
-        "size_bytes": 116784
+        "path": "/candy-bench.LMi3nUle/charts-rerun.eixN7Nxm/build/shell/candy",
+        "sha256": "7a48a0a86eeb1f3bb59028f49c620852527ec874ee4f3427044f545b3f769b50",
+        "size_bytes": 125992
       },
       "lua": {
-        "path": "/candy-bench.LMi3nUle/lua-5.4.7/src/lua",
+        "path": "/candy-bench.LMi3nUle/charts-rerun.eixN7Nxm/lua-5.4.7/src/lua",
         "sha256": "78a9af05115eec05d90117614db37308c39ed39938e251b68e45813a92282498",
         "size_bytes": 369616
       }
@@ -492,8 +492,8 @@
         "branch_chain_500k",
         "nested_functions_1k"
       ],
-      "out": "/candy-bench.LMi3nUle/assignment-fix.osy61bAy/wsl_ai_final_memory.json",
-      "cases_dir": "/candy-bench.LMi3nUle/assignment-fix.osy61bAy/candy/bench/cases",
+      "out": "/candy-bench.LMi3nUle/charts-rerun.eixN7Nxm/candy/bench/wsl_ai_final_memory.json",
+      "cases_dir": "/candy-bench.LMi3nUle/charts-rerun.eixN7Nxm/candy/bench/cases",
       "time": "/usr/bin/time",
       "time_args": [
         "-f",

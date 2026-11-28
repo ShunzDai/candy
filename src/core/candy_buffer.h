@@ -48,6 +48,25 @@ const void *candy_buffer_head(candy_buffer_t *self);
 
 size_t candy_buffer_size(candy_buffer_t *self);
 
+/* The unread span is valid until the next operation that refills the buffer. */
+static inline size_t candy_buffer_span(const candy_buffer_t *self, const char **data) {
+  size_t size = candy_vector_size(&self->vec);
+  if (self->r >= size)
+    return 0;
+  *data = (const char *)candy_vector_data(&self->vec) + self->r;
+  return size - self->r;
+}
+
+/* Consume and retain the first size bytes of the current unread span. */
+static inline void candy_buffer_collect(candy_buffer_t *self, size_t size) {
+  if (self->w != self->r) {
+    char *data = (char *)candy_vector_data(&self->vec);
+    memmove(data + self->w, data + self->r, size);
+  }
+  self->r += size;
+  self->w += size;
+}
+
 /* The lexer touches one byte at a time, and almost always from bytes that are
  * already buffered: these let it copy/advance inline and only fall back to the
  * refilling path when the read cursor reaches the end of the buffered window. */

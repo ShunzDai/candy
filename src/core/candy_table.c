@@ -33,19 +33,24 @@ struct candy_table {
   candy_pair_t *data;
   size_t used;
   uint8_t cap;
+  uint32_t revision;
 };
 
-/* A free slot is uninitialised memory (`none`), a tombstone is the zeroed
- * `null` slot left by a reset; a real `null` key carries MASK_CONST. */
-static bool _is_empty(const void *cell) {
+/* A zeroed key is unused; NONE with MASK_TOMB marks a deletion.
+ * A real NONE key carries MASK_CONST and is live. */
+static candy_hash_slot_t _classify(const void *cell) {
   const candy_pair_t *self = (const candy_pair_t *)cell;
-  /* A slot that was never written: zeroed, so type NONE and mask NONE. */
-  return candy_wrap_type(&self->key) == CANDY_TYPE_NONE && candy_wrap_mask(&self->key) == MASK_NONE;
+  uint8_t mask;
+  if (candy_wrap_type(&self->key) != CANDY_TYPE_NONE)
+    return CANDY_HASH_LIVE;
+  mask = candy_wrap_mask(&self->key);
+  if (mask == MASK_NONE)
+    return CANDY_HASH_EMPTY;
+  return mask == MASK_TOMB ? CANDY_HASH_TOMB : CANDY_HASH_LIVE;
 }
 
-static bool _is_tomb(const void *cell) {
-  const candy_pair_t *self = (const candy_pair_t *)cell;
-  return candy_wrap_type(&self->key) == CANDY_TYPE_NONE && candy_wrap_mask(&self->key) == MASK_TOMB;
+static CANDY_FORCE_INLINE bool _occupied(const candy_pair_t *pos) {
+  return pos && _classify(pos) == CANDY_HASH_LIVE;
 }
 
 static bool _is_equal(const void *cell, const void *key, candy_gc_t *gc) {
@@ -59,14 +64,19 @@ static candy_hash_t _hash(const void *cell, candy_gc_t *gc) {
 }
 
 static const candy_hash_ops_t _ops = {
-  .is_empty = _is_empty,
-  .is_tomb = _is_tomb,
+  .classify = _classify,
   .is_equal = _is_equal,
   .hash = _hash,
 };
 
-static CANDY_FORCE_INLINE candy_pair_t *_find(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, candy_hash_t hash, bool expand) {
-  return (candy_pair_t *)candy_hashmap_find(self->data, capacity_to_size(self->cap), sizeof(candy_pair_t), &_ops, key, hash, expand, gc);
+static CANDY_FORCE_INLINE candy_pair_t *_find(const candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, candy_hash_t hash, bool insert) {
+  return (candy_pair_t *)candy_hashmap_find(self->data, capacity_to_size(self->cap), sizeof(candy_pair_t), &_ops, key, hash, insert, gc);
+}
+
+static CANDY_FORCE_INLINE void _invalidate_slots(candy_table_t *self) {
+  /* After wrapping, stop caching this table rather than validating old slots. */
+  if (self->revision != 0)
+    ++self->revision;
 }
 
 static CANDY_FORCE_INLINE candy_err_t _resize(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t cap) {
@@ -75,6 +85,7 @@ static CANDY_FORCE_INLINE candy_err_t _resize(candy_table_t *self, candy_gc_t *g
   self->data = (candy_pair_t *)candy_hashmap_resize(self->data, old_size, new_size,
     sizeof(candy_pair_t), &_ops, candy_gc_memory(gc), gc, ctx);
   self->cap = (uint8_t)cap;
+  _invalidate_slots(self);
   return CANDY_OK;
 }
 
@@ -95,7 +106,7 @@ static candy_err_t _table_diffuse(candy_table_t *self, candy_gc_t *gc, void *arg
   candy_object_set_mark((candy_object_t *)self, MARK_DARK);
   for (size_t index = 0; index < capacity_to_size(self->cap); ++index) {
     const candy_pair_t *pair = self->data + index;
-    if (_is_empty(pair) || _is_tomb(pair))
+    if (_classify(pair) != CANDY_HASH_LIVE)
       continue;
     candy_err_t err = candy_wrap_mark(&pair->key, gc);
     if (err == CANDY_OK)
@@ -111,6 +122,7 @@ candy_table_t *candy_table_create(candy_gc_t *gc, candy_excep_t *ctx) {
   self->data = NULL;
   self->used = 0;
   self->cap = 0;
+  self->revision = 1;
   return self;
 }
 
@@ -119,6 +131,7 @@ candy_table_t *candy_table_create_global(candy_gc_t *gc, candy_excep_t *ctx) {
   self->data = NULL;
   self->used = 0;
   self->cap = 0;
+  self->revision = 1;
   return self;
 }
 
@@ -199,7 +212,7 @@ static candy_err_t _table_fprint_at(const candy_table_t *self, candy_gc_t *gc, c
     size_t remaining = self->used;
     for (size_t i = 0; i < size; ++i) {
       const candy_pair_t *pos = self->data + i;
-      if (_is_empty(pos) || _is_tomb(pos))
+      if (_classify(pos) != CANDY_HASH_LIVE)
         continue;
       _fprint_indent(out, level + 1);
       _fprint_key(gc, fmt, &pos->key);
@@ -237,24 +250,54 @@ CANDY_LARGE_LTO_INLINE const candy_wrap_t *candy_table_get(const candy_table_t *
   return pos ? &pos->val : &CANDY_WRAP_NULL;
 }
 
-CANDY_LARGE_LTO_INLINE candy_err_t candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
-  candy_hash_t hash = candy_wrap_hash(key);
-  size_t size = capacity_to_size(self->cap);
-  candy_pair_t *pos = _find(self, gc, key, hash, false);
-  if (pos) {
-    /* A hit already stores this exact key and hash: only the value changes. */
-    pos->val = *val;
-    return CANDY_OK;
+void candy_table_cache_bind(candy_table_cache_t *cache, candy_table_t *table) {
+  if (cache->table != table) {
+    memset(cache->slots, 0, sizeof(cache->slots));
+    cache->table = table;
   }
-  if (candy_hashmap_grow(self->used, size)) {
+}
+
+static CANDY_FORCE_INLINE candy_pair_t *_cached_pair(candy_table_cache_t *cache, const candy_object_t *name, candy_table_slot_t **entry) {
+  candy_table_t *self = cache->table;
+  candy_table_slot_t *slot = cache->slots + (((uintptr_t)name >> 4) & (CANDY_TABLE_CACHE_SIZE - 1));
+  *entry = slot;
+  /* Validate the revision before reading a name that may have been deleted. */
+  if (slot->revision != self->revision || slot->revision == 0 || slot->name != name)
+    return NULL;
+  return self->data + slot->index;
+}
+
+static CANDY_FORCE_INLINE candy_pair_t *_probe_and_cache(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key, candy_hash_t hash, bool insert, candy_table_slot_t *slot) {
+  candy_pair_t *pos = _find(self, gc, key, hash, insert);
+  uint32_t revision = self->revision;
+  if (revision != 0 && pos && (!insert || _occupied(pos))) {
+    slot->name = candy_wrap_get_object(key);
+    slot->index = (uint32_t)(pos - self->data);
+    slot->revision = revision;
+  }
+  return pos;
+}
+
+const candy_wrap_t *candy_table_get_cached(candy_table_cache_t *cache, candy_gc_t *gc, const candy_wrap_t *key) {
+  const candy_object_t *name = candy_wrap_get_object(key);
+  candy_table_slot_t *entry;
+  const candy_pair_t *pos = _cached_pair(cache, name, &entry);
+  if (pos != NULL)
+    return &pos->val;
+  pos = _probe_and_cache(cache->table, gc, key, candy_object_hash(name), false, entry);
+  return pos ? &pos->val : &CANDY_WRAP_NULL;
+}
+
+static CANDY_FORCE_INLINE candy_err_t _insert(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, candy_hash_t hash, candy_pair_t *pos, const candy_wrap_t *val) {
+  candy_err_t err;
+  if (candy_hashmap_grow(self->used, capacity_to_size(self->cap))) {
     if (self->cap >= 30)
       return CANDY_ERR_LIMITED;
-    candy_err_t err = candy_table_resize(self, gc, ctx, self->cap + 1);
+    err = candy_table_resize(self, gc, ctx, self->cap + 1);
     if (err != CANDY_OK)
       return err;
-    size = capacity_to_size(self->cap);
+    pos = _find(self, gc, NULL, hash, true);
   }
-  pos = _find(self, gc, key, hash, true);
   if (pos == NULL)
     return CANDY_ERR_LIMITED;
   pos->key = *key;
@@ -263,15 +306,50 @@ CANDY_LARGE_LTO_INLINE candy_err_t candy_table_set(candy_table_t *self, candy_gc
   return CANDY_OK;
 }
 
+CANDY_LARGE_LTO_INLINE candy_err_t candy_table_set(candy_table_t *self, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_wrap_t *val) {
+  candy_hash_t hash = candy_wrap_hash(key);
+  candy_pair_t *pos = _find(self, gc, key, hash, true);
+  if (!_occupied(pos))
+    return _insert(self, gc, ctx, key, hash, pos, val);
+  pos->val = *val;
+  return CANDY_OK;
+}
+
+candy_err_t candy_table_update_cached(candy_table_cache_t *cache, candy_gc_t *gc, candy_excep_t *ctx, const candy_wrap_t *key, const candy_table_t *fallback, candy_table_update_t update, const candy_wrap_t *operand) {
+  candy_table_t *self = cache->table;
+  const candy_object_t *name = candy_wrap_get_object(key);
+  candy_table_slot_t *entry;
+  candy_pair_t *pos = _cached_pair(cache, name, &entry);
+  candy_wrap_t result;
+  if (pos == NULL) {
+    candy_hash_t hash = candy_object_hash(name);
+    pos = _probe_and_cache(self, gc, key, hash, true, entry);
+    if (!_occupied(pos)) {
+      if (update) {
+        const candy_pair_t *current = fallback && fallback != self ? _find(fallback, gc, key, hash, false) : NULL;
+        update(&result, current ? &current->val : &CANDY_WRAP_NULL, operand);
+        operand = &result;
+      }
+      return _insert(self, gc, ctx, key, hash, pos, operand);
+    }
+  }
+  if (update) {
+    update(&result, &pos->val, operand);
+    operand = &result;
+  }
+  pos->val = *operand;
+  return CANDY_OK;
+}
+
 candy_err_t candy_table_reset(candy_table_t *self, candy_gc_t *gc, const candy_wrap_t *key) {
   candy_hash_t hash = candy_wrap_hash(key);
   candy_pair_t *pos = _find(self, gc, key, hash, false);
   if (pos) {
-    /* Mark the slot as a tombstone: still NONE-typed, but with MASK_OBJECT set
-     * so it differs from both an unused slot and a live object key. */
+    /* Keep the probe chain open while marking this slot as reusable. */
     candy_wrap_set_type(&pos->key, CANDY_TYPE_NONE);
     candy_wrap_set_mask(&pos->key, MASK_TOMB);
     --self->used;
+    _invalidate_slots(self);
   }
   return CANDY_OK;
 }

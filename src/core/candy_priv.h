@@ -28,12 +28,13 @@ extern "C" {
 #ifdef __GNUC__
 #define CANDY_NORETURN                    __attribute__((noreturn))
 #define CANDY_HOT                         __attribute__((hot))
+#define CANDY_CODE_ALIGN(_n)              __attribute__((aligned(_n)))
 #define CANDY_NOINLINE                    __attribute__((noinline))
 #define CANDY_LIKELY(_x)                  __builtin_expect(!!(_x), 1)
 #define CANDY_UNLIKELY(_x)                __builtin_expect(!!(_x), 0)
 #define CANDY_FORMAT(fmtarg, firstvararg) __attribute__((format(printf, fmtarg, firstvararg)))
-#define CANDY_FORCE_INLINE                inline __attribute__((always_inline))
 #define CANDY_ALWAYS_INLINE               __attribute__((always_inline))
+#define CANDY_FORCE_INLINE                inline CANDY_ALWAYS_INLINE
 #if defined(__clang__)
 #define CANDY_LTO_INLINE_DECL             CANDY_ALWAYS_INLINE
 #define CANDY_LARGE_LTO_INLINE            CANDY_ALWAYS_INLINE
@@ -47,6 +48,11 @@ extern "C" {
 #else
 #define CANDY_NORETURN
 #define CANDY_FORMAT(fmtarg, firstvararg)
+#define CANDY_HOT
+#define CANDY_CODE_ALIGN(_n)
+#define CANDY_NOINLINE
+#define CANDY_LIKELY(_x)                  (!!(_x))
+#define CANDY_UNLIKELY(_x)                (!!(_x))
 #define CANDY_FORCE_INLINE                inline
 #define CANDY_ALWAYS_INLINE
 #define CANDY_LTO_INLINE_DECL

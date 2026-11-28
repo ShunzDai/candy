@@ -48,6 +48,12 @@ candy_assert(self->ctx, self->vm->gc, _condition, CANDY_ERR_VM, _format, ##__VA_
 #define vmbreak()           break
 #endif /* CANDY_CONFIG_VM_USE_JMPTABLE */
 
+#define vmtestorder(_compare) do { \
+  const candy_wrap_t *rhs = (it->iabc.a ? constants : base) + it->iabc.c; \
+  vmll_assert(pc < inst_count && instructions[pc].op == OP_JMP, "missing comparison branch target"); \
+  pc = _compare(base + it->iabc.b, rhs) ? pc + 1 : instructions[pc].iax.a; \
+} while (0)
+
 typedef struct vmll vmll_t;
 
 struct vmll {
@@ -71,34 +77,31 @@ typedef enum candy_arith {
   CANDY_ARITH_MUL,
   CANDY_ARITH_DIV,
   CANDY_ARITH_MOD,
-  CANDY_ARITH_LT,
-  CANDY_ARITH_LE,
-  CANDY_ARITH_GT,
-  CANDY_ARITH_GE,
 } candy_arith_t;
 
 static CANDY_HOT void _execute(vmll_t *self);
 
-/* Grow a value/frame vector on demand, doubling from the minimum size; the
- * stack and frames start small and grow like Lua's stack. */
-static CANDY_FORCE_INLINE void _vector_grow(candy_vector_t *vec, candy_memory_t *mem, candy_excep_t *ctx, size_t need, size_t cell) {
+/* Reuse the current stack view unless a resize can invalidate it. */
+static CANDY_FORCE_INLINE candy_wrap_t *_stack_reserve(candy_vm_t *vm, candy_excep_t *ctx, size_t need, candy_wrap_t *stack) {
+  candy_vector_t *vec = &vm->s;
   size_t cap = candy_vector_size(vec);
+  size_t next;
   if (need <= cap)
-    return;
-  size_t next = cap ? cap : CANDY_CONFIG_VM_STACK_MIN;
+    return stack ? stack : (candy_wrap_t *)candy_vector_data(vec);
+  next = cap ? cap : CANDY_CONFIG_VM_STACK_MIN;
   do {
     next *= 2;
   } while (next < need);
   candy_assert(ctx, NULL, next <= CANDY_CONFIG_VM_STACK_MAX, CANDY_ERR_VM, "stack overflow");
-  size_t old = cap;
-  candy_vector_resize(vec, mem, ctx, next, cell);
-  memset((char *)candy_vector_data(vec) + old * cell, 0, (next - old) * cell);
+  candy_vector_resize(vec, candy_gc_memory(vm->gc), ctx, next, sizeof(candy_wrap_t));
+  stack = (candy_wrap_t *)candy_vector_data(vec);
+  memset(stack + cap, 0, (next - cap) * sizeof(candy_wrap_t));
+  return stack;
 }
 
 static CANDY_FORCE_INLINE void _vm_push(candy_vm_t *self, candy_excep_t *ctx, const candy_wrap_t *wrap, ptrdiff_t n) {
   candy_callinfo_t *ci = self->ci;
-  _vector_grow(&self->s, candy_gc_memory(self->gc), ctx, (size_t)(ci->tos + n), sizeof(candy_wrap_t));
-  candy_wrap_t *stack = (candy_wrap_t *)candy_vector_data(&self->s);
+  candy_wrap_t *stack = _stack_reserve(self, ctx, (size_t)(ci->tos + n), NULL);
   memcpy(stack + ci->tos, wrap, sizeof(candy_wrap_t) * n);
   ci->tos += n;
 }
@@ -159,9 +162,7 @@ static CANDY_FORCE_INLINE void _frame_push(vmll_t *self, size_t return_pc, uint3
   frame->tos = frame->bos + nreg;
   frame->inst = candy_proto_get_inst(proto);
   frame->constants = (const candy_wrap_t *)candy_vector_data(candy_proto_get_const(proto));
-  _vector_grow(&vm->s, candy_gc_memory(vm->gc), self->ctx,
-    (size_t)frame->bos + nreg, sizeof(candy_wrap_t));
-  self->stack = (candy_wrap_t *)candy_vector_data(&vm->s);
+  self->stack = _stack_reserve(vm, self->ctx, (size_t)frame->tos, self->stack);
   candy_wrap_t *base = self->stack + frame->bos;
   /* Temporaries are always written before they are read, so only the local
    * window has to start as none. */
@@ -185,9 +186,7 @@ static CANDY_FORCE_INLINE void _frame_push_self(vmll_t *self, size_t return_pc, 
   frame->tos = frame->bos + nreg;
   frame->inst = self->inst;
   frame->constants = self->constants;
-  _vector_grow(&vm->s, candy_gc_memory(vm->gc), self->ctx,
-    (size_t)frame->bos + nreg, sizeof(candy_wrap_t));
-  self->stack = (candy_wrap_t *)candy_vector_data(&vm->s);
+  self->stack = _stack_reserve(vm, self->ctx, (size_t)frame->tos, self->stack);
   /* The callee is the caller's own closure, so the slot already holds it; a
    * self call keeps its arguments in place and never overwrites it. */
   candy_wrap_t *base = self->stack + frame->bos;
@@ -214,8 +213,11 @@ static CANDY_FORCE_INLINE bool _frame_return(vmll_t *self, size_t *pc) {
   if (frame == self->prev)
     return false;
   *pc = frame->pc;
-  self->inst = frame->inst;
-  self->constants = frame->constants;
+  if (frame->inst != self->inst) {
+    candy_sclosure_t *closure = (candy_sclosure_t *)candy_wrap_get_object(self->stack + frame->bos);
+    const candy_proto_t *proto = candy_sclosure_get_proto(closure);
+    _load_frame(self, frame->inst, frame->constants, candy_proto_get_nlocal(proto));
+  }
   return true;
 }
 
@@ -249,8 +251,7 @@ static CANDY_FORCE_INLINE void _call_sclosure(vmll_t *self, const candy_proto_t 
   frame->pc = 0;
   frame->inst = candy_proto_get_inst(proto);
   frame->constants = (const candy_wrap_t *)candy_vector_data(candy_proto_get_const(proto));
-  _vector_grow(&vm->s, candy_gc_memory(vm->gc), self->ctx, (size_t)self->bos + nreg, sizeof(candy_wrap_t));
-  self->stack = (candy_wrap_t *)candy_vector_data(&vm->s);
+  self->stack = _stack_reserve(vm, self->ctx, (size_t)frame->tos, self->stack);
   candy_wrap_t *base = self->stack + self->bos;
   uint8_t nlocal = candy_proto_get_nlocal(proto);
   for (uint32_t i = (uint32_t)(self->prev->tos - self->bos); i < nlocal; ++i)
@@ -346,24 +347,24 @@ static CANDY_FORCE_INLINE candy_table_t *_globals(vmll_t *self) {
   return gc->modules ? _module_globals(self) : candy_gc_global(gc);
 }
 
-static CANDY_FORCE_INLINE const candy_wrap_t *_read_global(vmll_t *self, candy_table_t *globals, const candy_wrap_t *key) {
+static CANDY_FORCE_INLINE const candy_wrap_t *_read_global(vmll_t *self, candy_table_cache_t *globals, const candy_wrap_t *key) {
   candy_gc_t *gc = self->vm->gc;
-  const candy_wrap_t *value = candy_table_get(globals, gc, key);
-  if (value == &CANDY_WRAP_NULL && globals != candy_gc_global(gc))
+  const candy_wrap_t *value = candy_table_get_cached(globals, gc, key);
+  if (value == &CANDY_WRAP_NULL && globals->table != candy_gc_global(gc))
     return candy_table_get(candy_gc_global(gc), gc, key);
   return value;
 }
 
-static CANDY_FORCE_INLINE void _op_loadg(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
+static CANDY_FORCE_INLINE void _op_loadg(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k, candy_table_cache_t *globals) {
   const candy_wrap_t *key = k + it->iabx.b;
-  const candy_wrap_t *val = _read_global(self, _globals(self), key);
+  const candy_wrap_t *val = _read_global(self, globals, key);
   base[it->iabx.a] = *val;
 }
 
-static CANDY_FORCE_INLINE void _op_setg(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
+static CANDY_FORCE_INLINE void _op_setg(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k, candy_table_cache_t *globals) {
   const candy_wrap_t *key = k + it->iabx.b;
   const candy_wrap_t *val = base + it->iabx.a;
-  candy_err_t err = candy_table_set(_globals(self), self->vm->gc, self->ctx, key, val);
+  candy_err_t err = candy_table_update_cached(globals, self->vm->gc, self->ctx, key, NULL, NULL, val);
   candy_assert(self->ctx, self->vm->gc, err == CANDY_OK, CANDY_ERR_VM, "set global failed");
 }
 
@@ -415,15 +416,14 @@ static CANDY_NOINLINE void _op_setupval(vmll_t *self, const candy_inst_t *it, ca
   *candy_upvalue_view(candy_sclosure_get_upval(closure, (uint8_t)it->iabx.b)) = base[it->iabx.a];
 }
 
-static CANDY_FORCE_INLINE void _op_table(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  candy_table_t *table = candy_table_create(self->vm->gc, self->ctx);
-  candy_wrap_set_object(base + it->iax.a, (candy_object_t *)table);
-  _vmll_gc(self);
-}
-
-static CANDY_FORCE_INLINE void _op_array(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  candy_array_t *array = candy_array_create(self->vm->gc, self->ctx, CANDY_TYPE_WRAP);
-  candy_wrap_set_object(base + it->iax.a, (candy_object_t *)array);
+/* Keep allocation and the GC check out of the dispatch loop. */
+static CANDY_NOINLINE void _op_newcontainer(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
+  candy_gc_t *gc = self->vm->gc;
+  candy_excep_t *ctx = self->ctx;
+  candy_object_t *object = it->iabx.b
+    ? (candy_object_t *)candy_array_create(gc, ctx, CANDY_TYPE_WRAP)
+    : (candy_object_t *)candy_table_create(gc, ctx);
+  candy_wrap_set_object(base + it->iabx.a, object);
   _vmll_gc(self);
 }
 
@@ -533,202 +533,104 @@ static CANDY_NOINLINE void _arith_slow(candy_wrap_t *dst, const candy_wrap_t *lh
     case CANDY_ARITH_MUL: candy_wrap_set_float(dst, a * b); break;
     case CANDY_ARITH_DIV: candy_wrap_set_float(dst, a / b); break;
     case CANDY_ARITH_MOD: candy_wrap_set_float(dst, fmod(a, b)); break;
-    case CANDY_ARITH_LT:  candy_wrap_set_boolean(dst, a < b); break;
-    case CANDY_ARITH_LE:  candy_wrap_set_boolean(dst, a <= b); break;
-    case CANDY_ARITH_GT:  candy_wrap_set_boolean(dst, a > b); break;
-    case CANDY_ARITH_GE:  candy_wrap_set_boolean(dst, a >= b); break;
   }
 }
 
-static CANDY_FORCE_INLINE void _op_add(const candy_inst_t *it, candy_wrap_t *base) {
-  candy_wrap_t *dst = base + it->iabc.a;
-  const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = base + it->iabc.c;
-  if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) + candy_wrap_get_integer(rhs));
+static CANDY_FORCE_INLINE void _add_integer(candy_wrap_t *dst, const candy_wrap_t *lhs, candy_integer_t rhs) {
+  if (CANDY_LIKELY(candy_wrap_type(lhs) == CANDY_TYPE_INTEGER))
+    candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) + rhs);
+  else
+    candy_wrap_set_float(dst, candy_wrap_to_float(lhs) + (candy_float_t)rhs);
+}
+
+static CANDY_FORCE_INLINE void _add(candy_wrap_t *dst, const candy_wrap_t *lhs, const candy_wrap_t *rhs) {
+  if (CANDY_LIKELY(candy_wrap_type(rhs) == CANDY_TYPE_INTEGER))
+    _add_integer(dst, lhs, candy_wrap_get_integer(rhs));
   else
     _arith_slow(dst, lhs, rhs, CANDY_ARITH_ADD);
 }
 
-static CANDY_FORCE_INLINE void _op_addg(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  candy_table_t *globals = _globals(self);
-  const candy_wrap_t *key = k + it->iabc.b;
-  const candy_wrap_t *cur = _read_global(self, globals, key);
-  const candy_wrap_t *rhs = base + it->iabc.c;
-  candy_wrap_t sum;
-  if (CANDY_LIKELY(_both_integer(cur, rhs)))
-    candy_wrap_set_integer(&sum, candy_wrap_get_integer(cur) + candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(&sum, cur, rhs, CANDY_ARITH_ADD);
-  candy_err_t err = candy_table_set(globals, self->vm->gc, self->ctx, key, &sum);
-  candy_assert(self->ctx, self->vm->gc, err == CANDY_OK, CANDY_ERR_VM, "set global failed");
+/* The opcode selects the right operand's bank; the operation is the same. */
+static CANDY_FORCE_INLINE void _op_add(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
+  _add(base + it->iabc.a, base + it->iabc.b, rhs_bank + it->iabc.c);
 }
 
-static CANDY_FORCE_INLINE void _op_addgk(vmll_t *self, const candy_inst_t *it, const candy_wrap_t *k) {
-  candy_table_t *globals = _globals(self);
-  const candy_wrap_t *key = k + it->iabc.b;
-  const candy_wrap_t *cur = _read_global(self, globals, key);
-  const candy_wrap_t *rhs = k + it->iabc.c;
-  candy_wrap_t sum;
-  if (CANDY_LIKELY(_both_integer(cur, rhs)))
-    candy_wrap_set_integer(&sum, candy_wrap_get_integer(cur) + candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(&sum, cur, rhs, CANDY_ARITH_ADD);
-  candy_err_t err = candy_table_set(globals, self->vm->gc, self->ctx, key, &sum);
-  candy_assert(self->ctx, self->vm->gc, err == CANDY_OK, CANDY_ERR_VM, "set global failed");
+static CANDY_FORCE_INLINE void _add_global(vmll_t *self, candy_table_cache_t *globals, const candy_wrap_t *key, const candy_wrap_t *rhs) {
+  candy_gc_t *gc = self->vm->gc;
+  candy_err_t err = candy_table_update_cached(globals, gc, self->ctx, key, candy_gc_global(gc), _add, rhs);
+  candy_assert(self->ctx, gc, err == CANDY_OK, CANDY_ERR_VM, "set global failed");
 }
 
-static CANDY_FORCE_INLINE void _op_addk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  (void)self;
+static CANDY_FORCE_INLINE void _op_addg(vmll_t *self, const candy_inst_t *it, const candy_wrap_t *k, const candy_wrap_t *rhs_bank, candy_table_cache_t *globals) {
+  _add_global(self, globals, k + it->iabc.b, rhs_bank + it->iabc.c);
+}
+
+static CANDY_FORCE_INLINE void _op_sub(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
   candy_wrap_t *dst = base + it->iabc.a;
   const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = k + it->iabc.c;
-  if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) + candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_ADD);
-}
-
-static CANDY_FORCE_INLINE void _op_sub(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  (void)self;
-  candy_wrap_t *dst = base + it->iabc.a;
-  const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = base + it->iabc.c;
+  const candy_wrap_t *rhs = rhs_bank + it->iabc.c;
   if (CANDY_LIKELY(_both_integer(lhs, rhs)))
     candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) - candy_wrap_get_integer(rhs));
   else
     _arith_slow(dst, lhs, rhs, CANDY_ARITH_SUB);
 }
 
-static CANDY_FORCE_INLINE void _op_subk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  (void)self;
+static CANDY_FORCE_INLINE void _op_mul(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
   candy_wrap_t *dst = base + it->iabc.a;
   const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = k + it->iabc.c;
-  if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) - candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_SUB);
-}
-
-static CANDY_FORCE_INLINE void _op_mul(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  (void)self;
-  candy_wrap_t *dst = base + it->iabc.a;
-  const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = base + it->iabc.c;
+  const candy_wrap_t *rhs = rhs_bank + it->iabc.c;
   if (CANDY_LIKELY(_both_integer(lhs, rhs)))
     candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) * candy_wrap_get_integer(rhs));
   else
     _arith_slow(dst, lhs, rhs, CANDY_ARITH_MUL);
 }
 
-static CANDY_FORCE_INLINE void _op_mulk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  (void)self;
+static CANDY_FORCE_INLINE void _op_div(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
   candy_wrap_t *dst = base + it->iabc.a;
   const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = k + it->iabc.c;
-  if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) * candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_MUL);
-}
-
-static CANDY_FORCE_INLINE void _op_div(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  (void)self;
-  candy_wrap_t *dst = base + it->iabc.a;
-  const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = base + it->iabc.c;
+  const candy_wrap_t *rhs = rhs_bank + it->iabc.c;
   if (CANDY_LIKELY(_both_integer(lhs, rhs)))
     candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) / candy_wrap_get_integer(rhs));
   else
     _arith_slow(dst, lhs, rhs, CANDY_ARITH_DIV);
 }
 
-static CANDY_FORCE_INLINE void _op_divk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  (void)self;
+static CANDY_FORCE_INLINE void _op_mod(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
   candy_wrap_t *dst = base + it->iabc.a;
   const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = k + it->iabc.c;
-  if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) / candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_DIV);
-}
-
-static CANDY_FORCE_INLINE void _op_mod(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  (void)self;
-  candy_wrap_t *dst = base + it->iabc.a;
-  const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = base + it->iabc.c;
+  const candy_wrap_t *rhs = rhs_bank + it->iabc.c;
   if (CANDY_LIKELY(_both_integer(lhs, rhs)))
     candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) % candy_wrap_get_integer(rhs));
   else
     _arith_slow(dst, lhs, rhs, CANDY_ARITH_MOD);
 }
 
-static CANDY_FORCE_INLINE void _op_modk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  (void)self;
-  candy_wrap_t *dst = base + it->iabc.a;
-  const candy_wrap_t *lhs = base + it->iabc.b;
-  const candy_wrap_t *rhs = k + it->iabc.c;
+static CANDY_FORCE_INLINE bool _less_than(const candy_wrap_t *lhs, const candy_wrap_t *rhs) {
   if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_integer(dst, candy_wrap_get_integer(lhs) % candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_MOD);
+    return candy_wrap_get_integer(lhs) < candy_wrap_get_integer(rhs);
+  return candy_wrap_to_float(lhs) < candy_wrap_to_float(rhs);
 }
 
-static CANDY_FORCE_INLINE void _cmp_lt(candy_wrap_t *dst, const candy_wrap_t *lhs, const candy_wrap_t *rhs) {
+static CANDY_FORCE_INLINE bool _less_equal(const candy_wrap_t *lhs, const candy_wrap_t *rhs) {
   if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_boolean(dst, candy_wrap_get_integer(lhs) < candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_LT);
+    return candy_wrap_get_integer(lhs) <= candy_wrap_get_integer(rhs);
+  return candy_wrap_to_float(lhs) <= candy_wrap_to_float(rhs);
 }
 
-static CANDY_FORCE_INLINE void _cmp_le(candy_wrap_t *dst, const candy_wrap_t *lhs, const candy_wrap_t *rhs) {
-  if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_boolean(dst, candy_wrap_get_integer(lhs) <= candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_LE);
+static CANDY_FORCE_INLINE void _op_le(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
+  candy_wrap_set_boolean(base + it->iabc.a, _less_equal(base + it->iabc.b, rhs_bank + it->iabc.c));
 }
 
-static CANDY_FORCE_INLINE void _cmp_gt(candy_wrap_t *dst, const candy_wrap_t *lhs, const candy_wrap_t *rhs) {
-  if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_boolean(dst, candy_wrap_get_integer(lhs) > candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_GT);
+static CANDY_FORCE_INLINE void _op_lt(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
+  candy_wrap_set_boolean(base + it->iabc.a, _less_than(base + it->iabc.b, rhs_bank + it->iabc.c));
 }
 
-static CANDY_FORCE_INLINE void _cmp_ge(candy_wrap_t *dst, const candy_wrap_t *lhs, const candy_wrap_t *rhs) {
-  if (CANDY_LIKELY(_both_integer(lhs, rhs)))
-    candy_wrap_set_boolean(dst, candy_wrap_get_integer(lhs) >= candy_wrap_get_integer(rhs));
-  else
-    _arith_slow(dst, lhs, rhs, CANDY_ARITH_GE);
+static CANDY_FORCE_INLINE void _op_eq(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
+  candy_wrap_set_boolean(base + it->iabc.a, candy_wrap_equal(base + it->iabc.b, rhs_bank + it->iabc.c));
 }
 
-static CANDY_FORCE_INLINE void _op_lt(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  (void)self;
-  _cmp_lt(base + it->iabc.a, base + it->iabc.b, base + it->iabc.c);
-}
-
-static CANDY_FORCE_INLINE void _op_ltk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  (void)self;
-  _cmp_lt(base + it->iabc.a, base + it->iabc.b, k + it->iabc.c);
-}
-
-static CANDY_FORCE_INLINE void _op_eq(const candy_inst_t *it, candy_wrap_t *base) {
-  candy_wrap_set_boolean(base + it->iabc.a, candy_wrap_equal(base + it->iabc.b, base + it->iabc.c));
-}
-
-static CANDY_FORCE_INLINE void _op_eqk(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  candy_wrap_set_boolean(base + it->iabc.a, candy_wrap_equal(base + it->iabc.b, k + it->iabc.c));
-}
-
-static CANDY_FORCE_INLINE void _op_neq(const candy_inst_t *it, candy_wrap_t *base) {
-  candy_wrap_set_boolean(base + it->iabc.a, !candy_wrap_equal(base + it->iabc.b, base + it->iabc.c));
-}
-
-static CANDY_FORCE_INLINE void _op_neqk(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  candy_wrap_set_boolean(base + it->iabc.a, !candy_wrap_equal(base + it->iabc.b, k + it->iabc.c));
+static CANDY_FORCE_INLINE void _op_neq(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs_bank) {
+  candy_wrap_set_boolean(base + it->iabc.a, !candy_wrap_equal(base + it->iabc.b, rhs_bank + it->iabc.c));
 }
 
 static CANDY_FORCE_INLINE bool _truthy(const candy_wrap_t *w) {
@@ -746,30 +648,6 @@ static CANDY_FORCE_INLINE void _op_bool(const candy_inst_t *it, candy_wrap_t *ba
 
 static CANDY_FORCE_INLINE void _op_not(const candy_inst_t *it, candy_wrap_t *base) {
   candy_wrap_set_boolean(base + it->iabc.a, !_truthy(base + it->iabc.b));
-}
-
-static CANDY_FORCE_INLINE void _op_le(const candy_inst_t *it, candy_wrap_t *base) {
-  _cmp_le(base + it->iabc.a, base + it->iabc.b, base + it->iabc.c);
-}
-
-static CANDY_FORCE_INLINE void _op_lek(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  _cmp_le(base + it->iabc.a, base + it->iabc.b, k + it->iabc.c);
-}
-
-static CANDY_FORCE_INLINE void _op_gt(const candy_inst_t *it, candy_wrap_t *base) {
-  _cmp_gt(base + it->iabc.a, base + it->iabc.b, base + it->iabc.c);
-}
-
-static CANDY_FORCE_INLINE void _op_gtk(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  _cmp_gt(base + it->iabc.a, base + it->iabc.b, k + it->iabc.c);
-}
-
-static CANDY_FORCE_INLINE void _op_ge(const candy_inst_t *it, candy_wrap_t *base) {
-  _cmp_ge(base + it->iabc.a, base + it->iabc.b, base + it->iabc.c);
-}
-
-static CANDY_FORCE_INLINE void _op_gek(const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  _cmp_ge(base + it->iabc.a, base + it->iabc.b, k + it->iabc.c);
 }
 
 static CANDY_FORCE_INLINE void _bit_op(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *rhs, candy_integer_t (*fn)(candy_integer_t, candy_integer_t)) {
@@ -795,46 +673,6 @@ static CANDY_FORCE_INLINE candy_integer_t _i_shl(candy_integer_t a, candy_intege
 
 static CANDY_FORCE_INLINE candy_integer_t _i_shr(candy_integer_t a, candy_integer_t b) {
   return a >> b;
-}
-
-static CANDY_FORCE_INLINE void _op_band(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  _bit_op(self, it, base, base + it->iabc.c, _i_band);
-}
-
-static CANDY_FORCE_INLINE void _op_bandk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  _bit_op(self, it, base, k + it->iabc.c, _i_band);
-}
-
-static CANDY_FORCE_INLINE void _op_bor(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  _bit_op(self, it, base, base + it->iabc.c, _i_bor);
-}
-
-static CANDY_FORCE_INLINE void _op_bork(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  _bit_op(self, it, base, k + it->iabc.c, _i_bor);
-}
-
-static CANDY_FORCE_INLINE void _op_bxor(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  _bit_op(self, it, base, base + it->iabc.c, _i_bxor);
-}
-
-static CANDY_FORCE_INLINE void _op_bxork(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  _bit_op(self, it, base, k + it->iabc.c, _i_bxor);
-}
-
-static CANDY_FORCE_INLINE void _op_shl(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  _bit_op(self, it, base, base + it->iabc.c, _i_shl);
-}
-
-static CANDY_FORCE_INLINE void _op_shlk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  _bit_op(self, it, base, k + it->iabc.c, _i_shl);
-}
-
-static CANDY_FORCE_INLINE void _op_shr(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base) {
-  _bit_op(self, it, base, base + it->iabc.c, _i_shr);
-}
-
-static CANDY_FORCE_INLINE void _op_shrk(vmll_t *self, const candy_inst_t *it, candy_wrap_t *base, const candy_wrap_t *k) {
-  _bit_op(self, it, base, k + it->iabc.c, _i_shr);
 }
 
 static CANDY_FORCE_INLINE void _op_jmp(vmll_t *self, const candy_inst_t *it, size_t *pc) {
@@ -964,12 +802,8 @@ static CANDY_FORCE_INLINE bool _op_tailcall(vmll_t *self, const candy_inst_t *it
     }
     /* The callee may need a taller frame than the caller had: grow the value
      * stack (which can move it) before touching the registers. */
-    candy_vm_t *vm = self->vm;
-    if ((size_t)self->ci->bos + nreg > candy_vector_size(&vm->s)) {
-      _vector_grow(&vm->s, candy_gc_memory(vm->gc), self->ctx, (size_t)self->ci->bos + nreg, sizeof(candy_wrap_t));
-      self->stack = (candy_wrap_t *)candy_vector_data(&vm->s);
-      base = self->stack + self->ci->bos;
-    }
+    self->stack = _stack_reserve(self->vm, self->ctx, (size_t)self->ci->bos + nreg, self->stack);
+    base = self->stack + self->ci->bos;
     for (uint32_t i = b + 1; i < nlocal; ++i)
       candy_wrap_set_none(base + i);
     self->ci->tos = self->ci->bos + nreg;
@@ -1005,7 +839,7 @@ static CANDY_FORCE_INLINE void _op_tailcallself(vmll_t *self, const candy_inst_t
   *pc = 0;
 }
 
-static CANDY_HOT __attribute__((aligned(64))) void _execute(vmll_t *self) {
+static CANDY_HOT CANDY_CODE_ALIGN(64) void _execute(vmll_t *self) {
   #if CANDY_CONFIG_VM_USE_JMPTABLE
   #if defined(__GNUC__)
   static void *dispatch_table[] = {
@@ -1017,21 +851,29 @@ static CANDY_HOT __attribute__((aligned(64))) void _execute(vmll_t *self) {
   #endif
   #endif
 
+  const candy_vector_t *code = NULL;
+  const candy_inst_t *instructions;
+  size_t inst_count;
+  const candy_wrap_t *constants;
+  candy_table_cache_t globals = {0};
+  candy_wrap_t *base;
   size_t pc = 0;
 reload:
-  for (;;) {
-    const candy_inst_t *instructions = candy_vector_data(self->inst);
-    const size_t inst_count = candy_vector_size(self->inst);
-    candy_wrap_t *base = self->stack + self->ci->bos;
-    const candy_wrap_t *constants = self->constants;
-    while (pc < inst_count) {
-      const candy_inst_t *it = instructions + pc++;
-      vmdispatch(it->op) {
-        #define CANDY_OPCODE_CASE
-        #include "core/candy_opcode.list"
-      }
+  /* Instructions, constants and the global environment belong to the prototype. */
+  if (code != self->inst) {
+    code = self->inst;
+    instructions = candy_vector_data(code);
+    inst_count = candy_vector_size(code);
+    constants = self->constants;
+    candy_table_cache_bind(&globals, _globals(self));
+  }
+  base = self->stack + self->ci->bos;
+  while (pc < inst_count) {
+    const candy_inst_t *it = instructions + pc++;
+    vmdispatch(it->op) {
+      #define CANDY_OPCODE_CASE
+      #include "core/candy_opcode.list"
     }
-    return; /* malformed proto without a trailing RETURN */
   }
 }
 

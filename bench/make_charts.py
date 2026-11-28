@@ -3,6 +3,7 @@
 import argparse
 import json
 import math
+import os
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -195,6 +196,61 @@ def chart_memory(memory, environment, build_label, path, steps):
     save(img, path)
 
 
+def find_font(font=None):
+    if font is not None:
+        font = font.expanduser()
+        if not font.is_file():
+            raise ValueError(f'font file not found: {font}')
+        return font
+    candidates = [Path(path) for path in FONT_CANDIDATES]
+    if prefix := os.environ.get('PREFIX'):
+        fonts = Path(prefix) / 'share' / 'fonts'
+        for name in ('NotoSansCJK-Regular.ttc', 'NotoSansSC-Regular.otf', 'NotoSansSC-VF.ttf'):
+            candidates.extend(sorted(fonts.rglob(name)))
+    for path in candidates:
+        if path.is_file():
+            return path
+    raise ValueError('no CJK font found; pass --font with the path to a Simplified Chinese font')
+
+
+def render_charts(datasets, out_dir, font=None, *, build_label='静态核心 · O3/LTO'):
+    font = find_font(font)
+    global F_TITLE, F_SUB, F_LABEL, F_TICK, F_VALUE
+    F_TITLE, F_SUB, F_LABEL, F_TICK, F_VALUE = (
+        load_font(font, size, weight) for size, weight in
+        ((40, 'Medium'), (21, 'Regular'), (23, 'Regular'), (19, 'Regular'), (20, 'Regular'))
+    )
+
+    series = []
+    for environment, platform_id, time_path, memory_path, time_name, memory_name in datasets:
+        data = json.loads(time_path.read_text(encoding='utf-8'))
+        memory = json.loads(memory_path.read_text(encoding='utf-8'))
+        if any(platform_id not in info['platform'].lower()
+               for info in (data['env'], memory['_metadata'])):
+            raise ValueError(f'input data do not match the {environment} chart label')
+        if data['env']['platform'] != memory['_metadata']['platform']:
+            raise ValueError(f'{environment} time and memory measurements used different platforms')
+        for lang in ('candy', 'lua'):
+            if memory['_metadata']['binaries'][lang]['sha256'] != data['env'][f'{lang}_sha256']:
+                raise ValueError(f'{environment} time and memory measurements used different {lang} binaries')
+
+        lua_version = ' '.join(data['env']['lua_version'].split()[:2])
+        build = f'Candy 寄存器 VM / {lua_version}'
+        if build_label:
+            build += ' · ' + build_label
+        rows = {r['name']: r for r in data['rows']}
+        series.append((rows, memory, environment, build, time_name, memory_name))
+
+    maximum = max(rows[key]['ratio_median'] for rows, *_ in series
+                  for _, items in TIME_GROUPS for _, key in items)
+    vmax = max(2, math.ceil(maximum * 2) / 2)
+    steps = memory_tick_steps([memory for _, memory, *_ in series])
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for rows, memory, environment, build, time_name, memory_name in series:
+        chart_time(rows, environment, build, out_dir / time_name, vmax)
+        chart_memory(memory, environment, build, out_dir / memory_name, steps)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--macos-time', type=Path, default=ROOT / 'macos_time.json')
@@ -205,44 +261,16 @@ def main():
     ap.add_argument('--out-dir', type=Path, default=OUT)
     args = ap.parse_args()
 
-    font = args.font or next((Path(path) for path in FONT_CANDIDATES if Path(path).is_file()), None)
-    if font is None or not font.is_file():
-        ap.error('no CJK font found; pass --font with the path to a Simplified Chinese font')
-    global F_TITLE, F_SUB, F_LABEL, F_TICK, F_VALUE
-    F_TITLE, F_SUB, F_LABEL, F_TICK, F_VALUE = (
-        load_font(font, size, weight) for size, weight in
-        ((40, 'Medium'), (21, 'Regular'), (23, 'Regular'), (19, 'Regular'), (20, 'Regular'))
-    )
-
-    series = []
-    for environment, platform_id, time_path, memory_path, time_name, memory_name in (
+    datasets = (
         ('macOS', 'macos-', args.macos_time, args.macos_memory,
          'macos_candy_vs_lua_time.png', 'macos_candy_vs_lua_memory.png'),
         ('WSL 2', 'wsl2', args.wsl_time, args.wsl_memory,
          'wsl_candy_vs_lua_time.png', 'wsl_candy_vs_lua_memory.png'),
-    ):
-        data = json.loads(time_path.read_text(encoding='utf-8'))
-        memory = json.loads(memory_path.read_text(encoding='utf-8'))
-        if any(platform_id not in info['platform'].lower()
-               for info in (data['env'], memory['_metadata'])):
-            ap.error(f'input data do not match the {environment} chart label')
-        for lang in ('candy', 'lua'):
-            if memory['_metadata']['binaries'][lang]['sha256'] != data['env'][f'{lang}_sha256']:
-                ap.error(f'{environment} time and memory measurements used different {lang} binaries')
-
-        lua_version = ' '.join(data['env']['lua_version'].split()[:2])
-        build = f'Candy 寄存器 VM / {lua_version} · 静态核心 · O3/LTO'
-        rows = {r['name']: r for r in data['rows']}
-        series.append((rows, memory, environment, build, time_name, memory_name))
-
-    maximum = max(rows[key]['ratio_median'] for rows, *_ in series
-                  for _, items in TIME_GROUPS for _, key in items)
-    vmax = max(2, math.ceil(maximum * 2) / 2)
-    steps = memory_tick_steps([memory for _, memory, *_ in series])
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    for rows, memory, environment, build, time_name, memory_name in series:
-        chart_time(rows, environment, build, args.out_dir / time_name, vmax)
-        chart_memory(memory, environment, build, args.out_dir / memory_name, steps)
+    )
+    try:
+        render_charts(datasets, args.out_dir, args.font)
+    except (OSError, ValueError, KeyError) as error:
+        ap.error(str(error))
 
 
 if __name__ == "__main__":

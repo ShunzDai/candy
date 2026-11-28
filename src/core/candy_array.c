@@ -45,11 +45,12 @@ struct candy_static {
 #define arr_assert(_condition, _format, ...) \
 candy_assert(ctx, gc, _condition, CANDY_ERR_ARRAY, _format, ##__VA_ARGS__)
 
-static inline size_t _type_size(candy_types_t val) {
-  return (size_t[]) {
+static inline size_t _type_size(candy_types_t type) {
+  static const size_t sizes[] = {
     #define CANDY_TYPE_SIZE
     #include "core/candy_type.list"
-  }[val];
+  };
+  return sizes[type];
 }
 
 static inline bool _is_const(const candy_array_t *self) {
@@ -72,6 +73,7 @@ static candy_err_t _array_color(candy_array_t *self, candy_gc_t *gc, void *arg) 
   switch (candy_object_type((candy_object_t *)self)) {
     case CANDY_TYPE_CCLOS:
     case CANDY_TYPE_SCLOS:
+    case CANDY_TYPE_UPVAL:
     case CANDY_TYPE_TABLE:
     case CANDY_TYPE_PROTO:
     case CANDY_TYPE_STATE:
@@ -101,6 +103,7 @@ static candy_err_t _array_diffuse(candy_array_t *self, candy_gc_t *gc, void *arg
     }
     case CANDY_TYPE_CCLOS:
     case CANDY_TYPE_SCLOS:
+    case CANDY_TYPE_UPVAL:
     case CANDY_TYPE_TABLE:
     case CANDY_TYPE_PROTO:
     case CANDY_TYPE_STATE: {
@@ -113,29 +116,22 @@ static candy_err_t _array_diffuse(candy_array_t *self, candy_gc_t *gc, void *arg
       return CANDY_OK;
     }
     default:
-      return CANDY_OK;  /* strings are raw bytes: they hold no references */
+      return CANDY_OK;  /* Scalar elements hold no GC references. */
   }
 }
 
-static candy_err_t _array_compare_bytes(const candy_array_t *self, const void *data, size_t size) {
-  /* An insertion probe carries no payload: it must never match a live entry. */
-  if (data == NULL)
-    return CANDY_ERR;
-  size_t cell = _type_size(candy_object_type((const candy_object_t *)self));
-  if (size != cell * candy_array_size(self))
-    return CANDY_ERR;
-  else if (size != 0 && memcmp(candy_array_data(self), data, size) != 0)
-    return CANDY_ERR;
-  else
-    return CANDY_OK;
-}
-
-/* Pool lookup compares payload contents: two interned arrays are equal only
- * when their bytes match, so distinct strings never alias on a hash collision. */
+/* GC checks the type first; the array checks the element count and bytes. */
 static candy_err_t _array_compare(candy_array_t *self, candy_gc_t *gc, void *arg) {
-  assert(candy_object_type((candy_object_t *)self) == CANDY_TYPE_CHAR);
+  const candy_static_t *array = (const candy_static_t *)self;
   const candy_gc_key_t *key = (const candy_gc_key_t *)arg;
-  return _array_compare_bytes(self, candy_gc_key_data(key), candy_gc_key_size(key));
+  const void *data = candy_gc_key_data(key);
+  size_t size = candy_gc_key_size(key);
+  size_t len;
+  /* Only a lookup carrying an actual payload can match. */
+  if (data == NULL || size != array->size)
+    return CANDY_ERR;
+  len = _type_size(candy_object_type((const candy_object_t *)self)) * size;
+  return memcmp(array->data, data, len) == 0 ? CANDY_OK : CANDY_ERR;
 }
 
 static void _format_quoted(FILE *out, const char data[], size_t size) {
@@ -194,10 +190,8 @@ static candy_err_t _array_format(candy_array_t *self, candy_gc_t *gc, void *arg)
   return CANDY_OK;
 }
 
-/* A growable byte buffer. It is internal scratch space (error messages and
- * similar), never a script value: anything the script can observe as a string
- * must be interned through candy_array_create_const, so string equality stays
- * pointer equality. */
+/* Dynamic char arrays are scratch buffers. Script-visible strings are
+ * interned through candy_array_create_const, keeping equality by identity. */
 candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type) {
   candy_dynamic_t *self = (candy_dynamic_t *)candy_gc_add(gc, ctx, type, sizeof(candy_dynamic_t));
   candy_object_set_mask((candy_object_t *)self, candy_object_mask((candy_object_t *)self) | MASK_ARRAY);
@@ -207,21 +201,39 @@ candy_array_t *candy_array_create(candy_gc_t *gc, candy_excep_t *ctx, candy_type
   return (candy_array_t *)self;
 }
 
-candy_array_t *candy_array_create_const(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size) {
-  assert(type == CANDY_TYPE_CHAR);  /* only strings are interned */
-  size_t len = _type_size(type) * size;
-  candy_hash_t hash = hash_djb(data, len);
-  candy_static_t *self = (candy_static_t *)candy_gc_find(gc, type, data, len, hash);
-  if (self == NULL) {
-    self = (candy_static_t *)candy_gc_add_pool(gc, ctx, type, sizeof(candy_static_t) + len + _type_size(type), hash);
-  }
+static inline candy_array_t *_array_intern(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type,
+                                           const void *data, size_t size, size_t cell, candy_hash_t hash) {
+  size_t len = size * cell;
+  candy_static_t *self;
+  if (data == NULL && len == 0)
+    data = "";  /* Give an empty payload a valid pointer for comparison and copy. */
+  self = (candy_static_t *)candy_gc_find(gc, type, data, size, hash);
+  if (self != NULL)
+    return (candy_array_t *)self;  /* Pool hits already match the immutable bytes. */
+  self = (candy_static_t *)candy_gc_add_pool(gc, ctx, type, sizeof(candy_static_t) + len + cell, hash);
   candy_object_set_mask((candy_object_t *)self, candy_object_mask((candy_object_t *)self) | MASK_ARRAY | MASK_CONST);
   memcpy(self->data, data, len);
-  memset(self->data + len, 0, _type_size(type));
+  memset(self->data + len, 0, cell);
   self->size = size;
   candy_object_set_hash((candy_object_t *)self, hash);
   self->arr.gray = NULL;
   return (candy_array_t *)self;
+}
+
+static inline size_t _const_array_cell(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, size_t size) {
+  size_t cell = _type_size(type);
+  arr_assert(cell == 0 || size < (SIZE_MAX - sizeof(candy_static_t)) / cell, "array is too large");
+  return cell;
+}
+
+candy_array_t *candy_array_create_const(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size) {
+  size_t cell = _const_array_cell(gc, ctx, type, size);
+  return _array_intern(gc, ctx, type, data, size, cell, hash_djb(data, size * cell));
+}
+
+candy_array_t *candy_array_create_const_hashed(candy_gc_t *gc, candy_excep_t *ctx, candy_types_t type, const void *data, size_t size, candy_hash_t hash) {
+  size_t cell = _const_array_cell(gc, ctx, type, size);
+  return _array_intern(gc, ctx, type, data, size, cell, hash);
 }
 
 candy_array_t *candy_array_vprint(candy_gc_t *gc, candy_excep_t *ctx, const char format[], va_list args) {
@@ -305,6 +317,7 @@ const candy_wrap_t *candy_array_get(const candy_array_t *self, size_t index) {
 
 candy_err_t candy_array_set(candy_array_t *self, candy_gc_t *gc, candy_excep_t *ctx, size_t index, const candy_wrap_t *value) {
   arr_assert(candy_object_type((candy_object_t *)self) == CANDY_TYPE_WRAP, "value array expected");
+  arr_assert(!_is_const(self), "object must be a dynamic array");
   size_t size = candy_array_size(self);
   if (index == size)
     return candy_array_append(self, gc, ctx, value, 1);

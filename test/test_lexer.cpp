@@ -14,6 +14,7 @@
   * limitations under the License.
   */
 #include "test.h"
+#include <climits>
 #include <string>
 
 #define TEST_BODY(_name, _token, ...) \
@@ -57,7 +58,7 @@ static void test_normal(const candy_meta_t &meta, const supposed &val) {
   }
 }
 
-template <candy_tokens_t token, typename ... supposed>
+template <candy_tokens_t token, candy_reader_t reader = string_reader, typename ... supposed>
 static void tast_body(const char exp[], const supposed & ... value) {
   struct catch_info {
     candy_lexer ls{};
@@ -69,7 +70,7 @@ static void tast_body(const char exp[], const supposed & ... value) {
   str_info info{exp, strlen(exp), 0};
   candy_excep_init(&ctx);
   candy_gc_init(&gc, (candy_handler_t)candy_array_handler, test_allocator, nullptr);
-  candy_lexer_init(&cinfo.ls, &gc, &ctx, string_reader, &info);
+  candy_lexer_init(&cinfo.ls, &gc, &ctx, reader, &info);
   candy_object_t *msg = nullptr;
   auto err = candy_excep_try(&ctx, +[](void *arg) {
     auto *self = static_cast<catch_info *>(arg);
@@ -177,14 +178,19 @@ TEST_ASSERT(string_invalid, "\"hello",   "lexical error: unexpected end of strin
 TEST_ASSERT(string_invalid, "\"hello\r", "lexical error: unexpected end of string"sv)
 TEST_ASSERT(string_invalid, "\"hello\n", "lexical error: unexpected end of string"sv)
 
-TEST_NORMAL(hex, TK_INTEGER,   "0xAbCd1234",   0xAbCd1234)
-TEST_NORMAL(dec, TK_INTEGER,       "114514",       114514)
-TEST_NORMAL(oct, TK_INTEGER,     "00114514",     00114514)
-TEST_NORMAL(bin, TK_INTEGER,    "0b0101110",    0b0101110)
-TEST_NORMAL(float, TK_FLOAT,    "3.1415926",    3.1415926)
-TEST_NORMAL(sci, TK_FLOAT, "0.31415926e1", 0.31415926e1)
-TEST_NORMAL(sci, TK_FLOAT, "314.15926e-2", 314.15926e-2)
-TEST_NORMAL(sci, TK_FLOAT, "314.15926e+2", 314.15926e+2)
+TEST_NORMAL(hex, TK_INTEGER,           "0xAbCd1234",   0xAbCd1234)
+TEST_NORMAL(dec, TK_INTEGER,               "114514",       114514)
+TEST_NORMAL(dec, TK_INTEGER,                    "0",            0)
+TEST_NORMAL(dec, TK_INTEGER,  "9223372036854775807",    INT64_MAX)
+TEST_NORMAL(dec, TK_INTEGER,  "9223372036854775808",     LONG_MAX)
+TEST_NORMAL(dec, TK_INTEGER, "18446744073709551616",     LONG_MAX)
+TEST_NORMAL(oct, TK_INTEGER,             "00114514",     00114514)
+TEST_NORMAL(bin, TK_INTEGER,            "0b0101110",    0b0101110)
+TEST_NORMAL(float, TK_FLOAT,            "3.1415926",    3.1415926)
+TEST_NORMAL(sci, TK_FLOAT,                    "1e2",        100.0)
+TEST_NORMAL(sci, TK_FLOAT,           "0.31415926e1", 0.31415926e1)
+TEST_NORMAL(sci, TK_FLOAT,           "314.15926e-2", 314.15926e-2)
+TEST_NORMAL(sci, TK_FLOAT,           "314.15926e+2", 314.15926e+2)
 
 TEST_ASSERT(number_invalid, "0x",    "lexical error: invalid hexadecimal number"sv)
 TEST_ASSERT(number_invalid, "0b",    "lexical error: invalid binary number"sv)
@@ -193,9 +199,45 @@ TEST_ASSERT(number_invalid, "0b1.2", "lexical error: invalid float number"sv)
 TEST_ASSERT(number_invalid, "0x1x",  "lexical error: extra text after expected end of number"sv)
 TEST_ASSERT(number_invalid, "0x1.4", "lexical error: invalid float number"sv)
 TEST_ASSERT(number_invalid, "1..2",  "lexical error: malformed number"sv)
+TEST_ASSERT(number_invalid, "1_2",   "lexical error: extra text after expected end of number"sv)
+TEST_ASSERT(number_invalid, "09",   "lexical error: malformed number"sv)
 
-TEST_NORMAL(ident, TK_IDENT, "i")
+static int short_reader(void *buffer, size_t max_len, void *arg) {
+  return string_reader(buffer, max_len > 2 ? 2 : max_len, arg);
+}
+
+TEST(lexer, single_character_operator_at_reader_boundary) {
+  tast_body<TK_LPAREN, short_reader>(" (");
+  tast_body<TK_PLUS, short_reader>(" + ");
+}
+
+TEST(lexer, decimal_across_reads) {
+  tast_body<TK_INTEGER, short_reader>("1234", 1234);
+  tast_body<TK_INTEGER, short_reader>("9223372036854775807", INT64_MAX);
+  tast_body<TK_INTEGER, short_reader>("9223372036854775808", LONG_MAX);
+  tast_body<TK_INTEGER, short_reader>("18446744073709551616", LONG_MAX);
+}
+
+TEST(lexer, number_suffixes_across_reads) {
+  tast_body<TK_INTEGER, short_reader>("0xFe", 0xFE);
+  tast_body<TK_INTEGER, short_reader>("0b101", 5);
+  tast_body<TK_FLOAT, short_reader>("012.5e-1", 1.25);
+  tast_body<TK_NONE, short_reader>("0b1e", "lexical error: invalid float number"sv);
+}
+
+TEST_NORMAL(ident, TK_IDENT,    "i")
 TEST_NORMAL(ident, TK_IDENT, "ifif")
+
+TEST(lexer, identifier_spans_reader_chunks) {
+  tast_body<TK_IDENT, short_reader>("  _name123  ", "_name123"sv);
+  tast_body<TK_if, short_reader>(" if");
+}
+
+TEST(lexer, identifier_spans_buffer_growth) {
+  const string name(CANDY_CONFIG_BUFFER_EXPAND_SIZE * 2, 'x');
+  const string source = " " + name;
+  tast_body<TK_IDENT>(source.c_str(), string_view(name));
+}
 
 #define CANDY_OP_TEST
 #include "core/candy_operator.list"

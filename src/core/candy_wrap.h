@@ -53,15 +53,15 @@ int candy_wrap_format(const candy_wrap_t *self, candy_gc_t *gc, const candy_form
 
 int candy_wrap_fprint(const candy_wrap_t *self, candy_gc_t *gc, FILE *out);
 
-static inline void *candy_wrap_data(const candy_wrap_t *self) {
+static CANDY_FORCE_INLINE void *candy_wrap_data(const candy_wrap_t *self) {
   return (void *)&self->data;
 }
 
-static inline candy_types_t candy_wrap_type(const candy_wrap_t *self) {
+static CANDY_FORCE_INLINE candy_types_t candy_wrap_type(const candy_wrap_t *self) {
   return (candy_types_t)((self->type >> 0) & 0xFFU);
 }
 
-static inline void candy_wrap_set_type(candy_wrap_t *self, candy_types_t type) {
+static CANDY_FORCE_INLINE void candy_wrap_set_type(candy_wrap_t *self, candy_types_t type) {
   self->type = type;
 }
 
@@ -69,11 +69,11 @@ static inline uint8_t candy_wrap_mask(const candy_wrap_t *self) {
   return self->mask;
 }
 
-static inline void candy_wrap_set_mask(candy_wrap_t *self, uint8_t mask) {
+static CANDY_FORCE_INLINE void candy_wrap_set_mask(candy_wrap_t *self, uint8_t mask) {
   self->mask = mask;
 }
 
-static inline candy_integer_t candy_wrap_get_integer(const candy_wrap_t *self) {
+static CANDY_FORCE_INLINE candy_integer_t candy_wrap_get_integer(const candy_wrap_t *self) {
   assert(candy_wrap_type(self) == CANDY_TYPE_INTEGER);
   assert(self->mask == MASK_CONST);
   return *(candy_integer_t *)candy_wrap_data(self);
@@ -86,7 +86,7 @@ static inline void candy_wrap_set_none(candy_wrap_t *self) {
   self->mask = MASK_CONST;
 }
 
-static inline void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t val) {
+static CANDY_FORCE_INLINE void candy_wrap_set_integer(candy_wrap_t *self, const candy_integer_t val) {
   candy_wrap_set_type(self, CANDY_TYPE_INTEGER);
   candy_wrap_set_mask(self, MASK_CONST);
   *(candy_integer_t *)candy_wrap_data(self) = val;

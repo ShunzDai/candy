@@ -27,6 +27,16 @@ long strntol(const char nptr[], size_t size, char *endptr[], int base) {
   return res;
 }
 
+unsigned long long strntoull(const char nptr[], size_t size, char *endptr[], int base) {
+  char buf[size + 1];
+  memcpy(buf, nptr, size);
+  buf[size] = '\0';
+  unsigned long long res = strtoull(buf, endptr, base);
+  if (endptr)
+    *endptr = (char *)nptr + (*endptr - buf);
+  return res;
+}
+
 double strntod(const char nptr[], size_t size, char *endptr[]) {
   char buf[size + 1];
   memcpy(buf, nptr, size);

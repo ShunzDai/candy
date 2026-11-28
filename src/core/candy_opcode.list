@@ -42,67 +42,67 @@
 
 #ifdef CANDY_OPCODE
 CANDY_OPCODE(ADD,
-  _op_add(it, base);
+  _op_add(it, base, base);
 )
 
 CANDY_OPCODE(ADDK,
-  _op_addk(self, it, base, constants);
+  _op_add(it, base, constants);
 )
 
 CANDY_OPCODE(SUB,
-  _op_sub(self, it, base);
+  _op_sub(it, base, base);
 )
 
 CANDY_OPCODE(SUBK,
-  _op_subk(self, it, base, constants);
+  _op_sub(it, base, constants);
 )
 
 CANDY_OPCODE(MUL,
-  _op_mul(self, it, base);
+  _op_mul(it, base, base);
 )
 
 CANDY_OPCODE(MULK,
-  _op_mulk(self, it, base, constants);
+  _op_mul(it, base, constants);
 )
 
 CANDY_OPCODE(DIV,
-  _op_div(self, it, base);
+  _op_div(it, base, base);
 )
 
 CANDY_OPCODE(DIVK,
-  _op_divk(self, it, base, constants);
+  _op_div(it, base, constants);
 )
 
 CANDY_OPCODE(MOD,
-  _op_mod(self, it, base);
+  _op_mod(it, base, base);
 )
 
 CANDY_OPCODE(MODK,
-  _op_modk(self, it, base, constants);
+  _op_mod(it, base, constants);
 )
 
 CANDY_OPCODE(LT,
-  _op_lt(self, it, base);
+  _op_lt(it, base, base);
 )
 
 CANDY_OPCODE(LTK,
-  _op_ltk(self, it, base, constants);
+  _op_lt(it, base, constants);
 )
 
 CANDY_OPCODE(EQ,
-  _op_eq(it, base);
+  _op_eq(it, base, base);
 )
 
 CANDY_OPCODE(EQK,
-  _op_eqk(it, base, constants);
+  _op_eq(it, base, constants);
 )
 
 CANDY_OPCODE(NEQ,
-  _op_neq(it, base);
+  _op_neq(it, base, base);
 )
 
 CANDY_OPCODE(NEQK,
-  _op_neqk(it, base, constants);
+  _op_neq(it, base, constants);
 )
 
 CANDY_OPCODE(BOOL,
@@ -114,67 +114,59 @@ CANDY_OPCODE(NOT,
 )
 
 CANDY_OPCODE(LE,
-  _op_le(it, base);
+  _op_le(it, base, base);
 )
 
 CANDY_OPCODE(LEK,
-  _op_lek(it, base, constants);
-)
-
-CANDY_OPCODE(GT,
-  _op_gt(it, base);
+  _op_le(it, base, constants);
 )
 
 CANDY_OPCODE(GTK,
-  _op_gtk(it, base, constants);
-)
-
-CANDY_OPCODE(GE,
-  _op_ge(it, base);
+  candy_wrap_set_boolean(base + it->iabc.a, _less_than(constants + it->iabc.c, base + it->iabc.b));
 )
 
 CANDY_OPCODE(GEK,
-  _op_gek(it, base, constants);
+  candy_wrap_set_boolean(base + it->iabc.a, _less_equal(constants + it->iabc.c, base + it->iabc.b));
 )
 
 CANDY_OPCODE(BAND,
-  _op_band(self, it, base);
+  _bit_op(self, it, base, base + it->iabc.c, _i_band);
 )
 
 CANDY_OPCODE(BANDK,
-  _op_bandk(self, it, base, constants);
+  _bit_op(self, it, base, constants + it->iabc.c, _i_band);
 )
 
 CANDY_OPCODE(BOR,
-  _op_bor(self, it, base);
+  _bit_op(self, it, base, base + it->iabc.c, _i_bor);
 )
 
 CANDY_OPCODE(BORK,
-  _op_bork(self, it, base, constants);
+  _bit_op(self, it, base, constants + it->iabc.c, _i_bor);
 )
 
 CANDY_OPCODE(BXOR,
-  _op_bxor(self, it, base);
+  _bit_op(self, it, base, base + it->iabc.c, _i_bxor);
 )
 
 CANDY_OPCODE(BXORK,
-  _op_bxork(self, it, base, constants);
+  _bit_op(self, it, base, constants + it->iabc.c, _i_bxor);
 )
 
 CANDY_OPCODE(SHL,
-  _op_shl(self, it, base);
+  _bit_op(self, it, base, base + it->iabc.c, _i_shl);
 )
 
 CANDY_OPCODE(SHLK,
-  _op_shlk(self, it, base, constants);
+  _bit_op(self, it, base, constants + it->iabc.c, _i_shl);
 )
 
 CANDY_OPCODE(SHR,
-  _op_shr(self, it, base);
+  _bit_op(self, it, base, base + it->iabc.c, _i_shr);
 )
 
 CANDY_OPCODE(SHRK,
-  _op_shrk(self, it, base, constants);
+  _bit_op(self, it, base, constants + it->iabc.c, _i_shr);
 )
 
 CANDY_OPCODE(JMP,
@@ -209,19 +201,16 @@ CANDY_OPCODE(LOADK,
 )
 
 CANDY_OPCODE(LOADG,
-  _op_loadg(self, it, base, constants);
+  _op_loadg(self, it, base, constants, &globals);
 )
 
 CANDY_OPCODE(SETG,
-  _op_setg(self, it, base, constants);
+  _op_setg(self, it, base, constants, &globals);
 )
 
-CANDY_OPCODE(TABLE,
-  _op_table(self, it, base);
-)
-
-CANDY_OPCODE(ARRAY,
-  _op_array(self, it, base);
+/* Bx selects an array (1) or table (0). */
+CANDY_OPCODE(NEWCONTAINER,
+  _op_newcontainer(self, it, base);
 )
 
 CANDY_OPCODE(GETTABLE,
@@ -250,8 +239,6 @@ CANDY_OPCODE(TAILCALL,
   return;
 )
 
-/* Keep specialized opcodes at the end so existing opcode values and their
- * computed-goto layout remain stable. */
 CANDY_OPCODE(CALLSELF,
   _op_callself(self, it, &pc);
   goto reload;
@@ -264,11 +251,11 @@ CANDY_OPCODE(TAILCALLSELF,
 
 /* `global = global + operand`: one instruction for read-modify-write. */
 CANDY_OPCODE(ADDG,
-  _op_addg(self, it, base, constants);
+  _op_addg(self, it, constants, base, &globals);
 )
 
 CANDY_OPCODE(ADDGK,
-  _op_addgk(self, it, constants);
+  _op_addg(self, it, constants, constants, &globals);
 )
 
 CANDY_OPCODE(CLOSURE,
@@ -289,6 +276,22 @@ CANDY_OPCODE(CALLMETHOD,
   pc = next_pc;
   if (refresh)
     goto reload;
+)
+
+CANDY_OPCODE(LOADI,
+  candy_wrap_set_integer(base + it->iabx.a, (candy_integer_t)it->iabx.b);
+)
+
+CANDY_OPCODE(TESTLT,
+  vmtestorder(_less_than);
+)
+
+CANDY_OPCODE(ADDI,
+  _add_integer(base + it->iabc.a, base + it->iabc.b, (candy_integer_t)it->iabc.c - CANDY_ADDI_BIAS);
+)
+
+CANDY_OPCODE(TESTLE,
+  vmtestorder(_less_equal);
 )
 
 #endif /* CANDY_OPCODE */

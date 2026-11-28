@@ -166,3 +166,79 @@ TEST(table, overwrite_beyond_tombstone_does_not_duplicate_key) {
   EXPECT_EQ(candy_wrap_type(candy_table_get(self, &gc, &second)), CANDY_TYPE_NULL);
   candy_gc_deinit(&gc);
 }
+
+TEST(table, cached_name_survives_rehash_but_not_deletion_or_rebinding) {
+  candy_gc_t gc{};
+  candy_table_cache_t cache{};
+  candy_wrap_t name{}, value{};
+  candy_table_t *self;
+  candy_table_t *other;
+  ASSERT_EQ(candy_gc_init(&gc, _event_handler, test_allocator, nullptr), CANDY_OK);
+  self = candy_table_create(&gc, nullptr);
+  other = candy_table_create(&gc, nullptr);
+  candy_wrap_set_object(&name, reinterpret_cast<candy_object_t *>(
+    candy_array_create_const(&gc, nullptr, CANDY_TYPE_CHAR, "cached", 6)));
+  candy_wrap_set_integer(&value, 10);
+  candy_table_cache_bind(&cache, self);
+  ASSERT_EQ(candy_table_update_cached(&cache, &gc, nullptr, &name, nullptr, nullptr, &value), CANDY_OK);
+  EXPECT_EQ(candy_table_get_cached(&cache, &gc, &name), candy_table_get(self, &gc, &name));
+  ASSERT_EQ(candy_table_resize(self, &gc, nullptr, 8), CANDY_OK);
+  EXPECT_EQ(candy_table_get_cached(&cache, &gc, &name), candy_table_get(self, &gc, &name));
+  ASSERT_EQ(candy_table_reset(self, &gc, &name), CANDY_OK);
+  EXPECT_EQ(candy_table_get_cached(&cache, &gc, &name), &CANDY_WRAP_NULL);
+
+  candy_wrap_set_integer(&value, 20);
+  ASSERT_EQ(candy_table_set(self, &gc, nullptr, &name, &value), CANDY_OK);
+  EXPECT_EQ(candy_wrap_get_integer(candy_table_get_cached(&cache, &gc, &name)), 20);
+  for (int i = 0; i < 3; ++i)
+    ASSERT_EQ(candy_table_resize(other, &gc, nullptr, 8), CANDY_OK);
+  candy_table_cache_bind(&cache, other);
+  EXPECT_EQ(candy_table_get_cached(&cache, &gc, &name), &CANDY_WRAP_NULL);
+  candy_table_cache_bind(&cache, self);
+  EXPECT_EQ(candy_wrap_get_integer(candy_table_get_cached(&cache, &gc, &name)), 20);
+  ASSERT_EQ(candy_table_update_cached(&cache, &gc, nullptr, &name, nullptr, nullptr, &CANDY_WRAP_NULL), CANDY_OK);
+  EXPECT_NE(candy_table_get_cached(&cache, &gc, &name), &CANDY_WRAP_NULL);
+  EXPECT_EQ(candy_wrap_type(candy_table_get_cached(&cache, &gc, &name)), CANDY_TYPE_NULL);
+  EXPECT_EQ(candy_gc_deinit(&gc), CANDY_OK);
+}
+
+TEST(table, dense_table_preserves_colliding_keys_through_growth) {
+  candy_gc_t gc{};
+  ASSERT_EQ(candy_gc_init(&gc, _event_handler, test_allocator, nullptr), CANDY_OK);
+  auto *self = candy_table_create(&gc, nullptr);
+  candy_wrap_t key{}, value{};
+  candy_wrap_set_none(&key);
+  candy_wrap_set_integer(&value, -1);
+  ASSERT_EQ(candy_table_set(self, &gc, nullptr, &key, &value), CANDY_OK);
+
+  for (int i = 0; i < 180; ++i) {
+    candy_wrap_set_integer(&key, i * 256);
+    candy_wrap_set_integer(&value, i);
+    ASSERT_EQ(candy_table_set(self, &gc, nullptr, &key, &value), CANDY_OK);
+  }
+  for (int i = 0; i < 180; i += 2) {
+    candy_wrap_set_integer(&key, i * 256);
+    ASSERT_EQ(candy_table_reset(self, &gc, &key), CANDY_OK);
+  }
+  for (int i = 180; i < 300; ++i) {
+    candy_wrap_set_integer(&key, i * 256);
+    candy_wrap_set_integer(&value, i);
+    ASSERT_EQ(candy_table_set(self, &gc, nullptr, &key, &value), CANDY_OK);
+  }
+  for (int i = 0; i < 300; ++i) {
+    candy_wrap_set_integer(&key, i * 256);
+    const candy_wrap_t *actual = candy_table_get(self, &gc, &key);
+    if (i < 180 && i % 2 == 0) {
+      EXPECT_EQ(actual, &CANDY_WRAP_NULL);
+    }
+    else {
+      ASSERT_EQ(candy_wrap_type(actual), CANDY_TYPE_INTEGER);
+      EXPECT_EQ(candy_wrap_get_integer(actual), i);
+    }
+  }
+  candy_wrap_set_none(&key);
+  const candy_wrap_t *actual = candy_table_get(self, &gc, &key);
+  ASSERT_EQ(candy_wrap_type(actual), CANDY_TYPE_INTEGER);
+  EXPECT_EQ(candy_wrap_get_integer(actual), -1);
+  candy_gc_deinit(&gc);
+}

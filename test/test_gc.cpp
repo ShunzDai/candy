@@ -217,6 +217,97 @@ TEST_F(gc, constant_pool_reuses_tombstones) {
   }
 }
 
+TEST_F(gc, djb_hash_matches_bytewise_reference) {
+  EXPECT_EQ(hash_djb(nullptr, 0), 5381);
+  /* Exercise unaligned input, embedded zeros, and bytes above ASCII. */
+  alignas(uint32_t) uint8_t storage[257];
+  uint8_t *bytes = storage + 1;
+  for (size_t i = 0; i < sizeof(storage) - 1; ++i)
+    bytes[i] = static_cast<uint8_t>(137 * i + 255);
+
+  uint64_t expected = 5381;
+  for (size_t len = 0; len < sizeof(storage); ++len) {
+    EXPECT_EQ(hash_djb(bytes, len), static_cast<candy_hash_t>(expected)) << "length " << len;
+    if (len < sizeof(storage) - 1)
+      expected = (expected * 33 + bytes[len]) & 0x7FFFFFFFu;
+  }
+}
+
+TEST_F(gc, prehashed_strings_still_compare_bytes_on_collision) {
+  const char first[] = "ab";
+  const char second[] = "bA";
+  const size_t len = sizeof(first) - 1;
+  candy_hash_t hash = hash_djb(first, len);
+  ASSERT_EQ(hash, hash_djb(second, len));
+
+  auto *left = candy_array_create_const_hashed(&collector, &context, CANDY_TYPE_CHAR, first, len, hash);
+  auto *right = candy_array_create_const_hashed(&collector, &context, CANDY_TYPE_CHAR, second, len, hash);
+  ASSERT_NE(left, right);
+  EXPECT_MEMEQ(candy_array_data(left), first, sizeof(first));
+  EXPECT_MEMEQ(candy_array_data(right), second, sizeof(second));
+  EXPECT_EQ(candy_array_create_const(&collector, &context, CANDY_TYPE_CHAR, first, len), left);
+  EXPECT_EQ(candy_array_create_const_hashed(&collector, &context, CANDY_TYPE_CHAR, second, len, hash), right);
+
+  auto *retained = reinterpret_cast<candy_object_t *>(right);
+  retain(retained);
+  ASSERT_EQ(candy_gc_full(&collector), CANDY_OK);
+  EXPECT_EQ(candy_gc_find(&collector, CANDY_TYPE_CHAR, first, len, hash), nullptr);
+  EXPECT_EQ(candy_array_create_const_hashed(&collector, &context, CANDY_TYPE_CHAR, second, len, hash), right);
+  release();
+  ASSERT_EQ(candy_gc_full(&collector), CANDY_OK);
+  EXPECT_EQ(candy_gc_find(&collector, CANDY_TYPE_CHAR, second, len, hash), nullptr);
+}
+
+TEST_F(gc, constant_arrays_intern_by_type_count_and_all_bytes) {
+  const candy_integer_t data[] = {13, -8};
+  const candy_integer_t changed[] = {13, -9};
+  auto *array = candy_array_create_const(&collector, &context, CANDY_TYPE_INTEGER, data, 2);
+  ASSERT_NE(array, nullptr);
+  EXPECT_EQ(candy_object_type(reinterpret_cast<candy_object_t *>(array)), CANDY_TYPE_INTEGER);
+  EXPECT_EQ(candy_array_size(array), 2U);
+  EXPECT_MEMEQ(candy_array_data(array), data, sizeof(data));
+  EXPECT_EQ(candy_array_create_const_hashed(&collector, &context, CANDY_TYPE_INTEGER, data, 2,
+                                          hash_djb(data, sizeof(data))), array);
+  EXPECT_NE(candy_array_create_const(&collector, &context, CANDY_TYPE_INTEGER, changed, 2), array);
+  EXPECT_NE(candy_array_create_const(&collector, &context, CANDY_TYPE_INTEGER, data, 1), array);
+  EXPECT_NE(candy_array_create_const(&collector, &context, CANDY_TYPE_CHAR, data, sizeof(data)), array);
+
+  auto *empty = candy_array_create_const(&collector, &context, CANDY_TYPE_INTEGER, nullptr, 0);
+  EXPECT_EQ(candy_array_size(empty), 0U);
+  EXPECT_EQ(candy_array_create_const(&collector, &context, CANDY_TYPE_INTEGER, data, 0), empty);
+  auto *nulls = candy_array_create_const(&collector, &context, CANDY_TYPE_NULL, nullptr, 2);
+  EXPECT_EQ(candy_array_size(nulls), 2U);
+  EXPECT_EQ(candy_array_create_const(&collector, &context, CANDY_TYPE_NULL, nullptr, 2), nulls);
+  EXPECT_NE(candy_array_create_const(&collector, &context, CANDY_TYPE_NULL, nullptr, 1), nulls);
+}
+
+TEST_F(gc, constant_value_array_is_readonly_and_traces_references) {
+  auto *child = reinterpret_cast<candy_object_t *>(candy_table_create(&collector, &context));
+  candy_wrap_t value{};
+  candy_wrap_set_object(&value, child);
+  auto *array = candy_array_create_const(&collector, &context, CANDY_TYPE_WRAP, &value, 1);
+  retain(reinterpret_cast<candy_object_t *>(array));
+
+  struct mutation {
+    candy_array_t *array;
+    candy_gc_t *gc;
+    candy_excep_t *ctx;
+  } attempt{array, &collector, &context};
+  EXPECT_EQ(candy_excep_try(&context, +[](void *arg) {
+    auto *op = static_cast<mutation *>(arg);
+    candy_array_set(op->array, op->gc, op->ctx, 0, &CANDY_WRAP_NULL);
+  }, &attempt, nullptr), CANDY_ERR_ARRAY);
+  EXPECT_EQ(candy_wrap_get_object(candy_array_get(array, 0)), child);
+
+  ASSERT_EQ(candy_gc_full(&collector), CANDY_OK);
+  EXPECT_EQ(objects(), 1U);
+  EXPECT_EQ(collector.pool_used, 1U);
+  release();
+  ASSERT_EQ(candy_gc_full(&collector), CANDY_OK);
+  EXPECT_EQ(objects(), 0U);
+  EXPECT_EQ(collector.pool_used, 0U);
+}
+
 TEST_F(gc, constant_pool_lookup_crosses_tombstones) {
   auto *discarded = candy_array_create_const(&collector, &context, CANDY_TYPE_CHAR, "a", 1);
   auto *survivor = candy_array_create_const(&collector, &context, CANDY_TYPE_CHAR, "i", 1);
